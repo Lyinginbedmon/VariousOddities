@@ -1,0 +1,13 @@
+Additions
+	Creature types reimplemented, alter in the config to apply various pros and cons to mobs and specific players
+	The /types command can list, define, add, remove, set, and even test for creature types in a diverse manner
+	*Crabs and giant crabs have been reimplemented
+
+Known bugs
+	Boundary line rendering of settlement rooms is very glitchy, especially when not viewed in first person (stable when viewed first person w/ HUD off)
+	No mob sounds in multiplayer (inconsistent)
+
+Changes
+	Default spawn settings adjusted, overall more even mixes of vanilla mobs and oddities
+	Creature types now include a few new types with their own features and more smoothly affect drowning, starving, and sleeping (Players that can't sleep do not spawn phantoms)
+	Fixed an inconsistent bug related to goblins taking damage
