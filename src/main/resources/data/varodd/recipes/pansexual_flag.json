@@ -1,0 +1,13 @@
+{
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+        {
+            "item": "varodd:held_flag_nonbinary"
+        }
+    ],
+    "result": {
+        "item": "varodd:held_flag_pansexual",
+        "count": 1
+    },
+    "group": "pride_flag"
+}
