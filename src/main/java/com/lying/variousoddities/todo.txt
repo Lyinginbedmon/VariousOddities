@@ -1,0 +1,12 @@
+Fix settlement room rendering
+Drafting table UI
+Faction reputation
+	Player data
+	/faction command
+Warg
+Worg
+Crab & Giant Crab
+	Barnacles
+	Scuttling
+	Large claws
+	AI

@@ -1,7 +1,7 @@
 Additions
 	Creature types reimplemented, alter in the config to apply various pros and cons to mobs and specific players
 	The /types command can list, define, add, remove, set, and even test for creature types in a diverse manner
-	*Crabs and giant crabs have been reimplemented
+	Mob factions partially reimplemented, don't expect much from these just yet though
 
 Known bugs
 	Boundary line rendering of settlement rooms is very glitchy, especially when not viewed in first person (stable when viewed first person w/ HUD off)

@@ -25,13 +25,12 @@ public class EntityCrabRenderer extends MobRenderer<AbstractCrab, ModelCrab>
 	{
 		super(manager, new ModelCrab(), 0.5F * (renderScale / 1.5F));
 		scale = renderScale;
-		
 		addLayer(new LayerCrabBarnacles(this));
 	}
 	
 	public EntityCrabRenderer(EntityRendererManager manager)
 	{
-		this(manager, 0.6F);
+		this(manager, 0.5F);
 	}
 	
 	public ResourceLocation getEntityTexture(AbstractCrab entity) 
@@ -49,15 +48,14 @@ public class EntityCrabRenderer extends MobRenderer<AbstractCrab, ModelCrab>
      */
     protected void preRenderCallback(AbstractCrab ratIn, MatrixStack matrixStackIn, float partialTickTime)
     {
-    	float fullScale = this.scale;
-    	matrixStackIn.scale(fullScale, fullScale, fullScale);
+    	matrixStackIn.scale(scale, scale, scale);
     }
 	
 	public static class RenderFactorySmall implements IRenderFactory<AbstractCrab>
 	{
 		public EntityRenderer<? super AbstractCrab> createRenderFor(EntityRendererManager manager) 
 		{
-			return new EntityCrabRenderer(manager, 0.5F);
+			return new EntityCrabRenderer(manager);
 		}
 	}
 	

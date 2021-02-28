@@ -16,13 +16,12 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
 {
 	private final float scale;
 	
-	String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/rat/rat_";
+	public static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/rat/rat_";
 	
 	public EntityRatRenderer(EntityRendererManager manager, float renderScale) 
 	{
 		super(manager, new ModelRat(), 0.5F * (renderScale / 1.5F));
 		scale = renderScale;
-		
 		addLayer(new LayerGlowRat(this));
 	}
 	

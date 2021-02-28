@@ -1,13 +1,7 @@
 package com.lying.variousoddities.client.renderer;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.client.renderer.entity.EntityCrabRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityGoblinRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityKoboldRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityMarimoRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityRatRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
+import com.lying.variousoddities.client.renderer.entity.*;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.init.VOEntities;
 
@@ -29,6 +23,8 @@ public class EntityRenderRegistry
 	public static void registerEntityRenderers()
 	{
 		VariousOddities.log.info("Registering renderers");
+		
+		// First release
 		registerRenderer(VOEntities.SPELL, new EntitySpellRenderer.RenderFactory());
 		registerRenderer(VOEntities.MARIMO, new EntityMarimoRenderer.RenderFactory());
 		registerRenderer(VOEntities.KOBOLD, new EntityKoboldRenderer.RenderFactory());
@@ -38,8 +34,10 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.SCORPION, new EntityScorpionRenderer.RenderFactorySmall());
 		registerRenderer(VOEntities.SCORPION_GIANT, new EntityScorpionRenderer.RenderFactoryLarge());
 		
-		registerRenderer(VOEntities.CRAB, new EntityCrabRenderer.RenderFactorySmall());
-		registerRenderer(VOEntities.CRAB_GIANT, new EntityCrabRenderer.RenderFactoryLarge());
+		// Second release
+//		registerRenderer(VOEntities.CRAB, new EntityCrabRenderer.RenderFactorySmall());
+//		registerRenderer(VOEntities.CRAB_GIANT, new EntityCrabRenderer.RenderFactoryLarge());
+//		registerRenderer(VOEntities.WORG, new EntityWorgRenderer.RenderFactory());
 		
 		LivingRenderer foxRenderer = ((LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)Minecraft.getInstance().getRenderManager().renderers.get(EntityType.FOX));
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));

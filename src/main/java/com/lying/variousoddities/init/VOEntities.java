@@ -8,15 +8,8 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.entity.EntitySpell;
-import com.lying.variousoddities.entity.hostile.EntityCrabGiant;
-import com.lying.variousoddities.entity.hostile.EntityGoblin;
-import com.lying.variousoddities.entity.hostile.EntityRatGiant;
-import com.lying.variousoddities.entity.hostile.EntityScorpionGiant;
-import com.lying.variousoddities.entity.passive.EntityCrab;
-import com.lying.variousoddities.entity.passive.EntityKobold;
-import com.lying.variousoddities.entity.passive.EntityMarimo;
-import com.lying.variousoddities.entity.passive.EntityRat;
-import com.lying.variousoddities.entity.passive.EntityScorpion;
+import com.lying.variousoddities.entity.hostile.*;
+import com.lying.variousoddities.entity.passive.*;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
@@ -46,21 +39,24 @@ public class VOEntities
     public static final List<EntityType<?>> ENTITIES_AI = Lists.newArrayList();
     public static final Map<EntityType<?>, Item> SPAWN_EGGS = new HashMap<>();
     
-    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"crabs");
+//    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"crabs");
     public static final ITag.INamedTag<EntityType<?>> RATS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"rats");
     public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"scorpions");
 	
     public static final EntityType<EntitySpell> SPELL	= register("spell", EntitySpell::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntitySpell::canSpawnAt);
     
-	public static final EntityType<EntityKobold> KOBOLD						= register("kobold", EntityKobold::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityKobold::canSpawnAt, 16167425, 15826224);
-	public static final EntityType<EntityGoblin> GOBLIN						= register("goblin", EntityGoblin::new, EntityClassification.MONSTER, 0.6F, 1.6F, EntityGoblin::canSpawnAt, 5349438, 8306542);
-	public static final EntityType<EntityRat> RAT							= register("rat", EntityRat::new, EntityClassification.CREATURE, 0.3F, 0.2F, EntityRat::canSpawnAt, 6043662, 3679244);
-	public static final EntityType<EntityRatGiant> RAT_GIANT				= register("giant_rat", EntityRatGiant::new, EntityClassification.MONSTER, 0.9F, 0.5F, EntityRatGiant::canSpawnAt, 6043662, 3679244);
-	public static final EntityType<EntityScorpion> SCORPION					= register("scorpion", EntityScorpion::new, EntityClassification.CREATURE, 0.8F, 0.45F, EntityScorpion::canSpawnAt, 14704695, 14696759);
-	public static final EntityType<EntityScorpionGiant> SCORPION_GIANT		= register("giant_scorpion", EntityScorpionGiant::new, EntityClassification.MONSTER, 1.8F, 1.85F, EntityScorpionGiant::canSpawnAt, 14704695, 6366997);
+    // First release
+	public static final EntityType<EntityKobold> KOBOLD						= register("kobold",			EntityKobold::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityKobold::canSpawnAt, 16167425, 15826224);
+	public static final EntityType<EntityGoblin> GOBLIN						= register("goblin",			EntityGoblin::new, EntityClassification.MONSTER, 0.6F, 1.6F, EntityGoblin::canSpawnAt, 5349438, 8306542);
+	public static final EntityType<EntityRat> RAT							= register("rat",				EntityRat::new, EntityClassification.CREATURE, 0.3F, 0.2F, EntityRat::canSpawnAt, 6043662, 3679244);
+	public static final EntityType<EntityRatGiant> RAT_GIANT				= register("giant_rat",			EntityRatGiant::new, EntityClassification.MONSTER, 0.9F, 0.5F, EntityRatGiant::canSpawnAt, 6043662, 3679244);
+	public static final EntityType<EntityScorpion> SCORPION					= register("scorpion",			EntityScorpion::new, EntityClassification.CREATURE, 0.8F, 0.45F, EntityScorpion::canSpawnAt, 14704695, 14696759);
+	public static final EntityType<EntityScorpionGiant> SCORPION_GIANT		= register("giant_scorpion",	EntityScorpionGiant::new, EntityClassification.MONSTER, 1.8F, 1.85F, EntityScorpionGiant::canSpawnAt, 14704695, 6366997);
 	
-	public static final EntityType<EntityCrab> CRAB							= register("crab", EntityCrab::new, EntityClassification.WATER_CREATURE, 0.6F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrab::canSpawnAt, 10489616, 16775294);
-	public static final EntityType<EntityCrabGiant> CRAB_GIANT				= register("giant_crab", EntityCrabGiant::new, EntityClassification.MONSTER, 1.9F, 1.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrabGiant::canSpawnAt, 10489616, 16775294);
+	// Second release
+//	public static final EntityType<EntityCrab> CRAB							= register("crab",				EntityCrab::new, EntityClassification.WATER_CREATURE, 0.6F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrab::canSpawnAt, 10489616, 16775294);
+//	public static final EntityType<EntityCrabGiant> CRAB_GIANT				= register("giant_crab",		EntityCrabGiant::new, EntityClassification.MONSTER, 1.9F, 1.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrabGiant::canSpawnAt, 10489616, 16775294);
+//	public static final EntityType<EntityWorg> WORG							= register("worg",				EntityWorg::new, EntityClassification.CREATURE, 0.7F, 1.0F, EntityWorg::canSpawnAt, 14670297, 3749941);
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
     
@@ -135,8 +131,9 @@ public class VOEntities
     	GlobalEntityTypeAttributes.put(RAT_GIANT, EntityRatGiant.getAttributes().create());
     	GlobalEntityTypeAttributes.put(SCORPION, EntityRat.getAttributes().create());
     	GlobalEntityTypeAttributes.put(SCORPION_GIANT, EntityRatGiant.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(CRAB, EntityCrab.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(CRAB_GIANT, EntityCrabGiant.getAttributes().create());
+//    	GlobalEntityTypeAttributes.put(CRAB, EntityCrab.getAttributes().create());
+//    	GlobalEntityTypeAttributes.put(CRAB_GIANT, EntityCrabGiant.getAttributes().create());
+//    	GlobalEntityTypeAttributes.put(WORG, EntityWorg.getAttributes().create());
     }
     
     @SubscribeEvent

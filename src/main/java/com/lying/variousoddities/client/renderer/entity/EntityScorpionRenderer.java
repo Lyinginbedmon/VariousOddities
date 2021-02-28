@@ -17,23 +17,23 @@ public class EntityScorpionRenderer extends MobRenderer<AbstractScorpion, ModelS
 	private final float scale;
 	
 	public static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/scorpion/scorpion_";
-	public static final ResourceLocation resourceBaby = new ResourceLocation(resourceBase+"child.png");
+	public static final ResourceLocation TEXTURE_BABY = new ResourceLocation(resourceBase+"child.png");
 	
 	public EntityScorpionRenderer(EntityRendererManager manager, float renderScale) 
 	{
 		super(manager, new ModelScorpion(), 0.5F * (renderScale / 1.5F));
 		scale = renderScale;
+		addLayer(new LayerScorpionBabies(this));
 	}
 	
 	public EntityScorpionRenderer(EntityRendererManager manager)
 	{
 		this(manager, 0.6F);
-		addLayer(new LayerScorpionBabies(this));
 	}
 	
 	public ResourceLocation getEntityTexture(AbstractScorpion entity) 
 	{
-		return entity.getGrowingAge() < 0 ? resourceBaby : entity.getScorpionType().getTexture();
+		return entity.isChild() ? TEXTURE_BABY : entity.getScorpionType().getTexture();
 	}
 	
     /**
