@@ -1,0 +1,7 @@
+{
+	"parent": "varodd:item/flag",
+	"textures":
+	{
+		"layer1": "varodd:items/flag_queer"
+	}
+}

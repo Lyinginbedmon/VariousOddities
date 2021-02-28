@@ -1,0 +1,9 @@
+{
+    "parent": "item/generated",
+    "textures":
+    {
+    	"layer0": "varodd:items/moss_bottle_water",
+        "layer1": "varodd:items/moss_bottle_moss",
+        "layer2": "varodd:items/moss_bottle"
+    }
+}

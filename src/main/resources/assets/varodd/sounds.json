@@ -1,0 +1,80 @@
+{
+	"entity_goblin_ambient":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_goblin_ambient_0",
+			"varodd:entity_goblin_ambient_1",
+			"varodd:entity_goblin_ambient_2"
+		],
+		"subtitle": "varodd:subtitle.entity_goblin_ambient"
+	},
+	"entity_goblin_death":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_goblin_death_0",
+			"varodd:entity_goblin_death_1",
+			"varodd:entity_goblin_death_2"
+		],
+		"subtitle": "varodd:subtitle.entity_goblin_death"
+	},
+	"entity_goblin_hurt":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_goblin_hurt_0",
+			"varodd:entity_goblin_hurt_1",
+			"varodd:entity_goblin_hurt_2",
+			"varodd:entity_goblin_hurt_3"
+		],
+		"subtitle": "varodd:subtitle.entity_goblin_hurt"
+	},
+	"entity_goblin_attack":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_goblin_attack_0"
+		],
+		"subtitle": "varodd:subtitle.entity_goblin_attack"
+	},
+	"entity_kobold_ambient":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_kobold_ambient_0",
+			"varodd:entity_kobold_ambient_1",
+			"varodd:entity_kobold_ambient_2",
+			"varodd:entity_kobold_ambient_3",
+			"varodd:entity_kobold_ambient_4"
+		]
+	},
+	"entity_kobold_death":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_kobold_death_0",
+			"varodd:entity_kobold_death_1",
+			"varodd:entity_kobold_death_2",
+			"varodd:entity_kobold_death_3"
+		]
+	},
+	"entity_kobold_hurt":
+	{
+		"category": "master",
+		"sounds":
+		[
+			"varodd:entity_kobold_hurt_0",
+			"varodd:entity_kobold_hurt_1",
+			"varodd:entity_kobold_hurt_2",
+			"varodd:entity_kobold_hurt_3",
+			"varodd:entity_kobold_hurt_4"
+		]
+	}
+}

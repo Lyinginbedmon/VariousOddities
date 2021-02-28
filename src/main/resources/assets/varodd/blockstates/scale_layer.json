@@ -1,0 +1,12 @@
+{
+    "variants":
+    {
+    	"": 
+        [
+    		{ "model": "varodd:block/scale_layer" },
+            { "model": "varodd:block/scale_layer", "y": 90 },
+            { "model": "varodd:block/scale_layer", "y": 180 },
+            { "model": "varodd:block/scale_layer", "y": 270 }
+        ]
+    }
+}
