@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "lying.variousoddities.mixin",
+	"package": "com.lying.variousoddities.mixin",
 	"mixins":
 	[
 		"ServerMixin"
