@@ -1,4 +1,4 @@
-package com.lying.variousoddities.entity.passive;
+package com.lying.variousoddities.entity.mount;
 
 import javax.annotation.Nullable;
 
@@ -21,19 +21,22 @@ import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
-public class EntityWorg extends AbstractGoblinWolf
+public class EntityWarg extends AbstractGoblinWolf
 {
-	public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(EntityWorg.class, DataSerializers.VARINT);
+	public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(EntityWarg.class, DataSerializers.VARINT);
+	public static final DataParameter<Boolean>	SITTING		= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
     
-	public EntityWorg(EntityType<? extends EntityWorg> p_i48574_1_, World p_i48574_2_)
+	public EntityWarg(EntityType<? extends EntityWarg> type, World worldIn)
 	{
-		super(p_i48574_1_, p_i48574_2_);
+		super(type, worldIn);
 	}
 	
 	protected void registerData()
 	{
 		super.registerData();
 		getDataManager().register(COLOR, 0);
+		
+		getDataManager().register(SITTING, false);
 	}
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
@@ -48,12 +51,25 @@ public class EntityWorg extends AbstractGoblinWolf
     public int getColor(){ return getDataManager().get(COLOR).intValue(); }
     public void setColor(int par1Int){ getDataManager().set(COLOR, MathHelper.clamp(par1Int, 0, 2)); }
     
-    /**
-     * Returns the volume for the sounds this mob makes.
-     */
-    protected float getSoundVolume()
+    public boolean isSitting(){ return getDataManager().get(SITTING); }
+    public void setSitting(boolean sitting)
     {
-        return 0.4F;
+    	getDataManager().set(SITTING, sitting);
+//    	if(this.sitTask != null)
+//		{
+////    		this.sitTask.setSitting(sitting);
+//	    	if(sitting)
+//	    	{
+//		        this.isJumping = false;
+//		        this.navigator.clearPath();
+//		        this.setAttackTarget((EntityLivingBase)null);
+//	    	}
+//		}
+//    	else
+//    	{
+////    		this.sitTask = new EntityAISit(this, false);
+//    		setSitting(sitting);
+//    	}
     }
 	
 	public AgeableEntity func_241840_a(ServerWorld arg0, AgeableEntity arg1)
