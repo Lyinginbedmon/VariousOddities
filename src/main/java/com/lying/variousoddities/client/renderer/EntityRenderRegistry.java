@@ -35,9 +35,9 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.SCORPION_GIANT, new EntityScorpionRenderer.RenderFactoryLarge());
 		
 		// Second release
-//		registerRenderer(VOEntities.CRAB, new EntityCrabRenderer.RenderFactorySmall());
-//		registerRenderer(VOEntities.CRAB_GIANT, new EntityCrabRenderer.RenderFactoryLarge());
-//		registerRenderer(VOEntities.WORG, new EntityWorgRenderer.RenderFactory());
+		registerRenderer(VOEntities.CRAB, new EntityCrabRenderer.RenderFactorySmall());
+		registerRenderer(VOEntities.CRAB_GIANT, new EntityCrabRenderer.RenderFactoryLarge());
+		registerRenderer(VOEntities.WORG, new EntityWorgRenderer.RenderFactory());
 		
 		LivingRenderer foxRenderer = ((LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)Minecraft.getInstance().getRenderManager().renderers.get(EntityType.FOX));
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));

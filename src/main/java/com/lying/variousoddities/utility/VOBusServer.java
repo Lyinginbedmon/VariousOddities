@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
@@ -23,6 +24,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -32,18 +34,25 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class VOBusServer
 {
 	@SubscribeEvent
+	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<Entity> event)
+	{
+		if(event.getObject().getType() == EntityType.PLAYER)
+			event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
+	}
+	
+	@SubscribeEvent
 	public static void addEntityBehaviours(EntityJoinWorldEvent event)
 	{
 		Entity theEntity = event.getEntity();
 		if(theEntity.getType() == EntityType.CAT || theEntity.getType() == EntityType.OCELOT)
 		{
-			MobEntity theOcelot = (MobEntity)theEntity;
+			MobEntity feline = (MobEntity)theEntity;
 			
 			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT))
-				theOcelot.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRat>(theOcelot, EntityRat.class, true));
+				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRat>(feline, EntityRat.class, true));
 			
 			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT_GIANT))
-				theOcelot.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRatGiant>(theOcelot, EntityRatGiant.class, true));
+				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRatGiant>(feline, EntityRatGiant.class, true));
 		}
 		
 		if(theEntity instanceof MobEntity)

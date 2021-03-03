@@ -50,6 +50,12 @@ public class ModelCrabBarnacles extends EntityModel<AbstractCrab>
 		this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
-	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch){ }
+	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	{
+		if(entityIn.isPartying())
+			this.body.rotationPointX = (float)Math.sin(ageInTicks);
+		else
+			this.body.rotationPointX = 0F;
+	}
 
 }

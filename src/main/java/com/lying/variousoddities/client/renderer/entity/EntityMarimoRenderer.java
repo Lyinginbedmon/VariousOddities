@@ -115,6 +115,5 @@ public class EntityMarimoRenderer extends EntityRenderer<EntityMarimo>
 		{
 			return new EntityMarimoRenderer(manager);
 		}
-		
 	}
 }

@@ -2,12 +2,14 @@ package com.lying.variousoddities.entity.ai.controller;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAITargetHostileFaction;
 import com.lying.variousoddities.entity.ai.passive.EntityAIKoboldGuardEgg;
 import com.lying.variousoddities.entity.ai.passive.EntityAIKoboldMate;
 import com.lying.variousoddities.entity.ai.passive.EntityAIKoboldParade;
 import com.lying.variousoddities.entity.ai.passive.EntityAIKoboldPlaceTorch;
 import com.lying.variousoddities.entity.passive.EntityKobold;
+import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
@@ -27,7 +29,9 @@ public class ControllerKobold extends EntityController<EntityKobold>
 		addBehaviour(0, new SwimGoal(par1Entity));
 		addBehaviour(3, par1Entity.getOperateRoomTask());
 		addBehaviour(6, new WaterAvoidingRandomWalkingGoal(par1Entity, 1.0D));
-        addBehaviour(2, new HurtByTargetGoal(par1Entity));
+		
+		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
+			addBehaviour(2, new HurtByTargetGoal(par1Entity));
 	}
 	
 	public static class ControllerKoboldChild extends ControllerKobold
@@ -51,7 +55,9 @@ public class ControllerKobold extends EntityController<EntityKobold>
 			
 			addBehaviour(6, new EntityAIKoboldMate(par1Entity));
 			addBehaviour(2, new EntityAIKoboldParade(par1Entity, 0.20999999046325684D));
-	        addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
+			
+			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
+				addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
 		}
 		
 		public void applyBehaviours()
@@ -76,7 +82,9 @@ public class ControllerKobold extends EntityController<EntityKobold>
 			
 			addBehaviour(3, new EntityAIKoboldGuardEgg(par1Entity));
 			addBehaviour(5, new EntityAIKoboldPlaceTorch(par1Entity));
-	        addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
+			
+			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
+				addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
 		}
 		
 		public void applyBehaviours()

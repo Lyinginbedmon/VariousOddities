@@ -26,7 +26,6 @@ public class ConfigVO
 	{
 		GENERAL.updateCache();
 		MOBS.updateCache();
-		Factions.stringToFactions();
 	}
 	
 	public static class General
@@ -121,7 +120,10 @@ public class ConfigVO
 					
 					builder.push("individual AI control");
 				        for(ResourceLocation entry : VOEntities.getEntityAINameList())
+				        {
 				        	oddityAI.put(entry.getPath(), builder.define(entry.getPath(), true));
+				        	oddityAICache.put(entry.getPath(), true);
+				        }
 			        builder.pop();
 				builder.pop();
 			}
@@ -259,12 +261,18 @@ public class ConfigVO
 				
 				builder.push("Mobs");
 			        for(EnumCreatureType type : EnumCreatureType.values())
+			        {
 		        		mobTypes.put(type, builder.define(type.name(), CreatureTypes.typeToMobDefaults.getOrDefault(type, "")));
+		        		mobTypesCache.put(type, CreatureTypes.typeToMobDefaults.getOrDefault(type, "").split(","));
+			        }
 		        builder.pop();
 				
 		        builder.push("Players");
 			        for(EnumCreatureType type : EnumCreatureType.values())
+			        {
 			        	playerTypes.put(type, builder.define(type.name(), CreatureTypes.typeToPlayerDefaults.getOrDefault(type, "")));
+			        	playerTypesCache.put(type, CreatureTypes.typeToPlayerDefaults.getOrDefault(type, "").split(","));
+			        }
 		        builder.pop();
 		        
 				builder.pop();
@@ -366,10 +374,7 @@ public class ConfigVO
 			{
 				builder.push("factions");
 				reputationChanges = builder.define("reputationChanges", true);
-				
-				factionDefaults = builder.worldRestart().define("defaults", Factions.defaultsToString());
-				Factions.stringToFactions();
-				
+				factionDefaults = builder.worldRestart().define("defaults", setFactionString(Factions.defaultsToString()));
 				builder.pop();
 			}
 			
@@ -378,8 +383,21 @@ public class ConfigVO
 				if(reputationChanges != null)
 				{
 					repChanges = reputationChanges.get();
-					factionValues = factionDefaults.get();
+					setFactionString(factionDefaults.get());
 				}
+			}
+			
+			private String setFactionString(String par1String)
+			{
+				factionValues = par1String;
+				if(factionsInConfig())
+					Factions.stringToFactions(factionString());
+				return par1String;
+			}
+			
+			public boolean factionsInConfig()
+			{
+				return factionString() != null && factionString().length() > 0;
 			}
 			
 			public boolean repChanges(){ return repChanges; }

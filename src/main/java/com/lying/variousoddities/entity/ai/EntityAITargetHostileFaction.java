@@ -3,6 +3,7 @@ package com.lying.variousoddities.entity.ai;
 import java.util.EnumSet;
 
 import com.google.common.base.Predicate;
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 import com.lying.variousoddities.faction.FactionReputation.EnumInteraction;
 import com.lying.variousoddities.faction.Factions;
@@ -14,6 +15,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.TargetGoal;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 
 public class EntityAITargetHostileFaction extends TargetGoal
@@ -50,8 +52,13 @@ public class EntityAITargetHostileFaction extends TargetGoal
 					if(ownerFaction != null)
 						if(input.getType() == EntityType.PLAYER)
 						{
-							// TODO Retrieve faction reputation from playerdata
-							int reputation = ownerFaction.startingRep;
+							PlayerData data = PlayerData.forPlayer((PlayerEntity)input);
+							int reputation = data.reputation.getReputation(ownerFaction.name);
+							if(reputation == Integer.MIN_VALUE)
+							{
+								data.reputation.setReputation(ownerFaction.name, ownerFaction.startingRep);
+								reputation = ownerFaction.startingRep;
+							}
 							return EnumAttitude.fromRep(reputation).allowsInteraction(EnumInteraction.ATTACK);
 						}
 						else

@@ -17,9 +17,9 @@ public class EntityCrabRenderer extends MobRenderer<AbstractCrab, ModelCrab>
 	private final float scale;
 	
 	public static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/crab/crab_";
-	private static final ResourceLocation TEXTURE_RED = new ResourceLocation(Reference.ModInfo.MOD_ID, resourceBase+"red.png");
-	private static final ResourceLocation TEXTURE_GREEN = new ResourceLocation(Reference.ModInfo.MOD_ID, resourceBase+"green.png");
-	private static final ResourceLocation TEXTURE_BLUE = new ResourceLocation(Reference.ModInfo.MOD_ID, resourceBase+"blue.png");
+	private static final ResourceLocation TEXTURE_RED = new ResourceLocation(resourceBase+"red.png");
+	private static final ResourceLocation TEXTURE_GREEN = new ResourceLocation(resourceBase+"green.png");
+	private static final ResourceLocation TEXTURE_BLUE = new ResourceLocation(resourceBase+"blue.png");
 	
 	public EntityCrabRenderer(EntityRendererManager manager, float renderScale) 
 	{

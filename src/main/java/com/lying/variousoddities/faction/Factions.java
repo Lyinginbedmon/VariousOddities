@@ -7,11 +7,14 @@ import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.entity.IFactionMob;
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 import com.mojang.brigadier.StringReader;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.ListNBT;
@@ -23,6 +26,9 @@ public class Factions
 	
 	public static Faction get(String name)
 	{
+		if(FACTIONS.isEmpty() && ConfigVO.MOBS.factionSettings.factionsInConfig())
+			stringToFactions(ConfigVO.MOBS.factionSettings.factionString());
+		
 		for(Faction faction : FACTIONS)
 			if(faction.name.equals(name))
 				return faction;
@@ -33,6 +39,8 @@ public class Factions
 	{
 		if(entity instanceof IFactionMob)
 			return get(((IFactionMob)entity).getFactionName());
+		else if(entity.getType() == EntityType.PLAYER)
+			return get(PlayerData.forPlayer((PlayerEntity)entity).reputation.factionName());
 		return null;
 	}
 	
@@ -46,18 +54,9 @@ public class Factions
 		return comp.toString();
 	}
 	
-	public static void stringToFactions()
+	public static void stringToFactions(String par1String)
 	{
-		String configString = null;
-		try
-		{
-			configString = ConfigVO.MOBS.factionSettings.factionString();
-		}
-		catch(Exception e){ }
-		if(configString == null)
-			return;
-		
-		StringReader values = new StringReader(configString);
+		StringReader values = new StringReader(par1String);
 		ListNBT factionList = null;
 		try
 		{

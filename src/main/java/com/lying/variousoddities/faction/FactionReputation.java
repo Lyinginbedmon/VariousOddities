@@ -4,9 +4,13 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.api.event.ReputationEvent;
+import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.faction.FactionBus.ReputationChange;
+import com.lying.variousoddities.faction.Factions.Faction;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -22,16 +26,17 @@ public class FactionReputation
 	public static int getPlayerReputation(PlayerEntity player, String factionName)
 	{
 		factionName = validateName(factionName);
-		
-//		Map<String, Integer> reputation = VOPlayerData.getReputation(player);
-		int rep = 0;
-//		if(reputation.containsKey(factionName)) rep = reputation.get(factionName);
-//		else if(ConfigVO.Mobs.startingReputation.containsKey(factionName))
-//		{
-//			rep = Math.max(-100, Math.min(100, ConfigVO.Mobs.startingReputation.get(factionName)));
-//			reputation.put(factionName, rep);
-//			VariousOddities.proxy.setReputation(reputation);
-//		}
+		PlayerData data = PlayerData.forPlayer(player);
+		int rep = data.reputation.getReputation(factionName);
+		if(rep == Integer.MIN_VALUE)
+		{
+			// Set to starting reputation
+			Faction faction = Factions.get(factionName);
+			if(faction != null)
+				rep = faction.startingRep;
+			else
+				rep = 0;
+		}
 		
 		return rep;
 	}
@@ -59,9 +64,8 @@ public class FactionReputation
 		factionName = validateName(factionName);
 		repIn = Math.max(-100, Math.min(100, repIn));
 		
-//		Map<String, Integer> reputation = VOPlayerData.getReputation(player);
-//		reputation.put(factionName, repIn);
-//		VariousOddities.proxy.setReputation(reputation);
+		PlayerData data = PlayerData.forPlayer(player);
+		data.reputation.setReputation(factionName, repIn);
 		
 		return repIn;
 	}
@@ -75,12 +79,11 @@ public class FactionReputation
 	public static int resetPlayerReputation(PlayerEntity player, String factionName)
 	{
 		factionName = validateName(factionName);
+		Faction faction = Factions.get(factionName);
 		
-		int rep = 0;
-//		Map<String, Integer> reputation = VOPlayerData.getReputation(player);
-//		rep = ConfigVO.Mobs.startingReputation.containsKey(factionName) ? ConfigVO.Mobs.startingReputation.get(factionName) : 0;
-//		reputation.put(factionName, rep);
-//		VariousOddities.proxy.setReputation(reputation);
+		int rep = faction == null ? 0 : faction.startingRep;
+		PlayerData data = PlayerData.forPlayer(player);
+		data.reputation.setReputation(factionName, rep);
 		
 		return rep;
 	}
@@ -92,28 +95,26 @@ public class FactionReputation
 	 * @param repIn
 	 * @return
 	 */
-	public static int addPlayerReputation(PlayerEntity player, String factionName, int repIn, @Nullable LivingEntity sourceMob)
+	public static int addPlayerReputation(PlayerEntity player, String factionName, ReputationChange causeIn, int repIn, @Nullable LivingEntity sourceMob)
 	{
 		factionName = validateName(factionName);
 		
-//		Map<String, Integer> reputation = VOPlayerData.getReputation(player);
 		int currentReputation = getPlayerReputation(player, factionName);
 		EnumAttitude initialState = EnumAttitude.fromRep(currentReputation);
 		
-		ReputationEvent.Change event = new ReputationEvent.Change(player, factionName, currentReputation, repIn, sourceMob);
+		ReputationEvent.Change event = new ReputationEvent.Change(player, factionName, currentReputation, repIn, sourceMob, causeIn);
 		if(MinecraftForge.EVENT_BUS.post(event)) return currentReputation;
 		repIn = event.getChange();
 		
 		int rep = Math.max(-100, Math.min(100, currentReputation + repIn));
-//		reputation.put(factionName, rep);
-//		VariousOddities.proxy.setReputation(reputation);
+		PlayerData.forPlayer(player).reputation.setReputation(factionName, rep);
 		
 		EnumAttitude nextState = EnumAttitude.fromRep(rep);
 		if(initialState != nextState && !player.getEntityWorld().isRemote)
 		{
-            addPlayerReputation(player, factionName, player.getRNG().nextInt(10) + ((int)Math.signum(repIn) * 5), sourceMob);
+            addPlayerReputation(player, factionName, causeIn, player.getRNG().nextInt(10) + ((int)Math.signum(repIn) * 5), sourceMob);
 			if(!MinecraftForge.EVENT_BUS.post(new ReputationEvent.Attitude(player, factionName, initialState, nextState)))
-                player.sendStatusMessage(new TranslationTextComponent("gui.varodd:reputation", factionName, nextState.getTranslatedName()), true);
+                player.sendStatusMessage(new TranslationTextComponent("gui.varodd.reputation", factionName, nextState.getTranslatedName()), true);
 		}
 		
 		return rep;
@@ -126,16 +127,20 @@ public class FactionReputation
 	 * @param repIn
 	 * @return
 	 */
-	public static int removePlayerReputation(PlayerEntity player, String factionName, int repIn, @Nullable LivingEntity sourceMob)
+	public static int removePlayerReputation(PlayerEntity player, String factionName, ReputationChange causeIn, int repIn, @Nullable LivingEntity sourceMob)
 	{
-		return addPlayerReputation(player, factionName, -Math.abs(repIn), sourceMob);
+		return addPlayerReputation(player, factionName, causeIn, -Math.abs(repIn), sourceMob);
 	}
 	
-	public static void changePlayerReputation(PlayerEntity player, LivingEntity sourceMob, int change)
+	public static void changePlayerReputation(PlayerEntity player, LivingEntity sourceMob, ReputationChange causeIn, int change)
 	{
-		if(sourceMob == null || player == null) return;
-		String faction = getFaction(sourceMob);
-		if(faction != null) FactionReputation.addPlayerReputation(player, faction, change, sourceMob);
+		changePlayerReputation(player, getFaction(sourceMob), causeIn, change, sourceMob);
+	}
+	
+	public static void changePlayerReputation(PlayerEntity player, String faction, ReputationChange causeIn, int change, @Nullable LivingEntity sourceMob)
+	{
+		if(player == null || (faction == null || faction.length() == 0)) return;
+		FactionReputation.addPlayerReputation(player, faction, causeIn, change, sourceMob);
 	}
 	
 	/**
@@ -145,8 +150,10 @@ public class FactionReputation
 	 */
 	public static String getFaction(LivingEntity sourceMob)
 	{
-//		if(sourceMob instanceof EntityOddity && ((EntityOddity)sourceMob).hasCustomFaction()) return ((EntityOddity)sourceMob).getCustomFaction();
-		if(sourceMob instanceof IFactionMob) return ((IFactionMob)sourceMob).getFactionName();
+		if(sourceMob instanceof IFactionMob)
+			return ((IFactionMob)sourceMob).getFactionName();
+		else if(sourceMob.getType() == EntityType.PLAYER)
+			return PlayerData.forPlayer((PlayerEntity)sourceMob).reputation.factionName();
 		return null;
 	}
 	

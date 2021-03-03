@@ -3,6 +3,7 @@ package com.lying.variousoddities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
@@ -59,6 +60,7 @@ public class VariousOddities
     private void doCommonSetup(final FMLCommonSetupEvent event)
     {
     	PacketHandler.init();
+    	PlayerData.register();
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
     	MinecraftForge.EVENT_BUS.register(SettlementManagerServer.class);
     	MinecraftForge.EVENT_BUS.register(GroupHandler.class);

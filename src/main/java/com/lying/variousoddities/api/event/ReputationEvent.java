@@ -2,6 +2,7 @@ package com.lying.variousoddities.api.event;
 
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.faction.FactionBus.ReputationChange;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 
 import net.minecraft.entity.LivingEntity;
@@ -87,16 +88,19 @@ public class ReputationEvent extends PlayerEvent
 	public static class Change extends ReputationEvent
 	{
 		private final int currentRep;
-		int repChange;
+		private int repChange;
+		private final ReputationChange cause;
 		
-		public Change(PlayerEntity playerIn, String factionIn, int repIn, int changeIn, @Nullable LivingEntity sourceIn)
+		public Change(PlayerEntity playerIn, String factionIn, int repIn, int changeIn, @Nullable LivingEntity sourceIn, ReputationChange causeIn)
 		{
 			super(playerIn, factionIn, sourceIn);
 			currentRep = repIn;
 			repChange = changeIn;
+			cause = causeIn;
 		}
 		
 		public int getCurrentRep(){ return currentRep; }
+		public ReputationChange getCause(){ return cause; }
 		public int getChange(){ return repChange; }
 		public void setChange(int par1Int){ repChange = par1Int; }
 		

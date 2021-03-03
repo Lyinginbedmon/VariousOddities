@@ -17,6 +17,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3f;
 
 public class ModelCrab extends EntityModel<AbstractCrab>
 {
@@ -26,6 +27,9 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 	List<ModelLeg> rightLegs = new ArrayList<ModelLeg>();
 	
 	private static final float legOffset = 7F;
+	
+	private boolean bigLeft, bigRight;
+	private boolean scuttle;
 	
 	public ModelCrab()
 	{
@@ -57,19 +61,70 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 	
 	public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
 	{
-		this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-		this.leftClaw.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-		this.rightClaw.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-		
-		for(ModelLeg leg : leftLegs)
-			leg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-		
-		for(ModelLeg leg : rightLegs)
-			leg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+		matrixStackIn.push();
+			if(this.scuttle)
+	    		matrixStackIn.rotate(Vector3f.YP.rotationDegrees(90F));
+			
+			this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+			
+			float bigScale = 1.2F;
+			matrixStackIn.push();
+				if(this.bigLeft)
+				{
+					matrixStackIn.scale(bigScale, bigScale, bigScale);
+		    		matrixStackIn.translate(-0.05F, -0.15F, 0.05F);
+				}
+				this.leftClaw.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+			matrixStackIn.pop();
+			matrixStackIn.push();
+				if(this.bigRight)
+				{
+					matrixStackIn.scale(bigScale, bigScale, bigScale);
+		    		matrixStackIn.translate(0.05F, -0.15F, 0.05F);
+				}
+				this.rightClaw.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+			matrixStackIn.pop();
+			
+			for(ModelLeg leg : leftLegs)
+				leg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+			
+			for(ModelLeg leg : rightLegs)
+				leg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+		matrixStackIn.pop();
 	}
 	
 	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
+		this.bigLeft = entityIn.hasBigLeftClaw();
+		this.bigRight = entityIn.hasBigRightClaw();
+		this.scuttle = entityIn.shouldScuttle();
+		
+		if(entityIn.isPartying())
+		{
+			float wiggle = (float)Math.sin(ageInTicks);
+			this.body.rotationPointX = wiggle;
+			this.rightClaw.setXOffset(wiggle);
+			this.leftClaw.setXOffset(wiggle);
+			
+	    	for(int i=0; i<leftLegs.size(); i++)
+	    	{
+	    		leftLegs.get(i).setOffsetX(wiggle);
+	    		rightLegs.get(i).setOffsetX(wiggle);
+	    	}
+		}
+		else
+		{
+			this.body.rotationPointX = 0F;
+			this.rightClaw.setXOffset(0F);
+			this.leftClaw.setXOffset(0F);
+			
+	    	for(int i=0; i<leftLegs.size(); i++)
+	    	{
+	    		leftLegs.get(i).setOffsetX(0F);
+	    		rightLegs.get(i).setOffsetX(0F);
+	    	}
+		}
+		
     	for(int i=0; i<leftLegs.size(); i++)
     	{
     		leftLegs.get(i).setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
@@ -137,6 +192,9 @@ public class ModelCrab extends EntityModel<AbstractCrab>
     	ModelRenderer theArm;
     	ModelRenderer theClaw;
     	
+    	private final float defaultRotationX;
+    	private float offsetRotationX = 0F;
+    	
     	public ModelClaw(EnumLimbPosition side, Model theModel)
     	{
     		this.side = side;
@@ -147,7 +205,8 @@ public class ModelCrab extends EntityModel<AbstractCrab>
     		armBase.setTextureOffset(16, 36).addBox(-1.5F, -1F, -1.5F, 3, 5, 3);
     		
     		this.theArm = ModelUtils.freshRenderer(theModel);
-    		theArm.setRotationPoint(8F * (isLeft ? -1F : 1F), 13.5F, -6F);
+    		defaultRotationX = 8F * (isLeft ? -1F : 1F);
+    		theArm.setRotationPoint(defaultRotationX, 13.5F, -6F);
     		theArm.addChild(armBase);
     		
     		this.theClaw = ModelUtils.freshRenderer(theModel);
@@ -157,6 +216,11 @@ public class ModelCrab extends EntityModel<AbstractCrab>
     		theClaw.setTextureOffset(28, 46).addBox(2F * (isLeft ? 1F : -1.6F), -0.5F, -1F, 1, 3, 2, 0.75F);
     		theArm.addChild(theClaw);
     	}
+    	
+    	public void setXOffset(float par1Float)
+    	{
+    		this.offsetRotationX = par1Float;
+    	}
         
         /**
          * Sets the model's various rotation angles. For bipeds, par1 and par2 are used for animating the movement of arms
@@ -165,6 +229,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
          */
     	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
         {
+    		this.theArm.rotationPointX = defaultRotationX + offsetRotationX;
             if(swingProgress > 0.0F && swingSideMatches(this.getMainHand(entityIn)))
         	{
             	theClaw.rotateAngleZ = 0F;
@@ -173,14 +238,14 @@ public class ModelCrab extends EntityModel<AbstractCrab>
             	theArm.rotateAngleY = 0F;
             	theArm.rotateAngleZ = 0F;
             	
-	                float f1 = 1.0F - swingProgress;
-	                f1 = f1 * f1;
-	                f1 = f1 * f1;
-	                f1 = 1.0F - f1;
-	                float f2 = MathHelper.sin(f1 * (float)Math.PI);
-	                float f3 = MathHelper.sin(swingProgress * (float)Math.PI) * 0.7F * 0.75F;
-	                theArm.rotateAngleY = (float)((double)theArm.rotateAngleY - ((double)f2 * 1.2D + (double)f3)) * (isLeft ? -1F : 1F);
-	                theArm.rotateAngleZ += MathHelper.sin(swingProgress * (float)Math.PI) * -0.4F;
+                float f1 = 1.0F - swingProgress;
+                f1 = f1 * f1;
+                f1 = f1 * f1;
+                f1 = 1.0F - f1;
+                float f2 = MathHelper.sin(f1 * (float)Math.PI);
+                float f3 = MathHelper.sin(swingProgress * (float)Math.PI) * 0.7F * 0.75F;
+                theArm.rotateAngleY = (float)((double)theArm.rotateAngleY - ((double)f2 * 1.2D + (double)f3)) * (isLeft ? -1F : 1F);
+                theArm.rotateAngleZ += MathHelper.sin(swingProgress * (float)Math.PI) * -0.4F;
         	}
             else
             {
@@ -189,7 +254,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
             	theArm.rotateAngleX = -ModelUtils.degree180 * 0.75F;
             	theArm.rotateAngleX += (float)Math.cos(entityIn.ticksExisted / 20F) * ModelUtils.degree10 * 0.5F;
             	theArm.rotateAngleY = ModelUtils.degree90 * 0.5F * (isLeft ? 1F : -1F);
-            	theArm.rotateAngleZ = 0F;
+            	theArm.rotateAngleZ = this.offsetRotationX * 0.5F;
             }
         }
 
@@ -231,6 +296,9 @@ public class ModelCrab extends EntityModel<AbstractCrab>
     	private ModelRenderer theLegUpper;
     	private ModelRenderer theLegLower;
     	
+    	private final float defaultRotationX;
+    	private float offsetRotationX = 0F;
+    	
     	public ModelLeg(int index, EnumLimbPosition side, Model theModel)
     	{
     		this.index = index;
@@ -251,7 +319,8 @@ public class ModelCrab extends EntityModel<AbstractCrab>
     		
 			// Main leg elements, these control the rotation so the parts are always properly oriented
 			this.theLegUpper = ModelUtils.freshRenderer(theModel);
-			theLegUpper.setRotationPoint((legOffset + (index%2 == 0 ? 1.5F : 0F)) * pol, 18F, index * 5.2F);
+			defaultRotationX = (legOffset + (index%2 == 0 ? 1.5F : 0F)) * pol;
+			theLegUpper.setRotationPoint(defaultRotationX, 18F, index * 5.2F);
 			theLegUpper.rotateAngleZ = -ModelUtils.degree10 * pol;
 			theLegUpper.rotateAngleY = -ModelUtils.toRadians(10D) * index * pol;
 			if(!isLeft){ theLegUpper.rotateAngleY += ModelUtils.toRadians(180D); }
@@ -263,6 +332,8 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 			theLegLower.addChild(lowerLeg);
 			theLegUpper.addChild(theLegLower);
     	}
+    	
+    	public void setOffsetX(float par1Float){ this.offsetRotationX = par1Float; }
         
         /**
          * Sets the model's various rotation angles. For bipeds, par1 and par2 are used for animating the movement of arms
@@ -274,7 +345,10 @@ public class ModelCrab extends EntityModel<AbstractCrab>
         	float legBase = MathHelper.cos(limbSwing * 1.5F + (float)Math.PI) * 2F * limbSwingAmount;
         	boolean limbPolarity = (isLeft ? index%2 == 0 : index%2 != 0);
         	
+    		this.theLegUpper.rotationPointX = defaultRotationX + offsetRotationX;
+        	
     		theLegUpper.rotateAngleZ = Math.min(-ModelUtils.degree10, (legBase * (limbPolarity ? 1 : -1)) - ModelUtils.degree10) * (isLeft ? 1F : -1F);
+    		theLegUpper.rotateAngleZ += offsetRotationX * ModelUtils.toRadians(22.5D);
     		
     		theLegUpper.rotateAngleY = !isLeft ? ModelUtils.degree180 : 0F;
     		theLegUpper.rotateAngleY += (MathHelper.cos(limbSwing * 0.66682F + (float)Math.PI) * 0.8F * limbSwingAmount) * (limbPolarity ? 1F : -1F);

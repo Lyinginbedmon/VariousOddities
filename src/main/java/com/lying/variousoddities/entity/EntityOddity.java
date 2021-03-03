@@ -5,13 +5,14 @@ import java.util.List;
 
 import com.lying.variousoddities.entity.ai.controller.EntityController;
 
+import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.world.World;
 
-public abstract class EntityOddity extends MobEntity
+public abstract class EntityOddity extends CreatureEntity
 {
     /** A list of EntityControllers able to influence this entity */
 	@SuppressWarnings("rawtypes")

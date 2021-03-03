@@ -1,5 +1,9 @@
 package com.lying.variousoddities.faction;
 
+import java.util.Random;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.config.ConfigVO;
 
@@ -11,7 +15,6 @@ import net.minecraft.util.EntityPredicates;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -19,6 +22,7 @@ public class FactionBus
 {
 	public static boolean shouldFire(){ return ConfigVO.MOBS.factionSettings.repChanges(); }
 	
+	/** Returns true if the entity is associated with a faction */
 	private static final Predicate<Entity> ALL_FACTIONS = new Predicate<Entity>()
 			{
 				public boolean apply(Entity input)
@@ -35,16 +39,16 @@ public class FactionBus
 				}
 			};
 	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public static void onLivingHurtEvent(LivingHurtEvent event)
-	{
-		if(!shouldFire()) return;
-		
-		Entity trueSource = event.getSource().getTrueSource();
-		if(trueSource != null && trueSource instanceof PlayerEntity && !EntityPredicates.CAN_AI_TARGET.test(trueSource))
-			if(event.getEntityLiving().getRNG().nextInt(3) == 0)
-				FactionReputation.changePlayerReputation((PlayerEntity)trueSource, event.getEntityLiving(), -1);
-	}
+//	@SubscribeEvent(priority = EventPriority.LOWEST)
+//	public static void onLivingHurtEvent(LivingHurtEvent event)
+//	{
+//		if(!shouldFire()) return;
+//		
+//		Entity trueSource = event.getSource().getTrueSource();
+//		if(trueSource != null && trueSource instanceof PlayerEntity && !EntityPredicates.CAN_AI_TARGET.test(trueSource))
+//			if(event.getEntityLiving().getRNG().nextInt(3) == 0)
+//				FactionReputation.changePlayerReputation((PlayerEntity)trueSource, event.getEntityLiving(), -1);
+//	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onLivingDamageEvent(LivingDamageEvent event)
@@ -53,7 +57,7 @@ public class FactionBus
 		
 		Entity trueSource = event.getSource().getTrueSource();
 		if(trueSource != null && trueSource instanceof PlayerEntity && !EntityPredicates.CAN_AI_TARGET.test(trueSource) && event.getAmount() > 0F)
-			FactionReputation.changePlayerReputation((PlayerEntity)trueSource, event.getEntityLiving(), -1);
+			ReputationChange.HURT.applyTo((PlayerEntity)trueSource, event.getEntityLiving(), event.getEntityLiving().getRNG());
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
@@ -75,7 +79,7 @@ public class FactionBus
 					LivingEntity livingBase = (LivingEntity)living;
 					if(victimFaction.equals(FactionReputation.getFaction(livingBase)) && livingBase.canEntityBeSeen(victim))
 					{
-						FactionReputation.changePlayerReputation((PlayerEntity)trueSource, victim, -(1 + victim.getRNG().nextInt(3)));
+						ReputationChange.KILL.applyTo((PlayerEntity)trueSource, victim, victim.getRNG());
 						break;
 					}
 				}
@@ -88,7 +92,7 @@ public class FactionBus
 				String attackFaction = FactionReputation.getFaction(attackTarget);
 				if(attackFaction != null)
 				{
-					FactionReputation.changePlayerReputation((PlayerEntity)trueSource, attackTarget, 1 + victim.getRNG().nextInt(3));
+					ReputationChange.PROTECT.applyTo((PlayerEntity)trueSource, attackTarget, victim.getRNG());
 					return;
 				}
 			}
@@ -98,7 +102,7 @@ public class FactionBus
 				LivingEntity livingBase = (LivingEntity)living;
 				if(FactionReputation.getFaction(livingBase) != null && livingBase.getRevengeTarget() == victim && livingBase.canEntityBeSeen(victim))
 				{
-					FactionReputation.changePlayerReputation((PlayerEntity)trueSource, victim, -(1 + victim.getRNG().nextInt(3)));
+					ReputationChange.KILL.applyTo((PlayerEntity)trueSource, victim, victim.getRNG());
 					break;
 				}
 			}
@@ -112,7 +116,7 @@ public class FactionBus
 //		
 //		LivingEntity trader = event.getTrader();
 //		if(trader != null && trader.getRNG().nextInt(3) == 0)
-//			FactionReputation.changePlayerReputation(event.getPlayerEntity(), trader, 1);
+//			FactionReputation.changePlayerReputation(event.getPlayerEntity(), trader, ReputationChange.TRADE, trader.getRNG());
 //	}
 	
 	@SubscribeEvent
@@ -128,7 +132,48 @@ public class FactionBus
 			if(living.getHealth() < living.getMaxHealth() && faction != null)
 				for(PlayerEntity player : living.getEntityWorld().getEntitiesWithinAABB(PlayerEntity.class, living.getBoundingBox().grow(8D), EntityPredicates.CAN_AI_TARGET))
 					if(living.getEntitySenses().canSee(player) && player != living.getRevengeTarget())
-						FactionReputation.addPlayerReputation(player, faction, 1, mob);
+						ReputationChange.HEAL.applyTo(player, faction, mob.getRNG(), mob);
+		}
+	}
+	
+	public static enum ReputationChange
+	{
+		HURT(-1),
+		KILL(-1, -3),
+		PROTECT(1, 3),
+		TRADE(1),
+		HEAL(1),
+		COMMAND(0);
+		
+		private final int min, max;
+		
+		private ReputationChange(int val1, int val2)
+		{
+			min = Math.min(val1, val2);
+			max = Math.max(val1, val2);
+		}
+		
+		private ReputationChange(int val)
+		{
+			this(val, val);
+		}
+		
+		public int volume(Random rand)
+		{
+			if(max != min)
+				return min + rand.nextInt(max - min);
+			else
+				return min;
+		}
+		
+		public void applyTo(PlayerEntity player, LivingEntity mob, Random rand)
+		{
+			applyTo(player, FactionReputation.getFaction(mob), rand, mob);
+		}
+		
+		public void applyTo(PlayerEntity player, String faction, Random rand, @Nullable LivingEntity mob)
+		{
+			FactionReputation.changePlayerReputation(player, faction, this, volume(rand), mob);
 		}
 	}
 }
