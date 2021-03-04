@@ -1,6 +1,4 @@
 Fix settlement room rendering
 Drafting table UI
-Faction reputation
-	/faction command
 Worg
 Warg

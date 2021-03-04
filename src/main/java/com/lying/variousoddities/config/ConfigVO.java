@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.lying.variousoddities.entity.NaturalSpawns;
-import com.lying.variousoddities.faction.Factions;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.types.CreatureTypes;
 import com.lying.variousoddities.types.EnumCreatureType;
+import com.lying.variousoddities.world.savedata.FactionManager;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.ResourceLocation;
@@ -368,31 +368,19 @@ public class ConfigVO
 			private final ForgeConfigSpec.ConfigValue<String> factionDefaults;
 			
 			private boolean repChanges = true;
-			private String factionValues = Factions.defaultsToString();
 			
 			public FactionSettings(ForgeConfigSpec.Builder builder)
 			{
 				builder.push("factions");
 				reputationChanges = builder.define("reputationChanges", true);
-				factionDefaults = builder.worldRestart().define("defaults", setFactionString(Factions.defaultsToString()));
+				factionDefaults = builder.define("defaults", FactionManager.defaultsToString());
 				builder.pop();
 			}
 			
 			public void updateCache()
 			{
 				if(reputationChanges != null)
-				{
 					repChanges = reputationChanges.get();
-					setFactionString(factionDefaults.get());
-				}
-			}
-			
-			private String setFactionString(String par1String)
-			{
-				factionValues = par1String;
-				if(factionsInConfig())
-					Factions.stringToFactions(factionString());
-				return par1String;
 			}
 			
 			public boolean factionsInConfig()
@@ -401,7 +389,7 @@ public class ConfigVO
 			}
 			
 			public boolean repChanges(){ return repChanges; }
-			public String factionString(){ return factionValues; }
+			public String factionString(){ return factionDefaults.get(); }
 		}
 	}
 	

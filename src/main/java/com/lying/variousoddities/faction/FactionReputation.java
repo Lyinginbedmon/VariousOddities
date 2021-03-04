@@ -1,19 +1,24 @@
 package com.lying.variousoddities.faction;
 
+import java.util.EnumSet;
+
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.api.event.ReputationEvent;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.faction.FactionBus.ReputationChange;
-import com.lying.variousoddities.faction.Factions.Faction;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.world.savedata.FactionManager;
+import com.lying.variousoddities.world.savedata.FactionManager.Faction;
 
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.util.text.event.HoverEvent.Action;
 import net.minecraftforge.common.MinecraftForge;
 
 public class FactionReputation
@@ -31,7 +36,8 @@ public class FactionReputation
 		if(rep == Integer.MIN_VALUE)
 		{
 			// Set to starting reputation
-			Faction faction = Factions.get(factionName);
+			FactionManager manager = FactionManager.get(player.getEntityWorld());
+			Faction faction = manager.getFaction(factionName);
 			if(faction != null)
 				rep = faction.startingRep;
 			else
@@ -79,7 +85,8 @@ public class FactionReputation
 	public static int resetPlayerReputation(PlayerEntity player, String factionName)
 	{
 		factionName = validateName(factionName);
-		Faction faction = Factions.get(factionName);
+		FactionManager manager = FactionManager.get(player.getEntityWorld());
+		Faction faction = manager.getFaction(factionName);
 		
 		int rep = faction == null ? 0 : faction.startingRep;
 		PlayerData data = PlayerData.forPlayer(player);
@@ -177,11 +184,11 @@ public class FactionReputation
 	
 	public static enum EnumAttitude
 	{
-		HOSTILE(-100, -61, EnumInteraction.ATTACK, EnumInteraction.FLEE),
-		UNFRIENDLY(-60, -21, EnumInteraction.AVOID, EnumInteraction.RETALIATE),
-		INDIFFERENT(-20, 20, EnumInteraction.RETALIATE, EnumInteraction.TRADE),
-		FRIENDLY(21, 60, EnumInteraction.TRADE, EnumInteraction.HEAL),
-		HELPFUL(61, 100, EnumInteraction.TRADE, EnumInteraction.HEAL, EnumInteraction.DEFEND, EnumInteraction.FOLLOW);
+		HOSTILE(-100, -61, EnumSet.of(EnumInteraction.ATTACK, EnumInteraction.FLEE)),
+		UNFRIENDLY(-60, -21, EnumSet.of(EnumInteraction.AVOID, EnumInteraction.RETALIATE)),
+		INDIFFERENT(-20, 20, EnumSet.of(EnumInteraction.RETALIATE, EnumInteraction.TRADE)),
+		FRIENDLY(21, 60, EnumSet.of(EnumInteraction.TRADE, EnumInteraction.HEAL)),
+		HELPFUL(61, 100, EnumSet.of(EnumInteraction.TRADE, EnumInteraction.HEAL, EnumInteraction.DEFEND, EnumInteraction.FOLLOW));
 		
 		/**
 		 * Implemented behaviours:
@@ -200,9 +207,9 @@ public class FactionReputation
 		 */
 		
 		private final int minScore, maxScore;
-		private final EnumInteraction[] interactions;
+		private final EnumSet<EnumInteraction> interactions;
 		
-		private EnumAttitude(int min, int max, EnumInteraction... interactionsIn)
+		private EnumAttitude(int min, int max, EnumSet<EnumInteraction> interactionsIn)
 		{
 			minScore = min;
 			maxScore = max;
@@ -211,13 +218,12 @@ public class FactionReputation
 		
 		public boolean allowsInteraction(EnumInteraction interaction)
 		{
-			for(EnumInteraction action : interactions) if(action == interaction) return true;
-			return false;
+			return interactions.contains(interaction);
 		}
 		
-		public String getTranslatedName()
+		public ITextComponent getTranslatedName()
 		{
-			return I18n.format("enum."+Reference.ModInfo.MOD_PREFIX+"attitude."+toString().toLowerCase()+".name");
+			return new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".attitude."+toString().toLowerCase()).modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".attitude."+toString().toLowerCase()+".definition"))); });
 		}
 		
 		public static EnumAttitude fromRep(int par1Int)

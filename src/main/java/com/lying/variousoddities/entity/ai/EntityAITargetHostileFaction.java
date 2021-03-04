@@ -6,8 +6,8 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 import com.lying.variousoddities.faction.FactionReputation.EnumInteraction;
-import com.lying.variousoddities.faction.Factions;
-import com.lying.variousoddities.faction.Factions.Faction;
+import com.lying.variousoddities.world.savedata.FactionManager;
+import com.lying.variousoddities.world.savedata.FactionManager.Faction;
 
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.EntityType;
@@ -48,7 +48,8 @@ public class EntityAITargetHostileFaction extends TargetGoal
 			{
 				public boolean apply(LivingEntity input)
 				{
-					Faction ownerFaction = Factions.getFaction(entity);
+					FactionManager manager = FactionManager.get(input.getEntityWorld());
+					Faction ownerFaction = manager.getFaction(entity);
 					if(ownerFaction != null)
 						if(input.getType() == EntityType.PLAYER)
 						{
@@ -63,8 +64,11 @@ public class EntityAITargetHostileFaction extends TargetGoal
 						}
 						else
 						{
-							Faction inputFaction = Factions.getFaction(input);
-							return ownerFaction != null && inputFaction != null && ownerFaction.relationWith(inputFaction.name).allowsInteraction(EnumInteraction.ATTACK);
+							Faction inputFaction = manager.getFaction(input);
+							if(inputFaction == null)
+								return false;
+							else
+								return ownerFaction.relationWith(inputFaction.name).allowsInteraction(EnumInteraction.ATTACK);
 						}
 					return false;
 				}

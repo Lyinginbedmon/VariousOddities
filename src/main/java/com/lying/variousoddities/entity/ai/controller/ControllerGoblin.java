@@ -7,10 +7,8 @@ import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinFlee;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinMate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityGoblin.GoblinType;
-import com.lying.variousoddities.entity.passive.EntityKobold;
 
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 
 public class ControllerGoblin
 {
@@ -54,7 +52,6 @@ public class ControllerGoblin
 	        {
 	    	    addBehaviour(1, new HurtByTargetGoal(par1Entity));
 	    	    addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
-	            addBehaviour(2, new NearestAttackableTargetGoal<EntityKobold>(par1Entity, EntityKobold.class, true));
 	        }
 		}
 	}

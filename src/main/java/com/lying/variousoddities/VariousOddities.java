@@ -7,6 +7,7 @@ import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
+import com.lying.variousoddities.command.CommandFaction;
 import com.lying.variousoddities.command.CommandSettlement;
 import com.lying.variousoddities.command.CommandTypes;
 import com.lying.variousoddities.config.ConfigVO;
@@ -21,9 +22,11 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.TypeBus;
 import com.lying.variousoddities.utility.VOBusServer;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
+import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
+import net.minecraft.command.CommandSource;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -103,7 +106,9 @@ public class VariousOddities
     @SubscribeEvent
     public void onCommandRegister(RegisterCommandsEvent event)
     {
-    	CommandSettlement.register(event.getDispatcher());
-    	CommandTypes.register(event.getDispatcher());
+    	CommandDispatcher<CommandSource> dispather = event.getDispatcher();
+    	CommandSettlement.register(dispather);
+    	CommandTypes.register(dispather);
+    	CommandFaction.register(dispather);
     }
 }
