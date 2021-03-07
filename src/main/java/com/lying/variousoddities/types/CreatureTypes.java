@@ -179,6 +179,7 @@ public class CreatureTypes
 		addMobToTypeDefaults(EntityType.ELDER_GUARDIAN,		EnumCreatureType.ABERRATION, EnumCreatureType.AQUATIC);
 		addMobToTypeDefaults(EntityType.GUARDIAN,			EnumCreatureType.ABERRATION, EnumCreatureType.AQUATIC);
 		addMobToTypeDefaults(EntityType.ENDERMAN,			EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
+		addMobToTypeDefaults(EntityType.GHAST,				EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.HUSK,				EnumCreatureType.UNDEAD);
 		addMobToTypeDefaults(EntityType.DROWNED,			EnumCreatureType.UNDEAD, EnumCreatureType.AQUATIC);
 		addMobToTypeDefaults(EntityType.ZOMBIE,				EnumCreatureType.UNDEAD);
@@ -213,6 +214,7 @@ public class CreatureTypes
 		addMobToTypeDefaults(EntityType.PIGLIN,				EnumCreatureType.HUMANOID, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.RAVAGER,			EnumCreatureType.MAGICAL_BEAST);
 			// Oddities
+		addMobToTypeDefaults(VOEntities.GHASTLING,			EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(VOEntities.GOBLIN,				EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN);
 		addMobToTypeDefaults(VOEntities.KOBOLD,				EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE);
 		addMobToTypeDefaults(VOEntities.RAT,				EnumCreatureType.VERMIN);

@@ -5,6 +5,7 @@ import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -34,6 +35,20 @@ public class EntityWargRenderer extends MobRenderer<EntityWarg, ModelWarg>
 			default:
 				return TEXTURE_BLACK;
 		}
+	}
+	
+	public void render(EntityWarg wargIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn)
+	{
+		if(wargIn.isWet())
+		{
+			float f = wargIn.getShadingWhileWet(partialTicks);
+			this.entityModel.setTint(f, f, f);
+		}
+		
+		super.render(wargIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+		
+		if(wargIn.isWet())
+			this.entityModel.setTint(1F, 1F, 1F);
 	}
 	
     /**

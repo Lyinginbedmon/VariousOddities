@@ -8,9 +8,18 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.entity.EntitySpell;
-import com.lying.variousoddities.entity.hostile.*;
+import com.lying.variousoddities.entity.hostile.EntityCrabGiant;
+import com.lying.variousoddities.entity.hostile.EntityGoblin;
+import com.lying.variousoddities.entity.hostile.EntityRatGiant;
+import com.lying.variousoddities.entity.hostile.EntityScorpionGiant;
 import com.lying.variousoddities.entity.mount.EntityWarg;
-import com.lying.variousoddities.entity.passive.*;
+import com.lying.variousoddities.entity.passive.EntityCrab;
+import com.lying.variousoddities.entity.passive.EntityGhastling;
+import com.lying.variousoddities.entity.passive.EntityKobold;
+import com.lying.variousoddities.entity.passive.EntityMarimo;
+import com.lying.variousoddities.entity.passive.EntityRat;
+import com.lying.variousoddities.entity.passive.EntityScorpion;
+import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
@@ -20,13 +29,13 @@ import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.IPlacementPredicate;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.PlacementType;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
 import net.minecraft.item.Item;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -59,6 +68,7 @@ public class VOEntities
 	public static final EntityType<EntityCrabGiant> CRAB_GIANT				= register("giant_crab",		EntityCrabGiant::new, EntityClassification.MONSTER, 1.9F, 1.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrabGiant::canSpawnAt, 10489616, 16775294);
 	public static final EntityType<EntityWorg> WORG							= register("worg",				EntityWorg::new, EntityClassification.CREATURE, 0.7F, 1.0F, EntityWorg::canSpawnAt, 14670297, 3749941);
 	public static final EntityType<EntityWarg> WARG							= register("warg",				EntityWarg::new, EntityClassification.CREATURE, 0.85F, 1.35F, EntityWarg::canSpawnAt, 6898719, 1248261);
+	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityGhastling::new, EntityClassification.CREATURE, 0.95F, 0.95F, EntityGhastling::canSpawnAt, 0, 0);
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
     
@@ -113,7 +123,7 @@ public class VOEntities
     	return null;
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
 	@SubscribeEvent
     public static void registerEntities(RegistryEvent.Register<EntityType<?>> event)
     {
@@ -125,18 +135,23 @@ public class VOEntities
             EntityRegistry registry = TYPE_PROPERTIES_MAP.get(entity);
             EntitySpawnPlacementRegistry.register(entity, registry.placementType, registry.heightType, registry.placementPredicate);
     	}
-    	
-    	GlobalEntityTypeAttributes.put(KOBOLD, EntityKobold.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(GOBLIN, EntityGoblin.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(MARIMO, EntityMarimo.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(RAT, EntityRat.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(RAT_GIANT, EntityRatGiant.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(SCORPION, EntityRat.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(SCORPION_GIANT, EntityRatGiant.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(CRAB, EntityCrab.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(CRAB_GIANT, EntityCrabGiant.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(WORG, EntityWorg.getAttributes().create());
-    	GlobalEntityTypeAttributes.put(WARG, EntityWarg.getAttributes().create());
+    }
+    
+    @SubscribeEvent
+    public static void registerAttributes(EntityAttributeCreationEvent event)
+    {
+    	event.put(KOBOLD, EntityKobold.getAttributes().create());
+    	event.put(GOBLIN, EntityGoblin.getAttributes().create());
+    	event.put(MARIMO, EntityMarimo.getAttributes().create());
+    	event.put(RAT, EntityRat.getAttributes().create());
+    	event.put(RAT_GIANT, EntityRatGiant.getAttributes().create());
+    	event.put(SCORPION, EntityRat.getAttributes().create());
+    	event.put(SCORPION_GIANT, EntityRatGiant.getAttributes().create());
+    	event.put(CRAB, EntityCrab.getAttributes().create());
+    	event.put(CRAB_GIANT, EntityCrabGiant.getAttributes().create());
+    	event.put(WORG, EntityWorg.getAttributes().create());
+    	event.put(WARG, EntityWarg.getAttributes().create());
+    	event.put(GHASTLING, EntityGhastling.getAttributes().create());
     }
     
     @SubscribeEvent

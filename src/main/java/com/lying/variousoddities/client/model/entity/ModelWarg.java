@@ -7,12 +7,12 @@ import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
-import net.minecraft.client.renderer.entity.model.AgeableModel;
+import net.minecraft.client.renderer.entity.model.TintedAgeableModel;
 import net.minecraft.client.renderer.model.Model;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.math.MathHelper;
 
-public class ModelWarg extends AgeableModel<EntityWarg>
+public class ModelWarg extends TintedAgeableModel<EntityWarg>
 {
     public ModelRenderer head;
     public ModelRenderer jaw;

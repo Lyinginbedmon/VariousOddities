@@ -5,6 +5,7 @@ Additions
 	The /faction command can control the reputation of specific players as well as manage factions in the world and their relations with each-other
 	Crabs and giant crabs have been reintroduced, with a bonus degree of musical talent
 	Worgs and wargs have been partially reintroduced
+	Ghastlings now spawn when ghast are killed by their own fireballs, and can be tamed using most sweet foods
 
 Known bugs
 	Boundary line rendering of settlement rooms is very glitchy, especially when not viewed in first person (stable when viewed first person w/ HUD off)

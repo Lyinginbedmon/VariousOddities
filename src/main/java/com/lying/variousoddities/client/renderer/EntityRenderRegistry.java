@@ -1,12 +1,25 @@
 package com.lying.variousoddities.client.renderer;
 
+import java.util.Map;
+
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.client.renderer.entity.*;
+import com.lying.variousoddities.client.renderer.entity.EntityCrabRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityGhastlingRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityGoblinRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityKoboldRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityMarimoRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityRatRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.LivingRenderer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.model.FoxModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -39,10 +52,19 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.CRAB_GIANT, new EntityCrabRenderer.RenderFactoryLarge());
 		registerRenderer(VOEntities.WORG, new EntityWorgRenderer.RenderFactory());
 		registerRenderer(VOEntities.WARG, new EntityWargRenderer.RenderFactory());
+		registerRenderer(VOEntities.GHASTLING, new EntityGhastlingRenderer.RenderFactory());
 		
-		LivingRenderer foxRenderer = ((LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)Minecraft.getInstance().getRenderManager().renderers.get(EntityType.FOX));
+		LivingRenderer foxRenderer = (LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)Minecraft.getInstance().getRenderManager().renderers.get(EntityType.FOX);
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));
 		VariousOddities.log.info("  -Registered fox accessories layer");
+		
+		Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
+		for(String entry : skinMap.keySet())
+		{
+			PlayerRenderer renderer = skinMap.get(entry);
+			renderer.addLayer(new LayerGhastlingShoulder(renderer));
+			VariousOddities.log.info("  -Registered ghastling shoulder layer for "+entry);
+		}
 	}
 	
 	private static <T extends Entity> void registerRenderer(EntityType<T> entityClass, IRenderFactory<? super T> renderFactory)

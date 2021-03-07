@@ -1,8 +1,6 @@
 package com.lying.variousoddities.world.savedata;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,7 +26,7 @@ public class FactionManager extends WorldSavedData
 {
 	protected static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_factions";
 	
-	private static final List<Faction> DEFAULT_FACTIONS = new ArrayList<>();
+	private static final Map<String, Faction> DEFAULT_FACTIONS = new HashMap<>();
 	public final Map<String, Faction> factions = new HashMap<>();
 	
 	public FactionManager()
@@ -92,6 +90,11 @@ public class FactionManager extends WorldSavedData
 		return factions.keySet();
 	}
 	
+	public static Set<String> defaultFactions()
+	{
+		return DEFAULT_FACTIONS.keySet();
+	}
+	
 	public Faction getFaction(String name)
 	{
 		if(factions.containsKey(name))
@@ -132,7 +135,7 @@ public class FactionManager extends WorldSavedData
 	{
 		CompoundNBT comp = new CompoundNBT();
 		ListNBT list = new ListNBT();
-		for(Faction faction : DEFAULT_FACTIONS)
+		for(Faction faction : DEFAULT_FACTIONS.values())
 			list.add(faction.writeToNBT(new CompoundNBT()));
 		comp.put("Factions", list);
 		return comp.toString();
@@ -190,6 +193,11 @@ public class FactionManager extends WorldSavedData
 			return this;
 		}
 		
+		public Faction addRelation(Faction faction, int rep)
+		{
+			return addRelation(faction.name, rep);
+		}
+		
 		public EnumAttitude relationWith(String name)
 		{
 			return relations.containsKey(name) ? EnumAttitude.fromRep(relations.get(name)) : EnumAttitude.fromRep(startingRep);
@@ -237,9 +245,14 @@ public class FactionManager extends WorldSavedData
 		}
 	}
 	
+	public static void addDefaultFaction(Faction faction)
+	{
+		DEFAULT_FACTIONS.put(faction.name, faction);
+	}
+	
 	static
 	{
-		DEFAULT_FACTIONS.add(new Faction("kobold", 0).addRelation("goblin", -100));
-		DEFAULT_FACTIONS.add(new Faction("goblin", -30).addRelation("kobold", -100));
+		addDefaultFaction(new Faction("kobold", 0).addRelation("goblin", -100));
+		addDefaultFaction(new Faction("goblin", -30).addRelation("kobold", -100));
 	}
 }

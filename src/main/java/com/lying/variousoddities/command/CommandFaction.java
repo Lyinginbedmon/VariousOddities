@@ -51,6 +51,11 @@ public class CommandFaction extends CommandBase
 		dispatcher.register(literal);
 	}
 	
+	public static ITextComponent factionToInfo(Faction faction)
+	{
+		return factionToInfo(faction);
+	}
+	
 	public static ITextComponent factionToInfo(String faction)
 	{
 		return new StringTextComponent(faction).modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new TranslationTextComponent("command.varodd.faction.manage.click"))).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/faction manage info "+faction))); } );
@@ -74,15 +79,15 @@ public class CommandFaction extends CommandBase
 					.then(newArgument(PLAYER, EntityArgument.player())
 	    				.then(newArgument(AMOUNT, IntegerArgumentType.integer(-200, 200))
 	    					.then(newLiteral("with")
-		    					.then(newArgument(FACTION, StringArgumentType.word())
-		    							.executes((source) -> { return givePlayerRep(EntityArgument.getPlayer(source, PLAYER), StringArgumentType.getString(source, FACTION), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
+		    					.then(newArgument(FACTION, FactionArgument.faction())
+		    							.executes((source) -> { return givePlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
     	}
     	
-    	private static int givePlayerRep(PlayerEntity player, String faction, int amount, CommandSource source)
+    	private static int givePlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
     	{
-    		FactionReputation.addPlayerReputation(player, faction, ReputationChange.COMMAND, amount, null);
+    		FactionReputation.addPlayerReputation(player, faction.name, ReputationChange.COMMAND, amount, null);
     		source.sendFeedback(new TranslationTextComponent(translationSlug+"give.success", player.getName(), amount, factionToInfo(faction)), true);
-    		return (int)(15F * ((float)(FactionReputation.getPlayerReputation(player, faction) + 100) / 200F));
+    		return (int)(15F * ((float)(FactionReputation.getPlayerReputation(player, faction.name) + 100) / 200F));
     	}
 	}
 	
@@ -94,15 +99,15 @@ public class CommandFaction extends CommandBase
 					.then(newArgument(PLAYER, EntityArgument.player())
 		    				.then(newArgument(AMOUNT, IntegerArgumentType.integer(-100, 100))
 		    					.then(newLiteral("with")
-			    					.then(newArgument(FACTION, StringArgumentType.word())
-			    							.executes((source) -> { return setPlayerRep(EntityArgument.getPlayer(source, PLAYER), StringArgumentType.getString(source, FACTION), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
+			    					.then(newArgument(FACTION, FactionArgument.faction())
+			    							.executes((source) -> { return setPlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
     	}
     	
-    	private static int setPlayerRep(PlayerEntity player, String faction, int amount, CommandSource source)
+    	private static int setPlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
     	{
-    		FactionReputation.setPlayerReputation(player, faction, amount);
+    		FactionReputation.setPlayerReputation(player, faction.name, amount);
     		source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", player.getName(), factionToInfo(faction), amount), true);
-    		return repToStrength(FactionReputation.getPlayerReputation(player, faction));
+    		return repToStrength(FactionReputation.getPlayerReputation(player, faction.name));
     	}
 	}
 	
@@ -113,23 +118,21 @@ public class CommandFaction extends CommandBase
     		return newLiteral("reset")
 					.then(newArgument(PLAYER, EntityArgument.player())
     					.then(newLiteral("with")
-	    					.then(newArgument(FACTION, StringArgumentType.word())
-    							.executes((source) -> { return resetPlayerRep(EntityArgument.getPlayer(source, PLAYER), StringArgumentType.getString(source, FACTION), source.getSource()); }))));
+	    					.then(newArgument(FACTION, FactionArgument.faction())
+    							.executes((source) -> { return resetPlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), source.getSource()); }))));
     	}
     	
-    	private static int resetPlayerRep(PlayerEntity player, String faction, CommandSource source)
+    	private static int resetPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
     	{
-    		FactionManager manager = FactionManager.get(player.getEntityWorld());
-    		Faction fac = manager.getFaction(faction);
-    		if(fac == null)
+    		if(faction == null)
 	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.failed", player.getName(), faction), true);
     		else
     		{
-	    		int reputation = fac.startingRep;
-	    		FactionReputation.setPlayerReputation(player, faction, reputation);
-	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.success", player.getName(), factionToInfo(faction), reputation), true);
+	    		int reputation = faction.startingRep;
+	    		FactionReputation.setPlayerReputation(player, faction.name, reputation);
+	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.success", player.getName(), factionToInfo(faction.name), reputation), true);
 	    	}
-    		return repToStrength(FactionReputation.getPlayerReputation(player, faction));
+    		return repToStrength(FactionReputation.getPlayerReputation(player, faction.name));
     	}
 	}
 	
@@ -140,13 +143,13 @@ public class CommandFaction extends CommandBase
     		return newLiteral("get")
 					.then(newArgument(PLAYER, EntityArgument.player())
     					.then(newLiteral("with")
-	    					.then(newArgument(FACTION, StringArgumentType.word())
-	    						.executes((source) -> { return getPlayerRep(EntityArgument.getPlayer(source, PLAYER), StringArgumentType.getString(source, FACTION), source.getSource()); }))));
+	    					.then(newArgument(FACTION, FactionArgument.faction())
+	    						.executes((source) -> { return getPlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), source.getSource()); }))));
     	}
     	
-    	private static int getPlayerRep(PlayerEntity player, String faction, CommandSource source)
+    	private static int getPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
     	{
-    		int reputation = FactionReputation.getPlayerReputation(player, faction);
+    		int reputation = FactionReputation.getPlayerReputation(player, faction.name);
     		source.sendFeedback(new TranslationTextComponent(translationSlug+"get.success", player.getName(), factionToInfo(faction), reputation), true);
     		return repToStrength(reputation);
     	}
@@ -204,9 +207,9 @@ public class CommandFaction extends CommandBase
     					.then(newArgument(FACTION, StringArgumentType.word())
     						.executes((source) -> { return createFaction(StringArgumentType.getString(source, FACTION), 0, null, source.getSource()); })
     						.then(newArgument(REPUTATION, IntegerArgumentType.integer(-100, 100))
-    							.executes((source) -> { return createFaction(StringArgumentType.getString(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), null, source.getSource()); })
+    							.executes((source) -> { return createFaction(FactionArgument.getFactionName(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), null, source.getSource()); })
     							.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-    								.executes((source) -> { return createFaction(StringArgumentType.getString(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))));
+    								.executes((source) -> { return createFaction(FactionArgument.getFactionName(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))));
     		}
     		
     		private static int createFaction(String name, int startRep, CompoundNBT compound, CommandSource source)
@@ -235,8 +238,8 @@ public class CommandFaction extends CommandBase
     		public static LiteralArgumentBuilder<CommandSource> build()
     		{
     			return newLiteral("remove")
-    					.then(newArgument(FACTION, StringArgumentType.word())
-    						.executes((source) -> { return delete(StringArgumentType.getString(source, FACTION), source.getSource()); }))
+    					.then(newArgument(FACTION, FactionArgument.faction())
+    						.executes((source) -> { return delete(FactionArgument.getFactionName(source, FACTION), source.getSource()); }))
     					.then(newLiteral("all")
     						.executes((source) -> { return deleteAll(source.getSource()); }));
     		}
@@ -268,25 +271,23 @@ public class CommandFaction extends CommandBase
     		public static LiteralArgumentBuilder<CommandSource> build()
     		{
     			return newLiteral("relation")
-    					.then(newArgument(FACTION_A, StringArgumentType.word())
+    					.then(newArgument(FACTION_A, FactionArgument.faction())
     						.then(newLiteral("with")
-    							.then(newArgument(FACTION_B, StringArgumentType.word())
+    							.then(newArgument(FACTION_B, FactionArgument.faction())
     								.then(newArgument(REPUTATION, IntegerArgumentType.integer(-100, 100))
-    									.executes((source) -> { return addRelation(StringArgumentType.getString(source, FACTION_A), StringArgumentType.getString(source, FACTION_B), IntegerArgumentType.getInteger(source, REPUTATION), source.getSource()); })))));
+    									.executes((source) -> { return addRelation(FactionArgument.getFaction(source, FACTION_A), FactionArgument.getFaction(source, FACTION_B), IntegerArgumentType.getInteger(source, REPUTATION), source.getSource()); })))));
     		}
     		
-    		public static int addRelation(String factionA, String factionB, int rep, CommandSource source)
+    		public static int addRelation(Faction factionA, Faction factionB, int rep, CommandSource source)
     		{
     			FactionManager manager = FactionManager.get(source.getWorld());
-    			
-    			Faction facA = manager.getFaction(factionA);
-    			if(facA == null)
+    			if(factionA == null)
     				return 0;
     			else
     			{
-    				facA.addRelation(factionB, rep);
+    				factionA.addRelation(factionB, rep);
     				manager.markDirty();
-    				source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.relation", factionA, factionB, rep, EnumAttitude.fromRep(rep).getTranslatedName()), true);
+    				source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.relation", factionA.name, factionB.name, rep, EnumAttitude.fromRep(rep).getTranslatedName()), true);
     				return 15;
     			}
     		}
@@ -334,22 +335,20 @@ public class CommandFaction extends CommandBase
     		public static LiteralArgumentBuilder<CommandSource> build()
     		{
     			return newLiteral("info")
-    					.then(newArgument(FACTION, StringArgumentType.word())
-    						.executes((source) -> { return factionInfo(StringArgumentType.getString(source, FACTION), source.getSource()); }));
+    					.then(newArgument(FACTION, FactionArgument.faction())
+    						.executes((source) -> { return factionInfo(FactionArgument.getFaction(source, FACTION), source.getSource()); }));
     		}
     		
-    		private static int factionInfo(String faction, CommandSource source)
+    		private static int factionInfo(Faction faction, CommandSource source)
     		{
-    			FactionManager manager = FactionManager.get(source.getWorld());
-    			Faction fac = manager.getFaction(faction);
-    			if(fac == null)
+    			if(faction == null)
     				return 0;
     			else
     			{
-    				source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.info.name", fac.name), true);
-    				source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.info.starting_rep", fac.startingRep, EnumAttitude.fromRep(fac.startingRep).getTranslatedName()), false);
+    				source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.info.name", faction.name), true);
+    				source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.info.starting_rep", faction.startingRep, EnumAttitude.fromRep(faction.startingRep).getTranslatedName()), false);
     				
-    				Map<String, Integer> relations = fac.getRelations();
+    				Map<String, Integer> relations = faction.getRelations();
     				if(!relations.isEmpty())
     				{
     					source.sendFeedback(new TranslationTextComponent(translationSlug+"manage.info.relations"), false);

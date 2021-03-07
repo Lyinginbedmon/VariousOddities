@@ -5,11 +5,11 @@ import java.util.Arrays;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 
-import net.minecraft.client.renderer.entity.model.AgeableModel;
+import net.minecraft.client.renderer.entity.model.TintedAgeableModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.util.math.MathHelper;
 
-public class ModelWorg extends AgeableModel<EntityWorg>
+public class ModelWorg extends TintedAgeableModel<EntityWorg>
 {
     public ModelRenderer head;
     public ModelRenderer jaw;
