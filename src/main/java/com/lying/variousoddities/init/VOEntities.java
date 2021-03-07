@@ -68,7 +68,7 @@ public class VOEntities
 	public static final EntityType<EntityCrabGiant> CRAB_GIANT				= register("giant_crab",		EntityCrabGiant::new, EntityClassification.MONSTER, 1.9F, 1.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrabGiant::canSpawnAt, 10489616, 16775294);
 	public static final EntityType<EntityWorg> WORG							= register("worg",				EntityWorg::new, EntityClassification.CREATURE, 0.7F, 1.0F, EntityWorg::canSpawnAt, 14670297, 3749941);
 	public static final EntityType<EntityWarg> WARG							= register("warg",				EntityWarg::new, EntityClassification.CREATURE, 0.85F, 1.35F, EntityWarg::canSpawnAt, 6898719, 1248261);
-	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityGhastling::new, EntityClassification.CREATURE, 0.95F, 0.95F, EntityGhastling::canSpawnAt, 0, 0);
+	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityGhastling::new, EntityClassification.CREATURE, 0.95F, 0.95F, EntityGhastling::canSpawnAt, 16382457, 12369084);
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
     

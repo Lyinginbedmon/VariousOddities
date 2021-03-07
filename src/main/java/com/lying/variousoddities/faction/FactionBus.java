@@ -5,6 +5,7 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
+import com.lying.variousoddities.api.event.PlayerTradeEvent;
 import com.lying.variousoddities.config.ConfigVO;
 
 import net.minecraft.entity.Entity;
@@ -109,15 +110,15 @@ public class FactionBus
 		}
 	}
 	
-//	@SubscribeEvent
-//	public static void onPlayerTradeEvent(PlayerTradeEvent event)
-//	{
-//		if(!shouldFire()) return;
-//		
-//		LivingEntity trader = event.getTrader();
-//		if(trader != null && trader.getRNG().nextInt(3) == 0)
-//			FactionReputation.changePlayerReputation(event.getPlayerEntity(), trader, ReputationChange.TRADE, trader.getRNG());
-//	}
+	@SubscribeEvent
+	public static void onPlayerTradeEvent(PlayerTradeEvent event)
+	{
+		if(!shouldFire()) return;
+		
+		LivingEntity trader = event.getTrader();
+		if(trader != null && trader.getRNG().nextInt(3) == 0)
+			ReputationChange.TRADE.applyTo(event.getPlayer(), trader, trader.getRNG());
+	}
 	
 	@SubscribeEvent
 	public static void onLivingHealEvent(LivingHealEvent event)

@@ -3,6 +3,7 @@
 	"package": "com.lying.variousoddities.mixin",
 	"mixins":
 	[
-		"ServerMixin"
+		"ServerWorldMixin",
+		"MerchantResultSlotMixin"
 	]
 }

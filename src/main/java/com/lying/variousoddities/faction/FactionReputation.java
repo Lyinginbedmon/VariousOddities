@@ -147,6 +147,10 @@ public class FactionReputation
 	public static void changePlayerReputation(PlayerEntity player, String faction, ReputationChange causeIn, int change, @Nullable LivingEntity sourceMob)
 	{
 		if(player == null || (faction == null || faction.length() == 0)) return;
+		
+		FactionManager manager = FactionManager.get(player.getEntityWorld());
+		if(manager == null || manager.getFaction(faction) == null) return;
+		
 		FactionReputation.addPlayerReputation(player, faction, causeIn, change, sourceMob);
 	}
 	
