@@ -49,7 +49,7 @@ public class VOEntities
     public static final List<EntityType<?>> ENTITIES_AI = Lists.newArrayList();
     public static final Map<EntityType<?>, Item> SPAWN_EGGS = new HashMap<>();
     
-//    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"crabs");
+    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"crabs");
     public static final ITag.INamedTag<EntityType<?>> RATS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"rats");
     public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"scorpions");
 	

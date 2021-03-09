@@ -18,7 +18,10 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.vector.Vector3f;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class LayerHeldItemPride<T extends LivingEntity, M extends EntityModel<T> & IHasArm> extends HeldItemLayer<T, M>
 {
 	public LayerHeldItemPride(IEntityRenderer<T, M> p_i50934_1_)

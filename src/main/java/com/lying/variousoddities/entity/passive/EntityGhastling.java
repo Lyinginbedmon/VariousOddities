@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.EntityOddity;
-import com.lying.variousoddities.entity.ai.MovementControllerBigFloater;
+import com.lying.variousoddities.entity.ai.MovementControllerGhastling;
 import com.lying.variousoddities.entity.ai.passive.EntityAIGhastlingFireball;
 import com.lying.variousoddities.entity.ai.passive.EntityAIGhastlingWander;
 import com.lying.variousoddities.init.VOEntities;
@@ -21,7 +21,6 @@ import net.minecraft.entity.Pose;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LandOnOwnersShoulderGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
@@ -67,7 +66,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 	public EntityGhastling(EntityType<? extends EntityGhastling> type, World worldIn)
 	{
 		super(type, worldIn);
-		this.moveController = new MovementControllerBigFloater(this);
+		this.moveController = new MovementControllerGhastling(this);
 	    this.setPathPriority(PathNodeType.DANGER_FIRE, 0.0F);
 	    this.setPathPriority(PathNodeType.DAMAGE_FIRE, 0.0F);
 	}
@@ -82,9 +81,8 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 	{
 	    this.goalSelector.addGoal(2, new SitGoal(this));
 		this.goalSelector.addGoal(5, new EntityAIGhastlingFireball(this));
-	    this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0D, 5.0F, 1.0F, true));
 		this.goalSelector.addGoal(7, new LandOnOwnersShoulderGoal(this));
-		this.goalSelector.addGoal(8, new EntityAIGhastlingWander(this, 10));
+		this.goalSelector.addGoal(8, new EntityAIGhastlingWander(this, 0.1F));
 		this.goalSelector.addGoal(10, new LookAtGoal(this, PlayerEntity.class, 8.0F));
 		this.goalSelector.addGoal(10, new LookRandomlyGoal(this));
 		
@@ -211,14 +209,6 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 	{
 		super.livingTick();
 		
-		if(getAttackTarget() != null && getAttackTarget().isAlive())
-		{
-			if(!isAngry())
-				setEmotion(Emotion.ANGRY);
-		}
-		else if(isAngry())
-			setEmotion(Emotion.NEUTRAL);
-		
 		if(getEmotion() == Emotion.SLEEP)
 		{
 			if(onGround)
@@ -295,8 +285,6 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 		getDataManager().set(EMOTION, emote.ordinal());
 		setPose(emote.pose());
 	}
-	
-	public boolean isAngry(){ return getEmotion() == Emotion.ANGRY || getEmotion() == Emotion.ANGRY2; }
 	
 	public static enum Emotion
 	{

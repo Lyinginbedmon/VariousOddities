@@ -11,8 +11,11 @@ import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
+@OnlyIn(Dist.CLIENT)
 public class EntityKoboldRenderer extends MobRenderer<EntityKobold, ModelKobold>
 {
 	private static final float SCALE = 0.8F;

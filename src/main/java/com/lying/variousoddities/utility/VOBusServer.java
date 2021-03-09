@@ -9,6 +9,7 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
+import com.lying.variousoddities.entity.passive.EntityGhastling;
 import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
@@ -20,9 +21,11 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -63,13 +66,39 @@ public class VOBusServer
 	}
 	
 	/**
+	 * Occasionally spawns ghastlings when a ghast is killed by a fireball.
+	 * @param event
+	 */
+	@SubscribeEvent
+	public static void onGhastSenderEvent(LivingDeathEvent event)
+	{
+		LivingEntity ghast = event.getEntityLiving();
+		if(ghast.getType() == EntityType.GHAST)
+		{
+			DamageSource source = event.getSource();
+			if(source.getImmediateSource() instanceof FireballEntity && source.getTrueSource() instanceof PlayerEntity)
+			{
+				Random rand = ghast.getRNG();
+				World world = ghast.getEntityWorld();
+				if(rand.nextInt(15) == 0)
+					for(int i=0; i<rand.nextInt(3); i++)
+					{
+						EntityGhastling ghastling = VOEntities.GHASTLING.create(world);
+						ghastling.setLocationAndAngles(ghast.getPosX(), ghast.getPosY(), ghast.getPosZ(), rand.nextFloat() * 360F, 0F);
+						world.addEntity(ghastling);
+					}
+			}
+		}
+	}
+	
+	/**
 	 * Reduces the refractory period of nearby goblins when<br>
 	 * a. any goblin is slain or <br>
 	 * b. a goblin slays any mob (with big bonus for slaying a player)
 	 * @param event
 	 */
 	@SubscribeEvent
-	public static void onLivingDeathEvent(LivingDeathEvent event)
+	public static void onDeathNearGoblinEvent(LivingDeathEvent event)
 	{
 		LivingEntity victim = event.getEntityLiving();
 		DamageSource cause = event.getSource();

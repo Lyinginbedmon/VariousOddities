@@ -6,15 +6,20 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 
-public class MovementControllerBigFloater extends MovementController
+public class MovementControllerGhastling extends MovementController
 {
 	private final MobEntity parentEntity;
 	private int courseChangeCooldown;
 	
-	public MovementControllerBigFloater(MobEntity ghast)
+	public MovementControllerGhastling(MobEntity ghast)
 	{
 		super(ghast);
 		this.parentEntity = ghast;
+	}
+	
+	public void clearMotion()
+	{
+		this.action = Action.WAIT;
 	}
 	
 	public void tick()

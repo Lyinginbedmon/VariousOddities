@@ -11,7 +11,10 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class TileEntityDraftingTableRenderer extends TileEntityRenderer<TileEntityDraftingTable>
 {
 	public TileEntityDraftingTableRenderer(TileEntityRendererDispatcher p_i226017_1_)

@@ -14,7 +14,10 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class LayerGhastlingShoulder<T extends PlayerEntity> extends LayerRenderer<T, PlayerModel<T>>
 {
 	private final ModelGhastling ghastlingModel = new ModelGhastling();

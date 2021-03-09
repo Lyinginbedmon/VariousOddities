@@ -3,6 +3,7 @@ package com.lying.variousoddities.command;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.gson.JsonObject;
 import com.lying.variousoddities.types.EnumCreatureType;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -15,9 +16,9 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.command.arguments.ArgumentSerializer;
-import net.minecraft.command.arguments.ArgumentTypes;
+import net.minecraft.command.arguments.IArgumentSerializer;
 import net.minecraft.command.arguments.SuggestionProviders;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -68,8 +69,21 @@ public class CreatureTypeArgument implements ArgumentType<EnumCreatureType>
 		return EnumCreatureType.names();
 	}
 	
-	static
+	public static class Serializer implements IArgumentSerializer<CreatureTypeArgument>
 	{
-		ArgumentTypes.register("creature_type", CreatureTypeArgument.class, new ArgumentSerializer<>(CreatureTypeArgument::type));
+		public void write(CreatureTypeArgument argument, PacketBuffer buffer)
+		{
+			
+		}
+		
+		public CreatureTypeArgument read(PacketBuffer buffer)
+		{
+			return type();
+		}
+		
+		public void write(CreatureTypeArgument p_212244_1_, JsonObject p_212244_2_)
+		{
+			
+		}
 	}
 }

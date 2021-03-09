@@ -11,7 +11,10 @@ import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class LayerOddityGlow<T extends Entity, M extends EntityModel<T>> extends LayerRenderer<T, M>
 {
     private final ResourceLocation theTexture;

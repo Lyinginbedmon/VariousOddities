@@ -6,10 +6,14 @@ import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
+@OnlyIn(Dist.CLIENT)
 public class EntitySpellRenderer extends EntityRenderer<EntitySpell>
 {
+	@SuppressWarnings("unused")
 	private final EntityRendererManager manager;
 	
 	public EntitySpellRenderer(EntityRendererManager renderManager)

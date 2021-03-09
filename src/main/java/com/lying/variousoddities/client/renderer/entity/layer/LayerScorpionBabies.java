@@ -13,7 +13,10 @@ import net.minecraft.client.renderer.entity.IEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class LayerScorpionBabies extends LayerRenderer<AbstractScorpion, ModelScorpion>
 {
 	private final ModelScorpionBabies MODEL = new ModelScorpionBabies();

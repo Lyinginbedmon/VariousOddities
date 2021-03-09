@@ -3,6 +3,7 @@ package com.lying.variousoddities.command;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.gson.JsonObject;
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -14,8 +15,8 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.command.arguments.ArgumentSerializer;
-import net.minecraft.command.arguments.ArgumentTypes;
+import net.minecraft.command.arguments.IArgumentSerializer;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public class RoomFunctionArgument implements ArgumentType<EnumRoomFunction>
@@ -59,8 +60,21 @@ public class RoomFunctionArgument implements ArgumentType<EnumRoomFunction>
 		return EnumRoomFunction.names();
 	}
 	
-	static
+	public static class Serializer implements IArgumentSerializer<RoomFunctionArgument>
 	{
-		ArgumentTypes.register("room_function", RoomFunctionArgument.class, new ArgumentSerializer<>(RoomFunctionArgument::function));
+		public void write(RoomFunctionArgument argument, PacketBuffer buffer)
+		{
+			
+		}
+		
+		public RoomFunctionArgument read(PacketBuffer buffer)
+		{
+			return function();
+		}
+		
+		public void write(RoomFunctionArgument p_212244_1_, JsonObject p_212244_2_)
+		{
+			
+		}
 	}
 }

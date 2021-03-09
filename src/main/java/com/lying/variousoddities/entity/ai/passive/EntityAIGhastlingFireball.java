@@ -31,6 +31,7 @@ public class EntityAIGhastlingFireball extends Goal
 	public void startExecuting()
 	{
 		this.attackTimer = 0;
+		this.parentEntity.setEmotion(Emotion.ANGRY);
 	}
 	
 	public void resetTask()
@@ -64,6 +65,7 @@ public class EntityAIGhastlingFireball extends Goal
 				fireball.setShooter(parentEntity);
 				world.addEntity(fireball);
 				this.attackTimer -= 40;
+				this.parentEntity.setEmotion(Emotion.ANGRY);
 			}
 		}
 		else if(this.attackTimer > 0)
@@ -71,7 +73,5 @@ public class EntityAIGhastlingFireball extends Goal
 		
 		if(this.attackTimer > 10)
 			this.parentEntity.setEmotion(Emotion.ANGRY2);
-		else
-			this.parentEntity.setEmotion(Emotion.ANGRY);
 	}
 }

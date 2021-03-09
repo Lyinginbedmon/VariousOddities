@@ -11,8 +11,11 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
 import net.minecraft.client.renderer.entity.layers.HeldItemLayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
+@OnlyIn(Dist.CLIENT)
 public class EntityGoblinRenderer extends MobRenderer<EntityGoblin, ModelGoblin>
 {
 	private static final float SCALE = 0.8F;

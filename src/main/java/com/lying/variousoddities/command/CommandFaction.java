@@ -14,12 +14,19 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.NBTCompoundTagArgument;
+import net.minecraft.command.arguments.SuggestionProviders;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponentUtils;
@@ -31,6 +38,11 @@ import net.minecraft.util.text.event.HoverEvent.Action;
 
 public class CommandFaction extends CommandBase
 {
+	public static final SimpleCommandExceptionType FACTION_NOT_FOUND = new SimpleCommandExceptionType(new TranslationTextComponent("argument.faction.notfound"));
+ 	public static final SuggestionProvider<CommandSource> FACTION_SUGGEST = SuggestionProviders.register(new ResourceLocation("default_factions"), (context, builder) -> {
+ 		return ISuggestionProvider.suggest(FactionManager.defaultFactions(), builder);
+ 		});
+ 	
 	private static final String translationSlug = "command."+Reference.ModInfo.MOD_ID+".faction.";
 	
 	private static final String PLAYER = "player";
@@ -49,6 +61,16 @@ public class CommandFaction extends CommandBase
 				.then(VariantManage.build());
 		
 		dispatcher.register(literal);
+	}
+	
+	public static Faction getFaction(CommandContext<CommandSource> context, String name) throws CommandSyntaxException
+	{
+		FactionManager manager = FactionManager.get(context.getSource().getWorld());
+		Faction faction = manager.getFaction(name);
+		if(faction == null)
+			throw FACTION_NOT_FOUND.create();
+		else
+			return faction;
 	}
 	
 	public static ITextComponent factionToInfo(Faction faction)
@@ -79,8 +101,8 @@ public class CommandFaction extends CommandBase
 					.then(newArgument(PLAYER, EntityArgument.player())
 	    				.then(newArgument(AMOUNT, IntegerArgumentType.integer(-200, 200))
 	    					.then(newLiteral("with")
-		    					.then(newArgument(FACTION, FactionArgument.faction())
-		    							.executes((source) -> { return givePlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
+		    					.then(newArgument(FACTION, StringArgumentType.word()).suggests(FACTION_SUGGEST)
+		    							.executes((source) -> { return givePlayerRep(EntityArgument.getPlayer(source, PLAYER), getFaction(source, StringArgumentType.getString(source, FACTION)), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
     	}
     	
     	private static int givePlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
@@ -99,8 +121,8 @@ public class CommandFaction extends CommandBase
 					.then(newArgument(PLAYER, EntityArgument.player())
 		    				.then(newArgument(AMOUNT, IntegerArgumentType.integer(-100, 100))
 		    					.then(newLiteral("with")
-			    					.then(newArgument(FACTION, FactionArgument.faction())
-			    							.executes((source) -> { return setPlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
+			    					.then(newArgument(FACTION, StringArgumentType.word()).suggests(FACTION_SUGGEST)
+			    							.executes((source) -> { return setPlayerRep(EntityArgument.getPlayer(source, PLAYER), getFaction(source, StringArgumentType.getString(source, FACTION)), IntegerArgumentType.getInteger(source, AMOUNT), source.getSource()); })))));
     	}
     	
     	private static int setPlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
@@ -118,8 +140,8 @@ public class CommandFaction extends CommandBase
     		return newLiteral("reset")
 					.then(newArgument(PLAYER, EntityArgument.player())
     					.then(newLiteral("with")
-	    					.then(newArgument(FACTION, FactionArgument.faction())
-    							.executes((source) -> { return resetPlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), source.getSource()); }))));
+	    					.then(newArgument(FACTION, StringArgumentType.word()).suggests(FACTION_SUGGEST)
+    							.executes((source) -> { return resetPlayerRep(EntityArgument.getPlayer(source, PLAYER), getFaction(source, StringArgumentType.getString(source, FACTION)), source.getSource()); }))));
     	}
     	
     	private static int resetPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
@@ -143,8 +165,8 @@ public class CommandFaction extends CommandBase
     		return newLiteral("get")
 					.then(newArgument(PLAYER, EntityArgument.player())
     					.then(newLiteral("with")
-	    					.then(newArgument(FACTION, FactionArgument.faction())
-	    						.executes((source) -> { return getPlayerRep(EntityArgument.getPlayer(source, PLAYER), FactionArgument.getFaction(source, FACTION), source.getSource()); }))));
+	    					.then(newArgument(FACTION, StringArgumentType.word()).suggests(FACTION_SUGGEST)
+	    						.executes((source) -> { return getPlayerRep(EntityArgument.getPlayer(source, PLAYER), getFaction(source, StringArgumentType.getString(source, FACTION)), source.getSource()); }))));
     	}
     	
     	private static int getPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
@@ -207,9 +229,9 @@ public class CommandFaction extends CommandBase
     					.then(newArgument(FACTION, StringArgumentType.word())
     						.executes((source) -> { return createFaction(StringArgumentType.getString(source, FACTION), 0, null, source.getSource()); })
     						.then(newArgument(REPUTATION, IntegerArgumentType.integer(-100, 100))
-    							.executes((source) -> { return createFaction(FactionArgument.getFactionName(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), null, source.getSource()); })
+    							.executes((source) -> { return createFaction(StringArgumentType.getString(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), null, source.getSource()); })
     							.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-    								.executes((source) -> { return createFaction(FactionArgument.getFactionName(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))));
+    								.executes((source) -> { return createFaction(StringArgumentType.getString(source, FACTION), IntegerArgumentType.getInteger(source, REPUTATION), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))));
     		}
     		
     		private static int createFaction(String name, int startRep, CompoundNBT compound, CommandSource source)
@@ -238,8 +260,8 @@ public class CommandFaction extends CommandBase
     		public static LiteralArgumentBuilder<CommandSource> build()
     		{
     			return newLiteral("remove")
-    					.then(newArgument(FACTION, FactionArgument.faction())
-    						.executes((source) -> { return delete(FactionArgument.getFactionName(source, FACTION), source.getSource()); }))
+    					.then(newArgument(FACTION, StringArgumentType.word()).suggests(FACTION_SUGGEST)
+    						.executes((source) -> { return delete(StringArgumentType.getString(source, FACTION), source.getSource()); }))
     					.then(newLiteral("all")
     						.executes((source) -> { return deleteAll(source.getSource()); }));
     		}
@@ -271,11 +293,11 @@ public class CommandFaction extends CommandBase
     		public static LiteralArgumentBuilder<CommandSource> build()
     		{
     			return newLiteral("relation")
-    					.then(newArgument(FACTION_A, FactionArgument.faction())
+    					.then(newArgument(FACTION_A, StringArgumentType.word()).suggests(FACTION_SUGGEST)
     						.then(newLiteral("with")
-    							.then(newArgument(FACTION_B, FactionArgument.faction())
+    							.then(newArgument(FACTION_B, StringArgumentType.word()).suggests(FACTION_SUGGEST)
     								.then(newArgument(REPUTATION, IntegerArgumentType.integer(-100, 100))
-    									.executes((source) -> { return addRelation(FactionArgument.getFaction(source, FACTION_A), FactionArgument.getFaction(source, FACTION_B), IntegerArgumentType.getInteger(source, REPUTATION), source.getSource()); })))));
+    									.executes((source) -> { return addRelation(getFaction(source, StringArgumentType.getString(source, FACTION_A)), getFaction(source, StringArgumentType.getString(source, FACTION_B)), IntegerArgumentType.getInteger(source, REPUTATION), source.getSource()); })))));
     		}
     		
     		public static int addRelation(Faction factionA, Faction factionB, int rep, CommandSource source)
@@ -335,8 +357,8 @@ public class CommandFaction extends CommandBase
     		public static LiteralArgumentBuilder<CommandSource> build()
     		{
     			return newLiteral("info")
-    					.then(newArgument(FACTION, FactionArgument.faction())
-    						.executes((source) -> { return factionInfo(FactionArgument.getFaction(source, FACTION), source.getSource()); }));
+    					.then(newArgument(FACTION, StringArgumentType.word()).suggests(FACTION_SUGGEST)
+    						.executes((source) -> { return factionInfo(getFaction(source, StringArgumentType.getString(source, FACTION)), source.getSource()); }));
     		}
     		
     		private static int factionInfo(Faction faction, CommandSource source)

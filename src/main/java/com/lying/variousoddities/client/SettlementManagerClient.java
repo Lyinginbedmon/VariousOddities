@@ -6,7 +6,10 @@ import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class SettlementManagerClient extends SettlementManager
 {
 	/** Notifies all players of all settlements */

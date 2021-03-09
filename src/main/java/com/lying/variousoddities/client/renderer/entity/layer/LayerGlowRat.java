@@ -8,7 +8,10 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class LayerGlowRat extends LayerOddityGlow<AbstractRat, ModelRat>
 {
 	String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/rat/rat_";

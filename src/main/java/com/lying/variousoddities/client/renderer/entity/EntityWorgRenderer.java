@@ -10,8 +10,11 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
+@OnlyIn(Dist.CLIENT)
 public class EntityWorgRenderer extends MobRenderer<EntityWorg, ModelWorg>
 {
 	private static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/worg/worg_";
