@@ -10,6 +10,10 @@ buildscript {
         maven {
             url='https://dist.creeper.host/Sponge/maven'
         }
+		maven {
+			name = "spongepowered"
+			url = "https://repo.spongepowered.org/maven/"
+		}
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
