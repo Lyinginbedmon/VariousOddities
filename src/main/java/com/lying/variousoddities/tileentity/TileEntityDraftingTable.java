@@ -60,7 +60,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 		
 		this.customName = compound.getString("CustomName").replace(" ", "_");
 		
-		this.function = EnumRoomFunction.fromName(compound.getString("Function"));
+		this.function = EnumRoomFunction.valueOf(compound.getString("Function"));
 		
 		ListNBT includes = compound.getList("MustInclude", 10);
 		for(int i=0; i<includes.size(); i++)

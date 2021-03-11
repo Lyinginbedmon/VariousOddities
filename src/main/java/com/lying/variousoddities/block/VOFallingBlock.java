@@ -7,6 +7,5 @@ public abstract class VOFallingBlock extends FallingBlock
 	public VOFallingBlock(Properties properties)
 	{
 		super(properties);
-		// TODO Auto-generated constructor stub
 	}
 }

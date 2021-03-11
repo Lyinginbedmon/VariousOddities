@@ -8,7 +8,7 @@ public class Reference
 		public static final String MOD_ID	= "varodd";
 		public static final String MOD_PREFIX	= MOD_ID + ":";
 		
-		public static final String VERSION	= "1.16-001a";
+		public static final String VERSION	= "1.16_001c";
 	}
 	
 	public static class Values

@@ -255,6 +255,8 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 			}
 		}
 	}
+	
+	public boolean isNoDespawnRequired(){ return true; }
     
     @Nullable
     public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)

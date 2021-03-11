@@ -333,7 +333,7 @@ public class BoxRoom
 			this.title = ITextComponent.Serializer.getComponentFromJsonLenient(compound.getString("Title"));
 		
 		if(compound.contains("Function"))
-			setFunction(EnumRoomFunction.fromName(compound.getString("Function")));
+			setFunction(EnumRoomFunction.fromString(compound.getString("Function")));
 		if(compound.contains("Tag"))
 			setTagCompound(compound.getCompound("Tag"));
 	}

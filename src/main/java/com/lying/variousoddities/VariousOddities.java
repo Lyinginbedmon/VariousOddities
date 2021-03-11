@@ -60,6 +60,7 @@ public class VariousOddities
     {
     	PacketHandler.init();
     	PlayerData.register();
+    	event.enqueueWork(VOCommands::registerArguments);
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
     	MinecraftForge.EVENT_BUS.register(SettlementManagerServer.class);
     	MinecraftForge.EVENT_BUS.register(GroupHandler.class);

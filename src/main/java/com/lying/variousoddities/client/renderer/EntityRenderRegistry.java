@@ -14,6 +14,7 @@ import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.init.VOEntities;
 
@@ -35,7 +36,8 @@ public class EntityRenderRegistry
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void registerEntityRenderers()
 	{
-		VariousOddities.log.info("Registering renderers");
+		if(ConfigVO.GENERAL.verboseLogs())
+			VariousOddities.log.info("Registering renderers");
 		
 		// First release
 		registerRenderer(VOEntities.SPELL, new EntitySpellRenderer.RenderFactory());
@@ -56,25 +58,31 @@ public class EntityRenderRegistry
 		
 		LivingRenderer foxRenderer = (LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)Minecraft.getInstance().getRenderManager().renderers.get(EntityType.FOX);
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));
-		VariousOddities.log.info("  -Registered fox accessories layer");
+		if(ConfigVO.GENERAL.verboseLogs())
+			VariousOddities.log.info("  -Registered fox accessories layer");
 		
 		Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
 		for(String entry : skinMap.keySet())
 		{
 			PlayerRenderer renderer = skinMap.get(entry);
 			renderer.addLayer(new LayerGhastlingShoulder(renderer));
-			VariousOddities.log.info("  -Registered ghastling shoulder layer for "+entry);
+			if(ConfigVO.GENERAL.verboseLogs())
+				VariousOddities.log.info("  -Registered ghastling shoulder layer for "+entry);
 		}
 	}
 	
 	private static <T extends Entity> void registerRenderer(EntityType<T> entityClass, IRenderFactory<? super T> renderFactory)
 	{
 		if(renderFactory == null)
-			VariousOddities.log.error("  -# Tried to register null renderer for "+entityClass.getRegistryName()+" #");
+		{
+			if(ConfigVO.GENERAL.verboseLogs())
+				VariousOddities.log.error("  -# Tried to register null renderer for "+entityClass.getRegistryName()+" #");
+		}
 		else
 		{
 			RenderingRegistry.registerEntityRenderingHandler(entityClass, renderFactory);
-			VariousOddities.log.info("  -Registered "+entityClass.getRegistryName()+" renderer");
+			if(ConfigVO.GENERAL.verboseLogs())
+				VariousOddities.log.info("  -Registered "+entityClass.getRegistryName()+" renderer");
 		}
 	}
 }

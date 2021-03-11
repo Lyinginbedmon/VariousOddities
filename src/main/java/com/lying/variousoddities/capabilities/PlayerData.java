@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,7 +38,8 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	public static void register()
 	{
 		CapabilityManager.INSTANCE.register(PlayerData.class, new PlayerData.Storage(), () -> null);
-		VariousOddities.log.info("Registered player data capability");
+		if(ConfigVO.GENERAL.verboseLogs())
+			VariousOddities.log.info("Registered player data capability");
 	}
 	
 	public static PlayerData forPlayer(PlayerEntity player) throws RuntimeException
@@ -117,7 +119,8 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		
 		public void setReputation(String faction, int rep)
 		{
-			VariousOddities.log.info("Set reputation with "+faction+" to "+rep);
+			if(ConfigVO.GENERAL.verboseLogs())
+				VariousOddities.log.info("Set reputation with "+faction+" to "+rep);
 			reputation.put(faction, MathHelper.clamp(rep, -100, 100));
 		}
 		

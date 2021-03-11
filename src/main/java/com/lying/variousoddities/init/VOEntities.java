@@ -57,7 +57,7 @@ public class VOEntities
     
     // First release
 	public static final EntityType<EntityKobold> KOBOLD						= register("kobold",			EntityKobold::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityKobold::canSpawnAt, 16167425, 15826224);
-	public static final EntityType<EntityGoblin> GOBLIN						= register("goblin",			EntityGoblin::new, EntityClassification.MONSTER, 0.6F, 1.6F, EntityGoblin::canSpawnAt, 5349438, 8306542);
+	public static final EntityType<EntityGoblin> GOBLIN						= register("goblin",			EntityGoblin::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityGoblin::canSpawnAt, 5349438, 8306542);
 	public static final EntityType<EntityRat> RAT							= register("rat",				EntityRat::new, EntityClassification.CREATURE, 0.3F, 0.2F, EntityRat::canSpawnAt, 6043662, 3679244);
 	public static final EntityType<EntityRatGiant> RAT_GIANT				= register("giant_rat",			EntityRatGiant::new, EntityClassification.MONSTER, 0.9F, 0.5F, EntityRatGiant::canSpawnAt, 6043662, 3679244);
 	public static final EntityType<EntityScorpion> SCORPION					= register("scorpion",			EntityScorpion::new, EntityClassification.CREATURE, 0.8F, 0.45F, EntityScorpion::canSpawnAt, 14704695, 14696759);

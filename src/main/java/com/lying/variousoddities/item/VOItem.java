@@ -8,7 +8,6 @@ public abstract class VOItem extends Item
 	public VOItem(Properties properties)
 	{
 		super(properties);
-		// TODO Auto-generated constructor stub
 	}
 
 }

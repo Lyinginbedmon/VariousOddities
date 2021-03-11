@@ -81,8 +81,7 @@ public class EntityAIGhastlingWander extends Goal
 				AxisAlignedBB bounds = this.creature.getBoundingBox().offset(dest);
 				if(!this.world.hasNoCollisions(this.creature, bounds))
 					dest = null;
-				
-				if(owner != null && owner.getDistanceSq(dest) > RANGE_MAX && owner.getDistanceSq(dest) > (ownerDist * 0.75D))
+				else if(owner != null && owner.getDistanceSq(dest) > RANGE_MAX && owner.getDistanceSq(dest) > (ownerDist * 0.75D))
 					dest = null;
 			}
 			while(dest == null && attempts-- > 0);
