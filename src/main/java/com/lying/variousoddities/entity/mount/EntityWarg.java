@@ -58,6 +58,15 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
         		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.3002F)
         		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 12.0D);
     }
+    
+	public void registerGoals()
+	{
+		super.registerGoals();
+		/**
+		 * TODO Warg AI
+		 * Prey hunting & eating (cows, llamas, pigs, sheep)
+		 */
+	}
 	
 	public AgeableEntity func_241840_a(ServerWorld arg0, AgeableEntity arg1)
 	{

@@ -1,4 +1,12 @@
 Fix settlement room rendering
 Drafting table UI
+Goblin Wolf
+	Taming timer based on recent interaction with goblins
 Worg
+	Fetch stuff
+	Follow nearby goblin tamers (untamed)
 Warg
+	Saddles
+	Chests
+	Sit command
+	Prey hunting

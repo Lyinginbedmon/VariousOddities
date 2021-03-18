@@ -10,6 +10,7 @@ import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
+import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -20,11 +21,11 @@ public class VOBlocks
 {
 	private static final List<Block> BLOCKS = new ArrayList<>();
 	
-	public static final Block TABLE_DRAFTING	= register("drafting_table", new BlockDraftingTable(AbstractBlock.Properties.create(Material.WOOD, MaterialColor.BLUE_TERRACOTTA)));
+	public static final Block TABLE_DRAFTING	= register("drafting_table", new BlockDraftingTable(AbstractBlock.Properties.create(Material.WOOD, MaterialColor.BLUE_TERRACOTTA).zeroHardnessAndResistance()));
 	public static final Block MOSS_BLOCK		= register("moss_block", new BlockMoss(AbstractBlock.Properties.create(Material.PLANTS, MaterialColor.GREEN).notSolid().setOpaque(VOBlock::isntSolid)));
-	public static final Block EGG_KOBOLD		= register("kobold_egg", new BlockEggKobold(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.YELLOW_TERRACOTTA)));
-	public static final Block EGG_KOBOLD_INERT	= register("inert_kobold_egg", new BlockEggBase(BlockEggBase.SHAPE_SMALL, AbstractBlock.Properties.create(Material.ROCK, MaterialColor.YELLOW_TERRACOTTA)));
-	public static final Block LAYER_SCALE		= register("scale_layer", new BlockLayerScale(AbstractBlock.Properties.create(Material.SEA_GRASS, MaterialColor.YELLOW_TERRACOTTA)));
+	public static final Block EGG_KOBOLD		= register("kobold_egg", new BlockEggKobold(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.YELLOW_TERRACOTTA).hardnessAndResistance(0.8F).setRequiresTool().harvestTool(ToolType.PICKAXE).harvestLevel(2)));
+	public static final Block EGG_KOBOLD_INERT	= register("inert_kobold_egg", new BlockEggBase(BlockEggBase.SHAPE_SMALL, AbstractBlock.Properties.create(Material.ROCK, MaterialColor.YELLOW_TERRACOTTA).hardnessAndResistance(0.8F).setRequiresTool().harvestTool(ToolType.PICKAXE).harvestLevel(2)));
+	public static final Block LAYER_SCALE		= register("scale_layer", new BlockLayerScale(AbstractBlock.Properties.create(Material.SEA_GRASS, MaterialColor.YELLOW_TERRACOTTA).hardnessAndResistance(0.3F)));
 	
 	public static Block register(String nameIn, Block blockIn)
 	{

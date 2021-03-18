@@ -15,10 +15,16 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.passive.CatEntity;
 import net.minecraft.entity.passive.OcelotEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.world.World;
 
 public class EntityRat extends AbstractRat
 {
+	public static final DataParameter<Boolean> MINION = EntityDataManager.<Boolean>createKey(EntityRat.class, DataSerializers.BOOLEAN);
+	
 	public EntityRat(EntityType<? extends EntityRat> type, World worldIn)
 	{
 		super(type, worldIn, 0);
@@ -33,6 +39,12 @@ public class EntityRat extends AbstractRat
         		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.5D);
     }
     
+	protected void registerData()
+	{
+		super.registerData();
+		getDataManager().register(MINION, false);
+	}
+    
     public void registerGoals()
     {
     	super.registerGoals();
@@ -45,7 +57,7 @@ public class EntityRat extends AbstractRat
 		    this.targetSelector.addGoal(1, new HurtByTargetGoal(this, AbstractRat.class, OcelotEntity.class, CatEntity.class));
     }
     
-    public boolean isNoDespawnRequired(){ return true; }
+    public boolean isNoDespawnRequired(){ return !isMinion() || super.isNoDespawnRequired(); }
     
     /**
      * 1 in 20 rats are plague rats and deal poison damage.<br>
@@ -69,5 +81,22 @@ public class EntityRat extends AbstractRat
     protected float getSoundPitch()
     {
     	return super.getSoundPitch() * 1.25F;
+    }
+    
+    public void setMinion(boolean par1Bool){ getDataManager().set(MINION, par1Bool); }
+    public boolean isMinion(){ return getDataManager().get(MINION).booleanValue(); }
+    
+    public void writeAdditional(CompoundNBT compound)
+    {
+    	super.writeAdditional(compound);
+    	if(isMinion())
+    		compound.putBoolean("Minion", isMinion());
+    }
+    
+    public void readAdditional(CompoundNBT compound)
+    {
+    	super.readAdditional(compound);
+    	if(compound.contains("Minion") && compound.getBoolean("Minion"))
+    		setMinion(true);
     }
 }

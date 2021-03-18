@@ -1,18 +1,22 @@
 package com.lying.variousoddities.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAIWargWander;
+import com.lying.variousoddities.entity.ai.passive.EntityAIGoblinWolfBeg;
+import com.lying.variousoddities.entity.hostile.EntityGoblin;
+import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.BreedGoal;
 import net.minecraft.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
@@ -24,6 +28,9 @@ import net.minecraft.entity.ai.goal.SitGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -49,9 +56,23 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  */
 public abstract class AbstractGoblinWolf extends TameableEntity
 {
+	protected static final DataParameter<Byte> GENETICS	= EntityDataManager.<Byte>createKey(AbstractGoblinWolf.class, DataSerializers.BYTE);
+	
 	public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
 	public static final DataParameter<Boolean>	BEGGING		= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
 	public static final DataParameter<Boolean>	JAW_OPEN	= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
+	
+    private static final List<Item> foodItems = new ArrayList<Item>();
+    static
+    {
+    	foodItems.add(Items.ROTTEN_FLESH);
+    	foodItems.add(Items.CHICKEN);
+    	foodItems.add(Items.MUTTON);
+    	foodItems.add(Items.BEEF);
+    	foodItems.add(Items.PORKCHOP);
+    	foodItems.add(Items.SALMON);
+    	foodItems.add(Items.TROPICAL_FISH);
+    }
 	
     private int openJawCounter;
     private float jawOpenness;
@@ -64,6 +85,8 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     private boolean isShaking;
     private float timeShaking;
     private float prevTimeShaking;
+    
+    private int goblinTimer = 0;
 	
 	protected AbstractGoblinWolf(EntityType<? extends AbstractGoblinWolf> type, World worldIn)
 	{
@@ -73,6 +96,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 	protected void registerData()
 	{
 		super.registerData();
+		getDataManager().register(GENETICS, Genetics.DEFAULT.toVal());
 		getDataManager().register(COLOR, 0);
 		getDataManager().register(BEGGING, false);
 		getDataManager().register(JAW_OPEN, false);
@@ -85,8 +109,8 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 		this.goalSelector.addGoal(2, new SitGoal(this));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
 		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0D, 10.0F, 2.0F, false));
-		this.goalSelector.addGoal(7, new BreedGoal(this, 1.0D));
 		this.goalSelector.addGoal(8, new EntityAIWargWander(this, 1.0D));
+		this.goalSelector.addGoal(9, new EntityAIGoblinWolfBeg(this, 8F));
 		this.goalSelector.addGoal(10, new LookAtGoal(this, PlayerEntity.class, 8.0F));
 		this.goalSelector.addGoal(10, new LookRandomlyGoal(this));
 		
@@ -106,6 +130,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public void writeAdditional(CompoundNBT compound)
     {
     	super.writeAdditional(compound);
+    	compound.putByte("Genes", getDataManager().get(GENETICS).byteValue());
     	CompoundNBT display = new CompoundNBT();
     		display.putInt("Color", getColor());
     	compound.put("Display", display);
@@ -114,8 +139,17 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public void readAdditional(CompoundNBT compound)
     {
     	super.readAdditional(compound);
+    	setGenetics(compound.getByte("Genes"));
     	CompoundNBT display = compound.getCompound("Display");
     		setColor(display.getInt("Color"));
+    }
+    
+    public boolean isFoodItem(ItemStack stack)
+    {
+    	for(Item item : foodItems)
+    		if(item == stack.getItem())
+    			return true;
+    	return false;
     }
     
     public int getColor(){ return getDataManager().get(COLOR).intValue(); }
@@ -142,19 +176,19 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         if(getRNG().nextInt(3) == 0)
         	return (isTamed() && getHealth() < 10.0F) ? SoundEvents.ENTITY_WOLF_WHINE : SoundEvents.ENTITY_WOLF_PANT;
         else
-        	return super.getAmbientSound();
+        	return SoundEvents.ENTITY_WOLF_AMBIENT;
     }
     
     protected SoundEvent getHurtSound(DamageSource damageSourceIn)
     {
     	openJaw();
-        return super.getHurtSound(damageSourceIn);
+        return SoundEvents.ENTITY_WOLF_HURT;
     }
     
     protected SoundEvent getDeathSound()
     {
     	openJaw();
-        return super.getDeathSound();
+        return SoundEvents.ENTITY_WOLF_DEATH;
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -243,6 +277,11 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         }
     }
     
+    public boolean isTameable()
+    {
+    	return !this.isTamed() && this.goblinTimer == 0;
+    }
+    
     private void resetShaking()
     {
     	this.isShaking = false;
@@ -273,6 +312,10 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         	this.isShaking = true;
         	this.getEntityWorld().setEntityState(this, (byte)8);
         }
+        
+        if(!this.getEntityWorld().isRemote && this.goblinTimer > 0 && --this.goblinTimer%Reference.Values.TICKS_PER_SECOND == 0)
+        	if(!getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, this.getBoundingBox().grow(8, 4, 8)).isEmpty())
+        		this.goblinTimer = Reference.Values.TICKS_PER_DAY;
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -296,10 +339,82 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public boolean isNoDespawnRequired(){ return true; }
     
+    public Genetics getGenetics(){ return new Genetics(getDataManager().get(GENETICS).byteValue()); }
+    public void setGenetics(byte genesIn){ getDataManager().set(GENETICS, genesIn); }
+    public void setGenetics(Genetics genesIn){ setGenetics(genesIn.toVal()); }
+    
     @Nullable
     public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
     {
+    	setGenetics(Genetics.random(getRNG()));
     	setColor(getRNG().nextInt(3));
 		return spawnDataIn;
+    }
+    
+    /**
+     * Holder class for managing a set of booleans representing a simple model of genetics.
+     * @author Lying
+     */
+    public static class Genetics
+    {
+    	/** Chance of gene mutation during breeding */
+    	private static final float MUTATION = 0.3F;
+    	
+    	public static final Genetics DEFAULT = new Genetics((byte)224);
+    	
+    	private byte value = 0;
+    	
+    	public Genetics(byte byteIn)
+    	{
+    		this.value = byteIn;
+    	}
+    	
+    	public byte toVal(){ return value; }
+    	
+    	/**
+    	 * Returns the value of the given gene.<br><br>
+    	 * 0 - Floppy ear (left)<br>
+    	 * 1 - Floppy ear (right)<br>
+    	 * 2 - Short snout<br>
+    	 * 3 - Lolling tongue<br>
+    	 * 4 - Passive<br>
+    	 * 5 - Spooked by loud noises<br>
+    	 * 6 - Warg gene A<br>
+    	 * 7 - Warg gene B
+    	 */
+    	public boolean gene(int n)
+    	{
+    		n = Math.max(0, Math.min(7, n));
+    		return (value & (1 << n) >> 0) == 1;
+    	}
+    	
+    	/** Returns a random cross of the given genetics, with additional random mutation */
+    	public static Genetics cross(Genetics genesA, Genetics genesB, Random rand)
+    	{
+    		int val = 0;
+    		for(int i=0; i<8; i++)
+    		{
+    			boolean geneA = genesA.gene(i);
+    			boolean geneB = genesB.gene(i);
+    			boolean gene = rand.nextBoolean() ? geneA : geneB;
+    			
+    			if(rand.nextFloat() < MUTATION)
+    				gene = !gene;
+    			
+    			val = val | (gene ? 1 << i : 0);
+    		}
+    		
+    		return new Genetics((byte)val);
+    	}
+    	
+    	/** Returns a random set of genes, suitable for a goblin-bred wolf */
+    	public static Genetics random(Random rand)
+    	{
+    		int val = 0;
+    		for(int i=0; i<8; i++)
+    			val = val | (rand.nextBoolean() || i >= 4 ? 1 << i : 0);
+    		
+    		return new Genetics((byte)val);
+    	}
     }
 }

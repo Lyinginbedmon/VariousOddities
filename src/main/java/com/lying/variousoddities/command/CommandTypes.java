@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.api.EnumArgumentChecked;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.CreatureTypes;
@@ -12,8 +13,10 @@ import com.lying.variousoddities.types.EnumCreatureType;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.EntitySummonArgument;
 import net.minecraft.command.arguments.SuggestionProviders;
@@ -31,6 +34,13 @@ import net.minecraft.util.text.event.HoverEvent;
 
 public class CommandTypes extends CommandBase
 {
+ 	public static final SuggestionProvider<CommandSource> SUPERTYPE_SUGGEST = SuggestionProviders.register(new ResourceLocation("creature_supertypes"), (context, builder) -> {
+ 		return ISuggestionProvider.suggest(EnumCreatureType.getSupertypeNames(), builder);
+ 		});
+ 	public static final SuggestionProvider<CommandSource> SUBTYPE_SUGGEST = SuggestionProviders.register(new ResourceLocation("creature_subtypes"), (context, builder) -> {
+ 		return ISuggestionProvider.suggest(EnumCreatureType.getSubtypeNames(), builder);
+ 		});
+ 	
 	private static final String TYPE = "type";
 	private static final String MOB = "target";
 	private static final String ENTITY = "entity";
@@ -39,7 +49,7 @@ public class CommandTypes extends CommandBase
 	
 	public static void register(CommandDispatcher<CommandSource> dispatcher)
 	{
-		LiteralArgumentBuilder<CommandSource> literal = newLiteral("types")
+		LiteralArgumentBuilder<CommandSource> literal = newLiteral("types").requires((source) -> { return source.hasPermissionLevel(2); } )
 			.then(VariantList.build())
 			.then(VariantRemove.build())
 			.then(VariantAdd.build())
@@ -65,7 +75,7 @@ public class CommandTypes extends CommandBase
     				.then(newLiteral("all")
     					.executes(VariantList::listAll))
     				.then(newLiteral(TYPE)
-    					.then(newArgument(TYPE, CreatureTypeArgument.type())
+    					.then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
     						.executes(VariantList::listOfType)))
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES)
@@ -109,7 +119,7 @@ public class CommandTypes extends CommandBase
     	
     	public static int listOfType(final CommandContext<CommandSource> source)
     	{
-    		EnumCreatureType type = CreatureTypeArgument.getType(source, TYPE);
+    		EnumCreatureType type = source.getArgument(TYPE, EnumCreatureType.class);
     		List<ResourceLocation> mobs = CreatureTypes.mobsOfType(type);
     		List<String> players = CreatureTypes.playersOfType(type);
     		
@@ -151,11 +161,11 @@ public class CommandTypes extends CommandBase
     	{
     		return newLiteral("add")
     				.then(newLiteral(ENTITY)
-    					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newArgument(TYPE, CreatureTypeArgument.type())
-    						.executes((source) -> { return VariantAdd.addToEntity(EntitySummonArgument.getEntityId(source, ENTITY), CreatureTypeArgument.getType(source, TYPE), source.getSource()); }))))
+    					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
+    						.executes((source) -> { return VariantAdd.addToEntity(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))))
 					.then(newLiteral(MOB)
-    					.then(newArgument(MOB, EntityArgument.entity()).then(newArgument(TYPE, CreatureTypeArgument.type())
-    						.executes((source) -> { return VariantAdd.addToMob(EntityArgument.getEntity(source, MOB), CreatureTypeArgument.getType(source, TYPE), source.getSource()); }))));
+    					.then(newArgument(MOB, EntityArgument.entity()).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
+    						.executes((source) -> { return VariantAdd.addToMob(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))));
     	}
     	
     	public static int addToMob(Entity entity, EnumCreatureType type, @Nullable CommandSource source)
@@ -199,11 +209,11 @@ public class CommandTypes extends CommandBase
     	{
     		return newLiteral("remove")
     				.then(newLiteral(ENTITY)
-    					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newArgument(TYPE, CreatureTypeArgument.type())
-    						.executes((source) -> { return VariantRemove.removeFromEntity(EntitySummonArgument.getEntityId(source, ENTITY), CreatureTypeArgument.getType(source, TYPE), source.getSource()); }))))
+    					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
+    						.executes((source) -> { return VariantRemove.removeFromEntity(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))))
 					.then(newLiteral(MOB)
-    					.then(newArgument(MOB, EntityArgument.entity()).then(newArgument(TYPE, CreatureTypeArgument.type())
-    						.executes((source) -> { return VariantRemove.removeFromMob(EntityArgument.getEntity(source, MOB), CreatureTypeArgument.getType(source, TYPE), source.getSource()); }))));
+    					.then(newArgument(MOB, EntityArgument.entity()).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
+    						.executes((source) -> { return VariantRemove.removeFromMob(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))));
     	}
     	
     	public static int removeFromMob(Entity entity, EnumCreatureType type, CommandSource source)
@@ -281,11 +291,11 @@ public class CommandTypes extends CommandBase
     	{
     		return newLiteral("test")
     				.then(newLiteral(ENTITY)
-    					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newLiteral("is").then(newArgument(TYPE, CreatureTypeArgument.type())
-    						.executes((source) -> { return VariantTest.testForType(CreatureTypes.getMobTypes(EntitySummonArgument.getEntityId(source, ENTITY)), CreatureTypeArgument.getType(source, TYPE), source.getSource()); })))))
+    					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newLiteral("is").then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
+    						.executes((source) -> { return VariantTest.testForType(CreatureTypes.getMobTypes(EntitySummonArgument.getEntityId(source, ENTITY)), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))))
 					.then(newLiteral(MOB)
-    					.then(newArgument(MOB, EntityArgument.entity()).then(newLiteral("is").then(newArgument(TYPE, CreatureTypeArgument.type())
-    						.executes((source) -> { return VariantTest.testForType(CreatureTypes.getMobTypes(EntityArgument.getEntity(source, MOB)), CreatureTypeArgument.getType(source, TYPE), source.getSource()); })))));
+    					.then(newArgument(MOB, EntityArgument.entity()).then(newLiteral("is").then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class))
+    						.executes((source) -> { return VariantTest.testForType(CreatureTypes.getMobTypes(EntityArgument.getEntity(source, MOB)), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))));
     	}
     	
     	private static int testForType(List<EnumCreatureType> types, EnumCreatureType type, CommandSource source)
@@ -315,27 +325,27 @@ public class CommandTypes extends CommandBase
 			return newLiteral("set")
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newLiteral("to")
-    						.then(newArgument(TYPE, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUPERTYPE_SUGGEST)
-								.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), CreatureTypeArgument.getType(source, TYPE)); })
-								.then(newArgument(TYPE2, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-									.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2)); })
-									.then(newArgument(TYPE3, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-										.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2), CreatureTypeArgument.getType(source, TYPE3)); })
-										.then(newArgument(TYPE4, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-											.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2), CreatureTypeArgument.getType(source, TYPE3), CreatureTypeArgument.getType(source, TYPE4)); })
-											.then(newArgument(TYPE5, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-												.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2), CreatureTypeArgument.getType(source, TYPE3), CreatureTypeArgument.getType(source, TYPE4), CreatureTypeArgument.getType(source, TYPE5)); })))))))))
+    						.then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUPERTYPE_SUGGEST)
+								.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), source.getArgument(TYPE, EnumCreatureType.class)); })
+								.then(newArgument(TYPE2, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+									.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class)); })
+									.then(newArgument(TYPE3, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+										.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class)); })
+										.then(newArgument(TYPE4, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+											.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class), source.getArgument(TYPE4, EnumCreatureType.class)); })
+											.then(newArgument(TYPE5, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+												.executes((source) -> { return VariantSet.set(EntitySummonArgument.getEntityId(source, ENTITY), null, source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class), source.getArgument(TYPE4, EnumCreatureType.class), source.getArgument(TYPE5, EnumCreatureType.class)); })))))))))
     					.then(newLiteral(MOB).then(newArgument(MOB, EntityArgument.entity()).then(newLiteral("to")
-    						.then(newArgument(TYPE, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUPERTYPE_SUGGEST)
-								.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), CreatureTypeArgument.getType(source, TYPE)); })
-								.then(newArgument(TYPE2, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-									.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2)); })
-									.then(newArgument(TYPE3, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-										.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2), CreatureTypeArgument.getType(source, TYPE3)); })
-										.then(newArgument(TYPE4, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-											.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2), CreatureTypeArgument.getType(source, TYPE3), CreatureTypeArgument.getType(source, TYPE4)); })
-											.then(newArgument(TYPE5, CreatureTypeArgument.type()).suggests(CreatureTypeArgument.SUBTYPE_SUGGEST)
-												.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), CreatureTypeArgument.getType(source, TYPE), CreatureTypeArgument.getType(source, TYPE2), CreatureTypeArgument.getType(source, TYPE3), CreatureTypeArgument.getType(source, TYPE4), CreatureTypeArgument.getType(source, TYPE5)); })))))))));
+    						.then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUPERTYPE_SUGGEST)
+								.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), source.getArgument(TYPE, EnumCreatureType.class)); })
+								.then(newArgument(TYPE2, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+									.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class)); })
+									.then(newArgument(TYPE3, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+										.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class)); })
+										.then(newArgument(TYPE4, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+											.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class), source.getArgument(TYPE4, EnumCreatureType.class)); })
+											.then(newArgument(TYPE5, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(SUBTYPE_SUGGEST)
+												.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class), source.getArgument(TYPE4, EnumCreatureType.class), source.getArgument(TYPE5, EnumCreatureType.class)); })))))))));
 		}
 		
 		private static int set(ResourceLocation mobRegistry, Entity targetEntity, CommandSource source, EnumCreatureType... types)

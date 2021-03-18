@@ -51,7 +51,7 @@ public class CommandFaction extends CommandBase
 	
 	public static void register(CommandDispatcher<CommandSource> dispatcher)
 	{
-		LiteralArgumentBuilder<CommandSource> literal = newLiteral("faction")
+		LiteralArgumentBuilder<CommandSource> literal = newLiteral("faction").requires((source) -> { return source.hasPermissionLevel(2); } )
 				.then(newLiteral("reputation")
 						.then(VariantGive.build())
 						.then(VariantSet.build())

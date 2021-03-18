@@ -24,7 +24,7 @@ public class TileEntityDraftingTableRenderer extends TileEntityRenderer<TileEnti
 	
     public void render(TileEntityDraftingTable te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn)
     {
-        if(!Minecraft.isGuiEnabled()) return;
+        if(!Minecraft.isGuiEnabled() || Minecraft.getInstance().player.isSpectator()) return;
         
         BlockPos posMin = te.min().subtract(te.getPos());
         BlockPos size = te.size();
@@ -34,12 +34,9 @@ public class TileEntityDraftingTableRenderer extends TileEntityRenderer<TileEnti
             double startX = (double)posMin.getX();
             double startY = (double)posMin.getY();
             double startZ = (double)posMin.getZ();
-            double endY = startY + (double)size.getY();
             double endX = startX + (double)size.getX();
+            double endY = startY + (double)size.getY();
             double endZ = startZ + (double)size.getZ();
-            
-//            double d4 = endX < 0.0D ? startX + 1.0D : startX;
-//            double d6 = endZ < 0.0D ? startZ + 1.0D : startZ;
             
             IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getLines());
             WorldRenderer.drawBoundingBox(matrixStackIn, ivertexbuilder, startX, startY, startZ, endX, endY, endZ, 0.9F, 0.9F, 0.9F, 1.0F, 0.5F, 0.5F, 0.5F);

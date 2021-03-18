@@ -6,6 +6,8 @@ Additions
 	Crabs and giant crabs have been reintroduced, with a bonus degree of musical talent
 	Worgs and wargs have been partially reintroduced
 	Ghastlings now spawn when ghast are killed by their own fireballs, and can be tamed using most sweet foods
+	Worgs and wargs are now tameable using bones, can be healed using most raw foods, and worgs can be bred (wargs cannot breed)
+	Worgs and wargs have genetics that affect their offspring, ranging from purely cosmetic features to behavioural changes to the creation of wargs
 
 Known bugs
 	Boundary line rendering of settlement rooms is very glitchy, especially when not viewed in first person (stable when viewed first person w/ HUD off)
@@ -15,5 +17,6 @@ Changes
 	Default spawn settings adjusted, overall more even mixes of vanilla mobs and oddities
 	Creature types now include a few new types with their own features and more smoothly affect drowning, starving, and sleeping (Players that can't sleep do not spawn phantoms)
 	Goblins are now persistent creatures
+	Commands changed to require operator status
 	Fixed an inconsistent bug related to goblins taking damage
 	Fixed a bug related to custom command arguments preventing joining multiplayer servers

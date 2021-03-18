@@ -117,7 +117,7 @@ public class ModelWorg extends TintedAgeableModel<EntityWorg>
         
         float frontLegSpace = LEG_SPACE;
         float rearLegSpace = LEG_SPACE * 0.6F;
-        if(entityIn.isSitting())
+        if(entityIn.isEntitySleeping())
         {
             mane.setRotationPoint(-1.0F, 16.0F, -3.0F);
             mane.rotateAngleX = ((float)Math.PI * 2F / 5F);

@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
 import com.lying.variousoddities.config.ConfigVO;
@@ -23,10 +22,12 @@ import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -43,8 +44,10 @@ public class VariousOddities
 	
 	public static IProxy proxy = new ServerProxy();
 	
+	@SuppressWarnings("deprecation")
 	public VariousOddities()
 	{
+		DistExecutor.callWhenOn(Dist.CLIENT, () -> () -> proxy = new ClientProxy());
 		proxy.registerHandlers();
 		
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -75,9 +78,6 @@ public class VariousOddities
         RenderTypeLookup.setRenderLayer(VOBlocks.MOSS_BLOCK, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(VOBlocks.TABLE_DRAFTING, RenderType.getCutout());
         MinecraftForge.EVENT_BUS.register(SettlementRender.class);
-        MinecraftForge.EVENT_BUS.register(RendererHandler.class);
-        
-        proxy = new ClientProxy();
     }
 	
     private void onConfigEvent(final ModConfigEvent event)

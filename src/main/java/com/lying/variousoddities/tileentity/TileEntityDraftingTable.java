@@ -18,11 +18,10 @@ import net.minecraft.util.math.vector.Vector3d;
 
 public class TileEntityDraftingTable extends VOTileEntity
 {
+	public String customName = "";
+	private BlockPos min, max;
 	private EnumRoomFunction function = EnumRoomFunction.NONE;
-	public String customName = null;
 	private CompoundNBT tag = new CompoundNBT();
-	
-	private BoxRoom room = null;
 	
 	List<BlockPos> mustInclude = new ArrayList<>();
 	
@@ -34,12 +33,12 @@ public class TileEntityDraftingTable extends VOTileEntity
 	 * 8 = Custom name
 	 */
 	private int lockMask = 0;
-
+	
 	public TileEntityDraftingTable()
 	{
 		super(VOTileEntities.TABLE_DRAFTING);
 	}
-
+	
 	public void read(BlockState state, CompoundNBT nbt)
 	{
 		super.read(state, nbt);
@@ -54,94 +53,141 @@ public class TileEntityDraftingTable extends VOTileEntity
 	
 	public void loadFromNbt(CompoundNBT compound)
 	{
-		this.lockMask = compound.getInt("Locked");
-		if(compound.contains("Room"))
-			this.room = new BoxRoom(compound.getCompound("Room"));
+		if(compound.contains("CustomName", 8))
+			this.customName = compound.getString("CustomName").replace(" ", "_");
 		
-		this.customName = compound.getString("CustomName").replace(" ", "_");
+		if(compound.contains("Start", 10))
+			this.min = NBTUtil.readBlockPos(compound.getCompound("Start"));
 		
-		this.function = EnumRoomFunction.valueOf(compound.getString("Function"));
+		if(compound.contains("End", 10))
+			this.max = NBTUtil.readBlockPos(compound.getCompound("End"));
 		
-		ListNBT includes = compound.getList("MustInclude", 10);
-		for(int i=0; i<includes.size(); i++)
-			this.mustInclude.add(NBTUtil.readBlockPos(includes.getCompound(i)));
+		if(compound.contains("Function", 8))
+			this.function = EnumRoomFunction.fromString(compound.getString("Function"));
+		
+		if(compound.contains("Tag", 10))
+			this.tag = compound.getCompound("Tag");
+		
+		if(compound.contains("Locked", 3))
+			this.lockMask = compound.getInt("Locked");
+		
+		if(compound.contains("MustInclude", 9))
+		{
+			ListNBT includes = compound.getList("MustInclude", 10);
+			for(int i=0; i<includes.size(); i++)
+				this.mustInclude.add(NBTUtil.readBlockPos(includes.getCompound(i)));
+		}
+		
+		markDirty();
 	}
 	
 	public CompoundNBT saveToNbt(CompoundNBT compound)
 	{
-		compound.putInt("Locked", this.lockMask);
-		if(this.room != null)
-			compound.put("Room", getRoom().writeToNBT(new CompoundNBT()));
+		if(!canAlter(8) && hasCustomName())
+			compound.putString("CustomName", getCustomName());
 		
-		compound.putString("CustomName", getCustomName());
+		if(!canAlter(1))
+			compound.put("Start", NBTUtil.writeBlockPos(this.min));
 		
-		compound.putString("Function", getFunction().name().toLowerCase());
+		if(!canAlter(2))
+			compound.put("End", NBTUtil.writeBlockPos(this.max));
 		
-		ListNBT list = new ListNBT();
-		for(BlockPos pos : mustInclude)
-			list.add(NBTUtil.writeBlockPos(pos));
-		compound.put("MustInclude", list);
+		if(!canAlter(4))
+			compound.putString("Function", getFunction().getString());
+		
+		if(!this.tag.isEmpty())
+			compound.put("Tag", this.tag);
+		
+		if(this.lockMask > 0)
+			compound.putInt("Locked", this.lockMask);
+		
+		if(!mustInclude.isEmpty())
+		{
+			ListNBT list = new ListNBT();
+			for(BlockPos pos : mustInclude)
+				list.add(NBTUtil.writeBlockPos(pos));
+			compound.put("MustInclude", list);
+		}
 		return compound;
 	}
 	
 	public int bitMask(){ return this.lockMask; }
 	public void setMask(int bitIn){ this.lockMask = Math.max(0, Math.min(15, bitIn)); }
 	
+	/**
+	 * Returns true if the given variable can be modified.<br>
+	 * 1 = Min co-ordinate<br>
+	 * 2 = Max co-ordinate<br>
+	 * 4 = Function<br>
+	 * 8 = Custom name<br>
+	 */
 	public boolean canAlter(int bit)
 	{
-		return !Boolean.valueOf((lockMask & bit) > 0);
+		return canAlter(bit, this.lockMask);
 	}
 	
-	public void initialise()
+	public static boolean canAlter(int bit, int bitMask)
 	{
-		double offset = (double)BoxRoom.MIN_SIZE * 0.5D;
-		Vector3d posMid = new Vector3d(getPos().getX() + 0.5D, getPos().getY() + 0.5D, getPos().getZ() + 0.5D).subtract(offset, offset, offset);
-		BlockPos min = new BlockPos(posMid.x, posMid.y, posMid.z);
-		BlockPos max = min.add(BoxRoom.MIN_SIZE, BoxRoom.MIN_SIZE, BoxRoom.MIN_SIZE);
-		this.room = new BoxRoom(min, max);
+		return !Boolean.valueOf((bitMask & bit) > 0);
 	}
 	
 	public BlockPos min()
 	{
-		if(room == null)
-			initialise();
-		return room.min();
+		if(min == null)
+		{
+			if(max != null)
+			{
+				min = max;
+				moveMin(-BoxRoom.MIN_SIZE, -BoxRoom.MIN_SIZE, -BoxRoom.MIN_SIZE);
+			}
+			else
+				min = getPos().add(-1, -1, -1);
+			
+			markDirty();
+		}
+		return min;
 	}
 	
 	public BlockPos max()
 	{
-		if(room == null)
-			initialise();
-		return room.max();
+		if(max == null)
+		{
+			if(min != null)
+			{
+				max = min;
+				moveMax(BoxRoom.MIN_SIZE, BoxRoom.MIN_SIZE, BoxRoom.MIN_SIZE);
+			}
+			else
+				max = getPos().add(1, 1, 1);
+			
+			markDirty();
+		}
+		return max;
 	}
 	
 	public BlockPos size()
 	{
-		if(room == null)
-			initialise();
-		return room.size();
+		int sizeX = this.max().getX() - this.min().getX();
+		int sizeY = this.max().getY() - this.min().getY();
+		int sizeZ = this.max().getZ() - this.min().getZ();
+		return new BlockPos(sizeX, sizeY, sizeZ);
 	}
 	
-	public boolean areBoundsValid(BlockPos posA, BlockPos posB)
+	public boolean canApplyToMin(int x, int y, int z)
 	{
-		int xMin = Math.min(posA.getX(), posB.getX());
-		int xMax = Math.max(posA.getX(), posB.getX());
-		
-		int yMin = Math.min(posA.getY(), posB.getY());
-		int yMax = Math.max(posA.getY(), posB.getY());
-		if(yMin < 1 || yMax > 255)
+		BlockPos min = min().add(x, y, z);
+		if(min.getY() < 1 || min.getY() > 255)
 			return false;
 		
-		int zMin = Math.min(posA.getZ(), posB.getZ());
-		int zMax = Math.max(posA.getZ(), posB.getZ());
-		
-		int lenX = xMax - xMin + 1;
-		int lenY = yMax - yMin + 1;
-		int lenZ = zMax - zMin + 1;
+		int lenX = max().getX() - min.getX();
 		if(lenX < BoxRoom.MIN_SIZE || lenX > 16)
 			return false;
+		
+		int lenY = max().getY() - min.getY();
 		if(lenY < BoxRoom.MIN_SIZE || lenY > 16)
 			return false;
+		
+		int lenZ = max().getZ() - min.getZ();
 		if(lenZ < BoxRoom.MIN_SIZE || lenZ > 16)
 			return false;
 		
@@ -150,22 +196,92 @@ public class TileEntityDraftingTable extends VOTileEntity
 		included.add(getPos());
 		for(BlockPos pos : included)
 		{
-			if(pos.getX() < xMin || pos.getX() > xMax)
+			if(pos.getX() < min.getX())
 				return false;
 			
-			if(pos.getY() < yMin || pos.getY() > yMax)
+			if(pos.getY() < min.getY())
 				return false;
 			
-			if(pos.getZ() < zMin || pos.getZ() > zMax)
+			if(pos.getZ() < min.getZ())
 				return false;
 		}
 		
 		return true;
 	}
 	
-	public void setBounds(BlockPos posA, BlockPos posB)
+	public boolean canApplyToMax(int x, int y, int z)
 	{
-		room.set(posA, posB);
+		BlockPos max = max().add(x, y, z);
+		if(max.getY() < 1 || max.getY() > 255)
+			return false;
+		
+		int lenX = max.getX() - min().getX();
+		if(lenX < BoxRoom.MIN_SIZE || lenX > 16)
+			return false;
+		
+		int lenY = max.getY() - min().getY();
+		if(lenY < BoxRoom.MIN_SIZE || lenY > 16)
+			return false;
+		
+		int lenZ = max.getZ() - min().getZ();
+		if(lenZ < BoxRoom.MIN_SIZE || lenZ > 16)
+			return false;
+		
+		List<BlockPos> included = new ArrayList<>();
+		included.addAll(mustInclude);
+		included.add(getPos());
+		for(BlockPos pos : included)
+		{
+			if(pos.getX() > max.getX())
+				return false;
+			
+			if(pos.getY() > max.getY())
+				return false;
+			
+			if(pos.getZ() > max.getZ())
+				return false;
+		}
+		
+		return true;
+	}
+	
+	public void moveMin(int x, int y, int z)
+	{
+		if(min == null) min();
+		
+		if(!canAlter(1))
+			return;
+		
+		int maxX = this.max().getX() - BoxRoom.MIN_SIZE;
+		int posX = Math.min(maxX, this.min().getX() + x);
+		
+		int maxY = Math.max(1, Math.min(255, this.max().getY() - BoxRoom.MIN_SIZE));
+		int posY = Math.min(maxY, this.min().getY() + y);
+		
+		int maxZ = this.max().getZ() - BoxRoom.MIN_SIZE;
+		int posZ = Math.min(maxZ, this.min().getZ() + z);
+		
+		this.min = new BlockPos(posX, posY, posZ);
+		markDirty();
+	}
+	
+	public void moveMax(int x, int y, int z)
+	{
+		if(max == null) max();
+		
+		if(!canAlter(2))
+			return;
+		
+		int minX = this.min().getX() + BoxRoom.MIN_SIZE;
+		int posX = Math.max(minX, this.max().getX() + x);
+		
+		int minY = Math.max(1, Math.min(255, this.min().getY() + BoxRoom.MIN_SIZE));
+		int posY = Math.max(minY, this.max().getY() + y);
+		
+		int minZ = this.min().getZ() + BoxRoom.MIN_SIZE;
+		int posZ = Math.max(minZ, this.max().getZ() + z);
+		
+		this.max = new BlockPos(posX, posY, posZ);
 		markDirty();
 	}
 	
@@ -183,7 +299,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 	
 	public boolean hasCustomName(){ return this.customName != null && this.customName.length() > 0; }
 	
-	public String getCustomName(){ return !hasCustomName() ? "" : this.customName.replace(" ", "_"); }
+	public String getCustomName(){ return !hasCustomName() ? "" : this.customName; }
 	
 	public void setCustomName(String nameIn)
 	{
@@ -193,11 +309,16 @@ public class TileEntityDraftingTable extends VOTileEntity
 	
 	public BoxRoom getRoom()
 	{
+		BoxRoom room = new BoxRoom(this.min, this.max);
+		
 		room.setFunction(getFunction());
+		
 		if(hasCustomName())
 			room.setName(getCustomName());
+		
 		if(!tag.isEmpty())
 			room.setTagCompound(tag);
+		
 		return room;
 	}
 	
@@ -205,8 +326,11 @@ public class TileEntityDraftingTable extends VOTileEntity
 	{
 		super.markDirty();
 		if(getWorld() != null && !getWorld().isRemote)
+		{
+			System.out.println("Syncing clients with drafting table");
 			for(PlayerEntity player : getWorld().getPlayers())
 				if(player.getDistanceSq(new Vector3d(getPos().getX() + 0.5D, getPos().getY() + 0.5D, getPos().getZ() + 0.5D)) < (64 * 64))
 					((ServerPlayerEntity)player).connection.sendPacket(getUpdatePacket());
+		}
 	}
 }

@@ -9,9 +9,12 @@ import com.lying.variousoddities.entity.AbstractRat;
 import com.lying.variousoddities.entity.ai.group.EntityGroup;
 import com.lying.variousoddities.entity.ai.group.EntityGroupRat;
 import com.lying.variousoddities.entity.ai.group.GroupHandler;
+import com.lying.variousoddities.entity.passive.EntityRat;
+import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
@@ -22,8 +25,11 @@ import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.passive.CatEntity;
 import net.minecraft.entity.passive.OcelotEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
@@ -94,4 +100,20 @@ public class EntityRatGiant extends AbstractRat
 			}
 		}
 	}
+    
+    @Nullable
+    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
+    {
+    	super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+    	if(reason == SpawnReason.SPAWNER)
+	    	for(int i=0; i<getRNG().nextInt(4); i++)
+	    	{
+	    		EntityRat rat = VOEntities.RAT.create(getEntityWorld());
+	    		rat.setMinion(true);
+	    		rat.setBreed(getBreed());
+	    		rat.setLocationAndAngles(getPosX(), getPosY(), getPosZ(), getRNG().nextFloat() * 360F, 0F);
+	    		getEntityWorld().addEntity(rat);
+	    	}
+		return spawnDataIn;
+    }
 }

@@ -6,15 +6,19 @@ import com.lying.variousoddities.init.VOTileEntities;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 @OnlyIn(Dist.CLIENT)
 public class RendererHandler
 {
-	@SubscribeEvent
-	public static void registerRenderers(ModelRegistryEvent event)
+	private static boolean registered = false;
+	
+	public static void registerTileRenderers(ModelRegistryEvent event)
 	{
+		System.out.println("Registering tile entity renderers");
+		if(!registered)
+			registered = true;
+		
 		ClientRegistry.bindTileEntityRenderer(VOTileEntities.TABLE_DRAFTING, TileEntityDraftingTableRenderer::new);
 	}
 }

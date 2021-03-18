@@ -2,6 +2,7 @@ package com.lying.variousoddities.command;
 
 import java.util.Collection;
 
+import com.lying.variousoddities.api.EnumArgumentChecked;
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.init.VOItems;
@@ -54,7 +55,7 @@ public class CommandSettlement extends CommandBase
 	
 	public static void register(CommandDispatcher<CommandSource> dispatcher)
 	{
-		LiteralArgumentBuilder<CommandSource> literal = newLiteral("settlement")
+		LiteralArgumentBuilder<CommandSource> literal = newLiteral("settlement").requires((source) -> { return source.hasPermissionLevel(2); } )
 			.then(VariantList.build())
 			.then(VariantHere.build())
 			.then(VariantRemove.build())
@@ -557,15 +558,15 @@ public class CommandSettlement extends CommandBase
     					.executes(VariantRoomAdd::addFromHand)
     					.then(newArgument(POS_A, BlockPosArgument.blockPos())
     						.then(newArgument(POS_B, BlockPosArgument.blockPos())
-								.then(newArgument(FUNCTION, RoomFunctionArgument.function())
-									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), RoomFunctionArgument.getFunction(source, FUNCTION), null, null, source.getSource()); })
+								.then(newArgument(FUNCTION, EnumArgumentChecked.enumArgument(EnumRoomFunction.class))
+									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, null, source.getSource()); })
 									.then(newArgument(NAME, StringArgumentType.string())
-										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), RoomFunctionArgument.getFunction(source, FUNCTION), StringArgumentType.getString(source, NAME), null, source.getSource()); }))
+										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), null, source.getSource()); }))
 									.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), RoomFunctionArgument.getFunction(source, FUNCTION), null, NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))
+										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))
 									.then(newArgument(NAME, StringArgumentType.string())
 										.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-											.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), RoomFunctionArgument.getFunction(source, FUNCTION), StringArgumentType.getString(source, NAME), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))))
+											.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))))
 								.then(newArgument(NAME, StringArgumentType.string())
 									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), null, StringArgumentType.getString(source, NAME), null, source.getSource()); })
 									.then(newArgument(NBT, NBTCompoundTagArgument.nbt())

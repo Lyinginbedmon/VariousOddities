@@ -201,7 +201,8 @@ public abstract class AbstractRat extends CreatureEntity
     
     protected void collideWithEntity(Entity entityIn)
     {
-    	if(entityIn instanceof AbstractRat && ((AbstractRat)entityIn).ratSize() != ratSize()){ return; }
+    	if(entityIn instanceof AbstractRat && ((AbstractRat)entityIn).ratSize() != ratSize())
+    		return;
     	super.collideWithEntity(entityIn);
     }
 	

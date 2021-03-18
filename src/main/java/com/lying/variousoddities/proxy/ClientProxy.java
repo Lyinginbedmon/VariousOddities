@@ -3,6 +3,7 @@ package com.lying.variousoddities.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementManagerClient;
 import com.lying.variousoddities.client.SpellManagerClient;
 import com.lying.variousoddities.world.savedata.SettlementManager;
@@ -11,6 +12,7 @@ import com.lying.variousoddities.world.savedata.SpellManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ClientProxy extends CommonProxy
@@ -25,6 +27,11 @@ public class ClientProxy extends CommonProxy
 //	public TypesData getTypesData(){ return localTypesData; }
 	public Map<String, Integer> getReputation(){ return localReputation; }
 	public void setReputation(Map<String, Integer> repIn){ localReputation = repIn; }
+	
+	public void registerHandlers()
+	{
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(RendererHandler::registerTileRenderers);
+	}
 	
 	public PlayerEntity getPlayerEntity(NetworkEvent.Context ctx){ return (ctx.getDirection().getReceptionSide().isClient() ? mc.player : super.getPlayerEntity(ctx)); }
 	

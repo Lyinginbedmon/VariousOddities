@@ -3,6 +3,7 @@ package com.lying.variousoddities.utility;
 import java.util.List;
 import java.util.Random;
 
+import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
@@ -11,6 +12,7 @@ import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
 import com.lying.variousoddities.entity.passive.EntityGhastling;
 import com.lying.variousoddities.entity.passive.EntityRat;
+import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.potion.PotionSleep;
@@ -22,9 +24,12 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.FireballEntity;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -114,6 +119,30 @@ public class VOBusServer
 		for(EntityGoblin goblin : nearbyGoblins)
 			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
 				goblin.setGrowingAge(Math.max(0, goblin.getGrowingAge() - amount));
+	}
+	
+	@SubscribeEvent
+	public static void onLightingSpawnEvent(EntityJoinWorldEvent event)
+	{
+		if(event.getEntity().getType() == EntityType.LIGHTNING_BOLT)
+		{
+			BlockPos pos = event.getEntity().getPosition();
+			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 256, 1).offset(pos.getX(), 0, pos.getZ()).grow(128, 0, 128);
+			for(EntityWorg worg : event.getEntity().getEntityWorld().getEntitiesWithinAABB(EntityWorg.class, bounds))
+				worg.spook();
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onFireworkBlastEvent(FireworkExplosionEvent event)
+	{
+		ListNBT explosions = event.fireworkData() == null ? null : event.fireworkData().getList("Explosions", 10);
+		if(explosions != null && !explosions.isEmpty())
+		{
+			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 1, 1).offset(event.position()).grow(16 * explosions.size());
+			for(EntityWorg worg : event.world().getEntitiesWithinAABB(EntityWorg.class, bounds))
+				worg.spook();
+		}
 	}
 	
 	/**
