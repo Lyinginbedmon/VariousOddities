@@ -7,6 +7,7 @@ import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.tileentity.TileEntityDraftingTable;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 import com.mojang.brigadier.CommandDispatcher;
@@ -92,9 +93,9 @@ public class CommandSettlement extends CommandBase
     	int maxY = max.getY();
     	int maxZ = max.getZ();
 		if(room.hasCustomName())
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.room.index_name", new Object[]{index, room.getName(), room.getFunction().toString(), minX, minY, minZ, maxX, maxY, maxZ}), false);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.room.index_name", new Object[]{index, room.getName(), room.getFunction().getName(), minX, minY, minZ, maxX, maxY, maxZ}), false);
 		else
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.room.index", new Object[]{index, room.getFunction().getString(), minX, minY, minZ, maxX, maxY, maxZ}), false);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.room.index", new Object[]{index, room.getFunction().getName(), minX, minY, minZ, maxX, maxY, maxZ}), false);
     }
     
     public static void notifyListenerOfSettlement(Settlement settlement, SettlementManager manager, CommandSource source)
@@ -592,10 +593,15 @@ public class CommandSettlement extends CommandBase
     						ItemStack table = living.getHeldItemMainhand();
     						if(table.hasTag() && table.getTag().contains("BlockEntityTag", 10))
     						{
-    							// TODO Create completed room from stored drafting table data and add to settlement
-//    							CompoundNBT tableData = table.getTag().getCompound("BlockEntityTag");
-    							if(!(living instanceof PlayerEntity && ((PlayerEntity)living).isCreative()))
-    								table.shrink(1);
+    							CompoundNBT tableData = table.getTag().getCompound("BlockEntityTag");
+    							if(tableData.contains("Locked", 3) && tableData.getInt("Locked") == 15)
+    							{
+	    							if(!(living instanceof PlayerEntity && ((PlayerEntity)living).isCreative()))
+	    								table.shrink(1);
+	    							
+	    							BoxRoom room = TileEntityDraftingTable.getRoomFromNBT(tableData);
+	    							return add(settlement, room, source.getSource());
+    							}
     						}
     					}
     				}
@@ -605,18 +611,10 @@ public class CommandSettlement extends CommandBase
     			return 0;
     		}
     		
-    		public static int add(Settlement settlement, BlockPos posA, BlockPos posB, EnumRoomFunction function, String name, CompoundNBT nbt, CommandSource source)
+    		public static int add(Settlement settlement, BoxRoom room, CommandSource source)
     		{
-    			if(settlement != null)
+    			if(settlement != null && room != null)
     			{
-	    			BoxRoom room = new BoxRoom(posA, posB);
-	    			if(function != null)
-	    				room.setFunction(function);
-	    			if(name != null && name.length() > 0)
-	    				room.setName(name.replace(" ", "_"));
-	    			if(nbt != null && !nbt.isEmpty())
-	    				room.readFromNBT(nbt);
-	    			
 	    			settlement.addRoom(room);
 	    			
 	    			SettlementManager manager = SettlementManager.get(source.getWorld());
@@ -625,6 +623,19 @@ public class CommandSettlement extends CommandBase
 	    			return 15;
     			}
     			return 0;
+    		}
+    		
+    		public static int add(Settlement settlement, BlockPos posA, BlockPos posB, EnumRoomFunction function, String name, CompoundNBT nbt, CommandSource source)
+    		{
+    			BoxRoom room = new BoxRoom(posA, posB);
+    			if(function != null)
+    				room.setFunction(function);
+    			if(name != null && name.length() > 0)
+    				room.setName(name.replace(" ", "_"));
+    			if(nbt != null && !nbt.isEmpty())
+    				room.readFromNBT(nbt);
+    			
+    			return add(settlement, room, source);
     		}
     	}
     	

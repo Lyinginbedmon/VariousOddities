@@ -1,6 +1,8 @@
 package com.lying.variousoddities.client;
 
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.client.renderer.tileentity.TileEntityDraftingTableRenderer;
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOTileEntities;
 
 import net.minecraftforge.api.distmarker.Dist;
@@ -15,7 +17,9 @@ public class RendererHandler
 	
 	public static void registerTileRenderers(ModelRegistryEvent event)
 	{
-		System.out.println("Registering tile entity renderers");
+		if(ConfigVO.GENERAL.verboseLogs())
+			VariousOddities.log.info("Registering tile entity renderers");
+		
 		if(!registered)
 			registered = true;
 		

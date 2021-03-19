@@ -15,14 +15,16 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.StringTextComponent;
 
 public class TileEntityDraftingTable extends VOTileEntity
 {
-	public String customName = "";
+	public String title = "";
 	private BlockPos min, max;
 	private EnumRoomFunction function = EnumRoomFunction.NONE;
 	private CompoundNBT tag = new CompoundNBT();
 	
+	private boolean showBounds = false;
 	List<BlockPos> mustInclude = new ArrayList<>();
 	
 	/**
@@ -54,16 +56,13 @@ public class TileEntityDraftingTable extends VOTileEntity
 	public void loadFromNbt(CompoundNBT compound)
 	{
 		if(compound.contains("CustomName", 8))
-			this.customName = compound.getString("CustomName").replace(" ", "_");
+			this.title = compound.getString("CustomName");
 		
-		if(compound.contains("Start", 10))
-			this.min = NBTUtil.readBlockPos(compound.getCompound("Start"));
+		this.min = NBTUtil.readBlockPos(compound.getCompound("Start"));
 		
-		if(compound.contains("End", 10))
-			this.max = NBTUtil.readBlockPos(compound.getCompound("End"));
+		this.max = NBTUtil.readBlockPos(compound.getCompound("End"));
 		
-		if(compound.contains("Function", 8))
-			this.function = EnumRoomFunction.fromString(compound.getString("Function"));
+		this.function = EnumRoomFunction.fromString(compound.getString("Function"));
 		
 		if(compound.contains("Tag", 10))
 			this.tag = compound.getCompound("Tag");
@@ -78,22 +77,21 @@ public class TileEntityDraftingTable extends VOTileEntity
 				this.mustInclude.add(NBTUtil.readBlockPos(includes.getCompound(i)));
 		}
 		
-		markDirty();
+		this.showBounds = compound.getBoolean("ShowBounds");
+		
+		super.markDirty();
 	}
 	
 	public CompoundNBT saveToNbt(CompoundNBT compound)
 	{
-		if(!canAlter(8) && hasCustomName())
-			compound.putString("CustomName", getCustomName());
+		if(hasTitle())
+			compound.putString("CustomName", getTitle());
 		
-		if(!canAlter(1))
-			compound.put("Start", NBTUtil.writeBlockPos(this.min));
+		compound.put("Start", NBTUtil.writeBlockPos(this.min()));
 		
-		if(!canAlter(2))
-			compound.put("End", NBTUtil.writeBlockPos(this.max));
+		compound.put("End", NBTUtil.writeBlockPos(this.max()));
 		
-		if(!canAlter(4))
-			compound.putString("Function", getFunction().getString());
+		compound.putString("Function", getFunction().getString());
 		
 		if(!this.tag.isEmpty())
 			compound.put("Tag", this.tag);
@@ -108,11 +106,21 @@ public class TileEntityDraftingTable extends VOTileEntity
 				list.add(NBTUtil.writeBlockPos(pos));
 			compound.put("MustInclude", list);
 		}
+		
+		compound.putBoolean("ShowBounds", this.showBounds);
+		
 		return compound;
 	}
 	
+	public boolean showBoundaries(){ return this.showBounds; }
+	public void toggleBoundaries(){ this.showBounds = !this.showBounds; markDirty(); }
+	
 	public int bitMask(){ return this.lockMask; }
-	public void setMask(int bitIn){ this.lockMask = Math.max(0, Math.min(15, bitIn)); }
+	public void setMask(int bitIn)
+	{
+		this.lockMask = Math.max(0, Math.min(15, bitIn));
+		markDirty();
+	}
 	
 	/**
 	 * Returns true if the given variable can be modified.<br>
@@ -126,6 +134,13 @@ public class TileEntityDraftingTable extends VOTileEntity
 		return canAlter(bit, this.lockMask);
 	}
 	
+	/**
+	 * Returns true if the given variable can be modified.<br>
+	 * 1 = Min co-ordinate<br>
+	 * 2 = Max co-ordinate<br>
+	 * 4 = Function<br>
+	 * 8 = Custom name<br>
+	 */
 	public static boolean canAlter(int bit, int bitMask)
 	{
 		return !Boolean.valueOf((bitMask & bit) > 0);
@@ -297,27 +312,31 @@ public class TileEntityDraftingTable extends VOTileEntity
 		markDirty();
 	}
 	
-	public boolean hasCustomName(){ return this.customName != null && this.customName.length() > 0; }
+	public boolean hasTitle(){ return this.title != null && this.title.length() > 0; }
 	
-	public String getCustomName(){ return !hasCustomName() ? "" : this.customName; }
+	public String getTitle(){ return !hasTitle() ? "" : this.title; }
 	
-	public void setCustomName(String nameIn)
+	public void setTitle(String nameIn)
 	{
-		this.customName = nameIn.replace(" ", "_");
+		this.title = nameIn;
 		markDirty();
 	}
 	
-	public BoxRoom getRoom()
+	public static BoxRoom getRoomFromNBT(CompoundNBT tableData)
 	{
-		BoxRoom room = new BoxRoom(this.min, this.max);
+		if(!tableData.contains("Locked", 3) || tableData.getInt("Locked") != 15)
+			return null;
 		
-		room.setFunction(getFunction());
+		String name = tableData.contains("CustomName", 8) ? tableData.getString("CustomName") : "";
+		BlockPos min = NBTUtil.readBlockPos(tableData.getCompound("Start"));
+		BlockPos max = NBTUtil.readBlockPos(tableData.getCompound("End"));
+		EnumRoomFunction function = EnumRoomFunction.fromString(tableData.getString("Function"));
+		CompoundNBT tag = tableData.contains("Tag", 10) ? tableData.getCompound("Tag") : new CompoundNBT();
 		
-		if(hasCustomName())
-			room.setName(getCustomName());
-		
-		if(!tag.isEmpty())
-			room.setTagCompound(tag);
+		BoxRoom room = new BoxRoom(min, max);
+		room.setTitle(new StringTextComponent(name));
+		room.setFunction(function);
+		room.setTagCompound(tag);
 		
 		return room;
 	}
@@ -327,10 +346,19 @@ public class TileEntityDraftingTable extends VOTileEntity
 		super.markDirty();
 		if(getWorld() != null && !getWorld().isRemote)
 		{
-			System.out.println("Syncing clients with drafting table");
 			for(PlayerEntity player : getWorld().getPlayers())
 				if(player.getDistanceSq(new Vector3d(getPos().getX() + 0.5D, getPos().getY() + 0.5D, getPos().getZ() + 0.5D)) < (64 * 64))
 					((ServerPlayerEntity)player).connection.sendPacket(getUpdatePacket());
 		}
+	}
+	
+	public void writePacketNBT(CompoundNBT compound)
+	{
+		saveToNbt(compound);
+	}
+	
+	public void readPacketNBT(CompoundNBT compound)
+	{
+		loadFromNbt(compound);
 	}
 }

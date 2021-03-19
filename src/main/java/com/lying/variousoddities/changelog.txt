@@ -18,5 +18,6 @@ Changes
 	Creature types now include a few new types with their own features and more smoothly affect drowning, starving, and sleeping (Players that can't sleep do not spawn phantoms)
 	Goblins are now persistent creatures
 	Commands changed to require operator status
+	Drafting tables can now be used to fully define a new room for a settlement, use "/settlement room <index or name> add" to add a finalised room to an existing settlement 
 	Fixed an inconsistent bug related to goblins taking damage
 	Fixed a bug related to custom command arguments preventing joining multiplayer servers

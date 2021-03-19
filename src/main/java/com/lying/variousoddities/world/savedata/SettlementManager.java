@@ -182,7 +182,7 @@ public abstract class SettlementManager extends WorldSavedData
 	public Settlement getTitleSettlementAt(BlockPos pos)
 	{
 		for(Settlement settlement : this.settlements.values())
-			if(settlement.hasTitle() && settlement.hasRooms() && settlement.getTitleRange() >= 0)
+			if(settlement.hasRooms() && settlement.getTitleRange() >= 0)
 				for(BoxRoom room : settlement.getRooms())
 					if(room.getBounds().grow(settlement.getTitleRange()).contains(new Vector3d(pos.getX(), pos.getY(), pos.getZ())))
 						return settlement;

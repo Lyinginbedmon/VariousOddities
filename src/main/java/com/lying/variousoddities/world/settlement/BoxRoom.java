@@ -82,8 +82,9 @@ public class BoxRoom
 	public BlockPos max(){ return this.max; }
 	
 	public boolean hasTitle(){ return getTitle() != null; }
-	
+	/** Returns the splash displayed when a player enters this room, if any */
 	public ITextComponent getTitle(){ return this.title; }
+	public void setTitle(ITextComponent titleIn){ this.title = titleIn; }
 	
 	public boolean hasCustomName()
 	{
@@ -95,6 +96,7 @@ public class BoxRoom
 		this.customName = nameIn;
 	}
 	
+	/** Returns the custom registry name of this room. */
 	public String getName()
 	{
 		return this.customName;
@@ -330,7 +332,7 @@ public class BoxRoom
 			setName(compound.getString("CustomName"));
 		
 		if(compound.contains("Title"))
-			this.title = ITextComponent.Serializer.getComponentFromJsonLenient(compound.getString("Title"));
+			setTitle(ITextComponent.Serializer.getComponentFromJsonLenient(compound.getString("Title")));
 		
 		if(compound.contains("Function"))
 			setFunction(EnumRoomFunction.fromString(compound.getString("Function")));

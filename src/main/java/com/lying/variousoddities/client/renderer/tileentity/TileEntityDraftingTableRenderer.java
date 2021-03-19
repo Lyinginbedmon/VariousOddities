@@ -24,7 +24,7 @@ public class TileEntityDraftingTableRenderer extends TileEntityRenderer<TileEnti
 	
     public void render(TileEntityDraftingTable te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn)
     {
-        if(!Minecraft.isGuiEnabled() || Minecraft.getInstance().player.isSpectator()) return;
+        if(!Minecraft.isGuiEnabled() || Minecraft.getInstance().player.isSpectator() || !te.showBoundaries()) return;
         
         BlockPos posMin = te.min().subtract(te.getPos());
         BlockPos size = te.size();

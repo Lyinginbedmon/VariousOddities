@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.client.gui.GuiDraftingTable;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.init.VOTileEntities;
@@ -143,19 +144,13 @@ public class BlockDraftingTable extends VOBlockRotated implements ITileEntityPro
 		{
 			CompoundNBT blockData = stack.getChildTag("BlockEntityTag");
 			
-			if(blockData.contains("CustomName", 8))
-			{
- 				IFormattableTextComponent name = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_1", blockData.getString("CustomName").replace(" ", "_")); 
- 				name.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GRAY); });
- 				tooltip.add(name);
-			}
+			int lock = blockData.contains("Locked", 3) ? blockData.getInt("Locked") : 0;
 			
-			if(blockData.contains("Function", 8))
- 			{
- 				IFormattableTextComponent function = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_2", blockData.getString("Function"));
- 				function.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GRAY); });
- 				tooltip.add(function);
- 			}
+			if(blockData.contains("CustomName", 8) && !TileEntityDraftingTable.canAlter(8, lock))
+ 				tooltip.add(setFormatting(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_1", blockData.getString("CustomName").replace(" ", "_")), TextFormatting.GRAY));
+			
+			if(blockData.contains("Function", 8) && !TileEntityDraftingTable.canAlter(4, lock))
+ 				tooltip.add(setFormatting(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_2", EnumRoomFunction.fromString(blockData.getString("Function")).getName()), TextFormatting.GRAY));
 			
 			BlockPos min = blockData.contains("Start", 10) ? NBTUtil.readBlockPos(blockData.getCompound("Start")) : null;
 			BlockPos max = blockData.contains("End", 10) ? NBTUtil.readBlockPos(blockData.getCompound("End")) : null;
@@ -163,27 +158,35 @@ public class BlockDraftingTable extends VOBlockRotated implements ITileEntityPro
 			if(min != null && max != null)
 			{
 	 			BlockPos size = max.subtract(min);
-	 			IFormattableTextComponent scale = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_5", size.getX(), size.getY(), size.getZ());
-	 			scale.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GRAY); });
-	 			tooltip.add(scale);
+	 			tooltip.add(setFormatting(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_5", size.getX(), size.getY(), size.getZ()), TextFormatting.GRAY));
 			}
 			
-			if(min != null)
-			{
-	 			IFormattableTextComponent start = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_3", min.getX(), min.getY(), min.getZ()); 
- 				start.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.DARK_GRAY).setItalic(true); });
-	 			tooltip.add(new StringTextComponent("  ").append(start));
-			}
+			if(min != null && !TileEntityDraftingTable.canAlter(1, lock))
+	 			tooltip.add(new StringTextComponent("  ").append(setFormatting(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_3", min.getX(), min.getY(), min.getZ()), TextFormatting.DARK_GRAY, true)));
 			
-			if(max != null)
-			{
-	 			IFormattableTextComponent end = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_4", max.getX(), max.getY(), max.getZ());
- 				end.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.DARK_GRAY).setItalic(true); });
-	 			tooltip.add(new StringTextComponent("  ").append(end));
-			}
+			if(max != null && !TileEntityDraftingTable.canAlter(2, lock))
+	 			tooltip.add(new StringTextComponent("  ").append(setFormatting(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_4", max.getX(), max.getY(), max.getZ()), TextFormatting.DARK_GRAY, true)));
 			
-			if(blockData.contains("Locked", 3) && blockData.getInt("Locked") == 15)
-				tooltip.add(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_6").modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GOLD); }));
+			if(lock == 15)
+				tooltip.add(setFormatting(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.tooltip_6"), TextFormatting.GOLD));
 		}
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	private static ITextComponent setFormatting(IFormattableTextComponent textComponent, TextFormatting colour, boolean italic)
+	{
+		return textComponent.modifyStyle((style) -> { return style.applyFormatting(colour).setItalic(italic); });
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	private static ITextComponent setFormatting(IFormattableTextComponent textComponent, TextFormatting colour)
+	{
+		return setFormatting(textComponent, colour, false);
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	private static ITextComponent setFormatting(IFormattableTextComponent textComponent)
+	{
+		return setFormatting(textComponent, TextFormatting.DARK_GRAY);
 	}
 }

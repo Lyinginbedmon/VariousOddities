@@ -15,6 +15,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
+import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -76,11 +77,16 @@ public class GuiDraftingTable extends Screen
     	this.addButton(maxYDown = new BoundsButton(midX + 40, midY - 0, Axis.Y, AxisDirection.NEGATIVE, false, this));
     	this.addButton(maxZDown = new BoundsButton(midX + 60, midY - 0, Axis.Z, AxisDirection.NEGATIVE, false, this));
     	
-    	this.addButton(functionSelect = new Button(midX - 50, midY - 65, 100, 20, new StringTextComponent(theTable.getFunction().name().toLowerCase()), (button) -> 
+        this.addButton(new Button(midX - 17, midY - 40, 34, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.button.showbb"), (button) -> 
+    	{
+    		theTable.toggleBoundaries();
+    	}));
+    	
+    	this.addButton(functionSelect = new Button(midX - 50, midY - 65, 100, 20, theTable.getFunction().getName(), (button) -> 
     		{
 	    		EnumRoomFunction currentFunction = theTable.getFunction();
 	    		theTable.setFunction(EnumRoomFunction.values()[(currentFunction.ordinal() + 1) % EnumRoomFunction.values().length]);
-	    		functionSelect.setMessage(new StringTextComponent(theTable.getFunction().getString()));
+	    		functionSelect.setMessage(theTable.getFunction().getName());
 	        	updateButtons();
 	        	sendToServer();
     		}));
@@ -89,13 +95,13 @@ public class GuiDraftingTable extends Screen
         this.nameField.setTextColor(-1);
         this.nameField.setEnableBackgroundDrawing(false);
         this.nameField.setDisabledTextColour(-1);
-        this.nameField.setMaxStringLength(25);
-        this.nameField.setText(theTable.getCustomName());
+        this.nameField.setMaxStringLength(16);
+        this.nameField.setText(theTable.getTitle());
     	this.children.add(this.nameField);
     	if(theTable.canAlter(8))
     		this.setFocusedDefault(this.nameField);
         
-        this.addButton(signButton = new Button(midX - 50, midY + 30, 100, 20, new TranslationTextComponent("book.signButton"), (button) -> 
+        this.addButton(signButton = new Button(midX - 35, midY + 30, 70, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".drafting_table.button.save"), (button) -> 
         	{
         		theTable.setMask(15);
         		sendToServer();
@@ -146,23 +152,28 @@ public class GuiDraftingTable extends Screen
 		
 		int midX = this.width / 2;
 		int midY = this.height / 2;
-		ITextComponent title = getTitle();
-        this.font.func_243248_b(matrixStack, title, midX - this.font.getStringWidth(title.getUnformattedComponentText()), midY - 95, 4210752);
+        drawCentred(matrixStack, getTitle(), midX, midY - 95, 4210752);
         
-        String minX = String.valueOf(theTable.min().getX() + ", " + theTable.min().getY() + ", " + theTable.min().getZ());
-        this.font.drawString(matrixStack, minX, midX - 20 - this.font.getStringWidth(minX), midY - 14, 4210752);
-        String maxX = String.valueOf(theTable.max().getX() + ", " + theTable.max().getY() + ", " + theTable.max().getZ());
-        this.font.drawString(matrixStack, maxX, midX + 80 - this.font.getStringWidth(maxX), midY - 14, 4210752);
+        ITextComponent start = new StringTextComponent(theTable.min().getX() + ", " + theTable.min().getY() + ", " + theTable.min().getZ());
+        drawCentred(matrixStack, start, midX - 50, midY - 14, 4210752);
+        ITextComponent end = new StringTextComponent(theTable.max().getX() + ", " + theTable.max().getY() + ", " + theTable.max().getZ());
+        drawCentred(matrixStack, end, midX + 50, midY - 14, 4210752);
+	}
+	
+	private void drawCentred(MatrixStack matrix, ITextComponent text, int x, int y, int colour)
+	{
+		IReorderingProcessor ireorderingprocessor = text.func_241878_f();
+		this.font.func_238422_b_(matrix, ireorderingprocessor, (float)(x - this.font.func_243245_a(ireorderingprocessor) / 2), (float)y, colour);
 	}
     
-    private void updateName()
+    private void updateTitle()
     {
     	String s = this.nameField.getText();
     	
     	if(s == null || s.length() == 0)
     		s = "";
     	
-    	theTable.customName = s.replace(" ", "_");
+    	theTable.setTitle(s);
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers)
@@ -212,7 +223,7 @@ public class GuiDraftingTable extends Screen
     {
         try
         {
-        	updateName();
+        	updateTitle();
             PacketHandler.sendToServer(new PacketTileUpdate(theTable));
             return true;
         }

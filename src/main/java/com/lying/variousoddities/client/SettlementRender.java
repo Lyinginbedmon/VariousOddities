@@ -2,7 +2,6 @@ package com.lying.variousoddities.client;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.world.settlement.Settlement;
-import com.lying.variousoddities.utility.VOHelper;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -52,7 +51,6 @@ public class SettlementRender
 		SettlementManager localManager = VariousOddities.proxy.getSettlementManager(mc.world);
 		if(!localManager.isEmpty())
 		{
-			
 			Settlement currentSettlement = localManager.getTitleSettlementAt(clientPlayer.getPosition());
 			int settlementHere = localManager.getIndexBySettlement(currentSettlement);
 			
@@ -62,12 +60,8 @@ public class SettlementRender
 			// If we've entered a different settlement, announce accordingly
 			else if(settlementHere != latestSettlement)
 			{
-				if(currentSettlement != null)
-					if(currentSettlement.hasTitle())
-					{
-						STitlePacket titlePacket = new STitlePacket(STitlePacket.Type.TITLE, currentSettlement.getTitle());
-						mc.getConnection().handleTitle(titlePacket);
-					}
+				if(currentSettlement != null && currentSettlement.hasTitle())
+					mc.getConnection().handleTitle(new STitlePacket(STitlePacket.Type.TITLE, currentSettlement.getTitle()));
 				
 				latestSettlement = settlementHere;
 			}
@@ -97,7 +91,7 @@ public class SettlementRender
 			}
 			
 			// If player is creative or spectator, display room boundaries
-			if(VOHelper.isCreativeOrSpectator(clientPlayer))
+			if(clientPlayer.canUseCommandBlock())
 				for(Settlement settlement : localManager.getSettlements())
 					renderSettlementRooms(settlement, event.getMatrixStack(), event.getPartialTicks());
 		}
