@@ -66,6 +66,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		 * TODO Warg AI
 		 * Prey hunting & eating (cows, llamas, pigs, sheep)
 		 */
+		
 	}
 	
 	public AgeableEntity func_241840_a(ServerWorld arg0, AgeableEntity arg1)

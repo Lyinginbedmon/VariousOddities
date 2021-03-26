@@ -9,6 +9,7 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.types.TypeHandler.EnumDamageResist;
+import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
@@ -45,11 +46,17 @@ public class TypeBus
 	{
 		if(!shouldFire()) return;
 		if(event.getPlayer() != null)
-			if(!EnumCreatureType.ActionSet.fromTypes(CreatureTypes.getMobTypes(event.getEntityLiving())).sleeps())
+		{
+			PlayerEntity player = event.getPlayer();
+			if(player.getEntityWorld().isRemote) return;
+			
+			TypesManager manager = TypesManager.get(player.getEntityWorld());
+			if(!EnumCreatureType.ActionSet.fromTypes(manager.getMobTypes(player)).sleeps())
 			{
 				event.setResult(SleepResult.NOT_POSSIBLE_NOW);
 				return;
 			}
+		}
 	}
 	
 	/** Applies immunity and resistance to critical hits, usually by types lacking discernable vulnerabilities */
@@ -57,9 +64,10 @@ public class TypeBus
 	public static void onCriticalHitEvent(CriticalHitEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
+		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity && !event.getEntityLiving().getEntityWorld().isRemote)
 		{
-			for(EnumCreatureType mobType : CreatureTypes.getMobTypes(event.getEntityLiving()))
+			TypesManager manager = TypesManager.get(event.getTarget().getEntityWorld());
+			for(EnumCreatureType mobType : manager.getMobTypes(event.getEntityLiving()))
 			{
 				if(!mobType.getHandler().canCriticalHit())
 				{
@@ -78,9 +86,10 @@ public class TypeBus
 	public static void onLivingAttackEvent(LivingAttackEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
+		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive() && !event.getEntityLiving().getEntityWorld().isRemote)
 		{
-			List<EnumCreatureType> types = CreatureTypes.getMobTypes(event.getEntityLiving());
+			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
+			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
 			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(types);
 			DamageSource source = event.getSource();
 			
@@ -99,7 +108,7 @@ public class TypeBus
 			else
 			{
 				EnumDamageResist resistance = EnumDamageResist.NORMAL;
-				for(EnumCreatureType mobType : CreatureTypes.getMobTypes(event.getEntityLiving()))
+				for(EnumCreatureType mobType : types)
 				{
 					resistance = resistance.add(mobType.getHandler().getDamageResist(event.getSource()));
 					mobType.getHandler().onDamageEventPre(event);
@@ -117,9 +126,10 @@ public class TypeBus
 	public static void onLivingHurtEvent(LivingHurtEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
+		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive() && !event.getEntityLiving().getEntityWorld().isRemote)
 		{
-			List<EnumCreatureType> types = CreatureTypes.getMobTypes(event.getEntityLiving());
+			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
+			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
 			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(types);
 			
 			DamageSource source = event.getSource();
@@ -144,7 +154,7 @@ public class TypeBus
 			else
 			{
 				EnumDamageResist resistance = EnumDamageResist.NORMAL;
-				for(EnumCreatureType mobType : CreatureTypes.getMobTypes(event.getEntityLiving()))
+				for(EnumCreatureType mobType : types)
 				{
 					resistance = resistance.add(mobType.getHandler().getDamageResist(source));
 					mobType.getHandler().onDamageEventPost(event);
@@ -167,7 +177,11 @@ public class TypeBus
 	@SubscribeEvent
 	public static void onLivingDamageEvent(LivingDamageEvent event)
 	{
-		if(!shouldFire() || !CreatureTypes.hasCustomAttributes(event.getEntityLiving())) return;
+		if(!shouldFire()) return;
+		if(event.getEntityLiving().getEntityWorld().isRemote) return;
+		
+		TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
+		if(!manager.hasCustomAttributes(event.getEntityLiving())) return;
 		
 		if(event.getSource().getTrueSource() != null && event.getSource().getTrueSource() instanceof LivingEntity)
 		{
@@ -175,7 +189,7 @@ public class TypeBus
 			if(!livingSource.getHeldItemMainhand().isEmpty() && livingSource.getHeldItemMainhand().isEnchanted())
 			{
 				CreatureAttribute actualType = event.getEntityLiving().getCreatureAttribute();
-				List<CreatureAttribute> configTypes = CreatureTypes.getCreatureAttributes(event.getEntityLiving());
+				List<CreatureAttribute> configTypes = manager.getCreatureAttributes(event.getEntityLiving());
 				
 				Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(livingSource.getHeldItemMainhand());
 				
@@ -210,10 +224,11 @@ public class TypeBus
 	public static void onMobUpdateEvent(LivingUpdateEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
+		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive() && !event.getEntityLiving().getEntityWorld().isRemote)
 		{
 			LivingEntity living = event.getEntityLiving();
-			List<EnumCreatureType> types = CreatureTypes.getMobTypes(living);
+			TypesManager manager = TypesManager.get(living.getEntityWorld());
+			List<EnumCreatureType> types = manager.getMobTypes(living);
 			for(EnumCreatureType mobType : types)
 			{
 				TypeHandler handler = mobType.getHandler();
@@ -266,20 +281,26 @@ public class TypeBus
 	public static void onSpellAffectEntityEvent(SpellAffectEntityEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
-			for(EnumCreatureType mobType : CreatureTypes.getMobTypes((LivingEntity)event.getTarget()))
+		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity && !event.getWorld().isRemote)
+		{
+			TypesManager manager = TypesManager.get(event.getTarget().getEntityWorld());
+			for(EnumCreatureType mobType : manager.getMobTypes((LivingEntity)event.getTarget()))
 				if(!mobType.getHandler().canSpellAffect(event.getSpellData().getSpell()))
 				{
 					event.setCanceled(true);
 					return;
 				}
+		}
 	}
 	
 	@SubscribeEvent
 	public static void onBreakSpeedEvent(BreakSpeed event)
 	{
+		if(!shouldFire()) return;
 		PlayerEntity player = event.getPlayer();
-		if(CreatureTypes.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
+		if(player.getEntityWorld().isRemote) return;
+		TypesManager manager = TypesManager.get(player.getEntityWorld());
+		if(manager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
 			event.setNewSpeed(event.getNewSpeed() * 1.3F);
 	}
 	

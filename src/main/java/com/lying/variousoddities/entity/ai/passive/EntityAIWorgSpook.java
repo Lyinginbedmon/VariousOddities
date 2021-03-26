@@ -18,7 +18,12 @@ public class EntityAIWorgSpook extends PanicGoal
 	public boolean shouldExecute()
 	{
 		if(this.creature.isSpooked())
-			return findRandomPosition();
+		{
+			if(!creature.getGenetics().gene(5))
+				this.creature.unSpook();
+			else
+				return findRandomPosition();
+		}
 		return false;
 	}
 	

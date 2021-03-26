@@ -1,13 +1,11 @@
 package com.lying.variousoddities.config;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.lying.variousoddities.entity.NaturalSpawns;
 import com.lying.variousoddities.init.VOEntities;
-import com.lying.variousoddities.types.CreatureTypes;
+import com.lying.variousoddities.types.CreatureTypeDefaults;
 import com.lying.variousoddities.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.FactionManager;
 
@@ -250,8 +248,6 @@ public class ConfigVO
 			private Map<EnumCreatureType, ForgeConfigSpec.ConfigValue<String>> playerTypes = new HashMap<>();
 			
 			private boolean typesActive = true;
-			private Map<EnumCreatureType, String[]> mobTypesCache = new HashMap<>();
-			private Map<EnumCreatureType, String[]> playerTypesCache = new HashMap<>();
 			
 			public TypeSettings(ForgeConfigSpec.Builder builder)
 			{
@@ -261,18 +257,12 @@ public class ConfigVO
 				
 				builder.push("Mobs");
 			        for(EnumCreatureType type : EnumCreatureType.values())
-			        {
-		        		mobTypes.put(type, builder.define(type.name(), CreatureTypes.typeToMobDefaults.getOrDefault(type, "")));
-		        		mobTypesCache.put(type, CreatureTypes.typeToMobDefaults.getOrDefault(type, "").split(","));
-			        }
+		        		mobTypes.put(type, builder.define(type.name(), CreatureTypeDefaults.getMobDefaults(type)));
 		        builder.pop();
 				
 		        builder.push("Players");
 			        for(EnumCreatureType type : EnumCreatureType.values())
-			        {
-			        	playerTypes.put(type, builder.define(type.name(), CreatureTypes.typeToPlayerDefaults.getOrDefault(type, "")));
-			        	playerTypesCache.put(type, CreatureTypes.typeToPlayerDefaults.getOrDefault(type, "").split(","));
-			        }
+			        	playerTypes.put(type, builder.define(type.name(), CreatureTypeDefaults.getPlayerDefaults(type)));
 		        builder.pop();
 		        
 				builder.pop();
@@ -282,84 +272,27 @@ public class ConfigVO
 			{
 				if(typesMatter != null)
 					typesActive = typesMatter.get();
-				
-				mobTypesCache.clear();
-				playerTypesCache.clear();
 			}
 			
 			public Map<EnumCreatureType, String[]> getMobTypes()
 			{
-				if(mobTypesCache.isEmpty())
-					for(EnumCreatureType type : mobTypes.keySet())
-						mobTypesCache.put(type, mobTypes.get(type).get().split(","));
+				Map<EnumCreatureType, String[]> types = new HashMap<>();
+				for(EnumCreatureType type : mobTypes.keySet())
+					types.put(type, mobTypes.get(type).get().split(","));
 				
-				return mobTypesCache;
+				return types;
 			}
 			
 			public Map<EnumCreatureType, String[]> getPlayerTypes()
 			{
-				if(playerTypesCache.isEmpty())
-					for(EnumCreatureType type : playerTypes.keySet())
-						playerTypesCache.put(type, playerTypes.get(type).get().split(","));
+				Map<EnumCreatureType, String[]> types = new HashMap<>();
+				for(EnumCreatureType type : playerTypes.keySet())
+					types.put(type, playerTypes.get(type).get().split(","));
 				
-				return playerTypesCache;
+				return types;
 			}
 			
 			public boolean typesMatter(){ return typesActive; }
-			
-			public void addToPlayer(String name, EnumCreatureType type)
-			{
-				addToRegistry(playerTypes.get(type), name);
-				playerTypesCache.clear();
-			}
-			
-			public void addToEntity(String name, EnumCreatureType type)
-			{
-				addToRegistry(mobTypes.get(type), name);
-				mobTypesCache.clear();
-			}
-			
-			public void removeFromPlayer(String name, EnumCreatureType type)
-			{
-				ForgeConfigSpec.ConfigValue<String> configEntry = playerTypes.get(type);
-				List<String> entryList = Arrays.asList(ConfigVO.MOBS.typeSettings.getPlayerTypes().get(type));
-				removeFromRegistry(configEntry, entryList, name);
-				
-				playerTypesCache.clear();
-			}
-			
-			public void removeFromEntity(String name, EnumCreatureType type)
-			{
-				ForgeConfigSpec.ConfigValue<String> configEntry = mobTypes.get(type);
-				List<String> entryList = Arrays.asList(ConfigVO.MOBS.typeSettings.getMobTypes().get(type));
-				removeFromRegistry(configEntry, entryList, name);
-				
-				mobTypesCache.clear();
-			}
-	    	
-	    	private static void removeFromRegistry(ForgeConfigSpec.ConfigValue<String> configEntry, List<String> entryList, String target)
-	    	{
-				String removed = "";
-				for(String sup : entryList)
-				{
-					if(sup.equals(target)) continue;
-					if(removed.length() > 0)
-						removed += ",";
-					removed += sup;
-				}
-				
-				configEntry.set(removed);
-	    	}
-	    	
-	    	private static void addToRegistry(ForgeConfigSpec.ConfigValue<String> configEntry, String target)
-	    	{
-				String added = configEntry.get();
-				if(added.length() > 0)
-					added += ",";
-				added += target;
-				
-				configEntry.set(added);
-	    	}
 		}
 		
 		public static class FactionSettings

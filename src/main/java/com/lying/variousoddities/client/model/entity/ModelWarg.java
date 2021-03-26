@@ -3,6 +3,7 @@ package com.lying.variousoddities.client.model.entity;
 import java.util.Arrays;
 
 import com.lying.variousoddities.client.model.ModelUtils;
+import com.lying.variousoddities.entity.AbstractGoblinWolf.Genetics;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -15,7 +16,10 @@ import net.minecraft.util.math.MathHelper;
 public class ModelWarg extends TintedAgeableModel<EntityWarg>
 {
     public ModelRenderer head;
+    public ModelRenderer earLeft, earRight;
+    public ModelRenderer muzzle;
     public ModelRenderer jaw;
+    public ModelRenderer tongue;
     
     public ModelRenderer body;
     public ModelRenderer mane;
@@ -29,6 +33,7 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
     public ModelRenderer tail;
     
 	private final float JAW_RANGE = ModelUtils.toRadians(15D);
+	private final float TONGUE_GAP = ModelUtils.toRadians(3D);
 	private final float LEG_SPACE = 2.5F;
 	private float scaleFactor = 0F;
     
@@ -42,35 +47,40 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
         this.head.setTextureOffset(0, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, 0.0F);
         	// Headwear
         this.head.setTextureOffset(20, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, 0.25F);
-        	// Muzzle
-        this.head.setTextureOffset(0, 10).addBox(-1.5F, 0.0F, -6.0F, 3, 2, 4, 0.0F);
         	// Fangs
         this.head.setTextureOffset(14, 10).addBox(-1.5F, 2.0F, -6.0F, 3, 1, 4, 0.01F);
-        float earAlt = -2.25F;
-        float earDepth = 0.5F;
         float earSpace = 2.75F;
         	// Right ear
-	        ModelRenderer earRight = ModelUtils.freshRenderer(this);
-	        earRight.setRotationPoint(-earSpace, earAlt, earDepth);
-	        earRight.rotateAngleZ = -ModelUtils.degree90 / 3F;
-	        earRight.rotateAngleY = ModelUtils.degree10 * 2F;
-	        earRight.rotateAngleX = -ModelUtils.degree10 * 2F;
+	        earRight = ModelUtils.freshRenderer(this);
+	        earRight.setRotationPoint(-earSpace, -2.25F, 0.5F);
+	        earRight.rotateAngleX = -ModelUtils.toRadians(20D);
+	        earRight.rotateAngleY = ModelUtils.toRadians(20D);
+	        earRight.rotateAngleZ = -ModelUtils.toRadians(30D);
 	        earRight.setTextureOffset(28, 10).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, 0.0F);
         this.head.addChild(earRight);
         	// Left ear
-	        ModelRenderer earLeft = ModelUtils.freshRenderer(this);
-	        earLeft.setRotationPoint(earSpace, earAlt, earDepth);
+	        earLeft = ModelUtils.freshRenderer(this);
+	        earLeft.setRotationPoint(earSpace, -2.25F, 0.5F);
 	        earLeft.mirror = true;
-	        earLeft.rotateAngleZ = ModelUtils.degree90 / 3F;
-	        earLeft.rotateAngleY = -ModelUtils.degree10 * 2F;
-	        earLeft.rotateAngleX = -ModelUtils.degree10 * 2F;
+	        earLeft.rotateAngleX = -ModelUtils.toRadians(20D);
+	        earLeft.rotateAngleY = -ModelUtils.toRadians(20D);
+	        earLeft.rotateAngleZ = ModelUtils.toRadians(30D);
 	        earLeft.setTextureOffset(28, 14).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, 0.0F);
         this.head.addChild(earLeft);
+        
+        this.muzzle = ModelUtils.freshRenderer(this);
+        this.muzzle.setTextureOffset(0, 10).addBox(-1.5F, 0.0F, -6.0F, 3, 2, 4, 0.0F);
+        	this.head.addChild(this.muzzle);
         
         this.jaw = ModelUtils.freshRenderer(this);
         this.jaw.setRotationPoint(0F, 2.5F, -2F);
         this.jaw.setTextureOffset(0, 16).addBox(-1.5F, -0.5F, -4, 3, 1, 3);
-		this.head.addChild(jaw);
+		this.muzzle.addChild(jaw);
+		
+		this.tongue = ModelUtils.freshRenderer(this);
+		this.tongue.rotateAngleZ = ModelUtils.toRadians(10D);
+		this.tongue.setTextureOffset(16, 0).addBox(-2F, -0.7F, -3.75F, 1, 2, 2, -0.25F);
+		this.jaw.addChild(this.tongue);
         
         this.body = ModelUtils.freshRenderer(this);
         this.body.setRotationPoint(0.0F, 14.0F, 2.0F);
@@ -125,6 +135,12 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
 		
         if(entityIn.getAttackTarget() != null) tail.rotateAngleY = 0.0F;
         else tail.rotateAngleY = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+        
+        Genetics genetics = entityIn.getGenetics();
+        this.earRight.rotateAngleX = genetics.gene(0) ? ModelUtils.toRadians(20D) : -ModelUtils.toRadians(20D);
+        this.earLeft.rotateAngleX = genetics.gene(1) ? ModelUtils.toRadians(20D) : -ModelUtils.toRadians(20D);
+        this.muzzle.rotationPointZ = genetics.gene(2) ? 1F : 0F;
+        this.tongue.showModel = genetics.gene(3);
         
         float frontLegSpace = LEG_SPACE;
         float rearLegSpace = LEG_SPACE * 0.6F + 1F;
@@ -187,7 +203,8 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
         head.rotateAngleX = headPitch * 0.017453292F;
         head.rotateAngleY = netHeadYaw * 0.017453292F;
         
-        jaw.rotateAngleX = entityIn.getJawState(scaleFactor) * JAW_RANGE;
+        boolean tongue = entityIn.getGenetics().gene(3);
+        jaw.rotateAngleX = (tongue ? TONGUE_GAP : 0F) + entityIn.getJawState(scaleFactor) * (JAW_RANGE - (tongue ? TONGUE_GAP : 0F));
         jaw.rotationPointZ = -2F + jaw.rotateAngleX;
         
         tail.rotateAngleX = entityIn.getTailRotation();

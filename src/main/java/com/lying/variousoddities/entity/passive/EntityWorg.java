@@ -57,7 +57,6 @@ public class EntityWorg extends AbstractGoblinWolf
 		 */
 		this.goalSelector.addGoal(1, new EntityAIWorgSpook(this, 1.0D));
 		this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
-		this.goalSelector.addGoal(7, new BreedGoal(this, 1.0D));
 	}
     
     /**

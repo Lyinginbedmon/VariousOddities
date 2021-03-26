@@ -7,7 +7,7 @@ import java.util.Random;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.CreatureTypes;
+import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -77,7 +77,8 @@ public class EntityAISleep extends Goal
 	public boolean canSleep()
 	{
 		this.isMagicSleep = PotionSleep.hasSleepEffect(theMob);
-		List<EnumCreatureType> types = CreatureTypes.getMobTypes(theMob);
+		TypesManager manager = TypesManager.get(theMob.getEntityWorld());
+		List<EnumCreatureType> types = manager.getMobTypes(theMob);
 		if(this.isMagicSleep)
 			for(EnumCreatureType type : types)
 				;

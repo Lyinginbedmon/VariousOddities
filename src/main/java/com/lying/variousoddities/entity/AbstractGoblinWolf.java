@@ -56,7 +56,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  */
 public abstract class AbstractGoblinWolf extends TameableEntity
 {
-	protected static final DataParameter<Byte> GENETICS	= EntityDataManager.<Byte>createKey(AbstractGoblinWolf.class, DataSerializers.BYTE);
+	protected static final DataParameter<Integer> GENETICS	= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
 	
 	public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
 	public static final DataParameter<Boolean>	BEGGING		= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
@@ -130,7 +130,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public void writeAdditional(CompoundNBT compound)
     {
     	super.writeAdditional(compound);
-    	compound.putByte("Genes", getDataManager().get(GENETICS).byteValue());
+    	compound.putInt("Genes", getDataManager().get(GENETICS).intValue());
     	CompoundNBT display = new CompoundNBT();
     		display.putInt("Color", getColor());
     	compound.put("Display", display);
@@ -339,14 +339,13 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public boolean isNoDespawnRequired(){ return true; }
     
-    public Genetics getGenetics(){ return new Genetics(getDataManager().get(GENETICS).byteValue()); }
-    public void setGenetics(byte genesIn){ getDataManager().set(GENETICS, genesIn); }
+    public Genetics getGenetics(){ return new Genetics(getDataManager().get(GENETICS).intValue()); }
+    public void setGenetics(int genesIn){ getDataManager().set(GENETICS, genesIn); }
     public void setGenetics(Genetics genesIn){ setGenetics(genesIn.toVal()); }
     
     @Nullable
     public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
     {
-    	setGenetics(Genetics.random(getRNG()));
     	setColor(getRNG().nextInt(3));
 		return spawnDataIn;
     }
@@ -360,16 +359,16 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	/** Chance of gene mutation during breeding */
     	private static final float MUTATION = 0.3F;
     	
-    	public static final Genetics DEFAULT = new Genetics((byte)224);
+    	public static final Genetics DEFAULT = new Genetics(224);
     	
-    	private byte value = 0;
+    	private int value = 0;
     	
-    	public Genetics(byte byteIn)
+    	public Genetics(int byteIn)
     	{
-    		this.value = byteIn;
+    		this.value = Math.max(0, Math.min(255, byteIn));
     	}
     	
-    	public byte toVal(){ return value; }
+    	public int toVal(){ return value; }
     	
     	/**
     	 * Returns the value of the given gene.<br><br>
@@ -385,7 +384,9 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	public boolean gene(int n)
     	{
     		n = Math.max(0, Math.min(7, n));
-    		return (value & (1 << n) >> 0) == 1;
+    		
+//    		return (val & (1 << n) >> 0) == 1; // Flying's original
+    		return (((byte)value >> n) & 1) == 1;
     	}
     	
     	/** Returns a random cross of the given genetics, with additional random mutation */
@@ -404,7 +405,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     			val = val | (gene ? 1 << i : 0);
     		}
     		
-    		return new Genetics((byte)val);
+    		return new Genetics(val);
     	}
     	
     	/** Returns a random set of genes, suitable for a goblin-bred wolf */
@@ -414,7 +415,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     		for(int i=0; i<8; i++)
     			val = val | (rand.nextBoolean() || i >= 4 ? 1 << i : 0);
     		
-    		return new Genetics((byte)val);
+    		return new Genetics(val);
     	}
     }
 }

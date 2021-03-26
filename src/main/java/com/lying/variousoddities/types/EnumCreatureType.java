@@ -118,7 +118,7 @@ public enum EnumCreatureType
 			{
 				return !(spellIn.getSchool() == MagicSchool.ENCHANTMENT || spellIn.getDescriptors().contains(MagicSubType.DEATH));
 			}
-		}.noParalysis().noPoison().addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE), Action.NONE),
+		}.noCriticalHit().noParalysis().noPoison().addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE), Action.NONE),
 	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.ALL),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic());
 	
@@ -168,11 +168,19 @@ public enum EnumCreatureType
 		return names;
 	}
 	
+	public static List<String> getTypeNames()
+	{
+		List<String> names = new ArrayList<>();
+		for(EnumCreatureType type : values())
+			names.add(type.getSimpleName().toLowerCase());
+		return names;
+	}
+	
 	public boolean hasParentAttribute(){ return parentAttribute != null; }
 	public CreatureAttribute getParentAttribute(){ return parentAttribute; }
 	
 	public String getName(){ return translationBase+getSimpleName(); }
-	private String getSimpleName(){ return this.name().toLowerCase(); }
+	public String getSimpleName(){ return this.name().toLowerCase(); }
 	public String getDefinition(){ return translationBase+getSimpleName()+".definition"; }
 	public String getProperties(){ return translationBase+getSimpleName()+".properties"; }
 	public String getType(){ return translationBase + (supertype ? "supertype" : "subtype"); }
@@ -190,7 +198,7 @@ public enum EnumCreatureType
 	public static EnumCreatureType fromName(String nameIn)
 	{
 		for(EnumCreatureType type : EnumCreatureType.values())
-			if(type.name().equalsIgnoreCase(nameIn))
+			if(type.getSimpleName().equalsIgnoreCase(nameIn))
 				return type;
 		return null;
 	}
