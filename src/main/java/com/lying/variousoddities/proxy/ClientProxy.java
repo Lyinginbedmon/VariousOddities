@@ -8,6 +8,7 @@ import com.lying.variousoddities.client.SettlementManagerClient;
 import com.lying.variousoddities.client.SpellManagerClient;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
+import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
@@ -21,10 +22,10 @@ public class ClientProxy extends CommonProxy
 	private SettlementManager settlements = new SettlementManagerClient();
 	private SpellManager spells = new SpellManagerClient();
 	
-//	public static TypesData localTypesData = new TypesData();
+	public static TypesManager localTypesData = new TypesManager();
 	public static Map<String, Integer> localReputation = new HashMap<>();
 	
-//	public TypesData getTypesData(){ return localTypesData; }
+	public TypesManager getTypesManager(){ return localTypesData; }
 	public Map<String, Integer> getReputation(){ return localReputation; }
 	public void setReputation(Map<String, Integer> repIn){ localReputation = repIn; }
 	

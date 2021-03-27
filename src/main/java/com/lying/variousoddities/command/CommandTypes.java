@@ -228,7 +228,7 @@ public class CommandTypes extends CommandBase
     		{
     			if(type.getHandler().canApplyTo(manager.getMobTypes(entity)))
     			{
-    				manager.addToPlayer(entity.getName().getUnformattedComponentText(), type);
+    				manager.addToPlayer(entity.getName().getUnformattedComponentText(), type, report);
     				
     				if(report)
     				{
@@ -250,7 +250,7 @@ public class CommandTypes extends CommandBase
     		TypesManager manager = TypesManager.get(source.getWorld());
 			if(type.getHandler().canApplyTo(manager.getMobTypes(registry)))
 			{
-				manager.addToEntity(registry, type);
+				manager.addToEntity(registry, type, report);
 				
 				if(report)
 				{
@@ -281,7 +281,7 @@ public class CommandTypes extends CommandBase
     		if(entity.getType() == EntityType.PLAYER)
     		{
     			if(manager.isPlayerOfType((PlayerEntity)entity, type))
-    				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type);
+    				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type, true);
     			
     			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), entity.getName()), true);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
@@ -297,7 +297,7 @@ public class CommandTypes extends CommandBase
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
 			if(manager.isMobOfType(registry, type))
-				manager.removeFromEntity(registry, type);
+				manager.removeFromEntity(registry, type, true);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), registry.toString()), true);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), EnumCreatureType.typesToHeader(manager.getMobTypes(registry))), true);
     		return 15;
@@ -324,8 +324,8 @@ public class CommandTypes extends CommandBase
         		TypesManager manager = TypesManager.get(source.getWorld());
     			
     			for(EnumCreatureType type : manager.getPlayerTypes((PlayerEntity)entity, true))
-    				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type);
-    			
+    				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type, false);
+    			manager.markDirty();
         		if(report)
         			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear.success", entity.getName()), true);
     			return 15;
@@ -341,8 +341,8 @@ public class CommandTypes extends CommandBase
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		for(EnumCreatureType type : manager.getMobTypes(registry))
-    			manager.removeFromEntity(registry, type);
-    		
+    			manager.removeFromEntity(registry, type, false);
+    		manager.markDirty();
     		if(report)
     			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear.success", registry.toString()), true);
     		return 15;
@@ -430,7 +430,6 @@ public class CommandTypes extends CommandBase
 				return setTypeMob(mobRegistry, source, types);
 			else if(targetEntity != null && targetEntity instanceof LivingEntity)
 				return setTypeEntity(targetEntity, source, types);
-			
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.failed"), true);
 			return 0;
 		}
@@ -441,6 +440,7 @@ public class CommandTypes extends CommandBase
 			for(EnumCreatureType type : types)
 				VariantAdd.addToEntity(registry, type, source, false);
 			
+			TypesManager.get(source.getWorld()).markDirty();
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", registry.toString(), EnumCreatureType.typesToHeader(TypesManager.get(source.getWorld()).getMobTypes(registry))), true);
 			return 15;
 		}
@@ -450,6 +450,8 @@ public class CommandTypes extends CommandBase
 			VariantClear.clearFromMob(entity, source, false);
 			for(EnumCreatureType type : types)
 				VariantAdd.addToMob(entity, type, source, false);
+			
+			TypesManager.get(source.getWorld()).markDirty();
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", entity.getName(), EnumCreatureType.typesToHeader(TypesManager.get(source.getWorld()).getMobTypes(entity))), true);
 			return 15;
 		}

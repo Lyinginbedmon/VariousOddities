@@ -26,6 +26,8 @@ import net.minecraft.potion.Effects;
 import net.minecraft.stats.ServerStatisticsManager;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.DamageSource;
+import net.minecraft.world.World;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -40,6 +42,17 @@ public class TypeBus
 {
 	public static boolean shouldFire(){ return ConfigVO.MOBS.typeSettings.typesMatter(); }
 	
+	@SubscribeEvent
+	public static void onPlayerLogInEvent(EntityJoinWorldEvent event)
+	{
+		if(event.getEntity().getType() == EntityType.PLAYER)
+		{
+			World world = event.getWorld();
+			if(world != null && !world.isRemote)
+				TypesManager.get(world).notifyPlayer((PlayerEntity)event.getEntity());
+		}
+	}
+	
 	/** Prevents creatures that do not sleep from sleeping in a bed */
 	@SubscribeEvent
 	public static void onSleepEvent(PlayerSleepInBedEvent event)
@@ -48,8 +61,6 @@ public class TypeBus
 		if(event.getPlayer() != null)
 		{
 			PlayerEntity player = event.getPlayer();
-			if(player.getEntityWorld().isRemote) return;
-			
 			TypesManager manager = TypesManager.get(player.getEntityWorld());
 			if(!EnumCreatureType.ActionSet.fromTypes(manager.getMobTypes(player)).sleeps())
 			{
@@ -64,7 +75,7 @@ public class TypeBus
 	public static void onCriticalHitEvent(CriticalHitEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity && !event.getEntityLiving().getEntityWorld().isRemote)
+		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
 		{
 			TypesManager manager = TypesManager.get(event.getTarget().getEntityWorld());
 			for(EnumCreatureType mobType : manager.getMobTypes(event.getEntityLiving()))
@@ -86,7 +97,7 @@ public class TypeBus
 	public static void onLivingAttackEvent(LivingAttackEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive() && !event.getEntityLiving().getEntityWorld().isRemote)
+		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
 		{
 			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
 			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
@@ -126,7 +137,7 @@ public class TypeBus
 	public static void onLivingHurtEvent(LivingHurtEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive() && !event.getEntityLiving().getEntityWorld().isRemote)
+		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
 		{
 			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
 			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
@@ -178,7 +189,6 @@ public class TypeBus
 	public static void onLivingDamageEvent(LivingDamageEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving().getEntityWorld().isRemote) return;
 		
 		TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
 		if(!manager.hasCustomAttributes(event.getEntityLiving())) return;
@@ -224,7 +234,7 @@ public class TypeBus
 	public static void onMobUpdateEvent(LivingUpdateEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive() && !event.getEntityLiving().getEntityWorld().isRemote)
+		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
 		{
 			LivingEntity living = event.getEntityLiving();
 			TypesManager manager = TypesManager.get(living.getEntityWorld());
@@ -281,7 +291,7 @@ public class TypeBus
 	public static void onSpellAffectEntityEvent(SpellAffectEntityEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity && !event.getWorld().isRemote)
+		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
 		{
 			TypesManager manager = TypesManager.get(event.getTarget().getEntityWorld());
 			for(EnumCreatureType mobType : manager.getMobTypes((LivingEntity)event.getTarget()))

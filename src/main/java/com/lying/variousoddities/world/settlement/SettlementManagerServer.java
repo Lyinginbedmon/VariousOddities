@@ -10,6 +10,7 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSettlementData;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -69,7 +70,7 @@ public class SettlementManagerServer extends SettlementManager
 	@SubscribeEvent
 	public static void onPlayerLogInEvent(EntityJoinWorldEvent event)
 	{
-		if(event.getEntity() instanceof PlayerEntity)
+		if(event.getEntity().getType() == EntityType.PLAYER)
 		{
 			World world = event.getWorld();
 			if(world != null && !world.isRemote)

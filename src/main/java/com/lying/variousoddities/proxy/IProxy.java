@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
+import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
@@ -13,7 +14,7 @@ public interface IProxy
 {
 	public default void registerHandlers(){ }
 	
-//	public default TypesData getTypesData(){ return null; }
+	public TypesManager getTypesManager();
 	
 	public default Map<String, Integer> getReputation(){ return new HashMap<String, Integer>(); }
 	public default void setReputation(Map<String, Integer> repIn){ }

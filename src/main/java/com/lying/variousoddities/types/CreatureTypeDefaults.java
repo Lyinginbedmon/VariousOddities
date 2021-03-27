@@ -139,5 +139,6 @@ public class CreatureTypeDefaults
 		addPlayerToTypeDefaults("_Booked",					EnumCreatureType.FEY, EnumCreatureType.OUTSIDER);
 		addPlayerToTypeDefaults("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.AUGMENTED);
 		addPlayerToTypeDefaults("Exandrian",				EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC, EnumCreatureType.EXTRAPLANAR);
+		addPlayerToTypeDefaults("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH);
 	}
 }

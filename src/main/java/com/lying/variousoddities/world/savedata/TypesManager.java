@@ -6,7 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketTypesData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.EnumCreatureType;
 
@@ -15,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
@@ -30,6 +34,8 @@ public class TypesManager extends WorldSavedData
 	private Map<EnumCreatureType, List<ResourceLocation>> typeToMob = new HashMap<>();
 	private Map<EnumCreatureType, List<String>> typeToPlayer = new HashMap<>();
 	
+	private ServerWorld world = null;
+	
 	public TypesManager()
 	{
 		this(DATA_NAME);
@@ -42,6 +48,7 @@ public class TypesManager extends WorldSavedData
 	
 	public void read(CompoundNBT compound)
 	{
+		System.out.println((world == null ? "[CLIENT]" : "[SERVER]")+" Reading types from memory: "+compound);
 		ListNBT mobs = compound.getList("Mobs", 10);
 		for(int i=0; i<mobs.size(); i++)
 		{
@@ -106,7 +113,7 @@ public class TypesManager extends WorldSavedData
 	public static TypesManager get(World worldIn)
 	{
 		if(worldIn.isRemote)
-			return null;
+			return VariousOddities.proxy.getTypesManager();
 		else
 		{
 			ServerWorld world = (ServerWorld)worldIn;
@@ -117,8 +124,19 @@ public class TypesManager extends WorldSavedData
 				manager.resetMobs();
 				manager.resetPlayers();
 			}
+			manager.world = world;
 			return manager;
 		}
+	}
+	
+	public void notifyPlayer(PlayerEntity player)
+	{
+		PacketHandler.sendTo((ServerPlayerEntity)player, new PacketTypesData(write(new CompoundNBT())));
+	}
+	
+	public void notifyPlayers(ServerWorld world)
+	{
+		PacketHandler.sendToAll(world, new PacketTypesData(write(new CompoundNBT())));
 	}
 	
 	public void resetMobs()
@@ -129,7 +147,7 @@ public class TypesManager extends WorldSavedData
 		for(EnumCreatureType type : configuredMobs.keySet())
 			for(String entry : configuredMobs.get(type))
 				if(entry != null && entry.length() > 0 && entry.contains(":"))
-					addToEntity(new ResourceLocation(entry), type);
+					addToEntity(new ResourceLocation(entry), type, false);
 		markDirty();
 	}
 	
@@ -140,7 +158,7 @@ public class TypesManager extends WorldSavedData
 		for(EnumCreatureType type : configuredPlayers.keySet())
 			for(String entry : configuredPlayers.get(type))
 				if(entry != null && entry.length() > 0)
-					addToPlayer(entry, type);
+					addToPlayer(entry, type, false);
 		markDirty();
 	}
 	
@@ -285,7 +303,7 @@ public class TypesManager extends WorldSavedData
 		return attributes;
 	}
 	
-	public void addToEntity(ResourceLocation entity, EnumCreatureType type)
+	public void addToEntity(ResourceLocation entity, EnumCreatureType type, boolean notify)
 	{
 		if(entity == null || type == null || isMobOfType(entity, type))
 			return;
@@ -294,10 +312,12 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(mobsOfType(type));
 			entries.add(entity);
 		typeToMob.put(type, entries);
-		markDirty();
+		
+		if(notify)
+			markDirty();
 	}
 	
-	public void removeFromEntity(ResourceLocation entity, EnumCreatureType type)
+	public void removeFromEntity(ResourceLocation entity, EnumCreatureType type, boolean notify)
 	{
 		if(entity == null || type == null || !isMobOfType(entity, type))
 			return;
@@ -305,10 +325,12 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(typeToMob.getOrDefault(type, Collections.emptyList()));
 			entries.remove(entity);
 		typeToMob.put(type, entries);
-		markDirty();
+		
+		if(notify)
+			markDirty();
 	}
 	
-	public void addToPlayer(String player, EnumCreatureType type)
+	public void addToPlayer(String player, EnumCreatureType type, boolean notify)
 	{
 		if(player == null || player.length() == 0 || isPlayerOfType(player, type))
 			return;
@@ -317,10 +339,12 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(typeToPlayer.getOrDefault(type, Collections.emptyList()));
 			entries.add(player);
 		typeToPlayer.put(type, entries);
-		markDirty();
+		
+		if(notify)
+			markDirty();
 	}
 	
-	public void removeFromPlayer(String player, EnumCreatureType type)
+	public void removeFromPlayer(String player, EnumCreatureType type, boolean notify)
 	{
 		if(player == null || player.length() == 0 || !isPlayerOfType(player, type))
 			return;
@@ -329,6 +353,15 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(typeToPlayer.getOrDefault(type, Collections.emptyList()));
 			entries.remove(player);
 		typeToPlayer.put(type, entries);
-		markDirty();
+		
+		if(notify)
+			markDirty();
+	}
+	
+	public void markDirty()
+	{
+		super.markDirty();
+		if(this.world != null)
+			notifyPlayers(this.world);
 	}
 }
