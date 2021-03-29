@@ -129,7 +129,7 @@ public class CreatureTypeDefaults
 		
 		// Individual player settings (override defaults)
 		addPlayerToTypeDefaults("_Lying", 					EnumCreatureType.HOLY, EnumCreatureType.FEY);
-		addPlayerToTypeDefaults("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER);
+		addPlayerToTypeDefaults("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER, EnumCreatureType.FIRE);
 		addPlayerToTypeDefaults("SakuraWolfe",				EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.EXTRAPLANAR);
 		addPlayerToTypeDefaults("Dusty21134",				EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
 		addPlayerToTypeDefaults("Princessfirefly9",			EnumCreatureType.FEY, EnumCreatureType.AIR);
@@ -140,5 +140,6 @@ public class CreatureTypeDefaults
 		addPlayerToTypeDefaults("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.AUGMENTED);
 		addPlayerToTypeDefaults("Exandrian",				EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC, EnumCreatureType.EXTRAPLANAR);
 		addPlayerToTypeDefaults("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH);
+		addPlayerToTypeDefaults("Pyrodance",				EnumCreatureType.HUMANOID, EnumCreatureType.SHAPECHANGER);
 	}
 }

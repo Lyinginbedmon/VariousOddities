@@ -3,6 +3,7 @@ package com.lying.variousoddities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
@@ -63,6 +64,7 @@ public class VariousOddities
     {
     	PacketHandler.init();
     	PlayerData.register();
+    	LivingData.register();
     	event.enqueueWork(VOCommands::registerArguments);
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
     	MinecraftForge.EVENT_BUS.register(SettlementManagerServer.class);

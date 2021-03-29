@@ -1,14 +1,18 @@
 package com.lying.variousoddities.init;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Predicate;
 import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -23,6 +27,9 @@ public class VOPotions
 	public static boolean isRegistered = false;
 	
 	public static final Effect SLEEP				= addPotion((new PotionSleep(3973574)).setIconIndex(9, 0));
+	
+	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
+	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();
 	
 	private static Effect addPotion(Effect potionIn){ EFFECTS.add(potionIn); return potionIn; } 
 	
@@ -47,16 +54,39 @@ public class VOPotions
 	
 	public static boolean isParalysed(LivingEntity entity)
 	{
-		return (
-//				casterIn.isPotionActive(VOPotions.PETRIFIED) ||
-//				casterIn.isPotionActive(VOPotions.ENTANGLED) ||
-				(entity.isPotionActive(Effects.SLOWNESS) && entity.getActivePotionEffect(Effects.SLOWNESS).getAmplifier() >= 4) ||
-				entity.getAttribute(Attributes.MOVEMENT_SPEED).getValue() == 0D);
+		return paralysedByPotions(entity) || entity.getAttribute(Attributes.MOVEMENT_SPEED).getValue() == 0D;
+	}
+	
+	/** Returns true if the creature is paralysed by known potion effects */
+	public static boolean paralysedByPotions(LivingEntity entity)
+	{
+		for(Effect effect : PARALYSIS_EFFECTS.keySet())
+			if(entity.isPotionActive(effect) && PARALYSIS_EFFECTS.get(effect).apply(entity.getActivePotionEffect(effect)))
+				return true;
+		return false;
 	}
 	
 	public static boolean isSilenced(LivingEntity entity)
 	{
-//		return (casterIn.isPotionActive(VOPotions.SILENCED) || casterIn.isPotionActive(VOPotions.PETRIFIED));
+		for(Effect effect : SILENCE_EFFECTS.keySet())
+			if(entity.isPotionActive(effect) && SILENCE_EFFECTS.get(effect).apply(entity.getActivePotionEffect(effect)))
+				return true;
 		return false;
+	}
+	
+	static
+	{
+		PARALYSIS_EFFECTS.put(Effects.SLOWNESS, new Predicate<EffectInstance>()
+		{
+			public boolean apply(EffectInstance input)
+			{
+				return input.getAmplifier() >= 4;
+			}
+		});
+//		PARALYSIS_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());
+//		PARALYSIS_EFFECTS.put(VOPotions.ENTANGLED, Predicates.alwaysTrue());
+		
+//		SILENCE_EFFECTS.put(VOPotions.SILENCED, Predicates.alwaysTrue());
+//		SILENCE_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());
 	}
 }

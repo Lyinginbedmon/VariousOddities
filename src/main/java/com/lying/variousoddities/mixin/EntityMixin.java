@@ -8,7 +8,7 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.world.World;
 
 @Mixin(Entity.class)
-public class EntityMixin
+public class EntityMixin extends CapabilityProviderMixin
 {
 	@Shadow public World world;
 	
@@ -35,4 +35,7 @@ public class EntityMixin
 	{
 		return null;
 	}
+	
+	@Shadow
+	public void setAir(int airIn){ }
 }

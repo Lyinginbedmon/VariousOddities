@@ -3,7 +3,9 @@
 	"package": "com.lying.variousoddities.mixin",
 	"mixins":
 	[
+		"CapabilityProviderMixin",
 		"EntityMixin",
+		"LivingEntityMixin",
 		"FireworkRocketEntityMixin",
 		"ServerWorldMixin",
 		"MerchantResultSlotMixin"

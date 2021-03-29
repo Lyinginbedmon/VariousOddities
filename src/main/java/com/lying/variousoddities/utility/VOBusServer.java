@@ -5,6 +5,7 @@ import java.util.Random;
 
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
@@ -44,8 +45,12 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<Entity> event)
 	{
-		if(event.getObject().getType() == EntityType.PLAYER)
-			event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
+		if(event.getObject() instanceof LivingEntity)
+		{
+			event.addCapability(LivingData.IDENTIFIER, new LivingData());
+			if(event.getObject().getType() == EntityType.PLAYER)
+				event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
+		}
 	}
 	
 	@SubscribeEvent

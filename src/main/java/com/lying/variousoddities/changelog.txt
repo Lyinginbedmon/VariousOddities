@@ -16,9 +16,13 @@ Known bugs
 Changes
 	Default spawn settings adjusted, overall more even mixes of vanilla mobs and oddities
 	Creature types now include a few new types with their own features and more smoothly affect drowning, starving, and sleeping (Players that can't sleep do not spawn phantoms)
+	Type actions (eating, breathing, sleeping, etc.) are aggregated for entities with multiple supertypes, so they are treated as only having the actions shared by all of their supertypes
+	The Aquatic subtype can no longer breathe air unless the creature also has the Amphibious subtype (this is not shared by the Water subtype, which can breathe air normally)
+	The Air subtype now grants access to Creative-style flight (note that this does not include protection from falling damage when not flying)
+	See the Various Oddities wiki page for full details on all the existing types
 	Goblins are now persistent creatures
 	Commands changed to require operator status
-	Drafting tables can now be used to fully define a new room for a settlement, use "/settlement room <index or name> add" to add a finalised room to an existing settlement 
+	Drafting tables can now be used to fully define a new room for a settlement, use "/settlement room <index or name> add" to add a finalised room to an existing settlement
 	Fixed an inconsistent bug related to goblins taking damage
 	Fixed a bug related to custom command arguments preventing joining multiplayer servers
 	Fixed a persistency bug with custom creature types

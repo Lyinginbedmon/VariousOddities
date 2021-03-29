@@ -1,6 +1,7 @@
 package com.lying.variousoddities.types;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,6 @@ import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.types.EnumCreatureType.Action;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemTier;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
@@ -27,6 +27,7 @@ import net.minecraftforge.event.entity.player.CriticalHitEvent;
  */
 public class TypeHandler
 {
+	private boolean canBreatheAir = true;
 	private boolean canCriticalHit = true;
 	private boolean canPoison = true;
 	private boolean canParalysis = true;
@@ -36,10 +37,18 @@ public class TypeHandler
 	/** Returns a default instance */
 	public static final TypeHandler get(){ return new TypeHandler(); }
 	
-	public boolean canCriticalHit(){ return this.canCriticalHit; }
-	public boolean canPoison(){ return this.canPoison; }
-	public boolean canParalysis(){ return this.canParalysis; }
+	/** Called when the type is first applied in LivingData */
+	public void onApply(LivingEntity entity){ }
+	/** Called when the type is removed in LivingData */
+	public void onRemove(LivingEntity entity){ }
 	
+	public boolean canBreatheAir(){ return this.canBreatheAir; }
+	public boolean canCriticalHit(){ return this.canCriticalHit; }
+	public boolean canBePoisoned(){ return this.canPoison; }
+	public boolean canBeParalysed(){ return this.canParalysis; }
+	
+	/** Prevents this type from breathing outside of water */
+	public TypeHandler noBreatheAir(){ this.canBreatheAir = false; return this; }
 	/** Prevents this type from receiving critical hits */
 	public TypeHandler noCriticalHit(){ this.canCriticalHit = false; return this; }
 	/** Prevents this type from being affected by poison */
@@ -83,7 +92,7 @@ public class TypeHandler
 	public  boolean canSpellAffect(IMagicEffect spellIn){ return true; }
 	
 	/** Used by subtypes to modifer the action set from supertypes */
-	public  EnumSet<Action> applyActions(EnumSet<Action> actions){ return actions; }
+	public  EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ return actions; }
 	
 	/** Used in commands to determine if a given type can be added to an existing set */
 	public  boolean canApplyTo(List<EnumCreatureType> types){ return true; }
@@ -118,15 +127,6 @@ public class TypeHandler
 	public static class TypeUtils
 	{
 		public static final List<Effect> EMPTY_POTIONS = new ArrayList<Effect>();
-		
-		public static void preventNaturalRegen(LivingEntity living)
-		{
-			if(living != null && living instanceof PlayerEntity)
-			{
-				PlayerEntity player = (PlayerEntity)living;
-				if(player.getFoodStats().getFoodLevel() > 17) player.getFoodStats().setFoodLevel(17);
-			}
-		}
 		
 		public static ItemTier getMaterial(String name)
 		{

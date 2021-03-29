@@ -22,6 +22,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -48,7 +49,6 @@ public class TypesManager extends WorldSavedData
 	
 	public void read(CompoundNBT compound)
 	{
-		System.out.println((world == null ? "[CLIENT]" : "[SERVER]")+" Reading types from memory: "+compound);
 		ListNBT mobs = compound.getList("Mobs", 10);
 		for(int i=0; i<mobs.size(); i++)
 		{
@@ -117,10 +117,12 @@ public class TypesManager extends WorldSavedData
 		else
 		{
 			ServerWorld world = (ServerWorld)worldIn;
-			TypesManager manager = (TypesManager)world.getSavedData().get(TypesManager::new, DATA_NAME);
+			MinecraftServer server = world.getServer();
+			ServerWorld overWorld = server.getWorld(World.OVERWORLD);
+			TypesManager manager = (TypesManager)overWorld.getSavedData().get(TypesManager::new, DATA_NAME);
 			if(manager == null)
 			{
-				manager = (TypesManager)world.getSavedData().getOrCreate(TypesManager::new, DATA_NAME);
+				manager = (TypesManager)overWorld.getSavedData().getOrCreate(TypesManager::new, DATA_NAME);
 				manager.resetMobs();
 				manager.resetPlayers();
 			}
@@ -174,7 +176,7 @@ public class TypesManager extends WorldSavedData
 				members.removeAll(players);
 				players.addAll(members);
 			}
-			Collections.sort(players);
+			java.util.Collections.sort(players);
 		}
 		return players;
 	}
@@ -182,14 +184,14 @@ public class TypesManager extends WorldSavedData
 	public List<ResourceLocation> mobsOfType(EnumCreatureType type)
 	{
 		List<ResourceLocation> mobs = typeToMob.getOrDefault(type, Collections.emptyList());
-		Collections.sort(mobs);
+		java.util.Collections.sort(mobs);
 		return mobs;
 	}
 	
 	public List<String> playersOfType(EnumCreatureType type)
 	{
 		List<String> players = typeToPlayer.getOrDefault(type, Collections.emptyList());
-		Collections.sort(players);
+		java.util.Collections.sort(players);
 		return players;
 	}
 	

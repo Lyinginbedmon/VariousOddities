@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
+import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.SpellEvent.SpellAffectEntityEvent;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
@@ -23,8 +26,6 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.stats.ServerStatisticsManager;
-import net.minecraft.stats.Stats;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -53,18 +54,35 @@ public class TypeBus
 		}
 	}
 	
+	@SubscribeEvent
+	public static void onTypeApplyEvent(TypeApplyEvent event)
+	{
+		event.getType().getHandler().onApply(event.getEntityLiving());
+	}
+	
+	@SubscribeEvent
+	public static void onTypeRemoveEvent(TypeRemoveEvent event)
+	{
+		event.getType().getHandler().onRemove(event.getEntityLiving());
+	}
+	
 	/** Prevents creatures that do not sleep from sleeping in a bed */
 	@SubscribeEvent
 	public static void onSleepEvent(PlayerSleepInBedEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getPlayer() != null)
+		if(event.getPlayer() != null && event.getPos() != null)
 		{
 			PlayerEntity player = event.getPlayer();
 			TypesManager manager = TypesManager.get(player.getEntityWorld());
 			if(!EnumCreatureType.ActionSet.fromTypes(manager.getMobTypes(player)).sleeps())
 			{
 				event.setResult(SleepResult.NOT_POSSIBLE_NOW);
+				if(!player.getEntityWorld().isRemote)
+				{
+					ServerPlayerEntity playerServer = (ServerPlayerEntity)player;
+					playerServer.func_242111_a(playerServer.getServerWorld().getDimensionKey(), event.getPos(), 0.0F, true, true);
+				}
 				return;
 			}
 		}
@@ -237,6 +255,8 @@ public class TypeBus
 		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
 		{
 			LivingEntity living = event.getEntityLiving();
+			LivingData.forEntity(living).tick(living);
+			
 			TypesManager manager = TypesManager.get(living.getEntityWorld());
 			List<EnumCreatureType> types = manager.getMobTypes(living);
 			for(EnumCreatureType mobType : types)
@@ -250,35 +270,18 @@ public class TypeBus
 				List<EffectInstance> activeEffects = getActiveEffects(living);
 				if(!activeEffects.isEmpty())
 				{
-					if(!handler.canPoison())
+					if(!handler.canBePoisoned() && living.isPotionActive(Effects.POISON))
 						living.removeActivePotionEffect(Effects.POISON);
 					
-					if(!handler.canParalysis() && VOPotions.isParalysed(living))
-					{
-						for(EffectInstance instance : activeEffects)
-						{
-							Effect potion = instance.getPotion();
-							if(potion == Effects.SLOWNESS && instance.getAmplifier() >= 4)
-							{
-								living.removeActivePotionEffect(Effects.SLOWNESS);
-								break;
-							}
-//							else if(potion == VOPotions.PARALYSIS) ;
-//							else if(potion == VOPotions.ENTANGLED) ;
-						}
-					}
+					if(!handler.canBeParalysed() && VOPotions.isParalysed(living))
+						for(Effect effect : VOPotions.PARALYSIS_EFFECTS.keySet())
+							if(living.isPotionActive(effect) && VOPotions.PARALYSIS_EFFECTS.get(effect).apply(living.getActivePotionEffect(effect)))
+								living.removeActivePotionEffect(effect);
 					
 					for(Effect effect : handler.getInvalidPotions(activeEffects))
 						living.removeActivePotionEffect(effect);
 				}
 				if(event.isCanceled()) return;
-			}
-			
-			if(!living.getEntityWorld().isRemote && living.getType() == EntityType.PLAYER && !EnumCreatureType.ActionSet.fromTypes(types).sleeps())
-			{
-				ServerPlayerEntity player = (ServerPlayerEntity)living;
-                ServerStatisticsManager statManager = player.getStats();
-                statManager.setValue(player, Stats.CUSTOM.get(Stats.TIME_SINCE_REST), 0);
 			}
 		}
 	}

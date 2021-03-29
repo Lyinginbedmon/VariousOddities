@@ -14,7 +14,10 @@ import com.lying.variousoddities.types.TypeHandler.EnumDamageResist;
 
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -30,14 +33,52 @@ import net.minecraft.util.text.event.HoverEvent;
 
 public enum EnumCreatureType
 {
-	ABERRATION(null, TypeHandler.get(), Action.ALL),
-	AIR(),
+	ABERRATION(null, TypeHandler.get(), Action.STANDARD, 8),
+	AIR(null, new TypeHandler()
+		{
+			public void onMobUpdateEvent(LivingEntity living)
+			{
+				if(living.getType() == EntityType.PLAYER)
+				{
+					PlayerEntity player = (PlayerEntity)living;
+					if(!player.isCreative() && !player.isSpectator() && !player.abilities.allowFlying)
+					{
+						player.abilities.allowFlying = true;
+						player.sendPlayerAbilities();
+					}
+				}
+			}
+			
+			public void onRemove(LivingEntity living)
+			{
+				if(living.getType() == EntityType.PLAYER)
+				{
+					PlayerEntity player = (PlayerEntity)living;
+					if(!player.isCreative() && !player.isSpectator())
+					{
+						player.abilities.allowFlying = false;
+						player.sendPlayerAbilities();
+					}
+				}
+			}
+		}),
 	AMPHIBIOUS(null, new TypeHandler()
 		{
 			public boolean canApplyTo(List<EnumCreatureType> types){ return types.contains(AQUATIC); }
 		}),
-	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.ALL),
-	AQUATIC(null, new TypeHandlerAquatic()),
+	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
+	AQUATIC(null, new TypeHandlerAquatic()
+		{
+			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types)
+			{
+				actions.add(Action.BREATHE_WATER);
+				if(types.contains(AMPHIBIOUS))
+					actions.add(Action.BREATHE_AIR);
+				else
+					actions.remove(Action.BREATHE_AIR);
+				return actions;
+			}
+		}),
 	AUGMENTED(),
 	COLD(null, new TypeHandler().addResistance(VODamageSource.COLD, EnumDamageResist.IMMUNE).setFireResist(EnumDamageResist.VULNERABLE)),
 	CONSTRUCT(null, new TypeHandler()
@@ -46,17 +87,16 @@ public enum EnumCreatureType
 		{
 			return VODamageSource.isFalling(source) ? EnumDamageResist.IMMUNE : super.getDamageResist(source);
 		}
-		public void onMobUpdateEvent(LivingEntity living){ TypeUtils.preventNaturalRegen(living); }
 		public boolean canSpellAffect(IMagicEffect spellIn)
 		{
 			if(spellIn.getSchool() == MagicSchool.ENCHANTMENT) return false;
 			if(spellIn.getSchool() == MagicSchool.NECROMANCY || spellIn.getDescriptors().contains(MagicSubType.DEATH)) return false;
 			return true;
 		}
-	}.noCriticalHit().noParalysis().noPoison(), Action.NONE),
-	DRAGON(null, new TypeHandler().noParalysis(), Action.ALL),
+	}.noCriticalHit().noParalysis().noPoison(), Action.NONE, 10),
+	DRAGON(null, new TypeHandler().noParalysis(), Action.STANDARD, 12),
 	EARTH(),
-	ELEMENTAL(null, new TypeHandler().noCriticalHit().noParalysis().noPoison(), Action.NONE),
+	ELEMENTAL(null, new TypeHandler().noCriticalHit().noParalysis().noPoison(), Action.REGEN_ONLY, 8),
 	EXTRAPLANAR(),
 	EVIL(null, new TypeHandler().addResistance(VODamageSource.EVIL, EnumDamageResist.IMMUNE).addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE)),
 	FEY(null, new TypeHandler()
@@ -80,18 +120,18 @@ public enum EnumCreatureType
 				}
 				return super.getDamageResist(source);
 			}
-		}, Action.ALL),
+		}, Action.STANDARD, 6),
 	FIRE(null, new TypeHandler().setFireResist(EnumDamageResist.IMMUNE).addResistance(VODamageSource.COLD, EnumDamageResist.VULNERABLE)),
-	GIANT(null, TypeHandler.get(), Action.ALL),
+	GIANT(null, TypeHandler.get(), Action.STANDARD, 8),
 	GOBLIN(),
 	HOLY(null, new TypeHandler().addResistance(VODamageSource.HOLY, EnumDamageResist.IMMUNE).addResistance(VODamageSource.EVIL, EnumDamageResist.VULNERABLE)),
-	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.ALL),
-	MAGICAL_BEAST(null, TypeHandler.get(), Action.ALL),
-	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.ALL),
-	OUTSIDER(null, new TypeHandler(), EnumSet.of(Action.BREATHE)),
+	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
+	MAGICAL_BEAST(null, TypeHandler.get(), Action.STANDARD, 10),
+	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
+	OUTSIDER(null, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
 	NATIVE(null, new TypeHandler()
 		{
-			public EnumSet<Action> applyActions(EnumSet<Action> actions){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
+			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
 			public boolean canApplyTo(List<EnumCreatureType> types){ return types.contains(OUTSIDER); }
 		}),
 	PLANT(null, new TypeHandler()
@@ -101,7 +141,7 @@ public enum EnumCreatureType
 				MagicSchool school = spellIn.getSchool();
 				return !(school == MagicSchool.ENCHANTMENT || school == MagicSchool.TRANSMUTATION);
 			}
-		}.noCriticalHit().noParalysis().noPoison().setFireResist(EnumDamageResist.VULNERABLE), EnumSet.of(Action.BREATHE, Action.EAT)),
+		}.noCriticalHit().noParalysis().noPoison().setFireResist(EnumDamageResist.VULNERABLE), EnumSet.of(Action.BREATHE_AIR, Action.EAT), 8),
 	REPTILE(),
 	SHAPECHANGER(),
 	OOZE(null, new TypeHandler()
@@ -110,16 +150,15 @@ public enum EnumCreatureType
 			{
 				return spellIn.getSchool() != MagicSchool.TRANSMUTATION;
 			}
-		}.noCriticalHit().noParalysis().noPoison(), EnumSet.of(Action.BREATHE, Action.EAT)),
+		}.noCriticalHit().noParalysis().noPoison(), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
 	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler()
 		{
-			public void onMobUpdateEvent(LivingEntity event){ TypeUtils.preventNaturalRegen(event); }
 			public boolean canSpellAffect(IMagicEffect spellIn)
 			{
 				return !(spellIn.getSchool() == MagicSchool.ENCHANTMENT || spellIn.getDescriptors().contains(MagicSubType.DEATH));
 			}
-		}.noCriticalHit().noParalysis().noPoison().addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE), Action.NONE),
-	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.ALL),
+		}.noCriticalHit().noParalysis().noPoison().addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE), Action.NONE, 12),
+	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.STANDARD, 8),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic());
 	
 	private static final List<EnumCreatureType> SUPERTYPES = Arrays.asList(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
@@ -130,13 +169,15 @@ public enum EnumCreatureType
 	private final boolean supertype;
 	private final TypeHandler handler;
 	private final EnumSet<Action> actions;
+	private final int hitDie;
 	
-	private EnumCreatureType(CreatureAttribute attribute, TypeHandler handlerIn, EnumSet<Action> actionsIn)
+	private EnumCreatureType(CreatureAttribute attribute, TypeHandler handlerIn, EnumSet<Action> actionsIn, int hitDieIn)
 	{
 		parentAttribute = attribute;
 		supertype = true;
 		handler = handlerIn;
 		actions = actionsIn;
+		hitDie = hitDieIn;
 	}
 	
 	private EnumCreatureType()
@@ -150,6 +191,7 @@ public enum EnumCreatureType
 		supertype = false;
 		handler = handlerIn;
 		actions = Action.NONE;
+		hitDie = 8;
 	}
 	
 	public static List<String> getSupertypeNames()
@@ -188,6 +230,13 @@ public enum EnumCreatureType
 	public boolean isSupertype(){ return this.supertype; }
 	
 	public EnumSet<Action> actions(){ return actions; }
+	
+	public double healthModForPlayer()
+	{
+		if(!isSupertype()) return 0D;
+		return (((double)getHitDie() / (double)HUMANOID.getHitDie()) * Attributes.MAX_HEALTH.getDefaultValue()) - Attributes.MAX_HEALTH.getDefaultValue();
+	}
+	public int getHitDie(){ return hitDie; }
 	
 	/** Returns the translated name of the given creature type, with a hover event displaying its definition */
 	public IFormattableTextComponent getTranslated()
@@ -275,9 +324,9 @@ public enum EnumCreatureType
 	{
 		EnumSet<Action> actions = Action.NONE.clone();
 		
-		public void applyType(TypeHandler handler)
+		public void applyType(TypeHandler handler, Collection<EnumCreatureType> types)
 		{
-			actions = handler.applyActions(actions);
+			actions = handler.applyActions(actions, types);
 		}
 		
 		public void add(Action actionIn)
@@ -292,25 +341,53 @@ public enum EnumCreatureType
 				add(action);
 		}
 		
+		public void remove(Action actionIn)
+		{
+			if(actions.contains(actionIn))
+				actions.remove(actionIn);
+		}
+		
+		public void remove(EnumSet<Action> actionsIn)
+		{
+			for(Action action : actionsIn)
+				remove(action);
+		}
+		
 		public boolean eats(){ return actions.contains(Action.EAT); }
 		public boolean sleeps(){ return actions.contains(Action.SLEEP); }
-		public boolean breathes(){ return actions.contains(Action.BREATHE); }
+		public boolean breathes(){ return breathesAir() || breathesWater(); }
+		public boolean breathesAir(){ return actions.contains(Action.BREATHE_AIR); }
+		public boolean breathesWater(){ return actions.contains(Action.BREATHE_WATER); }
+		public boolean regenerates(){ return actions.contains(Action.REGENERATE); }
 		
 		public static ActionSet fromTypes(List<EnumCreatureType> types)
 		{
 			ActionSet set = new ActionSet();
+			
+			// Actions shared by all supertypes
+			EnumSet<Action> actions = Action.ALL;
 			for(EnumCreatureType type : types)
 				if(type.isSupertype())
-					set.add(type.actions());
+				{
+					EnumSet<Action> typeActions = type.actions();
+					EnumSet<Action> remove = EnumSet.noneOf(Action.class);
+					for(Action action : actions)
+						if(!typeActions.contains(action))
+							remove.add(action);
+					actions.removeAll(remove);
+				}
+			set.add(actions);
 			
+			// Modifiers to actions from subtypes
 			for(EnumCreatureType type : types)
 				if(!type.isSupertype())
-					set.applyType(type.getHandler());
+					set.applyType(type.getHandler(), types);
 			
 			return set;
 		}
 	}
 	
+	/** Common meaningful properties of creatures that must be acted upon to survive */
 	public enum Action
 	{
 		/** Eating food and starving to death without it */
@@ -318,9 +395,18 @@ public enum EnumCreatureType
 		/** Sleeping in a bed and spawning phantoms without sleep */
 		SLEEP,
 		/** Breathing air and drowning without it */
-		BREATHE;
+		BREATHE_AIR,
+		/** Breathing water and suffocating without it */
+		BREATHE_WATER,
+		/** Regain health naturally over time */
+		REGENERATE;
 		
-		private static final EnumSet<Action> ALL = EnumSet.of(Action.EAT, Action.SLEEP, Action.BREATHE);
-		private static final EnumSet<Action> NONE = EnumSet.noneOf(Action.class);
+		/** The most common array. */
+		public static final EnumSet<Action> STANDARD = EnumSet.of(Action.EAT, Action.SLEEP, Action.BREATHE_AIR, REGENERATE);
+		/** Creatures that do not need to eat, sleep, or breathe, but can regenerate health. */
+		public static final EnumSet<Action> REGEN_ONLY = EnumSet.of(REGENERATE);
+		/** Creatures that have no natural needs, but also cannot regenerate health. */
+		public static final EnumSet<Action> NONE = EnumSet.noneOf(Action.class);
+		public static final EnumSet<Action> ALL = EnumSet.allOf(Action.class);
 	}
 }
