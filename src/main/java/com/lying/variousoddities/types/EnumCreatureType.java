@@ -67,18 +67,7 @@ public enum EnumCreatureType
 			public boolean canApplyTo(List<EnumCreatureType> types){ return types.contains(AQUATIC); }
 		}),
 	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
-	AQUATIC(null, new TypeHandlerAquatic()
-		{
-			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types)
-			{
-				actions.add(Action.BREATHE_WATER);
-				if(types.contains(AMPHIBIOUS))
-					actions.add(Action.BREATHE_AIR);
-				else
-					actions.remove(Action.BREATHE_AIR);
-				return actions;
-			}
-		}),
+	AQUATIC(null, new TypeHandlerAquatic(false)),
 	AUGMENTED(),
 	COLD(null, new TypeHandler().addResistance(VODamageSource.COLD, EnumDamageResist.IMMUNE).setFireResist(EnumDamageResist.VULNERABLE)),
 	CONSTRUCT(null, new TypeHandler()
@@ -159,7 +148,7 @@ public enum EnumCreatureType
 			}
 		}.noCriticalHit().noParalysis().noPoison().addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE), Action.NONE, 12),
 	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.STANDARD, 8),
-	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic());
+	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(true));
 	
 	private static final List<EnumCreatureType> SUPERTYPES = Arrays.asList(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
 	private static final List<EnumCreatureType> SUBTYPES = Arrays.asList(AIR, AQUATIC, AUGMENTED, COLD, EARTH, EXTRAPLANAR, EVIL, FIRE, GOBLIN, HOLY, NATIVE, REPTILE, SHAPECHANGER, WATER);
@@ -360,7 +349,7 @@ public enum EnumCreatureType
 		public boolean breathesWater(){ return actions.contains(Action.BREATHE_WATER); }
 		public boolean regenerates(){ return actions.contains(Action.REGENERATE); }
 		
-		public static ActionSet fromTypes(List<EnumCreatureType> types)
+		public static ActionSet fromSupertypes(Collection<EnumCreatureType> types)
 		{
 			ActionSet set = new ActionSet();
 			
@@ -378,10 +367,19 @@ public enum EnumCreatureType
 				}
 			set.add(actions);
 			
+			return set;
+		}
+		
+		public static ActionSet fromTypes(Collection<EnumCreatureType> types)
+		{
+			ActionSet set = fromSupertypes(types);
+			
 			// Modifiers to actions from subtypes
-			for(EnumCreatureType type : types)
-				if(!type.isSupertype())
-					set.applyType(type.getHandler(), types);
+			types.forEach((type) -> 
+				{
+					if(!type.isSupertype())
+						set.applyType(type.getHandler(), types);
+				});
 			
 			return set;
 		}

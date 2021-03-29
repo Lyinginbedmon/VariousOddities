@@ -1,6 +1,10 @@
 package com.lying.variousoddities.types;
 
+import java.util.Collection;
+import java.util.EnumSet;
+
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.types.EnumCreatureType.Action;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.EffectInstance;
@@ -9,6 +13,24 @@ import net.minecraft.tags.FluidTags;
 
 public class TypeHandlerAquatic extends TypeHandler
 {
+	private final boolean breathesAir;
+	
+	public TypeHandlerAquatic(boolean breatheAir)
+	{
+		this.breathesAir = breatheAir;
+	}
+	
+	public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types)
+	{
+		if(actions.contains(Action.BREATHE_AIR))
+		{
+			actions.add(Action.BREATHE_WATER);
+			if(!breathesAir && !types.contains(EnumCreatureType.AMPHIBIOUS))
+				actions.remove(Action.BREATHE_AIR);
+		}
+		return actions;
+	}
+	
 	public void onMobUpdateEvent(LivingEntity living)
 	{
 		if(living.areEyesInFluid(FluidTags.WATER))

@@ -59,8 +59,8 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(EntityType.CREEPER,			EnumCreatureType.PLANT, EnumCreatureType.EVIL);
 		addMobToTypeDefaults(EntityType.ENDER_DRAGON,		EnumCreatureType.DRAGON, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.WITHER,				EnumCreatureType.UNDEAD);
-		addMobToTypeDefaults(EntityType.ELDER_GUARDIAN,		EnumCreatureType.ABERRATION, EnumCreatureType.AQUATIC);
-		addMobToTypeDefaults(EntityType.GUARDIAN,			EnumCreatureType.ABERRATION, EnumCreatureType.AQUATIC);
+		addMobToTypeDefaults(EntityType.ELDER_GUARDIAN,		EnumCreatureType.ABERRATION, EnumCreatureType.AQUATIC, EnumCreatureType.AMPHIBIOUS);
+		addMobToTypeDefaults(EntityType.GUARDIAN,			EnumCreatureType.ABERRATION, EnumCreatureType.AQUATIC, EnumCreatureType.AMPHIBIOUS);
 		addMobToTypeDefaults(EntityType.ENDERMAN,			EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.GHAST,				EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.HUSK,				EnumCreatureType.UNDEAD);
