@@ -135,6 +135,9 @@ public class ModelWorg extends TintedAgeableModel<EntityWorg>
         float rearLegSpace = LEG_SPACE * 0.6F;
         if(entityIn.isEntitySleeping())
         {
+        	head.rotationPointY = 13F;
+        	head.rotationPointZ = -6.5F;
+        	
             mane.setRotationPoint(-1.0F, 16.0F, -3.0F);
             mane.rotateAngleX = ((float)Math.PI * 2F / 5F);
             mane.rotateAngleY = 0.0F;
@@ -156,6 +159,9 @@ public class ModelWorg extends TintedAgeableModel<EntityWorg>
         }
         else
         {
+        	head.rotationPointY = 14F;
+        	head.rotationPointZ = -7.5F;
+        	
             body.setRotationPoint(0.0F, 14.0F, 2.0F);
             body.rotateAngleX = ((float)Math.PI / 2F);
             mane.setRotationPoint(-1.0F, 15F, -3.0F);
@@ -190,5 +196,4 @@ public class ModelWorg extends TintedAgeableModel<EntityWorg>
         
         tail.rotateAngleX = entityIn.getTailRotation();
 	}
-
 }

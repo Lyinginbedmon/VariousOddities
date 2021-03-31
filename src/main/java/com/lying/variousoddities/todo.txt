@@ -1,9 +1,6 @@
 Fix settlement room rendering
 Goblin wolf
 	Genetic behaviour features
-Worg
-	Fetch stuff
-	Follow nearby goblin tamers (untamed)
 Warg
 	Saddles
 	Chests

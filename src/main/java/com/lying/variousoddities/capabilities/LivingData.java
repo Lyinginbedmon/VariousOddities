@@ -153,14 +153,17 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			}
 		}
 		
+		this.overridingAir = false;
+		if(getAir() > entity.getMaxAir())
+			setAir(entity.getMaxAir());
 		if(!actions.breathes())
 		{
-			this.overridingAir = true;
-			entity.setAir(entity.getMaxAir());
+			setAir(entity.getMaxAir());
+			if(entity.getAir() < getAir())
+				this.overridingAir = true;
 		}
 		else if(entity.isAlive() && !isInvulnerablePlayer)
 		{
-			this.overridingAir = false;
 			boolean isInWater = entity.areEyesInFluid(FluidTags.WATER) && !entity.getEntityWorld().getBlockState(new BlockPos(entity.getPosX(), entity.getPosYEye(), entity.getPosZ())).isIn(Blocks.BUBBLE_COLUMN);
 			
 			// Prevents drowning due to water

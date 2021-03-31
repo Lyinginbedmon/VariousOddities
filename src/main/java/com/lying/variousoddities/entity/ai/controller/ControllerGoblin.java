@@ -5,6 +5,7 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAITargetHostileFaction;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinFlee;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinMate;
+import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgHurt;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityGoblin.GoblinType;
 
@@ -46,7 +47,7 @@ public class ControllerGoblin
 			super(priorityIn, par1Entity, activatorIn);
 			
 	    	addBehaviour(6, new EntityAIGoblinMate(par1Entity));
-//			addBehaviour(6, new EntityAIGoblinWorgHurt(par1Entity));
+			addBehaviour(6, new EntityAIGoblinWorgHurt(par1Entity));
 			
 	        if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(par1Entity.getType()))
 	        {

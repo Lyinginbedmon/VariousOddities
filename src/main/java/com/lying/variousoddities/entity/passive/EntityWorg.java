@@ -1,6 +1,7 @@
 package com.lying.variousoddities.entity.passive;
 
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
+import com.lying.variousoddities.entity.ai.passive.EntityAIWorgFetch;
 import com.lying.variousoddities.entity.ai.passive.EntityAIWorgSpook;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.init.VOEntities;
@@ -50,13 +51,9 @@ public class EntityWorg extends AbstractGoblinWolf
 	{
 		super.registerGoals();
 		
-		/**
-		 * TODO Worg AI
-		 * Fetching
-		 * Untamed follow goblin
-		 */
 		this.goalSelector.addGoal(1, new EntityAIWorgSpook(this, 1.0D));
 		this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
+		this.goalSelector.addGoal(2, new EntityAIWorgFetch(this, 6D));
 	}
     
     /**
@@ -85,37 +82,40 @@ public class EntityWorg extends AbstractGoblinWolf
     	{
 	    	if(isTamed())
 			{
-				if(isFoodItem(heldItem))
-		    	{
-		    		boolean consume = false;
-		    		if(getHealth() < getMaxHealth() && heldItem.getItem().isFood())
-		    		{
-		    			heal(heldItem.getItem().getFood().getHealing());
-		    			consume = true;
-		    		}
-		    		else if(getGrowingAge() == 0)
-		    		{
-		    			setInLove(player);
-		    			consume = true;
-		    		}
+				if(isFoodItem(heldItem) && getHealth() < getMaxHealth())
+	    		{
+	    			heal(heldItem.getItem().getFood().getHealing());
+		    		if(!player.isCreative())
+		    			heldItem.shrink(1);
 		    		
-		    		if(consume)
-		    		{
-			    		if(!player.isCreative())
-			    			heldItem.shrink(1);
-			    		
-			    		return ActionResultType.func_233537_a_(this.world.isRemote);
-		    		}
-		    		else
-		    			return ActionResultType.FAIL;
+		    		return ActionResultType.func_233537_a_(this.world.isRemote);
 		    	}
-				else
+				
+				if(heldItem.getItem() == Items.BONE && getGrowingAge() == 0)
 				{
-					this.func_233687_w_(!this.isSitting());
-					return ActionResultType.SUCCESS;
+	    			setInLove(player);
+	    			
+	    			if(!player.isCreative())
+	    				heldItem.shrink(1);
+	    			
+		    		return ActionResultType.func_233537_a_(this.world.isRemote);
 				}
+				
+				if(this.isOwner(player))
+	    		{
+					if(player.isSneaking())
+					{
+						this.func_233687_w_(!this.isSitting());
+						return ActionResultType.SUCCESS;
+					}
+					else
+					{
+						player.setHeldItem(hand, getHeldItemMainhand());
+						setHeldItem(Hand.MAIN_HAND, heldItem);
+					}
+	    		}
 			}
-	    	else if(heldItem.getItem() == Items.BONE && this.getAttackTarget() == null)
+	    	else if(isTameable() && heldItem.getItem() == Items.BONE && this.getAttackTarget() == null)
 	    	{
 	    		if(!player.isCreative())
 	    			heldItem.shrink(1);

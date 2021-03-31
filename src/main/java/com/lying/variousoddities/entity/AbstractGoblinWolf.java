@@ -8,13 +8,16 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAIWargWander;
+import com.lying.variousoddities.entity.ai.hostile.EntityAIWorgFollowGoblin;
 import com.lying.variousoddities.entity.ai.passive.EntityAIGoblinWolfBeg;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
+import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.FollowOwnerGoal;
@@ -28,6 +31,7 @@ import net.minecraft.entity.ai.goal.SitGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -108,6 +112,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 		this.goalSelector.addGoal(1, new SwimGoal(this));
 		this.goalSelector.addGoal(2, new SitGoal(this));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
+		this.goalSelector.addGoal(5, new EntityAIWorgFollowGoblin(this));
 		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0D, 10.0F, 2.0F, false));
 		this.goalSelector.addGoal(8, new EntityAIWargWander(this, 1.0D));
 		this.goalSelector.addGoal(9, new EntityAIGoblinWolfBeg(this, 8F));
@@ -139,7 +144,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public void readAdditional(CompoundNBT compound)
     {
     	super.readAdditional(compound);
-    	setGenetics(compound.getByte("Genes"));
+    	setGenetics(compound.getInt("Genes"));
     	CompoundNBT display = compound.getCompound("Display");
     		setColor(display.getInt("Color"));
     }
@@ -315,8 +320,10 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         
         if(!this.getEntityWorld().isRemote && this.goblinTimer > 0 && --this.goblinTimer%Reference.Values.TICKS_PER_SECOND == 0)
         	if(!getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, this.getBoundingBox().grow(8, 4, 8)).isEmpty())
-        		this.goblinTimer = Reference.Values.TICKS_PER_DAY;
+        		setGoblinSight(Reference.Values.TICKS_PER_DAY);
     }
+    
+    public void setGoblinSight(int par1Int){ this.goblinTimer = par1Int; }
     
     @OnlyIn(Dist.CLIENT)
     public void handleStatusUpdate(byte id)
@@ -342,6 +349,34 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public Genetics getGenetics(){ return new Genetics(getDataManager().get(GENETICS).intValue()); }
     public void setGenetics(int genesIn){ getDataManager().set(GENETICS, genesIn); }
     public void setGenetics(Genetics genesIn){ setGenetics(genesIn.toVal()); }
+    
+    public void setAttackTarget(@Nullable LivingEntity target)
+    {
+    	// Ignore attacks from goblins whilst untamed
+    	if(!isTamed() && target != null && target.getType() == VOEntities.GOBLIN)
+    		return;
+    	
+    	super.setAttackTarget(target);
+    	
+    	// Stop sitting when tamed
+    	if(isTamed() && target != null && target.isAlive() && isSitting())
+    		func_233687_w_(false);
+    }
+    
+    protected void spawnDrops(DamageSource source)
+    {
+    	for(EquipmentSlotType slot : EquipmentSlotType.values())
+    	{
+    		ItemStack heldStack = getItemStackFromSlot(slot);
+    		if(!heldStack.isEmpty())
+    		{
+    			entityDropItem(heldStack);
+    			setItemStackToSlot(slot, ItemStack.EMPTY);
+    		}
+    	}
+    	
+    	super.spawnDrops(source);
+    }
     
     @Nullable
     public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)

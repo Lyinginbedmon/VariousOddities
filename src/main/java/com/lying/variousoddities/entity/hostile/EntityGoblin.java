@@ -17,7 +17,6 @@ import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOSoundEvents;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.CreatureEntity;
@@ -49,8 +48,9 @@ import net.minecraft.world.server.ServerWorld;
 
 public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, ISettlementEntity
 {
-    public static final DataParameter<Byte> 	NOSE = EntityDataManager.<Byte>createKey(EntityGoblin.class, DataSerializers.BYTE);
-    public static final DataParameter<Byte> 	EARS = EntityDataManager.<Byte>createKey(EntityGoblin.class, DataSerializers.BYTE);
+    public static final DataParameter<Boolean> 	NOSE = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
+    public static final DataParameter<Boolean> 	EARS = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
+    public static final DataParameter<Boolean>	VIOLENT = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
     public static final DataParameter<Integer> 	COLOR = EntityDataManager.<Integer>createKey(EntityGoblin.class, DataSerializers.VARINT);
     public static final DataParameter<CompoundNBT>	CARRYING = EntityDataManager.<CompoundNBT>createKey(EntityGoblin.class, DataSerializers.COMPOUND_NBT);
     public static final DataParameter<Optional<BlockPos>>	NEST = EntityDataManager.<Optional<BlockPos>>createKey(EntityGoblin.class, DataSerializers.OPTIONAL_BLOCK_POS);
@@ -69,8 +69,9 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	{
 		super.registerData();
 		Random rand = new Random(this.getUniqueID().getLeastSignificantBits());
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), NOSE, rand.nextBoolean());
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), EARS, rand.nextBoolean());
+		getDataManager().register(NOSE, rand.nextBoolean());
+		getDataManager().register(EARS, rand.nextBoolean());
+		getDataManager().register(VIOLENT, rand.nextInt(16) > 0);
 		getDataManager().register(COLOR, rand.nextInt(3));
 		getDataManager().register(CARRYING, new CompoundNBT());
 		getDataManager().register(NEST, Optional.empty());
@@ -115,11 +116,14 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
 	public String getFactionName(){ return "goblin"; }
     
-    public boolean getNose(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), NOSE); }
-    public void setNose(boolean par1Boolean){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Boolean, NOSE); }
+    public boolean getNose(){ return getDataManager().get(NOSE).booleanValue(); }
+    public void setNose(boolean par1Boolean){ getDataManager().set(NOSE, par1Boolean); }
     
-    public boolean getEars(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), EARS); }
-    public void setEars(boolean par1Boolean){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Boolean, EARS); }
+    public boolean getEars(){ return getDataManager().get(EARS).booleanValue(); }
+    public void setEars(boolean par1Boolean){ getDataManager().set(EARS, par1Boolean); }
+    
+    public boolean isViolent(){ return getDataManager().get(VIOLENT).booleanValue(); }
+    public void setViolent(boolean par1Boolean){ getDataManager().set(VIOLENT, par1Boolean); }
     
     public int getColor(){ return ((Integer)getDataManager().get(COLOR)).intValue(); }
     public void setColor(int par1Int){ getDataManager().set(COLOR, Integer.valueOf(par1Int % 3)); }
@@ -168,6 +172,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 			displayData.putBoolean("Nose", getNose());
 			displayData.putBoolean("Ears", getEars());
 		compound.put("Display", displayData);
+		compound.putBoolean("Violent", isViolent());
 		compound.putInt("Type", getGoblinType().ordinal());
 		compound.put("Mate", getDataManager().get(CARRYING));
 		if(getNestSite() != null)
@@ -181,9 +186,10 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		{
 			CompoundNBT displayData = compound.getCompound("Display");
 			getDataManager().set(COLOR, displayData.getInt("Color"));
-			DataHelper.Booleans.setBooleanByte(getDataManager(), displayData.getBoolean("Nose"), NOSE);
-			DataHelper.Booleans.setBooleanByte(getDataManager(), displayData.getBoolean("Ears"), EARS);
+			setNose(displayData.getBoolean("Nose"));
+			setEars(displayData.getBoolean("Ears"));
 		}
+		setViolent(compound.getBoolean("Violent"));
 		this.goblinType = GoblinType.get(compound.getInt("Type"));
 		getDataManager().set(CARRYING, compound.getCompound("Mate"));
 		if(compound.contains("Nest", 10))
@@ -214,21 +220,26 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
     	super.livingTick();
     	if(isCarrying() || isChild() != child)
     		setGrowingAge(72000);
+    	
+    	if(isChild())
+    	{
+    		if(isViolent() && getRNG().nextInt(Reference.Values.TICKS_PER_MINUTE) == 0)
+    			setViolent(false);
+    	}
     }
 	
 	public AgeableEntity func_241840_a(ServerWorld worldIn, AgeableEntity parent)
 	{
 		EntityGoblin child = VOEntities.GOBLIN.create(worldIn);
 		
-		child.setColor(getColor());
-		child.setEars(getEars());
-		child.setNose(getNose());
-		if(parent != null && parent instanceof EntityGoblin)
+		if(parent.getType() == VOEntities.GOBLIN)
 		{
-			EntityGoblin parentGoblin = (EntityGoblin)parent;
-			if(getRNG().nextBoolean()) child.setColor(parentGoblin.getColor());
-			if(getRNG().nextBoolean()) child.setEars(parentGoblin.getEars());
-			if(getRNG().nextBoolean()) child.setNose(parentGoblin.getNose());
+			EntityGoblin partner = (EntityGoblin)parent;
+			child.setColor(rand.nextBoolean() ? partner.getColor() : getColor());
+			child.setEars(rand.nextBoolean() ? partner.getEars() : getEars());
+			child.setNose(rand.nextBoolean() ? partner.getNose() : getNose());
+			
+			child.setViolent(false);
 		}
 		
 		return child;

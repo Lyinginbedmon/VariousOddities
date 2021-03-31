@@ -107,7 +107,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 		return reason == SpawnReason.SPAWNER || rand.nextInt(20) == 0 && canSpawnOn(type, world, reason, pos, rand);
 	}
 	
-	public boolean isNoDespawnRequired(){ return true; }
+	public boolean isNoDespawnRequired(){ return this.isTamed() || super.isNoDespawnRequired(); }
 	
 	public SoundCategory getSoundCategory()
 	{

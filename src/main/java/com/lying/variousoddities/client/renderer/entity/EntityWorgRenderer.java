@@ -1,6 +1,7 @@
 package com.lying.variousoddities.client.renderer.entity;
 
 import com.lying.variousoddities.client.model.entity.ModelWorg;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerHeldItemWorg;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -25,6 +26,8 @@ public class EntityWorgRenderer extends MobRenderer<EntityWorg, ModelWorg>
 	public EntityWorgRenderer(EntityRendererManager p_i50961_1)
 	{
 		super(p_i50961_1, new ModelWorg(), 0.5F);
+		
+		this.addLayer(new LayerHeldItemWorg(this));
 	}
 	
 	public ResourceLocation getEntityTexture(EntityWorg entity)

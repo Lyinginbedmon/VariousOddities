@@ -26,6 +26,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -313,6 +314,11 @@ public class TypeBus
 		PlayerEntity player = event.getPlayer();
 		if(player.getEntityWorld().isRemote) return;
 		TypesManager manager = TypesManager.get(player.getEntityWorld());
+		
+		if(manager.isMobOfType(player, EnumCreatureType.AQUATIC) || manager.isMobOfType(player, EnumCreatureType.WATER))
+			if(player.areEyesInFluid(FluidTags.WATER))
+				event.setNewSpeed(event.getNewSpeed() * 5F);
+		
 		if(manager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
 			event.setNewSpeed(event.getNewSpeed() * 1.3F);
 	}

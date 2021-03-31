@@ -5,6 +5,7 @@ import java.util.EnumSet;
 
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.EnumCreatureType.Action;
+import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.EffectInstance;
@@ -22,7 +23,7 @@ public class TypeHandlerAquatic extends TypeHandler
 	
 	public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types)
 	{
-		if(actions.contains(Action.BREATHE_AIR))
+		if(new ActionSet(actions).breathes())
 		{
 			actions.add(Action.BREATHE_WATER);
 			if(!breathesAir && !types.contains(EnumCreatureType.AMPHIBIOUS))

@@ -6,7 +6,9 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.google.common.base.Predicate;
 import com.lying.variousoddities.init.VODamageSource;
+import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
@@ -41,10 +43,15 @@ public enum EnumCreatureType
 				if(living.getType() == EntityType.PLAYER)
 				{
 					PlayerEntity player = (PlayerEntity)living;
-					if(!player.isCreative() && !player.isSpectator() && !player.abilities.allowFlying)
+					boolean canFlyNatively = player.isCreative() || player.isSpectator();
+					
+					if(!VOPotions.isParalysed(player))
 					{
-						player.abilities.allowFlying = true;
-						player.sendPlayerAbilities();
+						if(!canFlyNatively && !player.abilities.allowFlying)
+						{
+							player.abilities.allowFlying = true;
+							player.sendPlayerAbilities();
+						}
 					}
 				}
 			}
@@ -165,7 +172,7 @@ public enum EnumCreatureType
 		parentAttribute = attribute;
 		supertype = true;
 		handler = handlerIn;
-		actions = actionsIn;
+		actions = actionsIn.clone();
 		hitDie = hitDieIn;
 	}
 	
@@ -311,7 +318,25 @@ public enum EnumCreatureType
 	
 	public static class ActionSet
 	{
+		private static final Predicate<EnumCreatureType> IS_SUPERTYPE = new Predicate<EnumCreatureType>()
+			{
+				public boolean apply(EnumCreatureType input){ return input.isSupertype(); }
+			};
+		private static final Predicate<EnumCreatureType> IS_SUBTYPE = new Predicate<EnumCreatureType>()
+			{
+				public boolean apply(EnumCreatureType input){ return !input.isSupertype(); }
+			};
+		
 		EnumSet<Action> actions = Action.NONE.clone();
+		
+		public ActionSet(){ }
+		public ActionSet(EnumSet<Action> actions)
+		{
+			super();
+			add(actions);
+		}
+		
+		public String toString(){ return actions.toString(); }
 		
 		public void applyType(TypeHandler handler, Collection<EnumCreatureType> types)
 		{
@@ -352,19 +377,19 @@ public enum EnumCreatureType
 		public static ActionSet fromSupertypes(Collection<EnumCreatureType> types)
 		{
 			ActionSet set = new ActionSet();
+			types.removeIf(IS_SUBTYPE);
 			
 			// Actions shared by all supertypes
-			EnumSet<Action> actions = Action.ALL;
+			EnumSet<Action> actions = EnumSet.allOf(Action.class);
 			for(EnumCreatureType type : types)
-				if(type.isSupertype())
-				{
-					EnumSet<Action> typeActions = type.actions();
-					EnumSet<Action> remove = EnumSet.noneOf(Action.class);
-					for(Action action : actions)
-						if(!typeActions.contains(action))
-							remove.add(action);
-					actions.removeAll(remove);
-				}
+			{
+				EnumSet<Action> typeActions = type.actions();
+				EnumSet<Action> remove = EnumSet.noneOf(Action.class);
+				for(Action action : actions)
+					if(!typeActions.contains(action))
+						remove.add(action);
+				actions.removeAll(remove);
+			}
 			set.add(actions);
 			
 			return set;
@@ -372,13 +397,19 @@ public enum EnumCreatureType
 		
 		public static ActionSet fromTypes(Collection<EnumCreatureType> types)
 		{
-			ActionSet set = fromSupertypes(types);
+			List<EnumCreatureType> supertypes = new ArrayList<>();
+			supertypes.addAll(types);
+			supertypes.removeIf(IS_SUBTYPE);
 			
+			ActionSet set = fromSupertypes(supertypes);
+			
+			List<EnumCreatureType> subtypes = new ArrayList<>();
+			subtypes.addAll(types);
+			subtypes.removeIf(IS_SUPERTYPE);
 			// Modifiers to actions from subtypes
-			types.forEach((type) -> 
+			subtypes.forEach((type) -> 
 				{
-					if(!type.isSupertype())
-						set.applyType(type.getHandler(), types);
+					set.applyType(type.getHandler(), types);
 				});
 			
 			return set;
