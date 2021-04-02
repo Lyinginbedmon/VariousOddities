@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -20,6 +21,7 @@ import com.lying.variousoddities.entity.passive.EntityMarimo;
 import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.entity.passive.EntityScorpion;
 import com.lying.variousoddities.entity.passive.EntityWorg;
+import com.lying.variousoddities.entity.projectile.EntityFireballGhastling;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
@@ -29,10 +31,13 @@ import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.IPlacementPredicate;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.PlacementType;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.item.Item;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
@@ -44,6 +49,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class VOEntities
 {
 	private static final Map<EntityType<?>, EntityRegistry> TYPE_PROPERTIES_MAP = new HashMap<>();
+	private static final Map<EntityType<?>, EntityRegistry> MISC_PROPERTIES_MAP = new HashMap<>();
 	
     public static final List<EntityType<?>> ENTITIES = Lists.newArrayList();
     public static final List<EntityType<?>> ENTITIES_AI = Lists.newArrayList();
@@ -71,7 +77,24 @@ public class VOEntities
 	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityGhastling::new, EntityClassification.CREATURE, 0.95F, 0.95F, EntityGhastling::canSpawnAt, 16382457, 12369084);
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
+	
+	public static final EntityType<EntityFireballGhastling> GHASTLING_FIREBALL	= register("ghastling_fireball", EntityFireballGhastling::new, EntityClassification.MISC, 0.3125F, 0.3125F, 4);
     
+	private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, int trackingRange)
+	{
+        ResourceLocation location = new ResourceLocation(Reference.ModInfo.MOD_ID, name);
+        EntityType<T> entity = EntityType.Builder.create(factory, type).size(width, height).setTrackingRange(trackingRange).setUpdateInterval(1).build(location.toString());
+        entity.setRegistryName(location);
+        
+        MISC_PROPERTIES_MAP.put(entity, new EntityRegistry(PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, new IPlacementPredicate<T>()
+        {
+			public boolean test(EntityType<T> p_test_1_, IServerWorld p_test_2_, SpawnReason p_test_3_, BlockPos p_test_4_, Random p_test_5_)
+			{
+				return true;
+			}}));
+        return entity;
+	}
+	
     private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, PlacementType placeType1, Heightmap.Type placeType2, IPlacementPredicate<T> predicate)
     {
         ResourceLocation location = new ResourceLocation(Reference.ModInfo.MOD_ID, name);

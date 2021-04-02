@@ -8,6 +8,7 @@
 		"LivingEntityMixin",
 		"FireworkRocketEntityMixin",
 		"ServerWorldMixin",
-		"MerchantResultSlotMixin"
+		"MerchantResultSlotMixin",
+		"NearestAttackableTargetGoalMixin"
 	]
 }

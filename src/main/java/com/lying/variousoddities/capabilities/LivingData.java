@@ -2,20 +2,27 @@ package com.lying.variousoddities.capabilities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.EnumCreatureType;
 import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
+import com.lying.variousoddities.types.TypeBus;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -28,6 +35,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
+import net.minecraft.util.FoodStats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
@@ -51,8 +59,11 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private final LazyOptional<LivingData> handler;
 	
 	private List<EnumCreatureType> prevTypes = new ArrayList<>();
+	
 	private int air = Reference.Values.TICKS_PER_DAY;
 	private boolean overridingAir = false;
+	
+	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
 	
 	public LivingData()
 	{
@@ -133,16 +144,19 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.prevTypes.addAll(typesNow);
 		
 		boolean isPlayer = false;
-		boolean isInvulnerablePlayer = false;
 		PlayerEntity player = null;
 		if(entity.getType() == EntityType.PLAYER)
 		{
 			isPlayer = true;
 			player = (PlayerEntity)entity;
-			isInvulnerablePlayer = player.abilities.disableDamage;
 		}
 		
+		if(isPlayer)
+			handleHealth(player);
+		
 		ActionSet actions = ActionSet.fromTypes(this.prevTypes);
+		
+		// Prevent phantoms due to sleeplessness
 		if(!actions.sleeps())
 		{
 			if(isPlayer && !isRemote)
@@ -153,10 +167,78 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			}
 		}
 		
+		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
+		
+		// Prevent player natural health regeneration
+		if(!actions.regenerates())
+			if(isPlayer && player.getFoodStats().getFoodLevel() > 17)
+			{
+				FoodStats stats = player.getFoodStats();
+				stats.setFoodLevel(17);
+				stats.setFoodSaturationLevel(Math.min(17, stats.getSaturationLevel()));
+			}
+	}
+	
+	/** Manage base health according to active supertypes */
+	public void handleHealth(PlayerEntity player)
+	{
+		List<EnumCreatureType> supertypes = new ArrayList<>();
+		supertypes.addAll(this.prevTypes);
+		supertypes.removeIf(EnumCreatureType.IS_SUBTYPE);
+		
+		double hitDieModifier = 0D;
+		if(!supertypes.isEmpty() && !player.abilities.disableDamage)
+		{
+			for(EnumCreatureType type : supertypes)
+			{
+				double health = ((double)type.getHitDie() / (double)EnumCreatureType.HUMANOID.getHitDie()) * 20D;
+				hitDieModifier += health - 20D;
+			}
+			hitDieModifier /= Math.max(1, supertypes.size());
+		}
+		
+		ModifiableAttributeInstance healthAttribute = player.getAttribute(Attributes.MAX_HEALTH);
+		AttributeModifier modifier = healthAttribute.getModifier(HEALTH_MODIFIER_UUID);
+		if(!TypeBus.shouldFire() || supertypes.isEmpty())
+		{
+			if(modifier != null)
+				healthAttribute.removeModifier(HEALTH_MODIFIER_UUID);
+		}
+		else
+		{
+			hitDieModifier = Math.max(hitDieModifier, -healthAttribute.getBaseValue() + 1);
+			if(modifier == null)
+			{
+				modifier = makeModifier(hitDieModifier);
+				healthAttribute.applyPersistentModifier(modifier);
+			}
+			else if(modifier.getAmount() != hitDieModifier)
+			{
+				
+				boolean shouldHeal = player.getHealth() == player.getMaxHealth() && modifier.getAmount() < hitDieModifier;
+				healthAttribute.removeModifier(modifier);
+				healthAttribute.applyPersistentModifier(makeModifier(hitDieModifier));
+				if(shouldHeal)
+					player.setHealth(player.getMaxHealth());
+			}
+		}
+	}
+	
+	/** Manage air for creatures that breathe water and/or don't breathe air */
+	public void handleAir(boolean breatheAir, boolean breatheWater, LivingEntity entity)
+	{
+		boolean isPlayer = false;
+		boolean isInvulnerablePlayer = false;
+		if(entity.getType() == EntityType.PLAYER)
+		{
+			isPlayer = true;
+			isInvulnerablePlayer = ((PlayerEntity)entity).abilities.disableDamage;
+		}
+		
 		this.overridingAir = false;
 		if(getAir() > entity.getMaxAir())
 			setAir(entity.getMaxAir());
-		if(!actions.breathes())
+		if(!breatheAir && !breatheWater)
 		{
 			setAir(entity.getMaxAir());
 			if(entity.getAir() < getAir())
@@ -167,7 +249,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			boolean isInWater = entity.areEyesInFluid(FluidTags.WATER) && !entity.getEntityWorld().getBlockState(new BlockPos(entity.getPosX(), entity.getPosYEye(), entity.getPosZ())).isIn(Blocks.BUBBLE_COLUMN);
 			
 			// Prevents drowning due to water
-			if(actions.breathesWater())
+			if(breatheWater)
 				if(isInWater && getAir() < entity.getMaxAir())
 				{
 					this.overridingAir = true;
@@ -175,7 +257,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				}
 			
 			// Causes drowning due to air
-			if(!actions.breathesAir())
+			if(!breatheAir)
 				if(!(EffectUtils.canBreatheUnderwater(entity) || isInWater))
 				{
 					setAir(Math.min(entity.getMaxAir(), decreaseAirSupply(getAir(), entity)));
@@ -188,11 +270,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				}
 		}
 		
-		if(!actions.regenerates())
-		{
-			if(isPlayer && player.getFoodStats().getFoodLevel() > 17)
-					player.getFoodStats().setFoodLevel(17);
-		}
+		if(overrideAir() && isPlayer && !entity.getEntityWorld().isRemote && entity.getEntityWorld().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
+			PacketHandler.sendTo((ServerPlayerEntity)entity, new PacketSyncAir(getAir()));
+	}
+	
+	private static AttributeModifier makeModifier(double amount)
+	{
+		return new AttributeModifier(HEALTH_MODIFIER_UUID, "hit_die_modifier", amount, AttributeModifier.Operation.ADDITION);
 	}
 	
 	public static class Storage implements Capability.IStorage<LivingData>

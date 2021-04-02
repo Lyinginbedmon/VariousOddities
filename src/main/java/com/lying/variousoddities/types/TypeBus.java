@@ -316,7 +316,7 @@ public class TypeBus
 		TypesManager manager = TypesManager.get(player.getEntityWorld());
 		
 		if(manager.isMobOfType(player, EnumCreatureType.AQUATIC) || manager.isMobOfType(player, EnumCreatureType.WATER))
-			if(player.areEyesInFluid(FluidTags.WATER))
+			if(player.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(player))
 				event.setNewSpeed(event.getNewSpeed() * 5F);
 		
 		if(manager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))

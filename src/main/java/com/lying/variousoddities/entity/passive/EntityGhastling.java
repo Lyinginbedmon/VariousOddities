@@ -129,7 +129,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 	
 	public boolean attackEntityFrom(DamageSource source, float amount)
 	{
-		if(source.isFireDamage())
+		if(source.isFireDamage() || source.isExplosion())
 			return false;
 		return super.attackEntityFrom(source, amount);
 	}

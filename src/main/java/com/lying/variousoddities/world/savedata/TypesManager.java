@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeGetEntityTypesEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketTypesData;
@@ -27,6 +28,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.WorldSavedData;
+import net.minecraftforge.common.MinecraftForge;
 
 public class TypesManager extends WorldSavedData
 {
@@ -201,7 +203,13 @@ public class TypesManager extends WorldSavedData
 	}
 	public List<EnumCreatureType> getMobTypes(LivingEntity entity)
 	{
-		return entity.getType() == EntityType.PLAYER ? getPlayerTypes((PlayerEntity)entity, false) : getMobTypes(entity.getType());
+		if(entity.getType() == EntityType.PLAYER)
+			return getPlayerTypes((PlayerEntity)entity, false);
+		
+		List<EnumCreatureType> types = getMobTypes(entity.getType());
+		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(entity.getEntityWorld(), entity, types);
+		MinecraftForge.EVENT_BUS.post(event);
+		return event.getTypes();
 	}
 	public List<EnumCreatureType> getMobTypes(EntityType<?> typeIn)
 	{
@@ -228,7 +236,10 @@ public class TypesManager extends WorldSavedData
 	
 	public List<EnumCreatureType> getPlayerTypes(PlayerEntity player, boolean customOnly)
 	{
-		return player != null ? getPlayerTypes(player.getName().getUnformattedComponentText(), customOnly) : Collections.emptyList();
+		List<EnumCreatureType> types = player != null ? getPlayerTypes(player.getName().getUnformattedComponentText(), customOnly) : Collections.emptyList();;
+		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(player.getEntityWorld(), player, types);
+		MinecraftForge.EVENT_BUS.post(event);
+		return event.getTypes();
 	}
 	public List<EnumCreatureType> getPlayerTypes(String playerName, boolean customOnly)
 	{

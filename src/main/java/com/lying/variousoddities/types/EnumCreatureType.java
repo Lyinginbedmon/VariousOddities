@@ -157,6 +157,15 @@ public enum EnumCreatureType
 	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.STANDARD, 8),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(true));
 	
+	public static final Predicate<EnumCreatureType> IS_SUPERTYPE = new Predicate<EnumCreatureType>()
+		{
+			public boolean apply(EnumCreatureType input){ return input.isSupertype(); }
+		};
+	public static final Predicate<EnumCreatureType> IS_SUBTYPE = new Predicate<EnumCreatureType>()
+		{
+			public boolean apply(EnumCreatureType input){ return !input.isSupertype(); }
+		};
+	
 	private static final List<EnumCreatureType> SUPERTYPES = Arrays.asList(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
 	private static final List<EnumCreatureType> SUBTYPES = Arrays.asList(AIR, AQUATIC, AUGMENTED, COLD, EARTH, EXTRAPLANAR, EVIL, FIRE, GOBLIN, HOLY, NATIVE, REPTILE, SHAPECHANGER, WATER);
 	
@@ -318,15 +327,6 @@ public enum EnumCreatureType
 	
 	public static class ActionSet
 	{
-		private static final Predicate<EnumCreatureType> IS_SUPERTYPE = new Predicate<EnumCreatureType>()
-			{
-				public boolean apply(EnumCreatureType input){ return input.isSupertype(); }
-			};
-		private static final Predicate<EnumCreatureType> IS_SUBTYPE = new Predicate<EnumCreatureType>()
-			{
-				public boolean apply(EnumCreatureType input){ return !input.isSupertype(); }
-			};
-		
 		EnumSet<Action> actions = Action.NONE.clone();
 		
 		public ActionSet(){ }

@@ -13,9 +13,9 @@ import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
 import com.lying.variousoddities.config.ConfigVO;
-import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.client.Minecraft;

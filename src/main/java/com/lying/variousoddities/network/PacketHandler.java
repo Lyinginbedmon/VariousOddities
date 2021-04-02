@@ -33,6 +33,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketSettlementData.class, PacketSettlementData::encode, PacketSettlementData::decode, PacketSettlementData::handle);
 		HANDLER.registerMessage(id++, PacketTileUpdate.class, PacketTileUpdate::encode, PacketTileUpdate::decode, PacketTileUpdate::handle);
 		HANDLER.registerMessage(id++, PacketTypesData.class, PacketTypesData::encode, PacketTypesData::decode, PacketTypesData::handle);
+		HANDLER.registerMessage(id++, PacketSyncAir.class, PacketSyncAir::encode, PacketSyncAir::decode, PacketSyncAir::handle);
 	}
 	
 	/**

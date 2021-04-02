@@ -16,6 +16,8 @@ import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.potion.PotionSleep;
 
 import net.minecraft.entity.Entity;
@@ -24,6 +26,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
@@ -35,6 +38,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -50,6 +54,16 @@ public class VOBusServer
 			event.addCapability(LivingData.IDENTIFIER, new LivingData());
 			if(event.getObject().getType() == EntityType.PLAYER)
 				event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onChangeDimensionEvent(EntityTravelToDimensionEvent event)
+	{
+		if(!event.getEntity().getEntityWorld().isRemote && event.getEntity().getType() == EntityType.PLAYER)
+		{
+			PlayerEntity player = (PlayerEntity)event.getEntity();
+			PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(LivingData.forEntity(player).getAir()));
 		}
 	}
 	
