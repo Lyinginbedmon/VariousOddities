@@ -35,6 +35,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.config.ModConfig.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -54,6 +55,7 @@ public class VariousOddities
 		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(this::doCommonSetup);
         bus.addListener(this::doClientSetup);
+        bus.addListener(this::doLoadComplete);
         
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigVO.spec);
         bus.addListener(this::onConfigEvent);
@@ -82,6 +84,11 @@ public class VariousOddities
         MinecraftForge.EVENT_BUS.register(SettlementRender.class);
     }
 	
+    private void doLoadComplete(final FMLLoadCompleteEvent event)
+    {
+    	proxy.onLoadComplete(event);
+    }
+    
     private void onConfigEvent(final ModConfigEvent event)
     {
     	switch(event.getConfig().getType())

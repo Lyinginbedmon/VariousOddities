@@ -35,7 +35,6 @@ import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
-import net.minecraft.util.FoodStats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
@@ -168,15 +167,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
-		
-		// Prevent player natural health regeneration
-		if(!actions.regenerates())
-			if(isPlayer && player.getFoodStats().getFoodLevel() > 17)
-			{
-				FoodStats stats = player.getFoodStats();
-				stats.setFoodLevel(17);
-				stats.setFoodSaturationLevel(Math.min(17, stats.getSaturationLevel()));
-			}
 	}
 	
 	/** Manage base health according to active supertypes */
@@ -199,11 +189,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		ModifiableAttributeInstance healthAttribute = player.getAttribute(Attributes.MAX_HEALTH);
 		AttributeModifier modifier = healthAttribute.getModifier(HEALTH_MODIFIER_UUID);
-		if(!TypeBus.shouldFire() || supertypes.isEmpty())
-		{
-			if(modifier != null)
-				healthAttribute.removeModifier(HEALTH_MODIFIER_UUID);
-		}
+		if(!TypeBus.shouldFire() || supertypes.isEmpty() || player.abilities.disableDamage)
+			healthAttribute.removeModifier(HEALTH_MODIFIER_UUID);
 		else
 		{
 			hitDieModifier = Math.max(hitDieModifier, -healthAttribute.getBaseValue() + 1);
@@ -214,7 +201,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			}
 			else if(modifier.getAmount() != hitDieModifier)
 			{
-				
 				boolean shouldHeal = player.getHealth() == player.getMaxHealth() && modifier.getAmount() < hitDieModifier;
 				healthAttribute.removeModifier(modifier);
 				healthAttribute.applyPersistentModifier(makeModifier(hitDieModifier));

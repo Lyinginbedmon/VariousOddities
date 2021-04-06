@@ -18,6 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.WorldSavedData;
@@ -46,7 +47,9 @@ public class FactionManager extends WorldSavedData
 		else
 		{
 			ServerWorld world = (ServerWorld)worldIn;
-			FactionManager manager = (FactionManager)world.getSavedData().get(FactionManager::new, DATA_NAME);
+			MinecraftServer server = world.getServer();
+			ServerWorld overWorld = server.getWorld(World.OVERWORLD);
+			FactionManager manager = (FactionManager)overWorld.getSavedData().get(FactionManager::new, DATA_NAME);
 			if(manager == null)
 			{
 				manager = (FactionManager)world.getSavedData().getOrCreate(FactionManager::new, DATA_NAME);

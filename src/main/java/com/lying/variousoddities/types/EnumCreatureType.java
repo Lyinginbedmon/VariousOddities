@@ -32,6 +32,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.HoverEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public enum EnumCreatureType
 {
@@ -97,24 +98,48 @@ public enum EnumCreatureType
 	EVIL(null, new TypeHandler().addResistance(VODamageSource.EVIL, EnumDamageResist.IMMUNE).addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE)),
 	FEY(null, new TypeHandler()
 		{
-			public EnumDamageResist getDamageResist(DamageSource source)
+//			public EnumDamageResist getDamageResist(DamageSource source)
+//			{
+//				if(source instanceof EntityDamageSource)
+//				{
+//					Entity attacker = source.getTrueSource();
+//					if(attacker != null && attacker instanceof LivingEntity)
+//					{
+//						ItemStack heldItem = ((LivingEntity)attacker).getHeldItemMainhand();
+//						if(!heldItem.isEmpty())
+//						{
+//							Item held = heldItem.getItem();
+//							IItemTier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
+//							if(itemTier != null && (itemTier == ItemTier.IRON || itemTier.toString().toLowerCase().contains("silver")))
+//								return EnumDamageResist.VULNERABLE;
+//						}
+//					}
+//				}
+//				return super.getDamageResist(source);
+//			}
+			
+			public void onDamageEventPost(LivingHurtEvent event)
 			{
+				DamageSource source = event.getSource();
 				if(source instanceof EntityDamageSource)
 				{
 					Entity attacker = source.getTrueSource();
 					if(attacker != null && attacker instanceof LivingEntity)
 					{
+						boolean resist = true;
 						ItemStack heldItem = ((LivingEntity)attacker).getHeldItemMainhand();
 						if(!heldItem.isEmpty())
 						{
 							Item held = heldItem.getItem();
 							IItemTier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
 							if(itemTier != null && (itemTier == ItemTier.IRON || itemTier.toString().toLowerCase().contains("silver")))
-								return EnumDamageResist.VULNERABLE;
+								resist = false;
 						}
+						
+						if(resist)
+							event.setAmount(Math.max(0F, event.getAmount() - 4F));
 					}
 				}
-				return super.getDamageResist(source);
 			}
 		}, Action.STANDARD, 6),
 	FIRE(null, new TypeHandler().setFireResist(EnumDamageResist.IMMUNE).addResistance(VODamageSource.COLD, EnumDamageResist.VULNERABLE)),
@@ -122,6 +147,7 @@ public enum EnumCreatureType
 	GOBLIN(),
 	HOLY(null, new TypeHandler().addResistance(VODamageSource.HOLY, EnumDamageResist.IMMUNE).addResistance(VODamageSource.EVIL, EnumDamageResist.VULNERABLE)),
 	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
+	INCORPOREAL(),
 	MAGICAL_BEAST(null, TypeHandler.get(), Action.STANDARD, 10),
 	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	OUTSIDER(null, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),

@@ -9,6 +9,8 @@
 		"FireworkRocketEntityMixin",
 		"ServerWorldMixin",
 		"MerchantResultSlotMixin",
-		"NearestAttackableTargetGoalMixin"
+		"NearestAttackableTargetGoalMixin",
+		"PlayerEntityMixin",
+		"AbstractBlockStateMixin"
 	]
 }

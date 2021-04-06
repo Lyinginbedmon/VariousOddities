@@ -1,5 +1,6 @@
 package com.lying.variousoddities.item;
 
+import com.lying.variousoddities.entity.passive.EntityMarimo;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.block.FlowingFluidBlock;
@@ -28,7 +29,7 @@ public class ItemMossBottle extends VOItem
 	
 	public static DyeColor getColor(ItemStack stack)
 	{
-		if(stack.hasTag() && stack.getTag().contains("Color"))
+		if(stack.hasTag() && stack.getTag().contains("Color", 3))
 			return DyeColor.byId(stack.getTag().getInt("Color"));
 		return DyeColor.GREEN;
 	}
@@ -60,15 +61,19 @@ public class ItemMossBottle extends VOItem
 			if((worldIn.getBlockState(blockpos).getBlock() instanceof FlowingFluidBlock))
 			{
 				if(worldIn.isBlockModifiable(playerIn, blockpos) && playerIn.canPlayerEdit(blockpos, blockraytraceresult.getFace(), itemstack))
-					if(VOEntities.MARIMO.spawn((ServerWorld)worldIn, itemstack, playerIn, blockpos, SpawnReason.SPAWN_EGG, false, false) == null)
+				{
+					EntityMarimo marimo = (EntityMarimo)VOEntities.MARIMO.spawn((ServerWorld)worldIn, itemstack, playerIn, blockpos, SpawnReason.SPAWN_EGG, false, false); 
+					if(marimo == null)
 						return ActionResult.resultPass(itemstack);
 					else
 					{
+						marimo.setColor(getColor(itemstack));
 						if(!playerIn.abilities.isCreativeMode)
 							itemstack.shrink(1);
 						playerIn.addStat(Stats.ITEM_USED.get(this));
 						return ActionResult.resultConsume(itemstack);
 					}
+				}
 			}
 			else
 				return ActionResult.resultFail(itemstack);

@@ -9,10 +9,13 @@ import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 
 public interface IProxy 
 {
 	public default void registerHandlers(){ }
+	
+	public default void onLoadComplete(FMLLoadCompleteEvent event){ }
 	
 	public TypesManager getTypesManager();
 	

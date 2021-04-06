@@ -145,7 +145,7 @@ public class TypeBus
 					if(event.isCanceled()) return;
 				}
 				
-				if(resistance == EnumDamageResist.IMMUNE)
+				if(resistance == EnumDamageResist.IMMUNE || event.getAmount() == 0F)
 					event.setCanceled(true);
 			}
 		}

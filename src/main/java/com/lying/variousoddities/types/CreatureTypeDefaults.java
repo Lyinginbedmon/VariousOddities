@@ -138,7 +138,7 @@ public class CreatureTypeDefaults
 		addPlayerToTypeDefaults("Kurloz_M",					EnumCreatureType.PLANT, EnumCreatureType.EARTH);
 		addPlayerToTypeDefaults("_Booked",					EnumCreatureType.FEY, EnumCreatureType.OUTSIDER);
 		addPlayerToTypeDefaults("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.AUGMENTED);
-		addPlayerToTypeDefaults("Exandrian",				EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC, EnumCreatureType.EXTRAPLANAR);
+		addPlayerToTypeDefaults("thefeywilds",				EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC, EnumCreatureType.EXTRAPLANAR);
 		addPlayerToTypeDefaults("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH);
 		addPlayerToTypeDefaults("Pyrodance",				EnumCreatureType.HUMANOID, EnumCreatureType.SHAPECHANGER);
 	}
