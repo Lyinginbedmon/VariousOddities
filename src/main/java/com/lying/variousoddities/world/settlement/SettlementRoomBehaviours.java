@@ -7,9 +7,14 @@ import java.util.Random;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.api.world.settlement.SettlementRoomBehaviour;
+import com.lying.variousoddities.entity.ai.EntityAIOperateRoom;
+import com.lying.variousoddities.entity.hostile.EntityGoblin;
+import com.lying.variousoddities.entity.hostile.EntityGoblin.GoblinType;
 import com.lying.variousoddities.entity.passive.EntityKobold;
+import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
@@ -25,6 +30,85 @@ import net.minecraft.world.server.ServerWorld;
 public class SettlementRoomBehaviours
 {
 	public static final SettlementRoomBehaviour KOBOLD_NEST = new KoboldRoomBehaviourNest();
+	public static final SettlementRoomBehaviour GOBLIN_BARN = new GoblinRoomBehaviourBarn();
+	public static final SettlementRoomBehaviour GOBLIN_STABLE = new SettlementRoomBehaviour()
+	{
+		/**
+		 * Ensure construction
+		 * Teleport wayward wargs?
+		 */
+		public void function(BoxRoom room, ServerWorld worldIn, Random rand)
+		{
+			
+		}
+	};
+	
+	public static class GoblinRoomBehaviourBarn implements SettlementRoomBehaviour
+	{
+		private static final Predicate<EntityGoblin> isTamer = new Predicate<EntityGoblin>()
+				{
+					public boolean apply(EntityGoblin input)
+					{
+						return input.isAlive() && !input.isChild() && input.getGoblinType() == GoblinType.WORG_TAMER;
+					}
+				};
+		
+		private static final Predicate<EntityWorg> isWayward = new Predicate<EntityWorg>()
+				{
+					public boolean apply(EntityWorg input)
+					{
+						SettlementManager manager = SettlementManager.get(input.getEntityWorld());
+						Settlement settlement = manager.getSettlementAt(input.getPosition());
+						if(settlement != null)
+						{
+							BoxRoom room = settlement.getRoomAt(input.getPosition());
+							if(room != null && room.hasFunction() && room.getFunction() == EnumRoomFunction.BARN)
+								return false;
+						}
+						return input.isAlive() && !input.isSitting() && !input.isTamed() && (input.getAttackTarget() == null || !input.getAttackTarget().isAlive());
+					}
+				};
+		
+		/**
+		 * Ensure construction
+		 * Teleport wayward worgs?
+		 */
+		public void functionCasual(BoxRoom room, ServerWorld worldIn, Random rand)
+		{
+			if(worldIn.getEntitiesWithinAABB(EntityGoblin.class, room.getBounds(), isTamer).isEmpty())
+			{
+				List<EntityGoblin> tamers = worldIn.getEntitiesWithinAABB(EntityGoblin.class, room.getBounds().grow(32, 8, 32), isTamer);
+				if(!tamers.isEmpty())
+				{
+					for(EntityGoblin tamer : tamers)
+					{
+						EntityAIOperateRoom operate = tamer.getOperateRoomTask();
+						if(!operate.isBusy())
+						{
+							operate.requestVisitTo(room, GOBLIN_BARN, rand);
+							return;
+						}
+					}
+				}
+			}
+			else
+				function(room, worldIn, rand);
+		}
+		
+		public void function(BoxRoom room, ServerWorld worldIn, Random rand)
+		{
+			BlockPos core = room.getCore();
+			for(EntityWorg worg : worldIn.getEntitiesWithinAABB(EntityWorg.class, room.getBounds().grow(32, 8, 32), isWayward))
+			{
+				// TODO Safe landing detection
+				if(rand.nextInt(3) == 0)
+				{
+					worg.setPosition(core.getX() + 0.5D, core.getY() + 1.5D, core.getZ() + 0.5D);
+					worg.getNavigator().clearPath();
+				}
+			}
+		}
+	}
 	
 	public static class KoboldRoomBehaviourNest implements SettlementRoomBehaviour
 	{

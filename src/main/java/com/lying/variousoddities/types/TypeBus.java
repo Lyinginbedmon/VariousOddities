@@ -1,15 +1,12 @@
 package com.lying.variousoddities.types;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.SpellEvent.SpellAffectEntityEvent;
-import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
-import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.types.TypeHandler.EnumDamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -23,16 +20,12 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerEntity.SleepResult;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
@@ -248,45 +241,6 @@ public class TypeBus
 		}
 	}
 	
-	/** Removes ineffective potion effects and applies any per-tick effects */
-	@SubscribeEvent
-	public static void onMobUpdateEvent(LivingUpdateEvent event)
-	{
-		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
-		{
-			LivingEntity living = event.getEntityLiving();
-			LivingData.forEntity(living).tick(living);
-			
-			TypesManager manager = TypesManager.get(living.getEntityWorld());
-			List<EnumCreatureType> types = manager.getMobTypes(living);
-			for(EnumCreatureType mobType : types)
-			{
-				TypeHandler handler = mobType.getHandler();
-				
-				/** General update effects */
-				handler.onMobUpdateEvent(living);
-				
-				/** Potion resistances */
-				List<EffectInstance> activeEffects = getActiveEffects(living);
-				if(!activeEffects.isEmpty())
-				{
-					if(!handler.canBePoisoned() && living.isPotionActive(Effects.POISON))
-						living.removeActivePotionEffect(Effects.POISON);
-					
-					if(!handler.canBeParalysed() && VOPotions.isParalysed(living))
-						for(Effect effect : VOPotions.PARALYSIS_EFFECTS.keySet())
-							if(living.isPotionActive(effect) && VOPotions.PARALYSIS_EFFECTS.get(effect).apply(living.getActivePotionEffect(effect)))
-								living.removeActivePotionEffect(effect);
-					
-					for(Effect effect : handler.getInvalidPotions(activeEffects))
-						living.removeActivePotionEffect(effect);
-				}
-				if(event.isCanceled()) return;
-			}
-		}
-	}
-	
 	/**
 	 * Prevents magic effects from affecting mobs and players immune to them, such as death effects
 	 * @param event
@@ -321,12 +275,5 @@ public class TypeBus
 		
 		if(manager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
 			event.setNewSpeed(event.getNewSpeed() * 1.3F);
-	}
-	
-	private static List<EffectInstance> getActiveEffects(LivingEntity input)
-	{
-		List<EffectInstance> activeEffects = new ArrayList<EffectInstance>();
-		activeEffects.addAll(input.getActivePotionEffects());
-		return activeEffects;
 	}
 }

@@ -14,6 +14,7 @@ import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 import com.lying.variousoddities.world.settlement.SettlementDummy;
+import com.lying.variousoddities.world.settlement.SettlementGoblin;
 import com.lying.variousoddities.world.settlement.SettlementKobold;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
@@ -420,6 +421,7 @@ public abstract class SettlementManager extends WorldSavedData
 	{
 		registerSettlement(SettlementDummy.TYPE_NAME, SettlementDummy.class);
 		registerSettlement(SettlementKobold.TYPE_NAME, SettlementKobold.class);
+		registerSettlement(SettlementGoblin.TYPE_NAME, SettlementGoblin.class);
 		MinecraftForge.EVENT_BUS.post(new SettlementRegistryEvent());
 	}
 }

@@ -123,7 +123,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 		{
 			this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
 			this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
-			this.targetSelector.addGoal(3, (new HurtByTargetGoal(this)).setCallsForHelp());
+			this.targetSelector.addGoal(3, (new HurtByTargetGoal(this, AbstractGoblinWolf.class)).setCallsForHelp());
 		}
 	}
 	

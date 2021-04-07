@@ -8,9 +8,7 @@ import com.lying.variousoddities.entity.ISettlementEntity;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -63,9 +61,7 @@ public class EntityAIOperateRoom extends Goal
 		theNavigator.clearPath();
 		BlockPos core = targetRoom.getCore();
 		
-		Path path = theNavigator.getPathToPos(core, (int)theMob.getAttribute(Attributes.FOLLOW_RANGE).getValue());
-		if(path != null)
-			theNavigator.setPath(path, 1.0D);
+		theNavigator.tryMoveToXYZ(core.getX(), core.getY(), core.getZ(), 1.0D);
 	}
 	
 	public void tick()

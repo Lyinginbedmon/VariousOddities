@@ -127,20 +127,27 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void tick(LivingEntity entity)
 	{
+		if(!TypeBus.shouldFire()) return;
+		
 		TypesManager manager = TypesManager.get(entity.getEntityWorld());
 		List<EnumCreatureType> typesNow = manager.getMobTypes(entity);
 		boolean isRemote = entity.getEntityWorld().isRemote;
 		
-		for(EnumCreatureType type : typesNow)
-			if(!this.prevTypes.contains(type))
-				MinecraftForge.EVENT_BUS.post(new TypeApplyEvent(entity, type));
+		List<EnumCreatureType> typesNew = new ArrayList<>();
+		typesNew.addAll(typesNow);
+		typesNew.removeAll(prevTypes);
+		for(EnumCreatureType type : typesNew)
+			MinecraftForge.EVENT_BUS.post(new TypeApplyEvent(entity, type));
 		
+		this.prevTypes.removeAll(typesNow);
 		for(EnumCreatureType type : prevTypes)
-			if(!typesNow.contains(type))
-				MinecraftForge.EVENT_BUS.post(new TypeRemoveEvent(entity, type));
+			MinecraftForge.EVENT_BUS.post(new TypeRemoveEvent(entity, type));
 		
 		this.prevTypes.clear();
 		this.prevTypes.addAll(typesNow);
+		
+		for(EnumCreatureType type : this.prevTypes)
+			type.getHandler().onLivingTick(entity);
 		
 		boolean isPlayer = false;
 		PlayerEntity player = null;

@@ -87,7 +87,7 @@ public class TypeHandler
 	public  List<Effect> getInvalidPotions(List<EffectInstance> activePotions){ return TypeUtils.EMPTY_POTIONS; };
 	
 	/** Applies additional effects specific to this type */
-	public  void onMobUpdateEvent(LivingEntity entity){ };
+	public  void onLivingTick(LivingEntity entity){ };
 	
 	public  boolean canSpellAffect(IMagicEffect spellIn){ return true; }
 	

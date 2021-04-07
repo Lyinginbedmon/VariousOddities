@@ -32,12 +32,15 @@ public class TypeHandlerAquatic extends TypeHandler
 		return actions;
 	}
 	
-	public void onMobUpdateEvent(LivingEntity living)
+	public void onLivingTick(LivingEntity living)
 	{
 		if(living.areEyesInFluid(FluidTags.WATER))
 		{
-			EffectInstance conduitPower = new EffectInstance(Effects.CONDUIT_POWER, 10 * Reference.Values.TICKS_PER_SECOND, 0, true, false);
-			living.addPotionEffect(conduitPower);
+			if(!living.isPotionActive(Effects.CONDUIT_POWER) || living.getActivePotionEffect(Effects.CONDUIT_POWER).getDuration() < Reference.Values.TICKS_PER_SECOND * 7)
+			{
+				EffectInstance conduitPower = new EffectInstance(Effects.CONDUIT_POWER, 10 * Reference.Values.TICKS_PER_SECOND, 0, true, false);
+				living.addPotionEffect(conduitPower);
+			}
 		}
 		else if(living.isPotionActive(Effects.CONDUIT_POWER))
 		{

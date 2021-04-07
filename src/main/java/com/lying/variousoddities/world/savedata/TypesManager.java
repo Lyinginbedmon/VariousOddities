@@ -37,6 +37,9 @@ public class TypesManager extends WorldSavedData
 	private Map<EnumCreatureType, List<ResourceLocation>> typeToMob = new HashMap<>();
 	private Map<EnumCreatureType, List<String>> typeToPlayer = new HashMap<>();
 	
+	private Map<String, List<EnumCreatureType>> playerTypeCache = new HashMap<>();
+	private Map<String, List<EnumCreatureType>> mobTypeCache = new HashMap<>();
+	
 	private ServerWorld world = null;
 	
 	public TypesManager()
@@ -221,8 +224,10 @@ public class TypesManager extends WorldSavedData
 	}
 	public List<EnumCreatureType> getMobTypes(String registryName)
 	{
-		List<EnumCreatureType> types = new ArrayList<>();
+		if(mobTypeCache.containsKey(registryName))
+			return mobTypeCache.get(registryName);
 		
+		List<EnumCreatureType> types = new ArrayList<>();
 		for(EnumCreatureType type : typeToMob.keySet())
 			for(ResourceLocation entry : typeToMob.getOrDefault(type, Collections.emptyList()))
 				if(entry.toString().equalsIgnoreCase(registryName))
@@ -231,6 +236,7 @@ public class TypesManager extends WorldSavedData
 					break;
 				}
 		
+		mobTypeCache.put(registryName, types);
 		return types;
 	}
 	
@@ -243,6 +249,9 @@ public class TypesManager extends WorldSavedData
 	}
 	public List<EnumCreatureType> getPlayerTypes(String playerName, boolean customOnly)
 	{
+		if(playerTypeCache.containsKey(playerName))
+			return playerTypeCache.get(playerName);
+		
 		List<EnumCreatureType> types = new ArrayList<>();
 		
 		for(EnumCreatureType type : typeToPlayer.keySet())
@@ -256,6 +265,7 @@ public class TypesManager extends WorldSavedData
 		if(types.isEmpty() && !customOnly)
 			types.addAll(getMobTypes(EntityType.PLAYER));
 		
+		playerTypeCache.put(playerName, types);
 		return types;
 	}
 	
@@ -327,7 +337,10 @@ public class TypesManager extends WorldSavedData
 		typeToMob.put(type, entries);
 		
 		if(notify)
+		{
+			mobTypeCache.remove(entity.toString());
 			markDirty();
+		}
 	}
 	
 	public void removeFromEntity(ResourceLocation entity, EnumCreatureType type, boolean notify)
@@ -340,7 +353,10 @@ public class TypesManager extends WorldSavedData
 		typeToMob.put(type, entries);
 		
 		if(notify)
+		{
+			mobTypeCache.remove(entity.toString());
 			markDirty();
+		}
 	}
 	
 	public void addToPlayer(String player, EnumCreatureType type, boolean notify)
@@ -354,7 +370,10 @@ public class TypesManager extends WorldSavedData
 		typeToPlayer.put(type, entries);
 		
 		if(notify)
+		{
+			playerTypeCache.remove(player);
 			markDirty();
+		}
 	}
 	
 	public void removeFromPlayer(String player, EnumCreatureType type, boolean notify)
@@ -368,7 +387,10 @@ public class TypesManager extends WorldSavedData
 		typeToPlayer.put(type, entries);
 		
 		if(notify)
+		{
+			playerTypeCache.remove(player);
 			markDirty();
+		}
 	}
 	
 	public void markDirty()

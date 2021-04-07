@@ -66,6 +66,14 @@ public class VOPotions
 		return false;
 	}
 	
+	public static boolean isParalysisEffect(EffectInstance instance)
+	{
+		for(Effect effect : PARALYSIS_EFFECTS.keySet())
+			if(effect == instance.getPotion() && PARALYSIS_EFFECTS.get(effect).apply(instance))
+				return true;
+		return false;
+	}
+	
 	public static boolean isSilenced(LivingEntity entity)
 	{
 		for(Effect effect : SILENCE_EFFECTS.keySet())

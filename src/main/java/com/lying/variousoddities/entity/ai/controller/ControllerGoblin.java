@@ -5,11 +5,17 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.ai.EntityAITargetHostileFaction;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinFlee;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinMate;
+import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgBreed;
+import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgFight;
+import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgHeal;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgHurt;
+import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgTame;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityGoblin.GoblinType;
 
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
+import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
 
 public class ControllerGoblin
 {
@@ -25,7 +31,9 @@ public class ControllerGoblin
 						}
 					});
 			
+			addBehaviour(0, new SwimGoal(par1Entity));
 			addBehaviour(1, new EntityAIGoblinFlee(par1Entity, 1.0D));
+			addBehaviour(6, new WaterAvoidingRandomWalkingGoal(par1Entity, 1.0D));
 		}
 	}
 	
@@ -45,6 +53,10 @@ public class ControllerGoblin
 		private ControllerGoblinBasic(int priorityIn, EntityGoblin par1Entity, Predicate<EntityGoblin> activatorIn)
 		{
 			super(priorityIn, par1Entity, activatorIn);
+			
+			addBehaviour(0, new SwimGoal(par1Entity));
+			addBehaviour(3, par1Entity.getOperateRoomTask());
+			addBehaviour(6, new WaterAvoidingRandomWalkingGoal(par1Entity, 1.0D));
 			
 	    	addBehaviour(6, new EntityAIGoblinMate(par1Entity));
 			addBehaviour(6, new EntityAIGoblinWorgHurt(par1Entity));
@@ -69,10 +81,10 @@ public class ControllerGoblin
 				}
 			});
 			
-//			addBehaviour(6, new EntityAIGoblinWorgBreed(par1Entity));
-//			addBehaviour(3, new EntityAIGoblinWorgHeal(par1Entity));
-//			addBehaviour(6, new EntityAIGoblinWorgFight(par1Entity));
-//			addBehaviour(6, new EntityAIGoblinWorgTame(par1Entity));
+			addBehaviour(6, new EntityAIGoblinWorgBreed(par1Entity));
+			addBehaviour(3, new EntityAIGoblinWorgHeal(par1Entity));
+			addBehaviour(6, new EntityAIGoblinWorgFight(par1Entity));
+			addBehaviour(6, new EntityAIGoblinWorgTame(par1Entity));
 		}
 	}
 	
