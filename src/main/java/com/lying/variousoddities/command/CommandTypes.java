@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lying.variousoddities.api.EnumArgumentChecked;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.CreatureTypeDefaults;
 import com.lying.variousoddities.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.TypesManager;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
@@ -58,7 +60,8 @@ public class CommandTypes extends CommandBase
 			.then(VariantClear.build())
 			.then(VariantSet.build())
 			.then(VariantReset.build())
-			.then(VariantTest.build());
+			.then(VariantTest.build())
+			.then(VariantOrigin.build());
 		
 		dispatcher.register(literal);
 	}
@@ -484,15 +487,69 @@ public class CommandTypes extends CommandBase
 			
 			if(players)
 			{
+				List<String> typedPlayers = manager.getTypedPlayers();
 				manager.resetPlayers();
+				List<String> resetPlayers = manager.getTypedPlayers();
+				resetPlayers.removeAll(typedPlayers);
+				typedPlayers.addAll(resetPlayers);
 				if(!mobs)
 				{
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.players.success"), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.players.success", typedPlayers.size()), true);
 					return 15;
 				}
 			}
 			
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.success"), true);
+			return 15;
+		}
+	}
+	
+	private static class VariantOrigin
+	{
+		private static final String DEST = "dimension";
+		
+		public static LiteralArgumentBuilder<CommandSource> build()
+		{
+			return newLiteral("origin")
+					.then(newLiteral(MOB).then(newArgument(MOB, EntityArgument.entity())
+						.executes((source) -> { return getHomeDimension(EntityArgument.getEntity(source, MOB), source.getSource()); })
+						.then(newArgument(DEST, StringArgumentType.word())
+							.executes((source) -> { return setHomeDimension(EntityArgument.getEntity(source, MOB), StringArgumentType.getString(source, DEST), source.getSource()); }))));
+		}
+		
+		private static int getHomeDimension(Entity entityIn, CommandSource source)
+		{
+			if(entityIn instanceof LivingEntity)
+			{
+				LivingData data = LivingData.forEntity((LivingEntity)entityIn);
+				if(data.getHomeDimension() != null)
+				{
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.success", entityIn.getName(), data.getHomeDimension()), true);
+					return 15;
+				}
+			}
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.failed", entityIn.getName()), true);
+			return 0;
+		}
+		
+		private static int setHomeDimension(Entity entityIn, String destination, CommandSource source)
+		{
+			if(entityIn instanceof LivingEntity)
+			{
+				LivingData data = LivingData.forEntity((LivingEntity)entityIn);
+				ResourceLocation dest = null;
+				try
+				{
+					dest = new ResourceLocation(destination);
+				}
+				catch(Exception e){ }
+				if(dest != null)
+				{
+					data.setHomeDimension(dest);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.success", entityIn.getName(), data.getHomeDimension()), true);
+				}
+			}
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.failed", entityIn.getName()), true);
 			return 15;
 		}
 	}

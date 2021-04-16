@@ -54,6 +54,7 @@ public class TypesManager extends WorldSavedData
 	
 	public void read(CompoundNBT compound)
 	{
+		typeToMob.clear();
 		ListNBT mobs = compound.getList("Mobs", 10);
 		for(int i=0; i<mobs.size(); i++)
 		{
@@ -68,6 +69,7 @@ public class TypesManager extends WorldSavedData
 			typeToMob.put(type, entries);
 		}
 		
+		typeToPlayer.clear();
 		ListNBT players = compound.getList("Players", 10);
 		for(int i=0; i<players.size(); i++)
 		{
@@ -146,26 +148,38 @@ public class TypesManager extends WorldSavedData
 		PacketHandler.sendToAll(world, new PacketTypesData(write(new CompoundNBT())));
 	}
 	
+	public void clearCaches()
+	{
+		playerTypeCache.clear();
+		mobTypeCache.clear();
+	}
+	
 	public void resetMobs()
 	{
 		typeToMob.clear();
-		Map<EnumCreatureType, String[]> configuredMobs = ConfigVO.MOBS.typeSettings.getMobTypes();
+		mobTypeCache.clear();
 		
+		Map<EnumCreatureType, String[]> configuredMobs = ConfigVO.MOBS.typeSettings.getMobTypes();
 		for(EnumCreatureType type : configuredMobs.keySet())
-			for(String entry : configuredMobs.get(type))
-				if(entry != null && entry.length() > 0 && entry.contains(":"))
-					addToEntity(new ResourceLocation(entry), type, false);
+			if(configuredMobs.get(type).length > 0)
+				for(String entry : configuredMobs.get(type))
+					if(entry != null && entry.length() > 0 && entry.contains(":"))
+						addToEntity(new ResourceLocation(entry), type, false);
+		
 		markDirty();
 	}
 	
 	public void resetPlayers()
 	{
 		typeToPlayer.clear();
+		playerTypeCache.clear();
+		
 		Map<EnumCreatureType, String[]> configuredPlayers = ConfigVO.MOBS.typeSettings.getPlayerTypes();
 		for(EnumCreatureType type : configuredPlayers.keySet())
 			for(String entry : configuredPlayers.get(type))
 				if(entry != null && entry.length() > 0)
 					addToPlayer(entry, type, false);
+		
 		markDirty();
 	}
 	
@@ -183,6 +197,7 @@ public class TypesManager extends WorldSavedData
 			}
 			java.util.Collections.sort(players);
 		}
+		
 		return players;
 	}
 	
@@ -202,10 +217,12 @@ public class TypesManager extends WorldSavedData
 	
 	public List<EnumCreatureType> getMobTypes(Entity entity)
 	{
-		return entity instanceof LivingEntity ? getMobTypes((LivingEntity)entity) : Collections.emptyList();
+		return entity != null && entity instanceof LivingEntity ? getMobTypes((LivingEntity)entity) : Collections.emptyList();
 	}
 	public List<EnumCreatureType> getMobTypes(LivingEntity entity)
 	{
+		if(entity == null)
+			return Collections.emptyList();
 		if(entity.getType() == EntityType.PLAYER)
 			return getPlayerTypes((PlayerEntity)entity, false);
 		
@@ -335,12 +352,10 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(mobsOfType(type));
 			entries.add(entity);
 		typeToMob.put(type, entries);
+		mobTypeCache.remove(entity.toString());
 		
 		if(notify)
-		{
-			mobTypeCache.remove(entity.toString());
 			markDirty();
-		}
 	}
 	
 	public void removeFromEntity(ResourceLocation entity, EnumCreatureType type, boolean notify)
@@ -351,12 +366,10 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(typeToMob.getOrDefault(type, Collections.emptyList()));
 			entries.remove(entity);
 		typeToMob.put(type, entries);
+		mobTypeCache.remove(entity.toString());
 		
 		if(notify)
-		{
-			mobTypeCache.remove(entity.toString());
 			markDirty();
-		}
 	}
 	
 	public void addToPlayer(String player, EnumCreatureType type, boolean notify)
@@ -368,12 +381,10 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(typeToPlayer.getOrDefault(type, Collections.emptyList()));
 			entries.add(player);
 		typeToPlayer.put(type, entries);
+		playerTypeCache.remove(player);
 		
 		if(notify)
-		{
-			playerTypeCache.remove(player);
 			markDirty();
-		}
 	}
 	
 	public void removeFromPlayer(String player, EnumCreatureType type, boolean notify)
@@ -385,12 +396,10 @@ public class TypesManager extends WorldSavedData
 			entries.addAll(typeToPlayer.getOrDefault(type, Collections.emptyList()));
 			entries.remove(player);
 		typeToPlayer.put(type, entries);
+		playerTypeCache.remove(player);
 		
 		if(notify)
-		{
-			playerTypeCache.remove(player);
 			markDirty();
-		}
 	}
 	
 	public void markDirty()

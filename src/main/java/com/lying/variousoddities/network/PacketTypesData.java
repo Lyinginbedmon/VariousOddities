@@ -35,6 +35,7 @@ public class PacketTypesData
 	{
 		NetworkEvent.Context context = cxt.get();
 		TypesManager manager = VariousOddities.proxy.getTypesManager();
+		manager.clearCaches();
 		manager.read(msg.data);
 		context.setPacketHandled(true);
 	}

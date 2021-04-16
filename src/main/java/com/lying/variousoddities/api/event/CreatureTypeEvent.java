@@ -36,14 +36,26 @@ public class CreatureTypeEvent extends Event
 		{
 			this.world = worldIn;
 			this.entity = entityIn;
-			setTypes(typesIn);
+			set(typesIn);
 		}
 		
 		public World getWorld(){ return this.world; }
 		public LivingEntity getEntity(){ return this.entity; }
 		public List<EnumCreatureType> getTypes(){ return this.types; }
 		
-		public void setTypes(Collection<EnumCreatureType> typesIn)
+		public void add(EnumCreatureType typeIn)
+		{
+			if(!this.types.contains(typeIn))
+				this.types.add(typeIn);
+		}
+		
+		public void remove(EnumCreatureType typeIn)
+		{
+			if(this.types.contains(typeIn))
+				this.types.remove(typeIn);
+		}
+		
+		public void set(Collection<EnumCreatureType> typesIn)
 		{
 			this.types.clear();
 			this.types.addAll(typesIn);

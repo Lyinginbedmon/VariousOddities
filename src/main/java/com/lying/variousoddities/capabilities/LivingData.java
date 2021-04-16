@@ -59,8 +59,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private List<EnumCreatureType> prevTypes = new ArrayList<>();
 	
+	private ResourceLocation originDimension = null;
+	
 	private int air = Reference.Values.TICKS_PER_DAY;
 	private boolean overridingAir = false;
+	
+	public boolean checkingFoodRegen = false;
 	
 	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
 	
@@ -89,6 +93,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public CompoundNBT serializeNBT()
 	{
 		CompoundNBT compound = new CompoundNBT();
+			if(this.originDimension != null)
+				compound.putString("HomeDim", this.originDimension.toString());
+			
 			compound.putInt("Air", this.air);
 			
 			ListNBT types = new ListNBT();
@@ -100,6 +107,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void deserializeNBT(CompoundNBT nbt)
 	{
+		if(nbt.contains("HomeDim", 8))
+			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
+		
 		this.air = nbt.getInt("Air");
 		
 		ListNBT types = nbt.getList("Types", 8);
@@ -107,6 +117,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		for(int i=0; i<types.size(); i++)
 			prevTypes.add(EnumCreatureType.fromName(types.getString(i)));
 	}
+	
+	public ResourceLocation getHomeDimension(){ return this.originDimension; }
+	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; }
 	
 	/** True if this object should override the vanilla air value */
 	public boolean overrideAir(){ return this.overridingAir; }
@@ -127,6 +140,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void tick(LivingEntity entity)
 	{
+		if(this.originDimension == null)
+		{
+			// TODO Check default home dimension registry for creature before setting to current dim
+			this.originDimension = entity.getEntityWorld().getDimensionKey().getLocation();
+		}
+		
 		if(!TypeBus.shouldFire()) return;
 		
 		TypesManager manager = TypesManager.get(entity.getEntityWorld());

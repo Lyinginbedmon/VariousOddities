@@ -11,6 +11,15 @@
 		"MerchantResultSlotMixin",
 		"NearestAttackableTargetGoalMixin",
 		"PlayerEntityMixin",
-		"AbstractBlockStateMixin"
+		"FoodStatsMixin",
+		"AbstractBlockStateMixin",
+		"BlockMixin",
+		"ItemStackMixin"
+	],
+	"client":
+	[
+		"OverlayRendererMixin",
+		"GameSettingsMixin",
+		"WorldRendererMixin"
 	]
 }

@@ -3,13 +3,21 @@ package com.lying.variousoddities.init;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lying.variousoddities.block.*;
+import com.lying.variousoddities.block.BlockDraftingTable;
+import com.lying.variousoddities.block.BlockEggBase;
+import com.lying.variousoddities.block.BlockEggKobold;
+import com.lying.variousoddities.block.BlockLayerScale;
+import com.lying.variousoddities.block.BlockMoss;
+import com.lying.variousoddities.block.VOBlock;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialColor;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ITag;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,6 +28,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class VOBlocks
 {
 	private static final List<Block> BLOCKS = new ArrayList<>();
+	
+    public static final ITag.INamedTag<Block> UNPHASEABLE = createTag("unphaseable");
 	
 	public static final Block TABLE_DRAFTING	= register("drafting_table", new BlockDraftingTable(AbstractBlock.Properties.create(Material.WOOD, MaterialColor.BLUE_TERRACOTTA).zeroHardnessAndResistance()));
 	public static final Block MOSS_BLOCK		= register("moss_block", new BlockMoss(AbstractBlock.Properties.create(Material.PLANTS, MaterialColor.GREEN).notSolid().setOpaque(VOBlock::isntSolid)));
@@ -38,5 +48,10 @@ public class VOBlocks
     public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent)
     {
     	blockRegistryEvent.getRegistry().registerAll(BLOCKS.toArray(new Block[0]));
+    }
+    
+    private static ITag.INamedTag<Block> createTag(String name)
+    {
+    	return BlockTags.makeWrapperTag(new ResourceLocation(Reference.ModInfo.MOD_ID, name).toString());
     }
 }

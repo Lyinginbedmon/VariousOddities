@@ -42,12 +42,8 @@ public class TypeHandlerAquatic extends TypeHandler
 				living.addPotionEffect(conduitPower);
 			}
 		}
-		else if(living.isPotionActive(Effects.CONDUIT_POWER))
-		{
-			EffectInstance instance = living.getActivePotionEffect(Effects.CONDUIT_POWER);
-			if(instance.isAmbient() && !instance.doesShowParticles())
-				living.removeActivePotionEffect(Effects.CONDUIT_POWER);
-		}
+		else
+			onRemove(living);
 	}
 	
 	public void onRemove(LivingEntity living)

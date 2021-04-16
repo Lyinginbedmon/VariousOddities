@@ -21,6 +21,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.FollowOwnerGoal;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
@@ -39,10 +40,12 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.particles.ItemParticleData;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
@@ -78,6 +81,8 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	foodItems.add(Items.TROPICAL_FISH);
     }
 	
+    private List<Tuple<Goal, Integer>> aggressiveBehaviours;
+    
     private int openJawCounter;
     private float jawOpenness;
     private float prevJawOpenness;
@@ -91,6 +96,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     private float prevTimeShaking;
     
     private int goblinTimer = 0;
+    private int eatTicks = 0;
 	
 	protected AbstractGoblinWolf(EntityType<? extends AbstractGoblinWolf> type, World worldIn)
 	{
@@ -121,10 +127,13 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 		
 		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
 		{
+		    this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
 			this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
 			this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
 			this.targetSelector.addGoal(3, (new HurtByTargetGoal(this, AbstractGoblinWolf.class)).setCallsForHelp());
 		}
+		
+		applyGeneticAI();
 	}
 	
     public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
@@ -297,10 +306,13 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public void livingTick()
     {
         super.livingTick();
+        
+        // Head tilting for begging
         this.headRotationCourseOld = this.headRotationCourse;
         if(this.isBegging()) this.headRotationCourse += (1.0F - this.headRotationCourse) * 0.4F;
         else this.headRotationCourse += (0.0F - this.headRotationCourse) * 0.4F;
         
+        // Jaw motion handling
         if (this.openJawCounter > 0 && ++this.openJawCounter > 20)
         {
             this.openJawCounter = 0;
@@ -318,12 +330,39 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         	this.getEntityWorld().setEntityState(this, (byte)8);
         }
         
+        // Tameability affected by interaction with goblins
         if(!this.getEntityWorld().isRemote && this.goblinTimer > 0 && --this.goblinTimer%Reference.Values.TICKS_PER_SECOND == 0)
         	if(!getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, this.getBoundingBox().grow(8, 4, 8)).isEmpty())
         		setGoblinSight(Reference.Values.TICKS_PER_DAY);
+        
+        // Eating held food
+        if(!this.getEntityWorld().isRemote && this.isAlive() && this.getHealth() < this.getMaxHealth() && this.isServerWorld())
+        {
+        	++this.eatTicks;
+        	ItemStack heldItem = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND);
+        	if(this.canEatItem(heldItem))
+        		if(this.eatTicks > 600)
+        		{
+        			heal(heldItem.getItem().getFood().getHealing());
+        			ItemStack heldItemUsed = heldItem.onItemUseFinish(getEntityWorld(), this);
+        			if(!heldItemUsed.isEmpty())
+        				this.setItemStackToSlot(EquipmentSlotType.MAINHAND, heldItemUsed);
+        			this.eatTicks = 0;
+        		}
+        		else if(this.eatTicks > 560 && this.rand.nextFloat() < 0.1F)
+        		{
+        			this.playSound(this.getEatSound(heldItem), 1F, 1F);
+        			this.getEntityWorld().setEntityState(this, (byte)45);
+        		}
+        }
     }
     
     public void setGoblinSight(int par1Int){ this.goblinTimer = par1Int; }
+    
+    public boolean canEatItem(ItemStack itemStackIn)
+    {
+    	return itemStackIn.getItem().isFood() && this.getAttackTarget() == null;
+    }
     
     @OnlyIn(Dist.CLIENT)
     public void handleStatusUpdate(byte id)
@@ -334,6 +373,15 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 	    		this.isShaking = true;
 	    		this.timeShaking = 0F;
 	    		this.prevTimeShaking = 0F;
+	    		break;
+	    	case 45:
+	    		ItemStack heldItem = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND);
+	    		if(!heldItem.isEmpty())
+	    			for(int i = 0; i < 8; ++i)
+	    			{
+	    				Vector3d pos = (new Vector3d(((double)this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D)).rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F)).rotateYaw(-this.rotationYaw * ((float)Math.PI / 180F));
+	    				this.world.addParticle(new ItemParticleData(ParticleTypes.ITEM, heldItem), this.getPosX() + this.getLookVec().x / 2.0D, this.getPosY(), this.getPosZ() + this.getLookVec().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
+	    			}
 	    		break;
 	    	case 56:
 	    		resetShaking();
@@ -347,8 +395,38 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     public boolean isNoDespawnRequired(){ return true; }
     
     public Genetics getGenetics(){ return new Genetics(getDataManager().get(GENETICS).intValue()); }
-    public void setGenetics(int genesIn){ getDataManager().set(GENETICS, genesIn); }
+    public void setGenetics(int genesIn){ getDataManager().set(GENETICS, genesIn); applyGeneticAI(); }
     public void setGenetics(Genetics genesIn){ setGenetics(genesIn.toVal()); }
+    
+    public abstract void getAggressiveBehaviours();
+    public void addGeneticAI(int priority, Goal goalIn)
+    {
+    	this.aggressiveBehaviours.add(new Tuple<Goal,Integer>(goalIn,priority));
+    }
+    public void applyGeneticAI()
+    {
+    	if(this.aggressiveBehaviours == null || this.aggressiveBehaviours.isEmpty())
+    	{
+    		this.aggressiveBehaviours = new ArrayList<>();
+    		getAggressiveBehaviours();
+    	}
+    	
+    	System.out.println("Applying genetic AI");
+    	// Clear aggressive behaviours
+    	for(Tuple<Goal,Integer> behaviour : this.aggressiveBehaviours)
+    		this.targetSelector.removeGoal(behaviour.getA());
+    	
+    	// Apply aggressive behaviours IF not passive
+    	if(!getGenetics().gene(4))
+    	{
+    		System.out.println("Adding aggressive AI");
+	    	for(Tuple<Goal,Integer> behaviour : this.aggressiveBehaviours)
+	    	{
+    			this.targetSelector.addGoal(behaviour.getB(), behaviour.getA());
+    			System.out.println("   Behaviour added");
+	    	}
+    	}
+    }
     
     public void setAttackTarget(@Nullable LivingEntity target)
     {

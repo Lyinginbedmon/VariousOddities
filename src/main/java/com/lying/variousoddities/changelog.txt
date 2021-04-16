@@ -8,6 +8,7 @@ Additions
 	Ghastlings now spawn when ghast are killed by their own fireballs, and can be tamed using most sweet foods
 	Worgs and wargs are now tameable using bones, can be healed using most raw foods, and worgs can be bred (wargs cannot breed)
 	Worgs and wargs have genetics that affect their offspring, ranging from purely cosmetic features to behavioural changes to the creation of wargs
+	Silversheen enchantment can now be applied temporarily to an item to bypass Fey damage reduction
 
 Known bugs
 	Boundary line rendering of settlement rooms is very glitchy, especially when not viewed in first person (stable when viewed first person w/ HUD off)
@@ -26,3 +27,4 @@ Changes
 	Fixed an inconsistent bug related to goblins taking damage
 	Fixed a bug related to custom command arguments preventing joining multiplayer servers
 	Fixed a persistency bug with custom creature types
+	Fixed Incorporeal creatures being unable to use portals (if you're using a modpack, use the datapack tag "unphaseable" to mark other blocks they can't phase through)

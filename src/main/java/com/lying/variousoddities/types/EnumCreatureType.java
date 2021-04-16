@@ -6,32 +6,45 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Predicate;
+import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VODamageSource;
+import com.lying.variousoddities.init.VOEnchantments;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.types.TypeHandler.EnumDamageResist;
+import com.lying.variousoddities.world.savedata.TypesManager;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.material.Material;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemTier;
 import net.minecraft.item.TieredItem;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.world.IBlockReader;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public enum EnumCreatureType
@@ -44,11 +57,9 @@ public enum EnumCreatureType
 				if(living.getType() == EntityType.PLAYER)
 				{
 					PlayerEntity player = (PlayerEntity)living;
-					boolean canFlyNatively = player.isCreative() || player.isSpectator();
-					
 					if(!VOPotions.isParalysed(player))
 					{
-						if(!canFlyNatively && !player.abilities.allowFlying)
+						if(!(player.isCreative() || player.isSpectator()) && !player.abilities.allowFlying)
 						{
 							player.abilities.allowFlying = true;
 							player.sendPlayerAbilities();
@@ -112,7 +123,7 @@ public enum EnumCreatureType
 						{
 							Item held = heldItem.getItem();
 							IItemTier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
-							if(itemTier != null && (itemTier == ItemTier.IRON || itemTier.toString().toLowerCase().contains("silver")))
+							if(itemTier != null && (itemTier.toString().toLowerCase().contains("silver") || EnchantmentHelper.getEnchantmentLevel(VOEnchantments.SILVERSHEEN, heldItem) > 0))
 								resist = false;
 						}
 						
@@ -127,7 +138,7 @@ public enum EnumCreatureType
 	GOBLIN(),
 	HOLY(null, new TypeHandler().addResistance(VODamageSource.HOLY, EnumDamageResist.IMMUNE).addResistance(VODamageSource.EVIL, EnumDamageResist.VULNERABLE)),
 	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
-	INCORPOREAL(),
+	INCORPOREAL(null, new TypeHandler().addResistance(DamageSource.FALL, EnumDamageResist.IMMUNE)),
 	MAGICAL_BEAST(null, TypeHandler.get(), Action.STANDARD, 10),
 	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	OUTSIDER(null, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
@@ -143,7 +154,7 @@ public enum EnumCreatureType
 				MagicSchool school = spellIn.getSchool();
 				return !(school == MagicSchool.ENCHANTMENT || school == MagicSchool.TRANSMUTATION);
 			}
-		}.noCriticalHit().noParalysis().noPoison().setFireResist(EnumDamageResist.VULNERABLE), EnumSet.of(Action.BREATHE_AIR, Action.EAT), 8),
+		}.noCriticalHit().noParalysis().noPoison().setFireResist(EnumDamageResist.VULNERABLE), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
 	REPTILE(),
 	SHAPECHANGER(),
 	OOZE(null, new TypeHandler()
@@ -172,8 +183,8 @@ public enum EnumCreatureType
 			public boolean apply(EnumCreatureType input){ return !input.isSupertype(); }
 		};
 	
-	private static final List<EnumCreatureType> SUPERTYPES = Arrays.asList(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
-	private static final List<EnumCreatureType> SUBTYPES = Arrays.asList(AIR, AQUATIC, AUGMENTED, COLD, EARTH, EXTRAPLANAR, EVIL, FIRE, GOBLIN, HOLY, NATIVE, REPTILE, SHAPECHANGER, WATER);
+	private static final EnumSet<EnumCreatureType> SUPERTYPES = EnumSet.of(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
+	private static final EnumSet<EnumCreatureType> SUBTYPES = EnumSet.complementOf(SUPERTYPES);
 	
 	private static final String translationBase = "enum.varodd.creature_type.";
 	private final CreatureAttribute parentAttribute;
@@ -331,6 +342,48 @@ public enum EnumCreatureType
 		return supertype.append(subtype);
 	}
 	
+	/** Returns true if the given entity can pass through obstacles at the given position */
+	public static boolean canPhase(IBlockReader worldIn, @Nullable BlockPos pos, LivingEntity entity)
+	{
+		if(entity == null)
+			return false;
+		
+		// Is the creature of a type that can phase?
+		TypesManager manager = TypesManager.get(entity.getEntityWorld());
+		if(!manager.isMobOfType(entity, EnumCreatureType.INCORPOREAL))
+			return false;
+		
+		// Position is null if this is just a check to see if the creature can phase at all
+		if(pos == null)
+			return true;
+		
+		// Deny for pre-defined blocks, such as unbreakable blocks and portals
+		BlockState state = worldIn.getBlockState(pos);
+		if(VOBlocks.UNPHASEABLE.contains(state.getBlock()))
+			return false;
+		
+		// Attempt to catch any of the above that haven't already been tagged in data
+		if(state.getBlockHardness(worldIn, pos) < 0F || state.getMaterial() == Material.PORTAL)
+			return false;
+		
+		// Phasing or not is irrelevant here, but prevents pressure plates etc. from firing
+		VoxelShape collision = state.getCollisionShape(worldIn, pos);
+		if(collision == null || collision == VoxelShapes.empty())
+			return true;
+		
+		// Lastly, only allow phasing if any open side exists around the target block
+		double blockTop = pos.getY() + collision.getBoundingBox().maxY;
+		if((entity.getPosY() + 0.2D) <= blockTop)
+			for(Direction direction : Direction.values())
+			{
+				BlockPos offset = pos.offset(direction);
+				BlockState stateAtOffset = worldIn.getBlockState(offset);
+				if(stateAtOffset.getCollisionShape(worldIn, offset) == VoxelShapes.empty() || stateAtOffset.getFluidState().getFluid() != Fluids.EMPTY)
+					return true;
+			}
+		return false;
+	}
+	
 	public static class ActionSet
 	{
 		EnumSet<Action> actions = Action.NONE.clone();
@@ -403,6 +456,9 @@ public enum EnumCreatureType
 		
 		public static ActionSet fromTypes(Collection<EnumCreatureType> types)
 		{
+			if(types.isEmpty())
+				return new ActionSet(Action.STANDARD);
+			
 			List<EnumCreatureType> supertypes = new ArrayList<>();
 			supertypes.addAll(types);
 			supertypes.removeIf(IS_SUBTYPE);

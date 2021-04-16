@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Predicate;
+import com.lying.variousoddities.VariousOddities;
 
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.Goal;
@@ -90,7 +91,7 @@ public abstract class EntityController<T extends MobEntity>
 	
 	protected final void addBehaviour(int priorityIn, Goal behaviourIn)
 	{
-		if(behaviourIn == null){ System.out.println("Tried to add a null task!"); return; }
+		if(behaviourIn == null){ VariousOddities.log.info("Tried to add a null task!"); return; }
 		else if(behaviourIn instanceof TargetGoal)
 			behavioursTarget.put(behaviourIn, priorityIn);
 		else

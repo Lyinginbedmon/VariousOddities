@@ -13,6 +13,11 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
+import net.minecraft.entity.passive.CowEntity;
+import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.entity.passive.horse.LlamaEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -58,15 +63,13 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
         		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.3002F)
         		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 12.0D);
     }
-    
-	public void registerGoals()
+	
+	public void getAggressiveBehaviours()
 	{
-		super.registerGoals();
-		/**
-		 * TODO Warg AI
-		 * Prey hunting & eating (cows, llamas, pigs, sheep)
-		 */
-		
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<CowEntity>(this, CowEntity.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<PigEntity>(this, PigEntity.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<LlamaEntity>(this, LlamaEntity.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<SheepEntity>(this, SheepEntity.class, true));
 	}
 	
 	public AgeableEntity func_241840_a(ServerWorld arg0, AgeableEntity arg1)

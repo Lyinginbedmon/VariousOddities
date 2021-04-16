@@ -3,11 +3,13 @@ package com.lying.variousoddities.utility;
 import java.util.List;
 import java.util.Random;
 
+import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeGetEntityTypesEvent;
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
@@ -19,6 +21,7 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.potion.PotionSleep;
+import com.lying.variousoddities.types.EnumCreatureType;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -32,6 +35,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -132,6 +136,15 @@ public class VOBusServer
 			reduceRefractory(victim, victim instanceof PlayerEntity ? 4000 : 500);
 	}
 	
+	@SubscribeEvent
+	public static void onGoblinWolfKillEvent(LivingDeathEvent event)
+	{
+		LivingEntity victim = event.getEntityLiving();
+		DamageSource cause = event.getSource();
+		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof AbstractGoblinWolf)
+			((AbstractGoblinWolf)cause.getTrueSource()).heal(2F + victim.getRNG().nextFloat() * 3F);
+	}
+	
 	private static void reduceRefractory(LivingEntity goblinIn, int amount)
 	{
 		List<EntityGoblin> nearbyGoblins = goblinIn.getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, goblinIn.getBoundingBox().grow(10));
@@ -161,6 +174,28 @@ public class VOBusServer
 			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 1, 1).offset(event.position()).grow(16 * explosions.size());
 			for(EntityWorg worg : event.world().getEntitiesWithinAABB(EntityWorg.class, bounds))
 				worg.spook();
+		}
+	}
+	
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public static void applyNativeExtraplanar(TypeGetEntityTypesEvent event)
+	{
+		LivingEntity entity = event.getEntity();
+		LivingData data = LivingData.forEntity(entity);
+		
+		if(data.getHomeDimension() != null)
+		{
+			ResourceLocation currentDim = entity.getEntityWorld().getDimensionKey().getLocation();
+			if(currentDim.equals(data.getHomeDimension()))
+			{
+				if(!event.getTypes().contains(EnumCreatureType.EXTRAPLANAR))
+					event.getTypes().add(EnumCreatureType.NATIVE);
+			}
+			else
+			{
+				if(!event.getTypes().contains(EnumCreatureType.NATIVE))
+					event.getTypes().add(EnumCreatureType.EXTRAPLANAR);
+			}
 		}
 	}
 	

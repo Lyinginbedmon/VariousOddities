@@ -12,6 +12,9 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.BreedGoal;
+import net.minecraft.entity.ai.goal.LeapAtTargetGoal;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
+import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -54,8 +57,15 @@ public class EntityWorg extends AbstractGoblinWolf
 		this.goalSelector.addGoal(1, new EntityAIWorgSpook(this, 1.0D));
 		this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
 		this.goalSelector.addGoal(2, new EntityAIWorgFetch(this, 6D));
+		this.goalSelector.addGoal(4, new LeapAtTargetGoal(this, 0.4F));
+		
 	}
     
+	public void getAggressiveBehaviours()
+	{
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<ChickenEntity>(this, ChickenEntity.class, true));
+	}
+	
     /**
      * Returns the volume for the sounds this mob makes.
      */

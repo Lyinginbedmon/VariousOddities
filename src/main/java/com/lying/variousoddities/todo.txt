@@ -1,8 +1,8 @@
 Fix settlement room rendering
-Goblin wolf
-	Genetic behaviour features
+	Fix settlement rooms rendering in different worlds
+AbstractGoblinWolf
+	Correct rendering of held item
 Warg
 	Saddles
 	Chests
 	Sit command
-	Prey hunting

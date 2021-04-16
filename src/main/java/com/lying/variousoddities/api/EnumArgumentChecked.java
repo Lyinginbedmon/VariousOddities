@@ -26,29 +26,31 @@ import net.minecraft.util.text.TranslationTextComponent;
  */
 public class EnumArgumentChecked<T extends Enum<T>> implements ArgumentType<T>
 {
-	public static final SimpleCommandExceptionType FACTION_NOT_FOUND = new SimpleCommandExceptionType(new TranslationTextComponent("argument.faction.notfound"));
+	public final SimpleCommandExceptionType ENUM_NOT_FOUND;
     private final Class<T> enumClass;
     
     public static <R extends Enum<R>> EnumArgumentChecked<R> enumArgument(Class<R> enumClass)
     {
-        return new EnumArgumentChecked<>(enumClass);
+        return new EnumArgumentChecked<>(enumClass, enumClass.getSimpleName());
     }
     
-    protected EnumArgumentChecked(final Class<T> enumClass) {
+    protected EnumArgumentChecked(final Class<T> enumClass, String enumName)
+    {
         this.enumClass = enumClass;
+        ENUM_NOT_FOUND = new SimpleCommandExceptionType(new TranslationTextComponent("argument."+enumName.toLowerCase()+".notfound"));
     }
     
     public T parse(final StringReader reader) throws CommandSyntaxException
     {
     	String str = reader.readUnquotedString();
     	if(str == null || str.length() == 0)
-    		throw FACTION_NOT_FOUND.create();
+    		throw ENUM_NOT_FOUND.create();
     	
     	for(T val : enumClass.getEnumConstants())
     		if(val.name().equalsIgnoreCase(str))
     			return val;
     	
-    	throw FACTION_NOT_FOUND.create();
+    	throw ENUM_NOT_FOUND.create();
     }
     
     public <S> CompletableFuture<Suggestions> listSuggestions(final CommandContext<S> context, final SuggestionsBuilder builder)
@@ -74,7 +76,7 @@ public class EnumArgumentChecked<T extends Enum<T>> implements ArgumentType<T>
             try
             {
                 String name = buffer.readString();
-                return new EnumArgumentChecked(Class.forName(name));
+                return new EnumArgumentChecked(Class.forName(name), name);
             }
             catch (ClassNotFoundException e)
             {
