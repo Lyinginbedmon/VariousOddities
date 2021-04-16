@@ -27,7 +27,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.16_001j'
+version = '1.16_001k'
 group = 'com.lying.variousoddities' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'varodd'
 
