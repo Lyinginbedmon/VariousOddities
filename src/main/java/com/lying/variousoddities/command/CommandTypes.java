@@ -522,7 +522,7 @@ public class CommandTypes extends CommandBase
 			if(entityIn instanceof LivingEntity)
 			{
 				LivingData data = LivingData.forEntity((LivingEntity)entityIn);
-				if(data.getHomeDimension() != null)
+				if(data != null && data.getHomeDimension() != null)
 				{
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.success", entityIn.getName(), data.getHomeDimension()), true);
 					return 15;
@@ -543,7 +543,7 @@ public class CommandTypes extends CommandBase
 					dest = new ResourceLocation(destination);
 				}
 				catch(Exception e){ }
-				if(dest != null)
+				if(data != null && dest != null)
 				{
 					data.setHomeDimension(dest);
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.success", entityIn.getName(), data.getHomeDimension()), true);

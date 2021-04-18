@@ -45,7 +45,8 @@ public class PacketSyncAir
 		if(sender != null)
 		{
 			LivingData data = LivingData.forEntity(sender);
-			data.setAir(msg.air);
+			if(data != null)
+				data.setAir(msg.air);
 		}
 		context.setPacketHandled(true);
 	}

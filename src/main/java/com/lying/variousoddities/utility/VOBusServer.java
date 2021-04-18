@@ -51,14 +51,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class VOBusServer
 {
 	@SubscribeEvent
-	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<Entity> event)
+	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<LivingEntity> event)
 	{
-		if(event.getObject() instanceof LivingEntity)
-		{
-			event.addCapability(LivingData.IDENTIFIER, new LivingData());
-			if(event.getObject().getType() == EntityType.PLAYER)
-				event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
-		}
+		event.addCapability(LivingData.IDENTIFIER, new LivingData());
+		if(event.getObject().getType() == EntityType.PLAYER)
+			event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
 	}
 	
 	@SubscribeEvent
@@ -67,7 +64,10 @@ public class VOBusServer
 		if(!event.getEntity().getEntityWorld().isRemote && event.getEntity().getType() == EntityType.PLAYER)
 		{
 			PlayerEntity player = (PlayerEntity)event.getEntity();
-			PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(LivingData.forEntity(player).getAir()));
+			LivingData data = LivingData.forEntity(player);
+			if(data == null)
+				return;
+			PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(data.getAir()));
 		}
 	}
 	
@@ -182,6 +182,8 @@ public class VOBusServer
 	{
 		LivingEntity entity = event.getEntity();
 		LivingData data = LivingData.forEntity(entity);
+		if(data == null)
+			return;
 		
 		if(data.getHomeDimension() != null)
 		{

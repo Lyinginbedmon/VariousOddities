@@ -58,6 +58,15 @@ public class LivingEntityMixin extends EntityMixin
 		}
 	}
 	
+	@Inject(method = "isEntityUndead()Z", at = @At("HEAD"), cancellable = true)
+	public void isEntityUndead(final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		TypesManager manager = TypesManager.get(entity.getEntityWorld());
+		if(manager.hasCustomAttributes(entity))
+			ci.setReturnValue(manager.isUndead(entity));
+	}
+	
 	@Inject(method = "isEntityInsideOpaqueBlock", at = @At("HEAD"), cancellable = true)
 	public void isEntityInsideOpaqueBlock(final CallbackInfoReturnable<Boolean> ci)
 	{

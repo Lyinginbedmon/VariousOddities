@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
@@ -80,9 +82,10 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			VariousOddities.log.info("Registered living data capability");
 	}
 	
-	public static LivingData forEntity(LivingEntity entity) throws RuntimeException
+	@Nullable
+	public static LivingData forEntity(LivingEntity entity)
 	{
-		return entity.getCapability(CAPABILITY).orElseThrow(() -> new RuntimeException("No living data found for "+entity.getName()));
+		return entity.getCapability(CAPABILITY).orElse(null);
 	}
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
