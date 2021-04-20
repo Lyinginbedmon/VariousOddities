@@ -89,7 +89,7 @@ public class VOBusClient
 	{
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null)
-			return EnumCreatureType.canPhase(player.getEntityWorld(), null, player) && getInWallBlockState(player) != null;
+			return EnumCreatureType.canPhase(player) && getInWallBlockState(player) != null;
 		return false;
 	}
 	

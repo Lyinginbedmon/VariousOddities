@@ -411,21 +411,14 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     		getAggressiveBehaviours();
     	}
     	
-    	System.out.println("Applying genetic AI");
     	// Clear aggressive behaviours
     	for(Tuple<Goal,Integer> behaviour : this.aggressiveBehaviours)
     		this.targetSelector.removeGoal(behaviour.getA());
     	
     	// Apply aggressive behaviours IF not passive
     	if(!getGenetics().gene(4))
-    	{
-    		System.out.println("Adding aggressive AI");
 	    	for(Tuple<Goal,Integer> behaviour : this.aggressiveBehaviours)
-	    	{
     			this.targetSelector.addGoal(behaviour.getB(), behaviour.getA());
-    			System.out.println("   Behaviour added");
-	    	}
-    	}
     }
     
     public void setAttackTarget(@Nullable LivingEntity target)

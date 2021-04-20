@@ -42,9 +42,11 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 			VariousOddities.log.info("Registered player data capability");
 	}
 	
-	public static PlayerData forPlayer(PlayerEntity player) throws RuntimeException
+	public LazyOptional<PlayerData> handler(){ return this.handler; }
+	
+	public static PlayerData forPlayer(PlayerEntity player)
 	{
-		return player.getCapability(CAPABILITY).orElseThrow(() -> new RuntimeException("No player data found for "+player.getName()));
+		return player.getCapability(CAPABILITY).orElse(null);
 	}
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)

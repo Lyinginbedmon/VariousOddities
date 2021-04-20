@@ -32,6 +32,9 @@ public class FactionReputation
 	{
 		factionName = validateName(factionName);
 		PlayerData data = PlayerData.forPlayer(player);
+		if(data == null)
+			return 0;
+		
 		int rep = data.reputation.getReputation(factionName);
 		if(rep == Integer.MIN_VALUE)
 		{
@@ -71,7 +74,8 @@ public class FactionReputation
 		repIn = Math.max(-100, Math.min(100, repIn));
 		
 		PlayerData data = PlayerData.forPlayer(player);
-		data.reputation.setReputation(factionName, repIn);
+		if(data != null)
+			data.reputation.setReputation(factionName, repIn);
 		
 		return repIn;
 	}
@@ -90,7 +94,8 @@ public class FactionReputation
 		
 		int rep = faction == null ? 0 : faction.startingRep;
 		PlayerData data = PlayerData.forPlayer(player);
-		data.reputation.setReputation(factionName, rep);
+		if(data != null)
+			data.reputation.setReputation(factionName, rep);
 		
 		return rep;
 	}
@@ -114,7 +119,10 @@ public class FactionReputation
 		repIn = event.getChange();
 		
 		int rep = Math.max(-100, Math.min(100, currentReputation + repIn));
-		PlayerData.forPlayer(player).reputation.setReputation(factionName, rep);
+		PlayerData data = PlayerData.forPlayer(player);
+		if(data == null)
+			return 0;
+		data.reputation.setReputation(factionName, rep);
 		
 		EnumAttitude nextState = EnumAttitude.fromRep(rep);
 		if(initialState != nextState && !player.getEntityWorld().isRemote)
@@ -163,7 +171,7 @@ public class FactionReputation
 	{
 		if(sourceMob instanceof IFactionMob)
 			return ((IFactionMob)sourceMob).getFactionName();
-		else if(sourceMob.getType() == EntityType.PLAYER)
+		else if(sourceMob.getType() == EntityType.PLAYER && PlayerData.forPlayer((PlayerEntity)sourceMob) != null)
 			return PlayerData.forPlayer((PlayerEntity)sourceMob).reputation.factionName();
 		return null;
 	}

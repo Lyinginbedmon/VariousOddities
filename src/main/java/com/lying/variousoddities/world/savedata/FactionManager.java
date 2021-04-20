@@ -129,7 +129,7 @@ public class FactionManager extends WorldSavedData
 	{
 		if(entity instanceof IFactionMob)
 			return getFaction(((IFactionMob)entity).getFactionName());
-		else if(entity.getType() == EntityType.PLAYER)
+		else if(entity.getType() == EntityType.PLAYER && PlayerData.forPlayer((PlayerEntity)entity) != null)
 			return getFaction(PlayerData.forPlayer((PlayerEntity)entity).reputation.factionName());
 		return null;
 	}

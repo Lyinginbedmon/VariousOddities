@@ -82,6 +82,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			VariousOddities.log.info("Registered living data capability");
 	}
 	
+	public LazyOptional<LivingData> handler(){ return this.handler; }
+	
 	@Nullable
 	public static LivingData forEntity(LivingEntity entity)
 	{

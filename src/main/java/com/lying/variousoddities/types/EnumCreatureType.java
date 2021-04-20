@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
@@ -347,16 +348,20 @@ public enum EnumCreatureType
 	{
 		if(entity == null)
 			return false;
-		
-		// Is the creature of a type that can phase?
+		else
+			return canPhase(entity) && (pos == null ? true : canPhaseThrough(worldIn, pos, entity));
+	}
+	
+	/** Returns true if the creature is of a type that can phase */
+	public static boolean canPhase(LivingEntity entity)
+	{
 		TypesManager manager = TypesManager.get(entity.getEntityWorld());
-		if(!manager.isMobOfType(entity, EnumCreatureType.INCORPOREAL))
-			return false;
-		
-		// Position is null if this is just a check to see if the creature can phase at all
-		if(pos == null)
-			return true;
-		
+		return manager.isMobOfType(entity, EnumCreatureType.INCORPOREAL);
+	}
+	
+	/** Returns true if the given entity can pass through the block at the given position */
+	public static boolean canPhaseThrough(IBlockReader worldIn, @Nonnull BlockPos pos, LivingEntity entity)
+	{
 		// Deny for pre-defined blocks, such as unbreakable blocks and portals
 		BlockState state = worldIn.getBlockState(pos);
 		if(VOBlocks.UNPHASEABLE.contains(state.getBlock()))
@@ -373,7 +378,7 @@ public enum EnumCreatureType
 		
 		// Lastly, only allow phasing if any open side exists around the target block
 		double blockTop = pos.getY() + collision.getBoundingBox().maxY;
-		if((entity.getPosY() + 0.2D) <= blockTop)
+		if((entity.getPosY() + 0.5D) <= blockTop)
 			for(Direction direction : Direction.values())
 			{
 				BlockPos offset = pos.offset(direction);

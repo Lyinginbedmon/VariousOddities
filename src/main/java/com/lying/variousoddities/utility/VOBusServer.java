@@ -51,11 +51,21 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class VOBusServer
 {
 	@SubscribeEvent
-	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<LivingEntity> event)
+	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<Entity> event)
 	{
-		event.addCapability(LivingData.IDENTIFIER, new LivingData());
-		if(event.getObject().getType() == EntityType.PLAYER)
-			event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
+		if(event.getObject() instanceof LivingEntity)
+		{
+			LivingData dataLiving = new LivingData();
+			event.addCapability(LivingData.IDENTIFIER, dataLiving);
+			event.addListener(dataLiving.handler()::invalidate);
+			
+			if(event.getObject().getType() == EntityType.PLAYER)
+			{
+				PlayerData dataPlayer = new PlayerData();
+				event.addCapability(PlayerData.IDENTIFIER, dataPlayer);
+				event.addListener(dataPlayer.handler()::invalidate);
+			}
+		}
 	}
 	
 	@SubscribeEvent

@@ -54,13 +54,16 @@ public class EntityAITargetHostileFaction extends TargetGoal
 						if(input.getType() == EntityType.PLAYER)
 						{
 							PlayerData data = PlayerData.forPlayer((PlayerEntity)input);
-							int reputation = data.reputation.getReputation(ownerFaction.name);
-							if(reputation == Integer.MIN_VALUE)
+							if(data != null)
 							{
-								data.reputation.setReputation(ownerFaction.name, ownerFaction.startingRep);
-								reputation = ownerFaction.startingRep;
+								int reputation = data.reputation.getReputation(ownerFaction.name);
+								if(reputation == Integer.MIN_VALUE)
+								{
+									data.reputation.setReputation(ownerFaction.name, ownerFaction.startingRep);
+									reputation = ownerFaction.startingRep;
+								}
+								return EnumAttitude.fromRep(reputation).allowsInteraction(EnumInteraction.ATTACK);
 							}
-							return EnumAttitude.fromRep(reputation).allowsInteraction(EnumInteraction.ATTACK);
 						}
 						else
 						{
