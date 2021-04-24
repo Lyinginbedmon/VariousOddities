@@ -16,6 +16,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.command.CommandSource;
@@ -127,6 +128,8 @@ public class CommandSettlement extends CommandBase
     
     private static class VariantList
     {
+		public static final SimpleCommandExceptionType LIST_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"list.failed"));
+    	
     	public static LiteralArgumentBuilder<CommandSource> build()
     	{
     		return newLiteral("list")
@@ -138,12 +141,12 @@ public class CommandSettlement extends CommandBase
     	}
     	
     	/** List all settlements in chat, including embedded commands to detail specific ones */
-    	public static int listAllSettlements(final CommandContext<CommandSource> source)
+    	public static int listAllSettlements(final CommandContext<CommandSource> source) throws CommandSyntaxException
     	{
     		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
     		
     		if(manager.isEmpty())
-    			source.getSource().sendFeedback(makeErrorMessage(translationSlug+"list.failed"), true);
+    			throw LIST_FAILED_EXCEPTION.create();
     		else
     		{
 				Collection<Settlement> settlements = manager.getSettlements();
@@ -408,23 +411,23 @@ public class CommandSettlement extends CommandBase
     					.executes(VariantHere::listHerePos));
     	}
     	
-    	private static int herePos(Vector3d pos, CommandSource source)
+    	private static int herePos(Vector3d pos, CommandSource source) throws CommandSyntaxException
     	{
     		SettlementManager manager = SettlementManager.get(source.getWorld());
 			Settlement settlementHere = manager.getSettlementAt(pos);
 			if(settlementHere == null)
-				source.sendFeedback(makeErrorMessage(translationSlug+"here.failed", (int)pos.getX(), (int)pos.getY(), (int)pos.getZ()), true);
+				throw VariantList.LIST_FAILED_EXCEPTION.create();
 			else
 				notifyListenerOfSettlement(settlementHere, manager, source);
     		return settlementHere == null ? 0 : 15;
     	}
     	
-    	public static int listHere(CommandContext<CommandSource> source)
+    	public static int listHere(CommandContext<CommandSource> source) throws CommandSyntaxException
     	{
     		return herePos(source.getSource().getPos(), source.getSource());
     	}
     	
-    	public static int listHerePos(CommandContext<CommandSource> source)
+    	public static int listHerePos(CommandContext<CommandSource> source) throws CommandSyntaxException
     	{
     		Vector3d position = null;
 			try

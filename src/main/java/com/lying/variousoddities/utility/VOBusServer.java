@@ -197,15 +197,16 @@ public class VOBusServer
 		
 		if(data.getHomeDimension() != null)
 		{
+			List<EnumCreatureType> types = event.getTypes();
 			ResourceLocation currentDim = entity.getEntityWorld().getDimensionKey().getLocation();
 			if(currentDim.equals(data.getHomeDimension()))
 			{
-				if(!event.getTypes().contains(EnumCreatureType.EXTRAPLANAR))
+				if(!types.contains(EnumCreatureType.EXTRAPLANAR) && EnumCreatureType.NATIVE.canApplyTo(types))
 					event.getTypes().add(EnumCreatureType.NATIVE);
 			}
 			else
 			{
-				if(!event.getTypes().contains(EnumCreatureType.NATIVE))
+				if(!types.contains(EnumCreatureType.NATIVE) && EnumCreatureType.EXTRAPLANAR.canApplyTo(types))
 					event.getTypes().add(EnumCreatureType.EXTRAPLANAR);
 			}
 		}

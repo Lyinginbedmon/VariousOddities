@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOEntities;
@@ -35,6 +36,8 @@ public class NaturalSpawns
 {
 	public static Map<String, String[]> NATURAL_SPAWNS = new HashMap<>();
 	public static Map<String, Boolean> DEFAULT_NATURAL = new HashMap<>();
+	
+	private static final List<Biome> spawnsLoaded = Lists.newArrayList();
 	
 	static
 	{
@@ -123,7 +126,7 @@ public class NaturalSpawns
         if(event.getName() != null)
         {
             Biome biome = ForgeRegistries.BIOMES.getValue(event.getName());
-            if(biome != null)
+            if(biome != null && !spawnsLoaded.contains(biome))
             {
             	List<EntityType<?>> added = new ArrayList<>();
             	for(EntityType<?> type : VOEntities.ENTITIES)
@@ -134,7 +137,6 @@ public class NaturalSpawns
                 		ConfiguredSpawns settings = new ConfiguredSpawns(spawnData);
                 		if(settings.containsBiome(event.getName()))
                 		{
-                			
                 			Tuple<Integer, Integer> spawnValues = settings.getSettingsForBiome(event.getName());
                 			if(spawnValues != null)
                 			{
@@ -165,6 +167,8 @@ public class NaturalSpawns
         				}
         			}
             	}
+            	
+            	spawnsLoaded.add(biome);
             }
         }
     }

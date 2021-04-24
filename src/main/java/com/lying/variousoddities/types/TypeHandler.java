@@ -95,7 +95,7 @@ public class TypeHandler
 	public  EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ return actions; }
 	
 	/** Used in commands to determine if a given type can be added to an existing set */
-	public  boolean canApplyTo(List<EnumCreatureType> types){ return true; }
+	public  boolean canApplyTo(Collection<EnumCreatureType> types){ return true; }
 	
 	public static enum EnumDamageResist
 	{

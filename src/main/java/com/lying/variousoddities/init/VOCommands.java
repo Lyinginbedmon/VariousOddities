@@ -20,6 +20,7 @@ public class VOCommands
     	CommandSettlement.register(dispatcher);
     	CommandTypes.register(dispatcher);
     	CommandFaction.register(dispatcher);
+    	CommandSpawns.register(dispatcher);
     }
     
     /** Registers custom command arguments */

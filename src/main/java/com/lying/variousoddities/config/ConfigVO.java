@@ -35,7 +35,7 @@ public class ConfigVO
 		public General(ForgeConfigSpec.Builder builder)
 		{
 			builder.push("general");
-			verboseLog = builder.define("verboseLog", false);
+				verboseLog = builder.define("verboseLog", false);
 			builder.pop();
 		}
 		
@@ -181,18 +181,22 @@ public class ConfigVO
 			
 			public String[] getSpawnsFor(String name)
 			{
+				String entry;
 				if(entryCache.containsKey(name))
+					entry = entryCache.get(name);
+				else
 				{
-					String entry = entryCache.get(name);
-					String[] split = entry.split("},");
-					for(int i=0; i<split.length; i++)
-					{
-						if(!split[i].endsWith("}"))
-							split[i] = split[i] + "}";
-					}
-					return split;
+					entry = entries.get(name).get();
+					entryCache.put(name, entry);
 				}
-				return null;
+				
+				String[] split = entry.split("},");
+				for(int i=0; i<split.length; i++)
+				{
+					if(!split[i].endsWith("}"))
+						split[i] = split[i] + "}";
+				}
+				return split;
 			}
 		}
 		
@@ -237,23 +241,41 @@ public class ConfigVO
 			public boolean odditySpawnsEnabled(){ return naturalSpawnsCache; }
 			public boolean isOdditySpawnEnabled(EntityType<?> type){ return isOdditySpawnEnabled(type.getRegistryName()); }
 			public boolean isOdditySpawnEnabled(ResourceLocation registry){ return isOdditySpawnEnabled(registry.getPath()); }
-			public boolean isOdditySpawnEnabled(String mobName){ return (naturalSpawnsCache ? odditySpawnsCache.containsKey(mobName) && odditySpawnsCache.get(mobName) : false);	}
+			public boolean isOdditySpawnEnabled(String mobName)
+			{
+				if(naturalSpawnsCache)
+				{
+					if(odditySpawnsCache.containsKey(mobName))
+						return odditySpawnsCache.get(mobName);
+					else if(odditySpawns.containsKey(mobName))
+					{
+						boolean enabled = odditySpawns.get(mobName).get();
+						odditySpawnsCache.put(mobName, enabled);
+						return enabled;
+					}
+				}
+				return false;
+			}
 		}
 		
 		public static class TypeSettings
 		{
 			private ForgeConfigSpec.BooleanValue typesMatter;
+			private ForgeConfigSpec.BooleanValue chooseTypes;
 			
 			private Map<EnumCreatureType, ForgeConfigSpec.ConfigValue<String>> mobTypes = new HashMap<>();
 			private Map<EnumCreatureType, ForgeConfigSpec.ConfigValue<String>> playerTypes = new HashMap<>();
 			
 			private boolean typesActive = true;
+			private boolean typesScreen = false;
 			
 			public TypeSettings(ForgeConfigSpec.Builder builder)
 			{
 				builder.push("types");
 				
 				typesMatter = builder.comment("Setting this to FALSE will disable the effects of all types").define("Types Matter", true);
+				
+				chooseTypes = builder.comment("Open the type selection screen when a player first logs in").define("Choose Types on login", false);
 				
 				builder.push("Mobs");
 			        for(EnumCreatureType type : EnumCreatureType.values())
@@ -272,6 +294,8 @@ public class ConfigVO
 			{
 				if(typesMatter != null)
 					typesActive = typesMatter.get();
+				if(chooseTypes != null)
+					typesScreen = chooseTypes.get();
 			}
 			
 			public Map<EnumCreatureType, String[]> getMobTypes()
@@ -293,6 +317,8 @@ public class ConfigVO
 			}
 			
 			public boolean typesMatter(){ return typesActive; }
+			
+			public boolean typesScreen(){ return typesScreen; }
 		}
 		
 		public static class FactionSettings

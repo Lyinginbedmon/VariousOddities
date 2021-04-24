@@ -50,7 +50,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public enum EnumCreatureType
 {
-	ABERRATION(null, TypeHandler.get(), Action.STANDARD, 8),
+	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AIR(null, new TypeHandler()
 		{
 			public void onLivingTick(LivingEntity living)
@@ -84,13 +84,13 @@ public enum EnumCreatureType
 		}),
 	AMPHIBIOUS(null, new TypeHandler()
 		{
-			public boolean canApplyTo(List<EnumCreatureType> types){ return types.contains(AQUATIC); }
+			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(AQUATIC); }
 		}),
 	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AQUATIC(null, new TypeHandlerAquatic(false)),
 	AUGMENTED(),
 	COLD(null, new TypeHandler().addResistance(VODamageSource.COLD, EnumDamageResist.IMMUNE).setFireResist(EnumDamageResist.VULNERABLE)),
-	CONSTRUCT(null, new TypeHandler()
+	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler()
 	{
 		public EnumDamageResist getDamageResist(DamageSource source)
 		{
@@ -103,12 +103,12 @@ public enum EnumCreatureType
 			return true;
 		}
 	}.noCriticalHit().noParalysis().noPoison(), Action.NONE, 10),
-	DRAGON(null, new TypeHandler().noParalysis(), Action.STANDARD, 12),
+	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler().noParalysis(), Action.STANDARD, 12),
 	EARTH(),
-	ELEMENTAL(null, new TypeHandler().noCriticalHit().noParalysis().noPoison(), Action.REGEN_ONLY, 8),
+	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison(), Action.REGEN_ONLY, 8),
 	EXTRAPLANAR(),
 	EVIL(null, new TypeHandler().addResistance(VODamageSource.EVIL, EnumDamageResist.IMMUNE).addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE)),
-	FEY(null, new TypeHandler()
+	FEY(CreatureAttribute.UNDEFINED, new TypeHandler()
 		{
 			public void onDamageEventPost(LivingHurtEvent event)
 			{
@@ -135,20 +135,20 @@ public enum EnumCreatureType
 			}
 		}, Action.STANDARD, 6),
 	FIRE(null, new TypeHandler().setFireResist(EnumDamageResist.IMMUNE).addResistance(VODamageSource.COLD, EnumDamageResist.VULNERABLE)),
-	GIANT(null, TypeHandler.get(), Action.STANDARD, 8),
+	GIANT(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	GOBLIN(),
 	HOLY(null, new TypeHandler().addResistance(VODamageSource.HOLY, EnumDamageResist.IMMUNE).addResistance(VODamageSource.EVIL, EnumDamageResist.VULNERABLE)),
 	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	INCORPOREAL(null, new TypeHandler().addResistance(DamageSource.FALL, EnumDamageResist.IMMUNE)),
-	MAGICAL_BEAST(null, TypeHandler.get(), Action.STANDARD, 10),
+	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 10),
 	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
-	OUTSIDER(null, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
+	OUTSIDER(CreatureAttribute.UNDEFINED, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
 	NATIVE(null, new TypeHandler()
 		{
 			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
-			public boolean canApplyTo(List<EnumCreatureType> types){ return types.contains(OUTSIDER); }
+			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(OUTSIDER); }
 		}),
-	PLANT(null, new TypeHandler()
+	PLANT(CreatureAttribute.UNDEFINED, new TypeHandler()
 		{
 			public boolean canSpellAffect(IMagicEffect spellIn)
 			{
@@ -158,7 +158,7 @@ public enum EnumCreatureType
 		}.noCriticalHit().noParalysis().noPoison().setFireResist(EnumDamageResist.VULNERABLE), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
 	REPTILE(),
 	SHAPECHANGER(),
-	OOZE(null, new TypeHandler()
+	OOZE(CreatureAttribute.UNDEFINED, new TypeHandler()
 		{
 			public boolean canSpellAffect(IMagicEffect spellIn)
 			{
@@ -249,6 +249,7 @@ public enum EnumCreatureType
 	public String getDefinition(){ return translationBase+getSimpleName()+".definition"; }
 	public String getProperties(){ return translationBase+getSimpleName()+".properties"; }
 	public String getType(){ return translationBase + (supertype ? "supertype" : "subtype"); }
+	public boolean canApplyTo(Collection<EnumCreatureType> types){ return getHandler().canApplyTo(types); }
 	public TypeHandler getHandler(){ return this.handler; }
 	public boolean isSupertype(){ return this.supertype; }
 	

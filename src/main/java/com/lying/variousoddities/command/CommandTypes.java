@@ -13,6 +13,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.command.CommandSource;
@@ -66,15 +68,10 @@ public class CommandTypes extends CommandBase
 		dispatcher.register(literal);
 	}
 	
-	public static ITextComponent makeErrorMessage(String translation, Object... args)
-	{
-		return new TranslationTextComponent(translation, args).modifyStyle((style) -> {
-			return style.setFormatting(TextFormatting.RED);
-		});
-	}
-	
 	private static class VariantList
 	{
+		private static final SimpleCommandExceptionType LIST_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"list.failed"));
+		
     	public static LiteralArgumentBuilder<CommandSource> build()
     	{
     		return newLiteral("list")
@@ -93,7 +90,7 @@ public class CommandTypes extends CommandBase
 						.executes(VariantList::listPlayers));
     	}
     	
-    	public static int listAll(final CommandContext<CommandSource> context)
+    	public static int listAll(final CommandContext<CommandSource> context) throws CommandSyntaxException
     	{
     		CommandSource source = context.getSource();
     		
@@ -122,10 +119,13 @@ public class CommandTypes extends CommandBase
     				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated().modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
     		}
     		
+    		if(supertypes.isEmpty() && subtypes.isEmpty())
+    			throw LIST_FAILED_EXCEPTION.create();
+    		
     		return 15;
     	}
     	
-    	public static int listPlayers(final CommandContext<CommandSource> source)
+    	public static int listPlayers(final CommandContext<CommandSource> source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getSource().getWorld());
     		List<String> playerNames = manager.getTypedPlayers();
@@ -141,7 +141,7 @@ public class CommandTypes extends CommandBase
     		return 15;
     	}
     	
-    	public static int listOfType(final CommandContext<CommandSource> source)
+    	public static int listOfType(final CommandContext<CommandSource> source) throws CommandSyntaxException
     	{
     		EnumCreatureType type = source.getArgument(TYPE, EnumCreatureType.class);
     		TypesManager manager = TypesManager.get(source.getSource().getWorld());
@@ -150,7 +150,7 @@ public class CommandTypes extends CommandBase
     		
     		ITextComponent typeName = type.getTranslated();
     		if(mobs.isEmpty() && players.isEmpty())
-    			source.getSource().sendFeedback(makeErrorMessage(translationSlug+"list.failed", typeName), true);
+    			throw LIST_FAILED_EXCEPTION.create();
     		else
     		{
     			if(!mobs.isEmpty())
@@ -184,22 +184,22 @@ public class CommandTypes extends CommandBase
     		return Math.min(mobs.size() + players.size(), 15);
     	}
     	
-    	public static int listEntityId(ResourceLocation entityId, CommandSource source)
+    	public static int listEntityId(ResourceLocation entityId, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		return listTypes(manager.getMobTypes(entityId), new StringTextComponent(entityId.toString()), source, false, true);
     	}
     	
-    	public static int listEntity(Entity entity, CommandSource source)
+    	public static int listEntity(Entity entity, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		return listTypes(manager.getMobTypes(entity), entity.getName(), source, false, true);
     	}
     	
-    	private static int listTypes(List<EnumCreatureType> types, ITextComponent identifier, CommandSource source, boolean grey, boolean log)
+    	private static int listTypes(List<EnumCreatureType> types, ITextComponent identifier, CommandSource source, boolean grey, boolean log) throws CommandSyntaxException
     	{
     		if(types.isEmpty())
-    			source.sendFeedback(makeErrorMessage(translationSlug+"list.failed", identifier), true);
+    			throw LIST_FAILED_EXCEPTION.create();
     		else
     		{
     			TranslationTextComponent text = new TranslationTextComponent(translationSlug+"list.success", identifier, EnumCreatureType.typesToHeader(types));
@@ -213,6 +213,8 @@ public class CommandTypes extends CommandBase
 	
 	private static class VariantAdd
 	{
+		private static final SimpleCommandExceptionType ADD_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"add.failed"));
+		
     	public static LiteralArgumentBuilder<CommandSource> build()
     	{
     		return newLiteral("add")
@@ -224,7 +226,7 @@ public class CommandTypes extends CommandBase
     						.executes((source) -> { return VariantAdd.addToMob(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource(), true); }))));
     	}
     	
-    	public static int addToMob(Entity entity, EnumCreatureType type, CommandSource source, boolean report)
+    	public static int addToMob(Entity entity, EnumCreatureType type, CommandSource source, boolean report) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		if(entity.getType() == EntityType.PLAYER)
@@ -244,11 +246,10 @@ public class CommandTypes extends CommandBase
     		else if(entity instanceof LivingEntity)
     			return addToEntity(entity.getType().getRegistryName(), type, source, true);
     		
-			source.sendFeedback(makeErrorMessage(translationSlug+"add.failed", entity.getName()), true);
-    		return 0;
+    		throw ADD_FAILED_EXCEPTION.create();
     	}
     	
-    	public static int addToEntity(ResourceLocation registry, EnumCreatureType type, CommandSource source, boolean report)
+    	public static int addToEntity(ResourceLocation registry, EnumCreatureType type, CommandSource source, boolean report) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
 			if(type.getHandler().canApplyTo(manager.getMobTypes(registry)))
@@ -261,12 +262,17 @@ public class CommandTypes extends CommandBase
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), EnumCreatureType.typesToHeader(manager.getMobTypes(registry))), true);
 				}
 			}
+			else if(report)
+				throw ADD_FAILED_EXCEPTION.create();
+			
     		return 15;
     	}
 	}
 	
 	private static class VariantRemove
 	{
+		private static final SimpleCommandExceptionType REMOVE_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"remove.failed"));
+		
     	public static LiteralArgumentBuilder<CommandSource> build()
     	{
     		return newLiteral("remove")
@@ -278,7 +284,7 @@ public class CommandTypes extends CommandBase
     						.executes((source) -> { return VariantRemove.removeFromMob(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))));
     	}
     	
-    	public static int removeFromMob(Entity entity, EnumCreatureType type, CommandSource source)
+    	public static int removeFromMob(Entity entity, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		if(entity.getType() == EntityType.PLAYER)
@@ -292,15 +298,17 @@ public class CommandTypes extends CommandBase
     		}
     		else if(entity instanceof LivingEntity)
     			return removeFromEntity(entity.getType().getRegistryName(), type, source);
-    		source.sendFeedback(makeErrorMessage(translationSlug+"remove.failed", entity.getName()), true);
-    		return 0;
+    		
+    		throw REMOVE_FAILED_EXCEPTION.create();
     	}
     	
-    	public static int removeFromEntity(ResourceLocation registry, EnumCreatureType type, CommandSource source)
+    	public static int removeFromEntity(ResourceLocation registry, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
 			if(manager.isMobOfType(registry, type))
 				manager.removeFromEntity(registry, type, true);
+			else
+				throw REMOVE_FAILED_EXCEPTION.create();
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), registry.toString()), true);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), EnumCreatureType.typesToHeader(manager.getMobTypes(registry))), true);
     		return 15;
@@ -309,6 +317,8 @@ public class CommandTypes extends CommandBase
 	
 	private static class VariantClear
 	{
+		private static final SimpleCommandExceptionType CLEAR_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"clear.failed"));
+		
     	public static LiteralArgumentBuilder<CommandSource> build()
     	{
     		return newLiteral("clear")
@@ -320,7 +330,7 @@ public class CommandTypes extends CommandBase
     						.executes((source) -> { return VariantClear.clearFromMob(EntityArgument.getEntity(source, MOB), source.getSource(), true); })));
     	}
     	
-    	public static int clearFromMob(Entity entity, CommandSource source, boolean report)
+    	public static int clearFromMob(Entity entity, CommandSource source, boolean report) throws CommandSyntaxException
     	{
     		if(entity.getType() == EntityType.PLAYER)
     		{
@@ -335,8 +345,10 @@ public class CommandTypes extends CommandBase
     		}
     		else if(entity instanceof LivingEntity)
     			return clearFromEntity(entity.getType().getRegistryName(), source, true);
+    		
     		if(report)
-    			source.sendFeedback(makeErrorMessage(translationSlug+"clear.failed", entity.getName()), true);
+    			throw CLEAR_FAILED_EXCEPTION.create();
+    		
     		return 0;
     	}
     	
@@ -354,6 +366,8 @@ public class CommandTypes extends CommandBase
 	
 	public static class VariantTest
 	{
+		private static final SimpleCommandExceptionType TEST_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"test.failed"));
+		
     	public static LiteralArgumentBuilder<CommandSource> build()
     	{
     		return newLiteral("test")
@@ -365,19 +379,19 @@ public class CommandTypes extends CommandBase
     						.executes((source) -> { return VariantTest.testEntity(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))));
     	}
     	
-    	public static int testEntityId(ResourceLocation entityId, EnumCreatureType type, CommandSource source)
+    	public static int testEntityId(ResourceLocation entityId, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		return testForType(manager.getMobTypes(entityId), type, source);
     	}
     	
-    	public static int testEntity(Entity entity, EnumCreatureType type, CommandSource source)
+    	public static int testEntity(Entity entity, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		return testForType(manager.getMobTypes(entity), type, source);
     	}
     	
-    	private static int testForType(List<EnumCreatureType> types, EnumCreatureType type, CommandSource source)
+    	private static int testForType(List<EnumCreatureType> types, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		if(types.contains(type))
     		{
@@ -385,15 +399,14 @@ public class CommandTypes extends CommandBase
     			return 15;
     		}
     		else
-    		{
-    			source.sendFeedback(makeErrorMessage(translationSlug+"test.failed", type.getTranslated()), true);
-    			return 0;
-    		}
+    			throw TEST_FAILED_EXCEPTION.create();
     	}
 	}
 	
 	public static class VariantSet
 	{
+		private static final SimpleCommandExceptionType SET_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"set.failed"));
+		
 		private static final String TYPE2 = "type2";
 		private static final String TYPE3 = "type3";
 		private static final String TYPE4 = "type4";
@@ -427,17 +440,17 @@ public class CommandTypes extends CommandBase
 												.executes((source) -> { return VariantSet.set(null, EntityArgument.getEntity(source, MOB), source.getSource(), source.getArgument(TYPE, EnumCreatureType.class), source.getArgument(TYPE2, EnumCreatureType.class), source.getArgument(TYPE3, EnumCreatureType.class), source.getArgument(TYPE4, EnumCreatureType.class), source.getArgument(TYPE5, EnumCreatureType.class)); })))))))));
 		}
 		
-		private static int set(ResourceLocation mobRegistry, Entity targetEntity, CommandSource source, EnumCreatureType... types)
+		private static int set(ResourceLocation mobRegistry, Entity targetEntity, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
 		{
 			if(mobRegistry != null)
 				return setTypeMob(mobRegistry, source, types);
 			else if(targetEntity != null && targetEntity instanceof LivingEntity)
 				return setTypeEntity(targetEntity, source, types);
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.failed"), true);
-			return 0;
+			
+			throw SET_FAILED_EXCEPTION.create();
 		}
 		
-		private static int setTypeMob(ResourceLocation registry, CommandSource source, EnumCreatureType... types)
+		private static int setTypeMob(ResourceLocation registry, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
 		{
 			VariantClear.clearFromEntity(registry, source, false);
 			for(EnumCreatureType type : types)
@@ -448,7 +461,7 @@ public class CommandTypes extends CommandBase
 			return 15;
 		}
 		
-		private static int setTypeEntity(Entity entity, CommandSource source, EnumCreatureType... types)
+		private static int setTypeEntity(Entity entity, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
 		{
 			VariantClear.clearFromMob(entity, source, false);
 			for(EnumCreatureType type : types)
@@ -506,6 +519,9 @@ public class CommandTypes extends CommandBase
 	
 	private static class VariantOrigin
 	{
+		private static final SimpleCommandExceptionType ORIGIN_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"origin.failed"));
+		private static final SimpleCommandExceptionType ORIGIN_FAILED_SET_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"origin.set.failed"));
+		
 		private static final String DEST = "dimension";
 		
 		public static LiteralArgumentBuilder<CommandSource> build()
@@ -517,7 +533,7 @@ public class CommandTypes extends CommandBase
 							.executes((source) -> { return setHomeDimension(EntityArgument.getEntity(source, MOB), StringArgumentType.getString(source, DEST), source.getSource()); }))));
 		}
 		
-		private static int getHomeDimension(Entity entityIn, CommandSource source)
+		private static int getHomeDimension(Entity entityIn, CommandSource source) throws CommandSyntaxException
 		{
 			if(entityIn instanceof LivingEntity)
 			{
@@ -528,11 +544,10 @@ public class CommandTypes extends CommandBase
 					return 15;
 				}
 			}
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.failed", entityIn.getName()), true);
-			return 0;
+			throw ORIGIN_FAILED_EXCEPTION.create();
 		}
 		
-		private static int setHomeDimension(Entity entityIn, String destination, CommandSource source)
+		private static int setHomeDimension(Entity entityIn, String destination, CommandSource source) throws CommandSyntaxException
 		{
 			if(entityIn instanceof LivingEntity)
 			{
@@ -549,8 +564,8 @@ public class CommandTypes extends CommandBase
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.success", entityIn.getName(), data.getHomeDimension()), true);
 				}
 			}
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.failed", entityIn.getName()), true);
-			return 15;
+			
+			throw ORIGIN_FAILED_SET_EXCEPTION.create();
 		}
 	}
 }
