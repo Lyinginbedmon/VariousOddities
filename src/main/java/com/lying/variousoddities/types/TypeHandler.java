@@ -3,19 +3,21 @@ package com.lying.variousoddities.types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.lying.variousoddities.init.VODamageSource;
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.types.EnumCreatureType.Action;
+import com.lying.variousoddities.types.abilities.Ability;
+import com.lying.variousoddities.types.abilities.DamageType;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemTier;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.DamageSource;
+import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
@@ -31,8 +33,8 @@ public class TypeHandler
 	private boolean canCriticalHit = true;
 	private boolean canPoison = true;
 	private boolean canParalysis = true;
-	private Map<DamageSource, EnumDamageResist> resistances = new HashMap<>();
-	private EnumDamageResist fireResist = EnumDamageResist.NORMAL;
+	
+	private final List<Ability> abilities = Lists.newArrayList();
 	
 	/** Returns a default instance */
 	public static final TypeHandler get(){ return new TypeHandler(); }
@@ -56,28 +58,17 @@ public class TypeHandler
 	/** Prevents this type from being affected by paralysis effects */
 	public TypeHandler noParalysis(){ this.canParalysis = false; return this; }
 	
-	/**
-	 * Sets how this type is affected by the given type of damage.<br>
-	 * Also affects synonym damage types.
-	 */
-	public TypeHandler addResistance(DamageSource source, EnumDamageResist resist){ resistances.put(source, resist); return this;}
-	/** Sets how this type is affected by fire-type damage */
-	public TypeHandler setFireResist(EnumDamageResist resist){ this.fireResist = resist; return this; }
+	public TypeHandler addAbility(Ability abilityIn)
+	{
+		this.abilities.add(abilityIn);
+		return this;
+	}
+	
+	public List<Ability> getAbilities(){ return this.abilities; }
 	
 	/** Controls how critical hits affect this type */
 	public  void onCriticalEvent(CriticalHitEvent event){ };
 	
-	/** Used to determine if the mob should take more, less, none, or normal damage from the given source */
-	public EnumDamageResist getDamageResist(DamageSource source)
-	{
-		if(source.isFireDamage())
-			return fireResist;
-		
-		for(DamageSource resistance : resistances.keySet())
-			if(VODamageSource.isOrSynonym(source, resistance))
-				return resistances.get(resistance);
-		return EnumDamageResist.NORMAL;
-	}
 	/** Applies immunity to certain types of damage, to prevent damage that might be applied */
 	public  void onDamageEventPre(LivingAttackEvent event){ };
 	/** Modifies damage received according to configured creature types */
@@ -97,7 +88,7 @@ public class TypeHandler
 	/** Used in commands to determine if a given type can be added to an existing set */
 	public  boolean canApplyTo(Collection<EnumCreatureType> types){ return true; }
 	
-	public static enum EnumDamageResist
+	public static enum DamageResist implements IStringSerializable
 	{
 		NORMAL(0F),
 		VULNERABLE(0.5F),
@@ -106,12 +97,12 @@ public class TypeHandler
 		
 		private final float mult;
 		
-		private EnumDamageResist(float multIn)
+		private DamageResist(float multIn)
 		{
 			this.mult = multIn;
 		}
 		
-		public EnumDamageResist add(EnumDamageResist resistA)
+		public DamageResist add(DamageResist resistA)
 		{
 			if(resistA == IMMUNE || this == IMMUNE)
 				return IMMUNE;
@@ -121,6 +112,21 @@ public class TypeHandler
 		}
 		
 		public float apply(float amount){ return amount * (1F + mult); }
+		
+		public String getString(){ return name().toLowerCase(); }
+		
+		public ITextComponent getTranslated(DamageType typeIn)
+		{
+			return new TranslationTextComponent("enum.varodd.damage_resist."+getString(), typeIn.getTranslated());
+		}
+		
+		public static DamageResist fromString(String str)
+		{
+	    	for(DamageResist val : values())
+	    		if(val.getString().equalsIgnoreCase(str))
+	    			return val;
+	    	return null;
+		}
 	}
 	
 	/** Common operations between types */

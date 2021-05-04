@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.controller.LookController;
@@ -14,6 +15,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -185,6 +189,16 @@ public class VOHelper
 		}
 		if(fragment.length() > 0) fragments.add(fragment);
 		return fragments;
+	}
+	
+	public static List<ITextProperties> getWrappedText(ITextComponent text, FontRenderer font, int maxWidth)
+	{
+        List<ITextProperties> wrappedTextLines = new ArrayList<>();
+        List<ITextProperties> wrappedLine = font.getCharacterManager().func_238362_b_(text, maxWidth, Style.EMPTY);
+        
+        for(ITextProperties line : wrappedLine)
+            wrappedTextLines.add(line);
+		return wrappedTextLines;
 	}
 	
 	public static String obfuscateStringRandomly(String sentence, long seed, int odds, boolean preserveSpaces)

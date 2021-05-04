@@ -259,7 +259,7 @@ public class TypesManager extends WorldSavedData
 	
 	public List<EnumCreatureType> getPlayerTypes(PlayerEntity player, boolean customOnly)
 	{
-		List<EnumCreatureType> types = player != null ? getPlayerTypes(player.getName().getUnformattedComponentText(), customOnly) : Collections.emptyList();;
+		List<EnumCreatureType> types = player != null && player.getGameProfile() != null ? getPlayerTypes(player.getName().getUnformattedComponentText(), customOnly) : Collections.emptyList();
 		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(player.getEntityWorld(), player, types);
 		MinecraftForge.EVENT_BUS.post(event);
 		return event.getTypes();

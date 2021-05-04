@@ -59,9 +59,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private final LazyOptional<LivingData> handler;
 	
-	private List<EnumCreatureType> prevTypes = new ArrayList<>();
+	@SuppressWarnings("unused")
+	private LivingEntity entity = null;
 	
+	private List<EnumCreatureType> prevTypes = new ArrayList<>();
 	private ResourceLocation originDimension = null;
+	
+	private Abilities abilities = new Abilities();
 	
 	private int air = Reference.Values.TICKS_PER_DAY;
 	private boolean overridingAir = false;
@@ -87,12 +91,30 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	@Nullable
 	public static LivingData forEntity(LivingEntity entity)
 	{
-		return entity.getCapability(CAPABILITY).orElse(null);
+		if(entity == null)
+			return null;
+		
+		LivingData data = null;
+		try
+		{
+			data = entity.getCapability(CAPABILITY).orElse(null);
+		}
+		catch(Exception e){ }
+		
+		if(data != null)
+			data.setEntity(entity);
+		return data;
 	}
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
 	{
 		return CAPABILITY.orEmpty(cap, this.handler);
+	}
+	
+	private void setEntity(LivingEntity entityIn)
+	{
+		this.entity = entityIn;
+		this.abilities.entity = entityIn;
 	}
 	
 	public CompoundNBT serializeNBT()
@@ -107,6 +129,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			for(EnumCreatureType type : prevTypes)
 				types.add(StringNBT.valueOf(type.getSimpleName()));
 			compound.put("Types", types);
+			
+			compound.put("Abilities", this.abilities.serializeNBT());
 		return compound;
 	}
 	
@@ -121,10 +145,14 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		prevTypes.clear();
 		for(int i=0; i<types.size(); i++)
 			prevTypes.add(EnumCreatureType.fromName(types.getString(i)));
+		
+		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
 	}
 	
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
 	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; }
+	
+	public Abilities getAbilities(){ return this.abilities; }
 	
 	/** True if this object should override the vanilla air value */
 	public boolean overrideAir(){ return this.overridingAir; }
@@ -198,6 +226,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
+		
+		abilities.tick();
 	}
 	
 	/** Manage base health according to active supertypes */

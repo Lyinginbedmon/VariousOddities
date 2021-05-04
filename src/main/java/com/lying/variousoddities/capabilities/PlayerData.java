@@ -46,7 +46,17 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	
 	public static PlayerData forPlayer(PlayerEntity player)
 	{
-		return player.getCapability(CAPABILITY).orElse(null);
+		if(player == null)
+			return null;
+		
+		PlayerData data = null;
+		try
+		{
+			data = player.getCapability(CAPABILITY).orElse(null);
+		}
+		catch(Exception e){ }
+		
+		return data;
 	}
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)

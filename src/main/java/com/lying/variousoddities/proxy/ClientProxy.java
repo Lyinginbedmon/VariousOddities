@@ -6,6 +6,7 @@ import java.util.Map;
 import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementManagerClient;
 import com.lying.variousoddities.client.SpellManagerClient;
+import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.client.renderer.ColorHandler;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
@@ -16,6 +17,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -36,7 +39,11 @@ public class ClientProxy extends CommonProxy
 	
 	public void registerHandlers()
 	{
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(RendererHandler::registerTileRenderers);
+		IEventBus busMod = FMLJavaModLoadingContext.get().getModEventBus();
+		busMod.addListener(RendererHandler::registerTileRenderers);
+        
+		IEventBus busForge = MinecraftForge.EVENT_BUS;
+		busForge.addListener(GuiHandler::onGameOverlayPost);
 	}
 	
 	public void onLoadComplete(FMLLoadCompleteEvent event)

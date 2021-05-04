@@ -5,8 +5,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.world.savedata.TypesManager;
+import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -21,21 +21,15 @@ public class BlockMixin
 	public void incorporealFallOn(World worldIn, BlockPos pos, Entity entityIn, float fallDistance, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
-		{
-			TypesManager manager = TypesManager.get(worldIn);
-			if(manager.isMobOfType((LivingEntity)entityIn, EnumCreatureType.INCORPOREAL))
+			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityIncorporeality.REGISTRY_NAME))
 				ci.cancel();
-		}
 	}
 	
 	@Inject(method = "onEntityWalk(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
 	public void incorporealWalkOn(World worldIn, BlockPos pos, Entity entityIn, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
-		{
-			TypesManager manager = TypesManager.get(worldIn);
-			if(manager.isMobOfType((LivingEntity)entityIn, EnumCreatureType.INCORPOREAL))
+			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityIncorporeality.REGISTRY_NAME))
 				ci.cancel();
-		}
 	}
 }

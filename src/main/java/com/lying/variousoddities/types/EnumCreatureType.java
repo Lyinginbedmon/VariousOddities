@@ -5,38 +5,35 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.init.VOBlocks;
-import com.lying.variousoddities.init.VODamageSource;
-import com.lying.variousoddities.init.VOEnchantments;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
-import com.lying.variousoddities.types.TypeHandler.EnumDamageResist;
-import com.lying.variousoddities.world.savedata.TypesManager;
+import com.lying.variousoddities.types.TypeHandler.DamageResist;
+import com.lying.variousoddities.types.abilities.Ability;
+import com.lying.variousoddities.types.abilities.AbilityDamageReduction;
+import com.lying.variousoddities.types.abilities.AbilityDamageResistance;
+import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.types.abilities.DamageType;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.item.IItemTier;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.TieredItem;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
@@ -46,7 +43,6 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.IBlockReader;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public enum EnumCreatureType
 {
@@ -89,57 +85,28 @@ public enum EnumCreatureType
 	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AQUATIC(null, new TypeHandlerAquatic(false)),
 	AUGMENTED(),
-	COLD(null, new TypeHandler().addResistance(VODamageSource.COLD, EnumDamageResist.IMMUNE).setFireResist(EnumDamageResist.VULNERABLE)),
+	COLD(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))),
 	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler()
 	{
-		public EnumDamageResist getDamageResist(DamageSource source)
-		{
-			return VODamageSource.isFalling(source) ? EnumDamageResist.IMMUNE : super.getDamageResist(source);
-		}
 		public boolean canSpellAffect(IMagicEffect spellIn)
 		{
 			if(spellIn.getSchool() == MagicSchool.ENCHANTMENT) return false;
 			if(spellIn.getSchool() == MagicSchool.NECROMANCY || spellIn.getDescriptors().contains(MagicSubType.DEATH)) return false;
 			return true;
 		}
-	}.noCriticalHit().noParalysis().noPoison(), Action.NONE, 10),
+	}.noCriticalHit().noParalysis().noPoison().addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE)), Action.NONE, 10),
 	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler().noParalysis(), Action.STANDARD, 12),
 	EARTH(),
 	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison(), Action.REGEN_ONLY, 8),
 	EXTRAPLANAR(),
-	EVIL(null, new TypeHandler().addResistance(VODamageSource.EVIL, EnumDamageResist.IMMUNE).addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE)),
-	FEY(CreatureAttribute.UNDEFINED, new TypeHandler()
-		{
-			public void onDamageEventPost(LivingHurtEvent event)
-			{
-				DamageSource source = event.getSource();
-				if(source instanceof EntityDamageSource)
-				{
-					Entity attacker = source.getTrueSource();
-					if(attacker != null && attacker instanceof LivingEntity)
-					{
-						boolean resist = true;
-						ItemStack heldItem = ((LivingEntity)attacker).getHeldItemMainhand();
-						if(!heldItem.isEmpty())
-						{
-							Item held = heldItem.getItem();
-							IItemTier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
-							if(itemTier != null && (itemTier.toString().toLowerCase().contains("silver") || EnchantmentHelper.getEnchantmentLevel(VOEnchantments.SILVERSHEEN, heldItem) > 0))
-								resist = false;
-						}
-						
-						if(resist)
-							event.setAmount(Math.max(0F, event.getAmount() - 4F));
-					}
-				}
-			}
-		}, Action.STANDARD, 6),
-	FIRE(null, new TypeHandler().setFireResist(EnumDamageResist.IMMUNE).addResistance(VODamageSource.COLD, EnumDamageResist.VULNERABLE)),
+	EVIL(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))),
+	FEY(CreatureAttribute.UNDEFINED, new TypeHandler().addAbility(new AbilityDamageReduction(4, DamageType.SILVER)), Action.STANDARD, 6),
+	FIRE(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.VULNERABLE))),
 	GIANT(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	GOBLIN(),
-	HOLY(null, new TypeHandler().addResistance(VODamageSource.HOLY, EnumDamageResist.IMMUNE).addResistance(VODamageSource.EVIL, EnumDamageResist.VULNERABLE)),
+	HOLY(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.VULNERABLE))),
 	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
-	INCORPOREAL(null, new TypeHandler().addResistance(DamageSource.FALL, EnumDamageResist.IMMUNE)),
+	INCORPOREAL(null, new TypeHandler().addAbility(new AbilityIncorporeality()).addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))),
 	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 10),
 	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	OUTSIDER(CreatureAttribute.UNDEFINED, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
@@ -155,7 +122,7 @@ public enum EnumCreatureType
 				MagicSchool school = spellIn.getSchool();
 				return !(school == MagicSchool.ENCHANTMENT || school == MagicSchool.TRANSMUTATION);
 			}
-		}.noCriticalHit().noParalysis().noPoison().setFireResist(EnumDamageResist.VULNERABLE), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
+		}.noCriticalHit().noParalysis().noPoison().addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
 	REPTILE(),
 	SHAPECHANGER(),
 	OOZE(CreatureAttribute.UNDEFINED, new TypeHandler()
@@ -171,7 +138,7 @@ public enum EnumCreatureType
 			{
 				return !(spellIn.getSchool() == MagicSchool.ENCHANTMENT || spellIn.getDescriptors().contains(MagicSubType.DEATH));
 			}
-		}.noCriticalHit().noParalysis().noPoison().addResistance(VODamageSource.HOLY, EnumDamageResist.VULNERABLE), Action.NONE, 12),
+		}.noCriticalHit().noParalysis().noPoison().addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE)), Action.NONE, 12),
 	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.STANDARD, 8),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(true));
 	
@@ -303,6 +270,13 @@ public enum EnumCreatureType
 		return null;
 	}
 	
+	public Map<ResourceLocation, Ability> addAbilitiesToMap(Map<ResourceLocation, Ability> abilityMap)
+	{
+		for(Ability ability : getHandler().getAbilities())
+			abilityMap.put(ability.getMapName(), ability);
+		return abilityMap;
+	}
+	
 	/** Converts a list of assorted creature types into a type entry, as in a stat block. */
 	public static ITextComponent typesToHeader(Collection<EnumCreatureType> types)
 	{
@@ -356,8 +330,7 @@ public enum EnumCreatureType
 	/** Returns true if the creature is of a type that can phase */
 	public static boolean canPhase(LivingEntity entity)
 	{
-		TypesManager manager = TypesManager.get(entity.getEntityWorld());
-		return manager.isMobOfType(entity, EnumCreatureType.INCORPOREAL);
+		return AbilityRegistry.hasAbility(entity, AbilityIncorporeality.REGISTRY_NAME);
 	}
 	
 	/** Returns true if the given entity can pass through the block at the given position */

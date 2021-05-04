@@ -6,3 +6,7 @@ Warg
 	Saddles
 	Chests
 	Sit command
+Abilities
+	Refine activated ability menu & HUD
+	Implement JSON handling of species & templates
+	Implement optional first-login species selection screen

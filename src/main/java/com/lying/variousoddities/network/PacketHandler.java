@@ -34,6 +34,10 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketTileUpdate.class, PacketTileUpdate::encode, PacketTileUpdate::decode, PacketTileUpdate::handle);
 		HANDLER.registerMessage(id++, PacketTypesData.class, PacketTypesData::encode, PacketTypesData::decode, PacketTypesData::handle);
 		HANDLER.registerMessage(id++, PacketSyncAir.class, PacketSyncAir::encode, PacketSyncAir::decode, PacketSyncAir::handle);
+		HANDLER.registerMessage(id++, PacketAbilityActivate.class, PacketAbilityActivate::encode, PacketAbilityActivate::decode, PacketAbilityActivate::handle);
+		HANDLER.registerMessage(id++, PacketAbilitiesSync.class, PacketAbilitiesSync::encode, PacketAbilitiesSync::decode, PacketAbilitiesSync::handle);
+		HANDLER.registerMessage(id++, PacketAbilityCooldown.class, PacketAbilityCooldown::encode, PacketAbilityCooldown::decode, PacketAbilityCooldown::handle);
+		HANDLER.registerMessage(id++, PacketAbilityFavourite.class, PacketAbilityFavourite::encode, PacketAbilityFavourite::decode, PacketAbilityFavourite::handle);
 	}
 	
 	/**

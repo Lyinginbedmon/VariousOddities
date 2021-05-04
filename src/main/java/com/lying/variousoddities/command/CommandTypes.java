@@ -193,7 +193,7 @@ public class CommandTypes extends CommandBase
     	public static int listEntity(Entity entity, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
-    		return listTypes(manager.getMobTypes(entity), entity.getName(), source, false, true);
+    		return listTypes(manager.getMobTypes(entity), entity.getDisplayName(), source, false, true);
     	}
     	
     	private static int listTypes(List<EnumCreatureType> types, ITextComponent identifier, CommandSource source, boolean grey, boolean log) throws CommandSyntaxException
@@ -237,8 +237,8 @@ public class CommandTypes extends CommandBase
     				
     				if(report)
     				{
-		    			source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), entity.getName()), true);
-						source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
+		    			source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), entity.getDisplayName()), true);
+						source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
     				}
     			}
     			return 15;
@@ -292,8 +292,8 @@ public class CommandTypes extends CommandBase
     			if(manager.isPlayerOfType((PlayerEntity)entity, type))
     				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type, true);
     			
-    			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), entity.getName()), true);
-				source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
+    			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), entity.getDisplayName()), true);
+				source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
     			return 15;
     		}
     		else if(entity instanceof LivingEntity)
@@ -340,7 +340,7 @@ public class CommandTypes extends CommandBase
     				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type, false);
     			manager.markDirty();
         		if(report)
-        			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear.success", entity.getName()), true);
+        			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear.success", entity.getDisplayName()), true);
     			return 15;
     		}
     		else if(entity instanceof LivingEntity)
@@ -468,7 +468,7 @@ public class CommandTypes extends CommandBase
 				VariantAdd.addToMob(entity, type, source, false);
 			
 			TypesManager.get(source.getWorld()).markDirty();
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", entity.getName(), EnumCreatureType.typesToHeader(TypesManager.get(source.getWorld()).getMobTypes(entity))), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", entity.getDisplayName(), EnumCreatureType.typesToHeader(TypesManager.get(source.getWorld()).getMobTypes(entity))), true);
 			return 15;
 		}
 	}
@@ -540,7 +540,7 @@ public class CommandTypes extends CommandBase
 				LivingData data = LivingData.forEntity((LivingEntity)entityIn);
 				if(data != null && data.getHomeDimension() != null)
 				{
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.success", entityIn.getName(), data.getHomeDimension()), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.success", entityIn.getDisplayName(), data.getHomeDimension()), true);
 					return 15;
 				}
 			}
@@ -561,7 +561,7 @@ public class CommandTypes extends CommandBase
 				if(data != null && dest != null)
 				{
 					data.setHomeDimension(dest);
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.success", entityIn.getName(), data.getHomeDimension()), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"origin.set.success", entityIn.getDisplayName(), data.getHomeDimension()), true);
 				}
 			}
 			

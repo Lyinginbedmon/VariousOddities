@@ -11,6 +11,8 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.types.EnumCreatureType;
 import com.lying.variousoddities.types.TypeHandler;
+import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.Entity;
@@ -77,11 +79,10 @@ public class LivingEntityMixin extends EntityMixin
 	@Inject(method = "applyEntityCollision(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
 	public void applyEntityCollision(Entity entityIn, final CallbackInfo ci)
 	{
-		TypesManager manager = TypesManager.get(entityIn.getEntityWorld());
 		Entity host = (Entity)(Object)this;
-		if(host instanceof LivingEntity && manager.isMobOfType((LivingEntity)host, EnumCreatureType.INCORPOREAL))
+		if(host instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)host, AbilityIncorporeality.REGISTRY_NAME))
 			ci.cancel();
-		else if(entityIn instanceof LivingEntity && manager.isMobOfType((LivingEntity)entityIn, EnumCreatureType.INCORPOREAL))
+		else if(entityIn instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityIncorporeality.REGISTRY_NAME))
 			ci.cancel();		
 	}
 }

@@ -108,7 +108,7 @@ public class CommandFaction extends CommandBase
     	private static int givePlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
     	{
     		FactionReputation.addPlayerReputation(player, faction.name, ReputationChange.COMMAND, amount, null);
-    		source.sendFeedback(new TranslationTextComponent(translationSlug+"give.success", player.getName(), amount, factionToInfo(faction)), true);
+    		source.sendFeedback(new TranslationTextComponent(translationSlug+"give.success", player.getDisplayName(), amount, factionToInfo(faction)), true);
     		return (int)(15F * ((float)(FactionReputation.getPlayerReputation(player, faction.name) + 100) / 200F));
     	}
 	}
@@ -128,7 +128,7 @@ public class CommandFaction extends CommandBase
     	private static int setPlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
     	{
     		FactionReputation.setPlayerReputation(player, faction.name, amount);
-    		source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", player.getName(), factionToInfo(faction), amount), true);
+    		source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", player.getDisplayName(), factionToInfo(faction), amount), true);
     		return repToStrength(FactionReputation.getPlayerReputation(player, faction.name));
     	}
 	}
@@ -147,12 +147,12 @@ public class CommandFaction extends CommandBase
     	private static int resetPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
     	{
     		if(faction == null)
-	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.failed", player.getName(), faction), true);
+	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.failed", player.getDisplayName(), faction), true);
     		else
     		{
 	    		int reputation = faction.startingRep;
 	    		FactionReputation.setPlayerReputation(player, faction.name, reputation);
-	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.success", player.getName(), factionToInfo(faction.name), reputation), true);
+	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.success", player.getDisplayName(), factionToInfo(faction.name), reputation), true);
 	    	}
     		return repToStrength(FactionReputation.getPlayerReputation(player, faction.name));
     	}
@@ -172,7 +172,7 @@ public class CommandFaction extends CommandBase
     	private static int getPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
     	{
     		int reputation = FactionReputation.getPlayerReputation(player, faction.name);
-    		source.sendFeedback(new TranslationTextComponent(translationSlug+"get.success", player.getName(), factionToInfo(faction), reputation), true);
+    		source.sendFeedback(new TranslationTextComponent(translationSlug+"get.success", player.getDisplayName(), factionToInfo(faction), reputation), true);
     		return repToStrength(reputation);
     	}
 	}
@@ -191,7 +191,7 @@ public class CommandFaction extends CommandBase
 			FactionManager manager = FactionManager.get(source.getWorld());
 			if(!manager.isEmpty())
 			{
-				source.sendFeedback(new TranslationTextComponent(translationSlug+"list", player.getName()), true);
+				source.sendFeedback(new TranslationTextComponent(translationSlug+"list", player.getDisplayName()), true);
     			Set<String> names = manager.factionNames();
     			for(String faction : names)
     			{

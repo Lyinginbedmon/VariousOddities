@@ -1,7 +1,9 @@
 package com.lying.variousoddities.utility;
 
 import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.world.savedata.TypesManager;
+import com.lying.variousoddities.types.abilities.AbilityBlind;
+import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.BlockRenderType;
@@ -72,8 +74,7 @@ public class VOBusClient
 			skipRenderEvent = false;
 		else if(renderTarget instanceof PlayerEntity)
 		{
-			TypesManager manager = TypesManager.get(renderTarget.getEntityWorld());
-			if(manager.isMobOfType(renderTarget, EnumCreatureType.INCORPOREAL))
+			if(AbilityRegistry.hasAbility(renderTarget, AbilityIncorporeality.REGISTRY_NAME))
 			{
 	            event.setCanceled(true);
 	            IRenderTypeBuffer.Impl iRenderTypeBuffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
@@ -90,6 +91,14 @@ public class VOBusClient
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null)
 			return EnumCreatureType.canPhase(player) && getInWallBlockState(player) != null;
+		return false;
+	}
+	
+	public static boolean playerIsBlind()
+	{
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null)
+			return AbilityRegistry.hasAbility(player, AbilityBlind.REGISTRY_NAME);
 		return false;
 	}
 	

@@ -5,10 +5,11 @@ import java.util.Map;
 
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
+import com.lying.variousoddities.api.event.DamageResistanceEvent;
 import com.lying.variousoddities.api.event.SpellEvent.SpellAffectEntityEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
-import com.lying.variousoddities.types.TypeHandler.EnumDamageResist;
+import com.lying.variousoddities.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.block.material.Material;
@@ -23,6 +24,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
@@ -128,17 +130,12 @@ public class TypeBus
 				event.setCanceled(true);
 				return;
 			}
-			else
+			else if(event.getAmount() > 0F)
 			{
-				EnumDamageResist resistance = EnumDamageResist.NORMAL;
-				for(EnumCreatureType mobType : types)
-				{
-					resistance = resistance.add(mobType.getHandler().getDamageResist(event.getSource()));
-					mobType.getHandler().onDamageEventPre(event);
-					if(event.isCanceled()) return;
-				}
-				
-				if(resistance == EnumDamageResist.IMMUNE || event.getAmount() == 0F)
+				DamageResistanceEvent resistanceEvent = new DamageResistanceEvent(source, event.getEntityLiving());
+				MinecraftForge.EVENT_BUS.post(resistanceEvent);
+				DamageResist resistance = resistanceEvent.getResistance();
+				if(resistance == DamageResist.IMMUNE)
 					event.setCanceled(true);
 			}
 		}
@@ -176,15 +173,9 @@ public class TypeBus
 			}
 			else
 			{
-				EnumDamageResist resistance = EnumDamageResist.NORMAL;
-				for(EnumCreatureType mobType : types)
-				{
-					resistance = resistance.add(mobType.getHandler().getDamageResist(source));
-					mobType.getHandler().onDamageEventPost(event);
-					if(event.isCanceled())
-						return;
-				}
-				
+				DamageResistanceEvent resistanceEvent = new DamageResistanceEvent(source, event.getEntityLiving());
+				MinecraftForge.EVENT_BUS.post(resistanceEvent);
+				DamageResist resistance = resistanceEvent.getResistance();
 				switch(resistance)
 				{
 					case IMMUNE:		event.setCanceled(true); break;

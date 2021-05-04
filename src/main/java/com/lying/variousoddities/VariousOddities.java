@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import com.lying.variousoddities.block.VOBlockTags;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.client.KeyBindings;
 import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
 import com.lying.variousoddities.config.ConfigVO;
@@ -14,12 +15,14 @@ import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.faction.FactionBus;
 import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VOCommands;
+import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.ClientProxy;
 import com.lying.variousoddities.proxy.IProxy;
 import com.lying.variousoddities.proxy.ServerProxy;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.TypeBus;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.lying.variousoddities.utility.VOBusServer;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
@@ -67,6 +70,7 @@ public class VariousOddities
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigVO.spec);
         bus.addListener(this::onConfigEvent);
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.addListener(VODamageSource::livingHurtEvent);
 	}
 	
     private void doCommonSetup(final FMLCommonSetupEvent event)
@@ -74,6 +78,7 @@ public class VariousOddities
     	PacketHandler.init();
     	PlayerData.register();
     	LivingData.register();
+    	AbilityRegistry.registerAbilityListeners();
     	event.enqueueWork(VOCommands::registerArguments);
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
     	MinecraftForge.EVENT_BUS.register(SettlementManagerServer.class);
@@ -84,6 +89,7 @@ public class VariousOddities
     
     private void doClientSetup(final FMLClientSetupEvent event)
     {
+    	KeyBindings.register();
         EntityRenderRegistry.registerEntityRenderers();
         RenderTypeLookup.setRenderLayer(VOBlocks.LAYER_SCALE, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(VOBlocks.MOSS_BLOCK, RenderType.getCutout());

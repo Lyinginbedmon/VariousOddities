@@ -14,12 +14,15 @@
 		"FoodStatsMixin",
 		"AbstractBlockStateMixin",
 		"BlockMixin",
-		"ItemStackMixin"
+		"ItemStackMixin",
+		"EffectMixin"
 	],
 	"client":
 	[
 		"OverlayRendererMixin",
 		"GameSettingsMixin",
-		"WorldRendererMixin"
+		"WorldRendererMixin",
+		"EntityMixinClient",
+		"TileEntityRenderDispatcherMixin"
 	]
 }

@@ -8,7 +8,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.world.savedata.TypesManager;
+import com.lying.variousoddities.types.abilities.AbilityHoldBreath;
+import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -45,6 +47,9 @@ public class EntityMixin extends CapabilityProviderMixin
 	}
 	
 	@Shadow
+	public int getMaxAir(){ return 0; }
+	
+	@Shadow
 	public void setAir(int airIn){ }
 	
 	@Shadow
@@ -65,7 +70,7 @@ public class EntityMixin extends CapabilityProviderMixin
 	public void incorporealFall(final CallbackInfo ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && TypesManager.get(world).isMobOfType((LivingEntity)ent, EnumCreatureType.INCORPOREAL))
+		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityIncorporeality.REGISTRY_NAME))
 			ent.fallDistance = 0F;
 	}
 	
@@ -73,7 +78,15 @@ public class EntityMixin extends CapabilityProviderMixin
 	public void incorporealStepCarefully(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && TypesManager.get(world).isMobOfType((LivingEntity)ent, EnumCreatureType.INCORPOREAL) && !isSprinting())
+		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityIncorporeality.REGISTRY_NAME) && !isSprinting())
 			ci.setReturnValue(true);
+	}
+	
+	@Inject(method = "getMaxAir()I", at = @At("HEAD"), cancellable = true)
+	public void getMaxAirReptile(final CallbackInfoReturnable<Integer> ci)
+	{
+		Entity ent = (Entity)(Object)this;
+		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityHoldBreath.REGISTRY_NAME))
+			ci.setReturnValue(getMaxAir() * 2);
 	}
 }

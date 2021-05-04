@@ -45,6 +45,9 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -78,7 +81,39 @@ public class VOBusServer
 			if(data == null)
 				return;
 			PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(data.getAir()));
+			data.getAbilities().markDirty();
 		}
+	}
+	
+	@SubscribeEvent
+	public static void onPlayerLogInEvent(PlayerLoggedInEvent event)
+	{
+		LivingData data = LivingData.forEntity(event.getPlayer());
+		if(data != null)
+		{
+			PacketHandler.sendTo((ServerPlayerEntity)event.getPlayer(), new PacketSyncAir(data.getAir()));
+			data.getAbilities().markDirty();
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onPlayerCloneEvent(PlayerEvent.Clone event)
+	{
+		LivingData oldData = LivingData.forEntity(event.getOriginal());
+		LivingData newData = LivingData.forEntity(event.getPlayer());
+		if(oldData != null && newData != null)
+		{
+			newData.getAbilities().copy(oldData.getAbilities());
+			newData.getAbilities().markDirty();
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onPlayerRespawnEvent(PlayerRespawnEvent event)
+	{
+		LivingData data = LivingData.forEntity(event.getPlayer());
+		if(data != null)
+			data.getAbilities().markDirty();
 	}
 	
 	@SubscribeEvent

@@ -373,11 +373,11 @@ public class CommandSettlement extends CommandBase
 				CompoundNBT originalNBT = settlementNBT.copy();
 				settlementNBT.merge(newNBT);
 				if(settlementNBT.equals(originalNBT))
-					source.sendFeedback(makeErrorMessage(translationSlug+"edit.failed", settlementNBT.toString()), true);
+					source.sendFeedback(makeErrorMessage(translationSlug+"edit.failed", settlementNBT.toFormattedComponent()), true);
 				else
 				{
 					manager.add(index, SettlementManager.NBTToSettlement(settlementNBT));
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"edit.success", settlementNBT.toString()), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"edit.success", settlementNBT.toFormattedComponent()), true);
 				}
     		}
     		else
@@ -714,7 +714,7 @@ public class CommandSettlement extends CommandBase
                 roomNBT.merge(newNBT);
                 if(roomNBT.equals(originalNBT))
                 {
-                	source.sendFeedback(makeErrorMessage(translationSlug+"room.edit.failed", roomNBT.toString()), true);
+                	source.sendFeedback(makeErrorMessage(translationSlug+"room.edit.failed", roomNBT.toFormattedComponent()), true);
                 	return 0;
                 }
                 else
@@ -724,7 +724,7 @@ public class CommandSettlement extends CommandBase
                 	SettlementManager manager = SettlementManager.get(source.getWorld());
                 	manager.add(manager.getIndexBySettlement(settlement), settlement);
                 	
-                	source.sendFeedback(new TranslationTextComponent(translationSlug+"room.edit.success", roomNBT.toString()), true);
+                	source.sendFeedback(new TranslationTextComponent(translationSlug+"room.edit.success", roomNBT.toFormattedComponent()), true);
                 	return 15;
                 }
     		}
