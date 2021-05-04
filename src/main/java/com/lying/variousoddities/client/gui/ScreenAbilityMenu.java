@@ -2,6 +2,7 @@ package com.lying.variousoddities.client.gui;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
@@ -16,31 +17,24 @@ import com.lying.variousoddities.types.abilities.AbilityRegistry;
 import com.lying.variousoddities.types.abilities.ActivatedAbility;
 import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector2f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 
 public class ScreenAbilityMenu extends Screen
 {
-	private final List<AbilityButton> abilityList = Lists.newArrayList();
-	private FavouriteButton[] favouriteList = new FavouriteButton[7];
-	
 	private final PlayerEntity thePlayer;
 	private final LivingData theData;
 	private final List<ActivatedAbility> abilities = Lists.newArrayList();
+	private final List<ActivatedAbility> abilitySet = Lists.newArrayList();
 	
-	private static final int maxRadius = 50;
 	private static final int startup = 6;
 	private int openTicks = 0;
 	
@@ -61,57 +55,160 @@ public class ScreenAbilityMenu extends Screen
 	
 	public void init()
 	{
-		int midX = this.width / 2;
-		int midY = this.height / 2;
-		
 		this.buttons.clear();
-		abilityList.clear();
-		abilityList.add(addButton(new AbilityButton(midX, midY, null)));
+		abilitySet.clear();
 		if(!abilities.isEmpty())
 		{
 			index = MathHelper.clamp(index, 0, abilities.size() > 7 ? abilities.size() - 7 : abilities.size());
 			int end = Math.min(index+7, abilities.size());
-			favouriteList = new FavouriteButton[end];
 			
 			for(int i=index; i<end; i++)
-			{
-				ActivatedAbility ability = (ActivatedAbility)abilities.get(i);
-				AbilityButton button = new AbilityButton(midX, midY, ability);
-				button.active = false;
-				abilityList.add(addButton(button));
-				
-				favouriteList[i - index] = addButton(new FavouriteButton(midX, midY, ability, this.theData));
-			}
+				abilitySet.add((ActivatedAbility)abilities.get(i));
 		}
 	}
 	
 	public void tick()
 	{
 		this.openTicks++;
-		
-		int midX = this.width / 2;
-		int midY = this.height / 2;
-		int xOff = 0;
-		int yOff = Math.min(maxRadius, (maxRadius / 2) + (int)((maxRadius / 2) * ((double)openTicks / (double)startup)));
-		Vector2f vec = new Vector2f(xOff, yOff);
-		double angle = Math.toRadians(360F / abilityList.size());
-		for(AbilityButton button : abilityList)
+	}
+	
+	public boolean mouseClicked(double mouseX, double mouseY, int button)
+	{
+		ActivatedAbility selected = getAbilitySlice(mouseX, mouseY);
+		if(selected == null)
 		{
-			button.active = button.isExit() || openTicks > startup && button.isActive(thePlayer);
-			button.setPosition(midX + (int)vec.x - button.getWidth() / 2, midY + (int)vec.y - button.getHeightRealms() / 2);
-			vec = rotateVector(vec, angle);
+			closeScreen();
+			return true;
+		}
+		else
+		{
+			activateAbility(selected, isFavourite(mouseX, mouseY), this.theData);
+			return true;
+		}
+	}
+	
+	/** Returns the distance of the mouse from the crosshair */
+	public double getMouseDist(double mouseX, double mouseY)
+	{
+		double midX = this.width * 0.5D;
+		double midY = this.height * 0.5D;
+		
+		double dirX = mouseX - midX;
+		double dirY = mouseY - midY;
+		double lenX = Math.abs(dirX);
+		double lenY = Math.abs(dirY);
+		
+		return Math.sqrt(lenX * lenX + lenY * lenY);
+	}
+	
+	/** Returns true if the mouse is far enough from the crosshair to engage favouriting */
+	public boolean isFavourite(double mouseX, double mouseY)
+	{
+		return getMouseDist(mouseX, mouseY) >= (this.height * 0.3D);
+	}
+	
+	/** Returns the ability attached to the area the mouse is in, if any */
+	public @Nullable ActivatedAbility getAbilitySlice(double mouseX, double mouseY)
+	{
+		if(getMouseDist(mouseX, mouseY) > (this.height * 0.45D) || this.openTicks < (Reference.Values.TICKS_PER_SECOND * 0.5D))
+			return null;
+		
+		double midX = this.width * 0.5D;
+		double midY = this.height * 0.5D;
+		
+		double dirX = mouseX - midX;
+		double dirY = mouseY - midY;
+		
+		Vector3d direction = (new Vector3d(dirX, dirY, 0D)).normalize();
+		double angle = (Math.atan2(direction.x, direction.y) / Math.PI) * 180D;
+		while(angle < 0)
+			angle += 360;
+		
+		int buttonCount = abilitySet.size() + 1;
+		double menuInc = 360F / buttonCount;
+		
+		int index = 0;
+		double radialStart = -(menuInc / 2);
+		double radialMin = radialStart;
+		double radialMax = radialMin + menuInc;
+		while((angle < radialMin || angle > radialMax) && index < buttonCount)
+		{
+			++index;
+			radialMin += menuInc;
+			radialMax += menuInc;
 		}
 		
-		int radius = maxRadius + 50;
-		xOff = 0;
-		yOff = Math.min(radius, (radius / 2) + (int)((radius / 2) * ((double)openTicks / (double)startup)));
-		vec = rotateVector(new Vector2f(xOff, yOff), angle);
-		for(int i=0; i<favouriteList.length; i++)
+		index = index%buttonCount;
+		if(index > 0)
+			index = buttonCount - index;
+		
+		return index == 0 ? null : abilitySet.get(index - 1);
+	}
+	
+	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+	{
+		int xOff = 0;
+		
+		int maxRadius = (int)((this.height * 0.5D) * 0.75D);
+		int yOff = Math.min(maxRadius, (maxRadius / 2) + (int)((maxRadius / 2) * ((double)openTicks / (double)startup)));
+		double angleInc = Math.toRadians(360F / (abilitySet.size() + 1));
+		Vector2f vec = rotateVector(new Vector2f(xOff, yOff), angleInc);
+		
+		ActivatedAbility currentlySelected = getAbilitySlice(mouseX, mouseY);
+		
+		for(ActivatedAbility ability : abilitySet)
 		{
-			FavouriteButton button = favouriteList[i];
-			button.setPosition(midX + (int)vec.x - button.getWidth() / 2, midY + (int)vec.y - button.getHeightRealms() / 2);
-			button.active = button.visible = button.isFavourite() || theData.getAbilities().hasEmptyFavourites();
-			vec = rotateVector(vec, angle);
+			int x = (int)vec.x;
+			int y = (int)vec.y;
+			
+			int colour = ability.canTrigger(thePlayer) ? -1 : 0;
+			if(currentlySelected != null && ability.getMapName().equals(currentlySelected.getMapName()))
+			{
+				x = (int)((double)x * 0.75D);
+				y = (int)((double)y * 0.75D);
+				
+				if(isFavourite(mouseX, mouseY))
+					colour = 8453920;
+			}
+			
+			matrixStack.push();
+				// TODO Rotate text outwards from screen centre
+				int textY = y + (this.height - font.FONT_HEIGHT) / 2;
+				List<ITextProperties> messageLines = VOHelper.getWrappedText(ability.translatedName(), font, 90);
+				if(messageLines.size() > 1)
+				{
+					textY = y + (this.height - font.FONT_HEIGHT / 2) / 2;
+					textY -= (int)((double)messageLines.size() / 2D * 8);
+				}
+				
+				for(ITextProperties line : messageLines)
+				{
+					drawCenteredString(matrixStack, font, line.getString(), x + this.width / 2, textY, colour);
+					textY += 8;
+				}
+			matrixStack.pop();
+			
+			vec = rotateVector(vec, angleInc);
+		}
+		
+		super.render(matrixStack, mouseX, mouseY, partialTicks);
+	}
+	
+	public void activateAbility(@Nonnull ActivatedAbility ability, boolean favourite, LivingData data)
+	{
+		if(ability == null)
+			return;
+		
+		if(!favourite)
+		{
+			ability.trigger(thePlayer, Dist.CLIENT);
+			PacketHandler.sendToServer(new PacketAbilityActivate(ability.getMapName()));
+			closeScreen();
+		}
+		else
+		{
+			boolean isFavourite = data.getAbilities().isFavourite(ability.getMapName());
+			PacketHandler.sendToServer(new PacketAbilityFavourite(ability.getMapName(), !isFavourite));
 		}
 	}
 	
@@ -131,107 +228,5 @@ public class ScreenAbilityMenu extends Screen
 		double x = vec.x * Math.cos(angle) - vec.y * Math.sin(angle);
 		double y = vec.x * Math.sin(angle) + vec.y * Math.cos(angle);
 		return new Vector2f((float)x, (float)y);
-	}
-	
-	private class AbilityButton extends Widget
-	{
-		@Nullable
-		private final ActivatedAbility ability;
-		
-		public AbilityButton(int x, int y, @Nullable ActivatedAbility abilityIn)
-		{
-			super(x - 10, y - 10, 20, 20, abilityIn == null ? StringTextComponent.EMPTY : abilityIn.translatedName());
-			this.ability = abilityIn;
-		}
-		
-		public void setPosition(int xIn, int yIn)
-		{
-			this.x = xIn;
-			this.y = yIn;
-		}
-		
-		public void onClick(double mouseX, double mouseY)
-		{
-			if(this.ability != null)
-			{
-				this.ability.trigger(thePlayer, Dist.CLIENT);
-				PacketHandler.sendToServer(new PacketAbilityActivate(this.ability.getMapName()));
-			}
-			Minecraft.getInstance().currentScreen.closeScreen();
-		}
-		
-		@Nullable
-		public ActivatedAbility getAbility(){ return this.ability; }
-		
-		public boolean isExit(){ return this.ability == null; }
-		
-		public boolean isActive(LivingEntity entity)
-		{
-			return this.ability == null || this.ability.canTrigger(entity);
-		}
-		
-		@SuppressWarnings("deprecation")
-		public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
-		{
-			Minecraft minecraft = Minecraft.getInstance();
-			FontRenderer fontrenderer = minecraft.fontRenderer;
-			minecraft.getTextureManager().bindTexture(WIDGETS_LOCATION);
-			RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.alpha);
-			int i = this.getYImage(this.isHovered());
-			RenderSystem.enableBlend();
-			RenderSystem.defaultBlendFunc();
-			RenderSystem.enableDepthTest();
-			this.blit(matrixStack, this.x, this.y, 0, 46 + i * 20, this.width / 2, this.height);
-			this.blit(matrixStack, this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
-			this.renderBg(matrixStack, minecraft, mouseX, mouseY);
-			
-			int j = getFGColor();
-			
-			matrixStack.push();
-				// TODO Rotate text outwards from screen centre
-				int textY = this.y + (this.height - fontrenderer.FONT_HEIGHT) / 2;
-				List<ITextProperties> messageLines = VOHelper.getWrappedText(getMessage(), fontrenderer, 90);
-				if(messageLines.size() > 1)
-				{
-					textY = this.y + (this.height - fontrenderer.FONT_HEIGHT / 2) / 2;
-					textY -= (int)((double)messageLines.size() / 2D * 8);
-				}
-				for(ITextProperties line : messageLines)
-				{
-					drawCenteredString(matrixStack, fontrenderer, line.getString(), this.x + this.width / 2, textY, j | MathHelper.ceil(this.alpha * 255.0F) << 24);
-					textY += 8;
-				}
-			matrixStack.pop();
-		}
-	}
-	
-	private class FavouriteButton extends Widget
-	{
-		private final ActivatedAbility ability;
-		private final LivingData data;
-		
-		public FavouriteButton(int x, int y, ActivatedAbility abilityIn, LivingData dataIn)
-		{
-			super(x - 10, y - 10, 20, 20, StringTextComponent.EMPTY);
-			this.ability = abilityIn;
-			this.data = dataIn;
-		}
-		
-		public void setPosition(int xIn, int yIn)
-		{
-			this.x = xIn;
-			this.y = yIn;
-		}
-		
-		public boolean isFavourite()
-		{
-			return data.getAbilities().isFavourite(ability.getMapName());
-		}
-		
-		public void onClick(double mouseX, double mouseY)
-		{
-			if(this.ability != null)
-				PacketHandler.sendToServer(new PacketAbilityFavourite(ability.getMapName(), !isFavourite()));
-		}
 	}
 }
