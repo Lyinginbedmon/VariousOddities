@@ -91,7 +91,7 @@ public class TypesManager extends WorldSavedData
 		for(EnumCreatureType type : typeToMob.keySet())
 		{
 			CompoundNBT typ = new CompoundNBT();
-			typ.putString("Type", type.getSimpleName());
+			typ.putString("Type", type.getString());
 			ListNBT entries = new ListNBT();
 			for(ResourceLocation entry : typeToMob.get(type))
 				entries.add(StringNBT.valueOf(entry.toString()));
@@ -105,7 +105,7 @@ public class TypesManager extends WorldSavedData
 		for(EnumCreatureType type : typeToPlayer.keySet())
 		{
 			CompoundNBT typ = new CompoundNBT();
-			typ.putString("Type", type.getSimpleName());
+			typ.putString("Type", type.getString());
 			ListNBT entries = new ListNBT();
 			for(String entry : typeToPlayer.get(type))
 				if(entry != null && entry.length() > 0)

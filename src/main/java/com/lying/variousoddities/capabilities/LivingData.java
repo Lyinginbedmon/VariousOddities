@@ -59,11 +59,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private final LazyOptional<LivingData> handler;
 	
-	@SuppressWarnings("unused")
 	private LivingEntity entity = null;
 	
 	private List<EnumCreatureType> prevTypes = new ArrayList<>();
 	private ResourceLocation originDimension = null;
+	
+//	private Species species = null;
+//	private List<Template> templates = Lists.newArrayList();
 	
 	private Abilities abilities = new Abilities();
 	
@@ -127,7 +129,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			ListNBT types = new ListNBT();
 			for(EnumCreatureType type : prevTypes)
-				types.add(StringNBT.valueOf(type.getSimpleName()));
+				types.add(StringNBT.valueOf(type.getString()));
 			compound.put("Types", types);
 			
 			compound.put("Abilities", this.abilities.serializeNBT());
@@ -212,7 +214,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(isPlayer)
 			handleHealth(player);
 		
-		ActionSet actions = ActionSet.fromTypes(this.prevTypes);
+		ActionSet actions = ActionSet.fromTypes(this.entity, this.prevTypes);
 		
 		// Prevent phantoms due to sleeplessness
 		if(!actions.sleeps())

@@ -22,7 +22,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 		if(data != null && data.checkingFoodRegen)
 		{
 			TypesManager manager = TypesManager.get(world);
-			ActionSet actions = ActionSet.fromTypes(manager.getMobTypes(player));
+			ActionSet actions = ActionSet.fromTypes(player, manager.getMobTypes(player));
 			if(!actions.regenerates())
 				ci.setReturnValue(false);
 			

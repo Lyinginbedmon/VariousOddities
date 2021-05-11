@@ -15,10 +15,72 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ConfigVO
 {
-	public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+	public static final ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
+	public static final ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
 	
-	public static final General GENERAL = new General(BUILDER);
-	public static final Mobs MOBS = new Mobs(BUILDER);
+	public static final Client CLIENT = new Client(CLIENT_BUILDER);
+	
+	public static final General GENERAL = new General(SERVER_BUILDER);
+	public static final Mobs MOBS = new Mobs(SERVER_BUILDER);
+	
+	public static class Client
+	{
+		public final ForgeConfigSpec.BooleanValue hideAbilities;
+		public final ForgeConfigSpec.BooleanValue announceCools;
+		public final ForgeConfigSpec.EnumValue<EnumCorner> abilityCorner;
+		public final ForgeConfigSpec.EnumValue<EnumNameDisplay> nameDisplay;
+		
+		public final ForgeConfigSpec.BooleanValue holdKeyForMenu;
+		
+		public Client(ForgeConfigSpec.Builder builder)
+		{
+			builder.push("hud");
+				hideAbilities = builder.define("hide_abilities", false);
+				announceCools = builder.define("announce_cooldown_finish", true);
+				abilityCorner = builder.defineEnum("HUD_corner", EnumCorner.TOP_LEFT);
+				nameDisplay = builder.defineEnum("name_display_style", EnumNameDisplay.CROPPED);
+				holdKeyForMenu = builder.define("hold_key_for_ability_menu", false);
+			builder.pop();
+		}
+		
+		public static enum EnumNameDisplay
+		{
+			FULL,
+			CROPPED,
+			SNEAKING;
+		}
+		
+		public static enum EnumCorner
+		{
+			TOP_LEFT(SideX.LEFT, SideY.TOP, SideX.RIGHT),
+			TOP_RIGHT(SideX.RIGHT, SideY.TOP, SideX.LEFT),
+			BOTTOM_LEFT(SideX.LEFT, SideY.BOTTOM, SideX.RIGHT),
+			BOTTOM_RIGHT(SideX.RIGHT, SideY.TOP, SideX.LEFT);
+			
+			public final SideX directionX;
+			public final SideY directionY;
+			public final SideX textSide;
+			
+			private EnumCorner(SideX dirX, SideY dirY, SideX text)
+			{
+				directionX = dirX;
+				directionY = dirY;
+				textSide = text;
+			}
+			
+			public static enum SideX
+			{
+				LEFT,
+				RIGHT;
+			}
+			
+			public static enum SideY
+			{
+				TOP,
+				BOTTOM;
+			}
+		}
+	}
 	
 	public static void updateCache()
 	{
@@ -352,5 +414,6 @@ public class ConfigVO
 		}
 	}
 	
-	public static final ForgeConfigSpec spec = BUILDER.build();
+	public static final ForgeConfigSpec client_spec = CLIENT_BUILDER.build();
+	public static final ForgeConfigSpec server_spec = SERVER_BUILDER.build();
 }

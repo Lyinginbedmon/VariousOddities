@@ -3,26 +3,27 @@
 	"package": "com.lying.variousoddities.mixin",
 	"mixins":
 	[
+		"AbstractBlockStateMixin",
+		"BlockMixin",
 		"CapabilityProviderMixin",
+		"EffectMixin",
 		"EntityMixin",
-		"LivingEntityMixin",
 		"FireworkRocketEntityMixin",
-		"ServerWorldMixin",
+		"FoodStatsMixin",
+		"ItemStackMixin",
+		"LivingEntityMixin",
 		"MerchantResultSlotMixin",
 		"NearestAttackableTargetGoalMixin",
 		"PlayerEntityMixin",
-		"FoodStatsMixin",
-		"AbstractBlockStateMixin",
-		"BlockMixin",
-		"ItemStackMixin",
-		"EffectMixin"
+		"ServerWorldMixin"
 	],
 	"client":
 	[
-		"OverlayRendererMixin",
-		"GameSettingsMixin",
-		"WorldRendererMixin",
+		"EntityRendererManagerMixin",
 		"EntityMixinClient",
-		"TileEntityRenderDispatcherMixin"
+		"GameSettingsMixin",
+		"OverlayRendererMixin",
+		"TileEntityRenderDispatcherMixin",
+		"WorldRendererMixin"
 	]
 }

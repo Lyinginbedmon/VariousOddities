@@ -1,5 +1,7 @@
 package com.lying.variousoddities.types.abilities;
 
+import java.util.Random;
+
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -7,6 +9,8 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -20,7 +24,7 @@ public class AbilityTeleportToPos extends ActivatedAbility
 	
 	private double maxRange;
 	
-	protected AbilityTeleportToPos(double range)
+	public AbilityTeleportToPos(double range)
 	{
 		super(Reference.Values.TICKS_PER_SECOND * 6);
 		this.maxRange = range;
@@ -52,15 +56,50 @@ public class AbilityTeleportToPos extends ActivatedAbility
 		RayTraceResult trace = entity.pick(maxRange, 0F, true);
 		if(trace.getType() == RayTraceResult.Type.BLOCK)
 		{
-			Vector3d hitVec = trace.getHitVec();
 			World world = entity.getEntityWorld();
+			
+			// True if no area at or in the vicinity of the target point was found to be safe to teleport to
+			boolean failed = false;
+			
+			Vector3d hitVec = trace.getHitVec();
+			Vector3d destination = hitVec;
+			if(!isValidTeleportTarget(destination, world, entity))
+			{
+				// If the target point is invalid, search for a valid point in its vicinity, getting progressively further out
+				Random rand = entity.getRNG();
+				int range = 1;
+				int attempts = 20;
+				while(!isValidTeleportTarget(destination, world, entity) && attempts-- > 0)
+				{
+					double modX = (rand.nextDouble() * range * 2) - range;
+					double modY = (rand.nextDouble() * range * 2) - range;
+					double modZ = (rand.nextDouble() * range * 2) - range;
+					destination = hitVec.add(modX, modY, modZ);
+					range = 1 + (int)((1D - ((double)attempts / 20D)) * 5);
+				}
+				
+				if(!isValidTeleportTarget(destination, world, entity))
+					failed = true;
+			}
+			
 			world.playSound(null, entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
-				entity.setPositionAndUpdate(hitVec.getX(), hitVec.getY(), hitVec.getZ());
-			world.playSound(null, hitVec.getX(), hitVec.getY(), hitVec.getZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
+			if(!failed)
+			{
+				entity.setPositionAndUpdate(destination.getX(), destination.getY(), destination.getZ());
+				entity.fallDistance = 0F;
+				world.playSound(null, destination.getX(), destination.getY(), destination.getZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
+			}
 		}
 		
 		if(side != Dist.CLIENT)
 			putOnCooldown(entity);
+	}
+	
+	private boolean isValidTeleportTarget(Vector3d vec, World world, LivingEntity entity)
+	{
+		AxisAlignedBB boundsAt = entity.getBoundingBox().offset(vec);
+		BlockPos blockPos = new BlockPos(vec.x, vec.y, vec.z);
+		return world.hasNoCollisions(entity, boundsAt) && !world.getBlockState(blockPos).getMaterial().blocksMovement() && world.getBlockState(blockPos.down()).getMaterial().blocksMovement();
 	}
 	
 	public int getCooldown(){ return Reference.Values.TICKS_PER_SECOND * 6; }

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.lying.variousoddities.potion.PotionParalysis;
 import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.reference.Reference;
 
@@ -26,7 +28,10 @@ public class VOPotions
 	
 	public static boolean isRegistered = false;
 	
+	// TODO Potions need icon textures
+	
 	public static final Effect SLEEP				= addPotion((new PotionSleep(3973574)).setIconIndex(9, 0));
+	public static final Effect PARALYSIS			= addPotion((new PotionParalysis(-1)).setIconIndex(10, 0));
 	
 	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
 	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();
@@ -36,8 +41,8 @@ public class VOPotions
 	@SubscribeEvent
 	public static void registerPotions(RegistryEvent.Register<Effect> event)
 	{
-//		for(Effect potion : EFFECTS)
-//			event.getRegistry().register(potion);
+		for(Effect potion : EFFECTS)
+			event.getRegistry().register(potion);
 		
 		isRegistered = true;
 	}
@@ -93,6 +98,7 @@ public class VOPotions
 		});
 //		PARALYSIS_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());
 //		PARALYSIS_EFFECTS.put(VOPotions.ENTANGLED, Predicates.alwaysTrue());
+		PARALYSIS_EFFECTS.put(VOPotions.PARALYSIS, Predicates.alwaysTrue());
 		
 //		SILENCE_EFFECTS.put(VOPotions.SILENCED, Predicates.alwaysTrue());
 //		SILENCE_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());

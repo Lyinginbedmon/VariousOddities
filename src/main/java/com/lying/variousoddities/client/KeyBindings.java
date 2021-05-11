@@ -62,22 +62,21 @@ public class KeyBindings
 	public void handleInputEvent(InputEvent event)
 	{
 		KeyBinding pressedKey = getPressedKey();
-		if(pressedKey == null || Minecraft.getInstance().player == null || !Minecraft.getInstance().player.isAlive() || Minecraft.getInstance().player.isSleeping())
+		if(pressedKey == null || Minecraft.getInstance().player == null || !Minecraft.getInstance().player.isAlive() || Minecraft.getInstance().player.isSleeping() || Minecraft.getInstance().currentScreen != null)
 			return;
 		
-		if(Minecraft.getInstance().currentScreen == null)
-			if(pressedKey == ABILITY_MENU)
-				Minecraft.getInstance().displayGuiScreen(new ScreenAbilityMenu());
-			else if(pressedKey == ABILITY_1)
-				handleAbilityKey(0);
-			else if(pressedKey == ABILITY_2)
-				handleAbilityKey(1);
-			else if(pressedKey == ABILITY_3)
-				handleAbilityKey(2);
-			else if(pressedKey == ABILITY_4)
-				handleAbilityKey(3);
-			else if(pressedKey == ABILITY_5)
-				handleAbilityKey(4);
+		if(pressedKey == ABILITY_MENU)
+			Minecraft.getInstance().displayGuiScreen(new ScreenAbilityMenu());
+		else if(pressedKey == ABILITY_1)
+			handleAbilityKey(0);
+		else if(pressedKey == ABILITY_2)
+			handleAbilityKey(1);
+		else if(pressedKey == ABILITY_3)
+			handleAbilityKey(2);
+		else if(pressedKey == ABILITY_4)
+			handleAbilityKey(3);
+		else if(pressedKey == ABILITY_5)
+			handleAbilityKey(4);
 	}
 	
 	public KeyBinding getPressedKey()

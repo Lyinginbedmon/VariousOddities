@@ -16,6 +16,7 @@ import com.lying.variousoddities.types.abilities.AbilityRegistry;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
@@ -58,6 +59,14 @@ public class LivingEntityMixin extends EntityMixin
 			else if(isParalysis && !handler.canBeParalysed())
 				ci.setReturnValue(false);
 		}
+	}
+	
+	@Inject(method = "updateAITasks", at = @At("HEAD"), cancellable = true)
+	public void isMobParalysed(final CallbackInfo ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		if(!(entity.getType() == EntityType.PLAYER) && VOPotions.isParalysed(entity))
+			ci.cancel();
 	}
 	
 	@Inject(method = "isEntityUndead()Z", at = @At("HEAD"), cancellable = true)

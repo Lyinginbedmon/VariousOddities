@@ -2,11 +2,12 @@ Fix settlement room rendering
 	Fix settlement rooms rendering in different worlds
 AbstractGoblinWolf
 	Correct rendering of held item
+	Complete goblin->goblin tamer->worg->warg pipeline
 Warg
 	Saddles
 	Chests
 	Sit command
 Abilities
-	Refine activated ability menu & HUD
+	Fix rendering of ability-selection menu
 	Implement JSON handling of species & templates
 	Implement optional first-login species selection screen

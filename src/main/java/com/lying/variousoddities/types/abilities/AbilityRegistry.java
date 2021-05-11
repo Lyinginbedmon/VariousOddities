@@ -12,33 +12,23 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryBuilder;
 
 public class AbilityRegistry
 {
-	private static final Map<ResourceLocation, Ability.Builder> REGISTRY = new HashMap<>();
-	
-	public static final Ability.Builder BLIND				= registerAbility(AbilityBlind.REGISTRY_NAME, new AbilityBlind.Builder());
-	public static final Ability.Builder BLIND_SIGHT			= registerAbility(AbilityBlindsight.REGISTRY_NAME, new AbilityBlindsight.Builder());
-	public static final Ability.Builder BREATH_WEAPON		= registerAbility(AbilityBreathWeapon.REGISTRY_NAME, new AbilityBreathWeapon.Builder());
-	public static final Ability.Builder DAMAGE_REDUCTION	= registerAbility(AbilityDamageReduction.REGISTRY_NAME, new AbilityDamageReduction.Builder());
-	public static final Ability.Builder DAMAGE_RESISTANCE	= registerAbility(AbilityDamageResistance.REGISTRY_NAME, new AbilityDamageResistance.Builder());
-	public static final Ability.Builder EXPLODE				= registerAbility(AbilityExplode.REGISTRY_NAME, new AbilityExplode.Builder());
-	public static final Ability.Builder GHOST_FORM			= registerAbility(AbilityGhostForm.REGISTRY_NAME, new AbilityGhostForm.Builder());
-	public static final Ability.Builder HEAT				= registerAbility(AbilityHeat.REGISTRY_NAME, new AbilityHeat.Builder());
-	public static final Ability.Builder HOLD_BREATH			= registerAbility(AbilityHoldBreath.REGISTRY_NAME, new AbilityHoldBreath.Builder());
-	public static final Ability.Builder INCORPOREALITY		= registerAbility(AbilityIncorporeality.REGISTRY_NAME, new AbilityIncorporeality.Builder());
-	public static final Ability.Builder INVISIBILITY		= registerAbility(AbilityInvisibility.REGISTRY_NAME, new AbilityInvisibility.Builder());
-	public static final Ability.Builder SILK_TOUCH			= registerAbility(AbilitySilkTouch.REGISTRY_NAME, new AbilitySilkTouch.Builder());
-	public static final Ability.Builder STATUS_EFFECT		= registerAbility(AbilityStatusEffect.REGISTRY_NAME, new AbilityStatusEffect.Builder());
-	public static final Ability.Builder TELEPORT_HOME		= registerAbility(AbilityTeleportToHome.REGISTRY_NAME, new AbilityTeleportToHome.Builder());
-	public static final Ability.Builder TELEPORT_POS		= registerAbility(AbilityTeleportToPos.REGISTRY_NAME, new AbilityTeleportToPos.Builder());
+	public static final IForgeRegistry<Ability.Builder> ABILITIES;
 	
 	/*
 	 * Enderman
@@ -51,45 +41,79 @@ public class AbilityRegistry
 	 * 	#Fireballs
 	 * Spider
 	 * 	#Web
-	 * 	Poison (# when used on held item)
 	 * 	Climbing
 	 * Rat
 	 * 	Disease (# when used on held item)
 	 * 
 	 * Darkvision
 	 * Low-light Vision
+	 * Light Sensitivity
 	 * Blindsense
 	 */
 	
+	public static void initAbilities()
+	{
+		registerAbility(AbilityBlind.REGISTRY_NAME, new AbilityBlind.Builder());
+		registerAbility(AbilityBlindsight.REGISTRY_NAME, new AbilityBlindsight.Builder());
+		registerAbility(AbilityBreathWeapon.REGISTRY_NAME, new AbilityBreathWeapon.Builder());
+		registerAbility(AbilityDamageReduction.REGISTRY_NAME, new AbilityDamageReduction.Builder());
+		registerAbility(AbilityDamageResistance.REGISTRY_NAME, new AbilityDamageResistance.Builder());
+		registerAbility(AbilityExplode.REGISTRY_NAME, new AbilityExplode.Builder());
+		registerAbility(AbilityFastHealing.REGISTRY_NAME, new AbilityFastHealing.Builder());
+		registerAbility(AbilityGhostForm.REGISTRY_NAME, new AbilityGhostForm.Builder());
+		registerAbility(AbilityHeat.REGISTRY_NAME, new AbilityHeat.Builder());
+		registerAbility(AbilityHoldBreath.REGISTRY_NAME, new AbilityHoldBreath.Builder());
+		registerAbility(AbilityIncorporeality.REGISTRY_NAME, new AbilityIncorporeality.Builder());
+		registerAbility(AbilityInvisibility.REGISTRY_NAME, new AbilityInvisibility.Builder());
+		registerAbility(AbilityNaturalArmour.REGISTRY_NAME, new AbilityNaturalArmour.Builder());
+		registerAbility(AbilityNaturalRegen.REGISTRY_NAME, new AbilityNaturalRegen.Builder());
+		registerAbility(AbilityPoison.REGISTRY_NAME, new AbilityPoison.Builder());
+		registerAbility(AbilityStatusEffect.REGISTRY_NAME, new AbilityStatusEffect.Builder());
+		registerAbility(AbilityTeleportToHome.REGISTRY_NAME, new AbilityTeleportToHome.Builder());
+		registerAbility(AbilityTeleportToPos.REGISTRY_NAME, new AbilityTeleportToPos.Builder());
+		registerAbility(AbilityWaterWalking.REGISTRY_NAME, new AbilityWaterWalking.Builder());
+		
+		VariousOddities.log.info("Initialised "+ABILITIES.getEntries().size()+" abilities");
+		if(ConfigVO.GENERAL.verboseLogs())
+			for(ResourceLocation name : ABILITIES.getKeys())
+				VariousOddities.log.info("#   "+name.toString());
+	}
+	
 	private static Ability.Builder registerAbility(ResourceLocation registryName, Ability.Builder builderIn)
 	{
-		if(REGISTRY.containsKey(registryName))
-			VariousOddities.log.warn("Overwrote existing ability registry for "+registryName);
-		REGISTRY.put(registryName, builderIn);
+		builderIn.setRegistryName(registryName);
+		ABILITIES.register(builderIn);
 		
 		return builderIn;
 	}
 	
 	public static Ability getAbility(ResourceLocation registryName, CompoundNBT nbt)
 	{
-		if(REGISTRY.containsKey(registryName))
-			return REGISTRY.get(registryName).create(nbt);
+		if(ABILITIES.containsKey(registryName))
+			return ABILITIES.getValue(registryName).create(nbt);
 		return null;
 	}
 	
 	public static Ability getAbility(CompoundNBT compound)
 	{
 		ResourceLocation registryName = new ResourceLocation(compound.getString("Name"));
-		return AbilityRegistry.getAbility(registryName, compound.getCompound("Tag"));
+		
+		CompoundNBT abilityData = compound.getCompound("Tag");
+		Ability ability = AbilityRegistry.getAbility(registryName, abilityData);
+		
+		if(compound.contains("CustomName", 8))
+			ability.setDisplayName(ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomName")));
+		
+		return ability;
 	}
 	
 	public static void registerAbilityListeners()
 	{
-		for(Ability.Builder builder : REGISTRY.values())
+		for(Ability.Builder builder : ABILITIES.getValues())
 			builder.create(new CompoundNBT()).addListeners(MinecraftForge.EVENT_BUS);
 	}
 	
-	public static Collection<ResourceLocation> getAbilityNames(){ return REGISTRY.keySet(); }
+	public static Collection<ResourceLocation> getAbilityNames(){ return ABILITIES.getKeys(); }
 	
 	/** Returns a map of the given creature's abilities based on their types and LivingData */
 	public static Map<ResourceLocation, Ability> getCreatureAbilities(@Nonnull LivingEntity entity)
@@ -142,5 +166,15 @@ public class AbilityRegistry
 				abilities.add(ability);
 		
 		return abilities;
+	}
+	
+	private static <T extends IForgeRegistryEntry<T>> IForgeRegistry<T> makeRegistry(ResourceLocation name, Class<T> type, int max)
+	{
+        return new RegistryBuilder<T>().setName(name).setType(type).setMaxID(max).create();
+    }
+	
+	static
+	{
+		ABILITIES = makeRegistry(new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities"), Ability.Builder.class, Integer.MAX_VALUE >> 5);
 	}
 }

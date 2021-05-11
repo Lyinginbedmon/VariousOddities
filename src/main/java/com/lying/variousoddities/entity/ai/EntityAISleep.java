@@ -83,7 +83,7 @@ public class EntityAISleep extends Goal
 			for(EnumCreatureType type : types)
 				;
 		
-		return EnumCreatureType.ActionSet.fromTypes(types).sleeps();
+		return EnumCreatureType.ActionSet.fromTypes(theMob, types).sleeps();
 	}
 	
 	public static void spawnParticles(LivingEntity theMob, Random rand)

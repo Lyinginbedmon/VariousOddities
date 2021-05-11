@@ -38,6 +38,9 @@ public class VODamageSource extends DamageSource
 	/** Damage caused by the owner exploding */
 	public static final DamageSource EXPLOSION = new VODamageSource("explosion").setDamageBypassesArmor().setExplosion();
 	
+	/** Damage caused by resigning to some form of paralysis */
+	public static final DamageSource PARALYSIS = new VODamageSource("paralysis").setDamageBypassesArmor().setDamageIsAbsolute().setDamageAllowedInCreativeMode();
+	
 	private VODamageSource(String nameIn)
 	{
 		super(nameIn);

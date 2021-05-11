@@ -71,7 +71,7 @@ public class TypeBus
 		{
 			PlayerEntity player = event.getPlayer();
 			TypesManager manager = TypesManager.get(player.getEntityWorld());
-			if(!EnumCreatureType.ActionSet.fromTypes(manager.getMobTypes(player)).sleeps())
+			if(!EnumCreatureType.ActionSet.fromTypes(player, manager.getMobTypes(player)).sleeps())
 			{
 				event.setResult(SleepResult.NOT_POSSIBLE_NOW);
 				if(!player.getEntityWorld().isRemote)
@@ -115,7 +115,7 @@ public class TypeBus
 		{
 			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
 			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
-			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(types);
+			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(event.getEntityLiving(), types);
 			DamageSource source = event.getSource();
 			
 			// Creatures that don't need to breathe cannot drown or suffocate
@@ -150,7 +150,7 @@ public class TypeBus
 		{
 			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
 			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
-			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(types);
+			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(event.getEntityLiving(), types);
 			
 			DamageSource source = event.getSource();
 			// Creatures that don't need to breathe cannot drown or suffocate

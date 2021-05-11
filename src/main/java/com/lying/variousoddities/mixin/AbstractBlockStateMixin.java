@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.types.EnumCreatureType;
+import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.types.abilities.AbilityWaterWalking;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.entity.Entity;
@@ -30,8 +32,18 @@ public abstract class AbstractBlockStateMixin
 	{
 		Entity entity = context.getEntity();
 		if(context instanceof EntitySelectionContext && entity != null && entity.isAlive() && entity instanceof LivingEntity)
-			if(EnumCreatureType.canPhase(worldIn, pos, (LivingEntity)entity))
+		{
+			LivingEntity living = (LivingEntity)entity;
+			if(EnumCreatureType.canPhase(worldIn, pos, living))
 				ci.setReturnValue(VoxelShapes.empty());
+			else if(AbilityRegistry.hasAbility(living, AbilityWaterWalking.REGISTRY_NAME))
+			{
+				AbilityWaterWalking ability = (AbilityWaterWalking)AbilityRegistry.getAbilityByName(living, AbilityWaterWalking.REGISTRY_NAME);
+				if(worldIn.getBlockState(pos).getFluidState() != null && ability.affectsFluid(worldIn.getBlockState(pos).getFluidState()))
+					if(!(living.isSneaking() || living.isSwimming()) && pos.getY() < living.getPosition().getY())
+						ci.setReturnValue(VoxelShapes.fullCube());
+			}
+		}
 	}
 	
 	@Inject(

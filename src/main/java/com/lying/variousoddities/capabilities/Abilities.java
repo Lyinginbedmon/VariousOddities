@@ -24,9 +24,11 @@ import net.minecraft.util.ResourceLocation;
 
 public class Abilities
 {
+	public static int FAVOURITE_SLOTS = 5;
+	
 	protected Map<ResourceLocation, Ability> abilities = new HashMap<>();
 	protected Map<ResourceLocation, Integer> cooldowns = new HashMap<>();
-	protected ResourceLocation[] favourites = new ResourceLocation[5];
+	protected ResourceLocation[] favourites = new ResourceLocation[FAVOURITE_SLOTS];
 	
 	public LivingEntity entity = null;
 	
@@ -141,7 +143,7 @@ public class Abilities
 	@Nullable
 	public ResourceLocation getFavourite(int index)
 	{
-		return this.favourites[index % 5];
+		return this.favourites[index % FAVOURITE_SLOTS];
 	}
 	
 	public boolean hasEmptyFavourites(){ return nextEmptyFavourite() >= 0; }

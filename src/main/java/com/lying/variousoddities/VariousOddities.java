@@ -3,14 +3,13 @@ package com.lying.variousoddities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.lying.variousoddities.block.VOBlockTags;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.client.KeyBindings;
 import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
 import com.lying.variousoddities.config.ConfigVO;
-import com.lying.variousoddities.entity.VOEntityTags;
+import com.lying.variousoddities.data.VODataGenerators;
 import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.faction.FactionBus;
 import com.lying.variousoddities.init.VOBlocks;
@@ -29,10 +28,8 @@ import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.data.DataGenerator;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -44,7 +41,6 @@ import net.minecraftforge.fml.config.ModConfig.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -65,9 +61,10 @@ public class VariousOddities
         bus.addListener(this::doCommonSetup);
         bus.addListener(this::doClientSetup);
         bus.addListener(this::doLoadComplete);
-        bus.addListener(this::onGatherData);
+        bus.addListener(VODataGenerators::onGatherData);
         
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigVO.spec);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigVO.server_spec);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigVO.client_spec);
         bus.addListener(this::onConfigEvent);
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.addListener(VODamageSource::livingHurtEvent);
@@ -78,6 +75,7 @@ public class VariousOddities
     	PacketHandler.init();
     	PlayerData.register();
     	LivingData.register();
+    	AbilityRegistry.initAbilities();
     	AbilityRegistry.registerAbilityListeners();
     	event.enqueueWork(VOCommands::registerArguments);
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
@@ -125,15 +123,4 @@ public class VariousOddities
     
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event){ VOCommands.onCommandRegister(event); }
-    
-    public void onGatherData(GatherDataEvent event)
-    {
-    	ExistingFileHelper helper = event.getExistingFileHelper();
-    	if(event.includeServer())
-    	{
-    		DataGenerator generator = event.getGenerator();
-    		generator.addProvider(new VOBlockTags(event.getGenerator(), helper));
-    		generator.addProvider(new VOEntityTags(event.getGenerator(), helper));
-    	}
-    }
 }

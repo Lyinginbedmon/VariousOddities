@@ -3,10 +3,13 @@ package com.lying.variousoddities.network;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
@@ -45,25 +48,28 @@ public class PacketAbilitiesSync
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isClient())
 		{
-			World world = Minecraft.getInstance().world;
-			if(world != null)
+			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			if(player != null)
 			{
-				LivingEntity entity = null;
-				for(LivingEntity living : world.getEntitiesWithinAABB(LivingEntity.class, Minecraft.getInstance().player.getBoundingBox().grow(64D)))
-					if(living.getUniqueID().equals(msg.uuid))
-					{
-						entity = living;
-						break;
-					}
-				
-				if(entity != null)
+				World world = player.getEntityWorld();
+				if(world != null)
 				{
-					LivingData data = LivingData.forEntity(entity);
-					data.getAbilities().deserializeNBT(msg.abilitiesData);
+					LivingEntity entity = null;
+					for(LivingEntity living : world.getEntitiesWithinAABB(LivingEntity.class, Minecraft.getInstance().player.getBoundingBox().grow(64D)))
+						if(living.getUniqueID().equals(msg.uuid))
+						{
+							entity = living;
+							break;
+						}
+					
+					if(entity != null)
+					{
+						LivingData data = LivingData.forEntity(entity);
+						data.getAbilities().deserializeNBT(msg.abilitiesData);
+					}
 				}
 			}
 		}
-		
 		context.setPacketHandled(true);
 	}
 }

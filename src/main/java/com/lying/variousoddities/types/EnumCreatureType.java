@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
+import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent;
 import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.magic.IMagicEffect;
@@ -33,6 +34,7 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.Direction;
+import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
@@ -43,8 +45,9 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.IBlockReader;
+import net.minecraftforge.common.MinecraftForge;
 
-public enum EnumCreatureType
+public enum EnumCreatureType implements IStringSerializable
 {
 	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AIR(null, new TypeHandler()
@@ -188,7 +191,7 @@ public enum EnumCreatureType
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : SUPERTYPES)
-			names.add(type.getSimpleName().toLowerCase());
+			names.add(type.getString());
 		return names;
 	}
 	
@@ -196,7 +199,7 @@ public enum EnumCreatureType
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : SUBTYPES)
-			names.add(type.getSimpleName().toLowerCase());
+			names.add(type.getString());
 		return names;
 	}
 	
@@ -204,17 +207,17 @@ public enum EnumCreatureType
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : values())
-			names.add(type.getSimpleName().toLowerCase());
+			names.add(type.getString());
 		return names;
 	}
 	
 	public boolean hasParentAttribute(){ return parentAttribute != null; }
 	public CreatureAttribute getParentAttribute(){ return parentAttribute; }
 	
-	public String getName(){ return translationBase+getSimpleName(); }
-	public String getSimpleName(){ return this.name().toLowerCase(); }
-	public String getDefinition(){ return translationBase+getSimpleName()+".definition"; }
-	public String getProperties(){ return translationBase+getSimpleName()+".properties"; }
+	public String getName(){ return translationBase+getString(); }
+	public String getString(){ return this.name().toLowerCase(); }
+	public String getDefinition(){ return translationBase+getString()+".definition"; }
+	public String getProperties(){ return translationBase+getString()+".properties"; }
 	public String getType(){ return translationBase + (supertype ? "supertype" : "subtype"); }
 	public boolean canApplyTo(Collection<EnumCreatureType> types){ return getHandler().canApplyTo(types); }
 	public TypeHandler getHandler(){ return this.handler; }
@@ -238,7 +241,7 @@ public enum EnumCreatureType
 	public static EnumCreatureType fromName(String nameIn)
 	{
 		for(EnumCreatureType type : EnumCreatureType.values())
-			if(type.getSimpleName().equalsIgnoreCase(nameIn))
+			if(type.getString().equalsIgnoreCase(nameIn))
 				return type;
 		return null;
 	}
@@ -247,7 +250,7 @@ public enum EnumCreatureType
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : values())
-			names.add(type.getSimpleName());
+			names.add(type.getString());
 		java.util.Collections.sort(names);
 		return names;
 	}
@@ -365,7 +368,7 @@ public enum EnumCreatureType
 	
 	public static class ActionSet
 	{
-		EnumSet<Action> actions = Action.NONE.clone();
+		private EnumSet<Action> actions = Action.NONE.clone();
 		
 		public ActionSet(){ }
 		public ActionSet(EnumSet<Action> actions)
@@ -380,6 +383,8 @@ public enum EnumCreatureType
 		{
 			actions = handler.applyActions(actions, types);
 		}
+		
+		public boolean contains(Action actionIn){ return this.actions.contains(actionIn); }
 		
 		public void add(Action actionIn)
 		{
@@ -433,7 +438,7 @@ public enum EnumCreatureType
 			return set;
 		}
 		
-		public static ActionSet fromTypes(Collection<EnumCreatureType> types)
+		public static ActionSet fromTypes(LivingEntity entity, Collection<EnumCreatureType> types)
 		{
 			if(types.isEmpty())
 				return new ActionSet(Action.STANDARD);
@@ -453,7 +458,10 @@ public enum EnumCreatureType
 					set.applyType(type.getHandler(), types);
 				});
 			
-			return set;
+			GetTypeActionsEvent event = new GetTypeActionsEvent(entity, types, set.actions);
+			MinecraftForge.EVENT_BUS.post(event);
+			
+			return event.getActions();
 		}
 	}
 	

@@ -16,10 +16,7 @@ public class PotionSleep extends PotionVO
 		super("sleep", EffectType.HARMFUL, colorIn);
 	}
 	
-    public boolean isReady(int duration, int amplifier)
-    {
-    	return true;
-    }
+    public boolean isReady(int duration, int amplifier){ return true; }
     
     public void performEffect(LivingEntity livingEntity, int amplifier)
     {

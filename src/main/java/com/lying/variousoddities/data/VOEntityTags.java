@@ -1,4 +1,4 @@
-package com.lying.variousoddities.entity;
+package com.lying.variousoddities.data;
 
 import javax.annotation.Nonnull;
 

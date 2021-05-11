@@ -5,9 +5,12 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 public abstract class Ability
 {
+	private ITextComponent displayName = null;
+	
 	/**
 	 * Returns the name of this ability in AbilityRegistry.<br>
 	 * This should NEVER change!
@@ -27,6 +30,21 @@ public abstract class Ability
 	/** Registers any necessary listeners needed for this ability to function */
 	public void addListeners(IEventBus bus){ }
 	
+	public boolean hasCustomName(){ return this.displayName != null; }
+	
+	public void setDisplayName(ITextComponent nameIn)
+	{
+		if(nameIn != null)
+			this.displayName = nameIn;
+		else
+			this.displayName = null;
+	}
+	
+	public ITextComponent getDisplayName()
+	{
+		return hasCustomName() ? this.displayName : translatedName();
+	}
+	
 	public ITextComponent translatedName()
 	{
 		return new TranslationTextComponent("ability."+getMapName());
@@ -35,6 +53,10 @@ public abstract class Ability
 	public final CompoundNBT writeAtomically(CompoundNBT compound)
 	{
 		compound.putString("Name", getRegistryName().toString());
+		
+		if(hasCustomName())
+			compound.putString("CustomName", ITextComponent.Serializer.toJson(this.displayName));
+		
 		compound.put("Tag", writeToNBT(new CompoundNBT()));
 		return compound;
 	}
@@ -51,16 +73,23 @@ public abstract class Ability
 	
 	public abstract Type getType();
 	
-	public static abstract class Builder
+	public static abstract class Builder extends ForgeRegistryEntry<Ability.Builder>
 	{
 		public abstract Ability create(CompoundNBT compound);
 	}
 	
 	public static enum Type
 	{
-		WEAKNESS,
-		UTILITY,
-		DEFENSE,
-		ATTACK;
+		WEAKNESS(3),
+		UTILITY(2),
+		DEFENSE(1),
+		ATTACK(0);
+		
+		public final int texIndex;
+		
+		private Type(int index)
+		{
+			this.texIndex = index;
+		}
 	}
 }

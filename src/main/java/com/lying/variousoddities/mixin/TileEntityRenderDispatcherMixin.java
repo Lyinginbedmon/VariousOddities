@@ -8,7 +8,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.lying.variousoddities.utility.VOBusClient;
 
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 @Mixin(TileEntityRendererDispatcher.class)
 public class TileEntityRenderDispatcherMixin
 {
