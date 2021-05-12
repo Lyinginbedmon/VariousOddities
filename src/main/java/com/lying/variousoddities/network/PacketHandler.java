@@ -39,6 +39,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketAbilityCooldown.class, PacketAbilityCooldown::encode, PacketAbilityCooldown::decode, PacketAbilityCooldown::handle);
 		HANDLER.registerMessage(id++, PacketAbilityFavourite.class, PacketAbilityFavourite::encode, PacketAbilityFavourite::decode, PacketAbilityFavourite::handle);
 		HANDLER.registerMessage(id++, PacketParalysisResignation.class, PacketParalysisResignation::encode, PacketParalysisResignation::decode, PacketParalysisResignation::handle);
+		HANDLER.registerMessage(id++, PacketTypesCustom.class, PacketTypesCustom::encode, PacketTypesCustom::decode, PacketTypesCustom::handle);
 	}
 	
 	/**

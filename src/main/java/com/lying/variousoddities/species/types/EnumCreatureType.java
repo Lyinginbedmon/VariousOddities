@@ -5,46 +5,34 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
+import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent;
-import com.lying.variousoddities.init.VOBlocks;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
-import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
-import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
+import com.lying.variousoddities.world.savedata.TypesManager;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.util.Direction;
 import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.HoverEvent;
-import net.minecraft.world.IBlockReader;
 import net.minecraftforge.common.MinecraftForge;
 
 public enum EnumCreatureType implements IStringSerializable
@@ -154,10 +142,10 @@ public enum EnumCreatureType implements IStringSerializable
 			public boolean apply(EnumCreatureType input){ return !input.isSupertype(); }
 		};
 	
-	private static final EnumSet<EnumCreatureType> SUPERTYPES = EnumSet.of(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
-	private static final EnumSet<EnumCreatureType> SUBTYPES = EnumSet.complementOf(SUPERTYPES);
+	public static final EnumSet<EnumCreatureType> SUPERTYPES = EnumSet.of(ABERRATION, ANIMAL, CONSTRUCT, DRAGON, ELEMENTAL, FEY, GIANT, HUMANOID, MAGICAL_BEAST, MONSTROUS_HUMANOID, OUTSIDER, PLANT, OOZE, UNDEAD, VERMIN);
+	public static final EnumSet<EnumCreatureType> SUBTYPES = EnumSet.complementOf(SUPERTYPES);
 	
-	private static final String translationBase = "enum.varodd.creature_type.";
+	public static final String translationBase = "enum.varodd.creature_type.";
 	private final CreatureAttribute parentAttribute;
 	private final boolean supertype;
 	private final TypeHandler handler;
@@ -246,15 +234,6 @@ public enum EnumCreatureType implements IStringSerializable
 		return null;
 	}
 	
-	public static List<String> names()
-	{
-		List<String> names = new ArrayList<>();
-		for(EnumCreatureType type : values())
-			names.add(type.getString());
-		java.util.Collections.sort(names);
-		return names;
-	}
-	
 	public static List<EnumCreatureType> stringToTypes(String[] namesIn)
 	{
 		List<EnumCreatureType> types = new ArrayList<EnumCreatureType>();
@@ -265,105 +244,40 @@ public enum EnumCreatureType implements IStringSerializable
 		return types;
 	}
 	
-	public static EnumCreatureType getTypeFromAttribute(CreatureAttribute attribute)
+	public static List<EnumCreatureType> getCreatureTypes(@Nullable LivingEntity entity)
 	{
-		for(EnumCreatureType type : values())
-			if(type.getParentAttribute() == attribute)
-				return type;
-		return null;
-	}
-	
-	public Map<ResourceLocation, Ability> addAbilitiesToMap(Map<ResourceLocation, Ability> abilityMap)
-	{
-		for(Ability ability : getHandler().getAbilities())
-			abilityMap.put(ability.getMapName(), ability);
-		return abilityMap;
-	}
-	
-	/** Converts a list of assorted creature types into a type entry, as in a stat block. */
-	public static ITextComponent typesToHeader(Collection<EnumCreatureType> types)
-	{
-		List<EnumCreatureType> supertypes = new ArrayList<>();
-		List<EnumCreatureType> subtypes = new ArrayList<>();
+		List<EnumCreatureType> types = Lists.newArrayList();
+		if(entity == null || !TypeBus.shouldFire())
+			return types;
 		
-		for(EnumCreatureType type : types)
-			if(type.isSupertype())
-				supertypes.add(type);
-			else
-				subtypes.add(type);
-		java.util.Collections.sort(supertypes);
-		java.util.Collections.sort(subtypes);
-		
-		StringTextComponent supertype = new StringTextComponent("");
-		if(supertypes.isEmpty())
-			supertype.append(new TranslationTextComponent(translationBase+"no_supertype"));
-		else
-			for(EnumCreatureType sup : supertypes)
-			{
-				if(supertype.getSiblings().size() > 0)
-					supertype.append(new StringTextComponent(" "));
-				supertype.append(sup.getTranslated());
-			}
-		
-		StringTextComponent subtype = new StringTextComponent("");
-		if(!subtypes.isEmpty())
+		LivingData data = LivingData.forEntity(entity);
+		if(data != null)
 		{
-			subtype = new StringTextComponent(" (");
-			for(EnumCreatureType sup : subtypes)
-			{
-				if(subtype.getSiblings().size() > 0)
-					subtype.append(new StringTextComponent(", "));
-				subtype.append(sup.getTranslated());
-			}
-			subtype.append(new StringTextComponent(")"));
+			// If creature has custom types, use those
+			if(data.hasCustomTypes())
+				types.addAll(data.getCustomTypes());
+			// If creature has species, use its types
+			else if(data.hasSpecies())
+				types.addAll(data.getTypesFromSpecies());
 		}
 		
-		return supertype.append(subtype);
+		if(types.isEmpty())
+		{
+			// Otherwise, default to world settings
+			TypesManager manager = TypesManager.get(entity.getEntityWorld());
+			if(manager != null)
+				types.addAll(manager.getMobTypes(entity.getType()));
+		}
+		
+		// Apply contextual type effects, eg. native vs extraplanar
+		GetEntityTypesEvent event = new GetEntityTypesEvent(entity.getEntityWorld(), entity, types);
+		MinecraftForge.EVENT_BUS.post(event);
+		return event.getTypes();
 	}
 	
-	/** Returns true if the given entity can pass through obstacles at the given position */
-	public static boolean canPhase(IBlockReader worldIn, @Nullable BlockPos pos, LivingEntity entity)
+	public static Types getTypes(LivingEntity entity)
 	{
-		if(entity == null)
-			return false;
-		else
-			return canPhase(entity) && (pos == null ? true : canPhaseThrough(worldIn, pos, entity));
-	}
-	
-	/** Returns true if the creature is of a type that can phase */
-	public static boolean canPhase(LivingEntity entity)
-	{
-		return AbilityRegistry.hasAbility(entity, AbilityIncorporeality.REGISTRY_NAME);
-	}
-	
-	/** Returns true if the given entity can pass through the block at the given position */
-	public static boolean canPhaseThrough(IBlockReader worldIn, @Nonnull BlockPos pos, LivingEntity entity)
-	{
-		// Deny for pre-defined blocks, such as unbreakable blocks and portals
-		BlockState state = worldIn.getBlockState(pos);
-		if(VOBlocks.UNPHASEABLE.contains(state.getBlock()))
-			return false;
-		
-		// Attempt to catch any of the above that haven't already been tagged in data
-		if(state.getBlockHardness(worldIn, pos) < 0F || state.getMaterial() == Material.PORTAL)
-			return false;
-		
-		// Phasing or not is irrelevant here, but prevents pressure plates etc. from firing
-		VoxelShape collision = state.getCollisionShape(worldIn, pos);
-		if(collision == null || collision == VoxelShapes.empty())
-			return true;
-		
-		// Lastly, only allow phasing if any open side exists around the target block
-		double blockTop = pos.getY() + collision.getBoundingBox().maxY;
-		if((entity.getPosY() + 0.5D) <= blockTop)
-			for(Direction direction : Direction.values())
-			{
-				BlockPos offset = pos.offset(direction);
-				BlockState stateAtOffset = worldIn.getBlockState(offset);
-				if(stateAtOffset.getCollisionShape(worldIn, offset) == VoxelShapes.empty() || stateAtOffset.getFluidState().getFluid() != Fluids.EMPTY)
-					return true;
-			}
-		return false;
+		return new Types(getCreatureTypes(entity));
 	}
 	
 	public static class ActionSet

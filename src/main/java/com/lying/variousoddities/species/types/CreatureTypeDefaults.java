@@ -1,8 +1,10 @@
 package com.lying.variousoddities.species.types;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.entity.EntityType;
@@ -10,25 +12,33 @@ import net.minecraft.entity.EntityType;
 public class CreatureTypeDefaults
 {
 	private static final Map<EnumCreatureType, String> typeToMobDefaults = new HashMap<>();
-	private static final Map<EnumCreatureType, String> typeToPlayerDefaults = new HashMap<>();
+	private static final Map<EnumCreatureType, List<String>> patronTypes = new HashMap<>();
 	
 	public static boolean isTypedPatron(String name)
 	{
-		for(EnumCreatureType type : typeToPlayerDefaults.keySet())
-			for(String player : typeToPlayerDefaults.get(type).split(","))
+		for(EnumCreatureType type : patronTypes.keySet())
+			for(String player : patronTypes.get(type))
 				if(player.equals(name))
 					return true;
 		return false;
 	}
 	
+	public static List<EnumCreatureType> getPatronTypes(String name)
+	{
+		List<EnumCreatureType> types = Lists.newArrayList();
+		for(EnumCreatureType type : patronTypes.keySet())
+			for(String entry : patronTypes.get(type))
+				if(entry.equalsIgnoreCase(name))
+				{
+					types.add(type);
+					break;
+				}
+		return types;
+	}
+	
 	public static String getMobDefaults(EnumCreatureType type)
 	{
 		return typeToMobDefaults.getOrDefault(type, "");
-	}
-	
-	public static String getPlayerDefaults(EnumCreatureType type)
-	{
-		return typeToPlayerDefaults.getOrDefault(type, "");
 	}
 	
 	public static void addMobToTypeDefaults(EntityType<?> classIn, EnumCreatureType... groups)
@@ -42,13 +52,17 @@ public class CreatureTypeDefaults
 		}
 	}
 	
-	private static void addPlayerToTypeDefaults(String playerName, EnumCreatureType... groups)
+	private static void addPatron(String playerName, EnumCreatureType... groups)
 	{
 		for(EnumCreatureType type : groups)
 		{
-			String entry = typeToPlayerDefaults.containsKey(type) ? typeToPlayerDefaults.get(type) : "";
-			entry += (entry.length() > 0 ? "," : "") + playerName;
-			typeToPlayerDefaults.put(type, entry);
+			List<String> entries = patronTypes.get(type);
+			if(entries == null)
+				entries = Lists.newArrayList();
+			
+			if(!entries.contains(playerName))
+				entries.add(playerName);
+			patronTypes.put(type, entries);
 		}
 	}
 	
@@ -127,20 +141,20 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(VOEntities.SCORPION,			EnumCreatureType.VERMIN);
 		addMobToTypeDefaults(VOEntities.SCORPION_GIANT,		EnumCreatureType.VERMIN);
 		
-		// Individual player settings (override defaults)
-		addPlayerToTypeDefaults("_Booked",					EnumCreatureType.FEY, EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC);
-		addPlayerToTypeDefaults("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);
-		addPlayerToTypeDefaults("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH, EnumCreatureType.FIRE);
-		addPlayerToTypeDefaults("chmobian",					EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.EARTH, EnumCreatureType.EXTRAPLANAR);
-		addPlayerToTypeDefaults("Dusty21134",				EnumCreatureType.OUTSIDER, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
-		addPlayerToTypeDefaults("Kurloz_M",					EnumCreatureType.PLANT, EnumCreatureType.EARTH);
-		addPlayerToTypeDefaults("Kyofushin",				EnumCreatureType.UNDEAD, EnumCreatureType.FEY);
-		addPlayerToTypeDefaults("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER, EnumCreatureType.FIRE);
-		addPlayerToTypeDefaults("Princessfirefly9",			EnumCreatureType.FEY, EnumCreatureType.AIR);
-		addPlayerToTypeDefaults("Pyrodance",				EnumCreatureType.FEY, EnumCreatureType.SHAPECHANGER);
-		addPlayerToTypeDefaults("SakuraWolfe",				EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
-		addPlayerToTypeDefaults("sawtooth44",				EnumCreatureType.ELEMENTAL, EnumCreatureType.AIR, EnumCreatureType.FIRE, EnumCreatureType.EXTRAPLANAR);
-		addPlayerToTypeDefaults("thefeywilds",				EnumCreatureType.OUTSIDER, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR, EnumCreatureType.WATER);
-		addPlayerToTypeDefaults("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.AUGMENTED);
+		// Individual player settings (added on first login)
+		addPatron("_Booked",					EnumCreatureType.FEY, EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC);
+		addPatron("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);
+		addPatron("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH, EnumCreatureType.FIRE);
+		addPatron("chmobian",					EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.EARTH, EnumCreatureType.EXTRAPLANAR);
+		addPatron("Dusty21134",					EnumCreatureType.OUTSIDER, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
+		addPatron("Kurloz_M",					EnumCreatureType.PLANT, EnumCreatureType.EARTH);
+		addPatron("Kyofushin",					EnumCreatureType.UNDEAD, EnumCreatureType.FEY);
+		addPatron("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER, EnumCreatureType.FIRE);
+		addPatron("Princessfirefly9",			EnumCreatureType.FEY, EnumCreatureType.AIR);
+		addPatron("Pyrodance",					EnumCreatureType.FEY, EnumCreatureType.SHAPECHANGER);
+		addPatron("SakuraWolfe",				EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
+		addPatron("sawtooth44",					EnumCreatureType.ELEMENTAL, EnumCreatureType.AIR, EnumCreatureType.FIRE, EnumCreatureType.EXTRAPLANAR);
+		addPatron("thefeywilds",				EnumCreatureType.OUTSIDER, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR, EnumCreatureType.WATER);
+		addPatron("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.AUGMENTED);
 	}
 }

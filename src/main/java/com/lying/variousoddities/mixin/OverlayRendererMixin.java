@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.species.types.EnumCreatureType;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.Minecraft;
@@ -21,7 +21,7 @@ public class OverlayRendererMixin
 	@Inject(method = "renderTexture(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lcom/mojang/blaze3d/matrix/MatrixStack;)V", at = @At("HEAD"), cancellable = true)
 	private static void renderBlockOverlay(Minecraft minecraftIn, TextureAtlasSprite spriteIn, MatrixStack stackIn, CallbackInfo ci)
 	{
-		if(EnumCreatureType.canPhase(minecraftIn.world, null, minecraftIn.player))
+		if(AbilityRegistry.canPhase(minecraftIn.world, null, minecraftIn.player))
 			ci.cancel();
 	}
 }

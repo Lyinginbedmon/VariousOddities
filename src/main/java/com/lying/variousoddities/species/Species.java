@@ -108,7 +108,7 @@ public class Species extends ForgeRegistryEntry<Species>
 		private SpeciesInstance addTypes(Collection<EnumCreatureType> typesIn){ this.types.addAll(typesIn); return this; }
 		private SpeciesInstance addAbilities(Collection<Ability> abilitiesIn){ this.abilities.addAll(abilitiesIn); return this; }
 		
-		public EnumCreatureType[] getTypes(){ return this.types.toArray(new EnumCreatureType[0]); }
+		public List<EnumCreatureType> getTypes(){ return this.types; }
 		public Map<ResourceLocation, Ability> addToMap(Map<ResourceLocation, Ability> mapIn)
 		{
 			this.abilities.forEach((ability) -> { mapIn.put(ability.getMapName(), ability); });

@@ -3,7 +3,7 @@ package com.lying.variousoddities.utility;
 import java.util.List;
 import java.util.Random;
 
-import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeGetEntityTypesEvent;
+import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.capabilities.LivingData;
@@ -223,7 +223,7 @@ public class VOBusServer
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public static void applyNativeExtraplanar(TypeGetEntityTypesEvent event)
+	public static void applyNativeExtraplanar(GetEntityTypesEvent event)
 	{
 		LivingEntity entity = event.getEntity();
 		LivingData data = LivingData.forEntity(entity);

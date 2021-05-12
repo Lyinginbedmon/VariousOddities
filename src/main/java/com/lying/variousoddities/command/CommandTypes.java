@@ -1,13 +1,13 @@
 package com.lying.variousoddities.command;
 
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.lying.variousoddities.api.EnumArgumentChecked;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.Types;
 import com.lying.variousoddities.world.savedata.TypesManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -23,9 +23,7 @@ import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.command.arguments.EntitySummonArgument;
 import net.minecraft.command.arguments.SuggestionProviders;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -79,33 +77,25 @@ public class CommandTypes extends CommandBase
     					.executes(VariantList::listAll))
     				.then(newLiteral(TYPE)
     					.then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes(VariantList::listOfType)))
+    						.executes((source) -> { return VariantList.listOfType(source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES)
     						.executes((source) -> { return VariantList.listEntityId(EntitySummonArgument.getEntityId(source, ENTITY), source.getSource()); })))
 					.then(newLiteral(MOB)
     					.then(newArgument(MOB, EntityArgument.entity())
-    						.executes((source) -> { return VariantList.listEntity(EntityArgument.getEntity(source, MOB), source.getSource()); })))
-					.then(newLiteral("players")
-						.executes(VariantList::listPlayers));
+    						.executes((source) -> { return VariantList.listEntity(EntityArgument.getEntity(source, MOB), source.getSource()); })));
     	}
     	
     	public static int listAll(final CommandContext<CommandSource> context) throws CommandSyntaxException
     	{
     		CommandSource source = context.getSource();
     		
-    		List<EnumCreatureType> supertypes = new ArrayList<>();
-    		List<EnumCreatureType> subtypes = new ArrayList<>();
-    		for(EnumCreatureType type : EnumCreatureType.values())
-    			if(type.isSupertype())
-    				supertypes.add(type);
-    			else
-    				subtypes.add(type);
+    		EnumSet<EnumCreatureType> supertypes = EnumCreatureType.SUPERTYPES;
+    		EnumSet<EnumCreatureType> subtypes = EnumCreatureType.SUBTYPES;
     		
     		source.sendFeedback(new TranslationTextComponent(translationSlug+"list.all", supertypes.size(), subtypes.size()), true);
     		if(!supertypes.isEmpty())
     		{
-        		java.util.Collections.sort(supertypes);
     			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.all.supertypes").modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent(translationSlug+"list.all.supertypes.definition"))); }), false);
     			for(EnumCreatureType type : supertypes)
     				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated().modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
@@ -113,7 +103,6 @@ public class CommandTypes extends CommandBase
     		
     		if(!subtypes.isEmpty())
     		{
-        		java.util.Collections.sort(subtypes);
     			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.all.subtypes").modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent(translationSlug+"list.all.subtypes.definition"))); }), false);
     			for(EnumCreatureType type : subtypes)
     				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated().modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
@@ -125,63 +114,32 @@ public class CommandTypes extends CommandBase
     		return 15;
     	}
     	
-    	public static int listPlayers(final CommandContext<CommandSource> source) throws CommandSyntaxException
+    	public static int listOfType(EnumCreatureType type, final CommandSource source) throws CommandSyntaxException
     	{
-    		TypesManager manager = TypesManager.get(source.getSource().getWorld());
-    		List<String> playerNames = manager.getTypedPlayers();
-    		boolean grey = !true;
-    		source.getSource().sendFeedback(new TranslationTextComponent(translationSlug+"list.players.success", playerNames.size()), true);
-    		for(String playerName : playerNames)
-    		{
-    			IFormattableTextComponent name = new StringTextComponent(playerName);
-    			if(CreatureTypeDefaults.isTypedPatron(playerName))
-    				name.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GOLD); });
-    			listTypes(manager.getPlayerTypes(playerName, false), name, source.getSource(), grey = !grey, false);
-    		}
-    		return 15;
-    	}
-    	
-    	public static int listOfType(final CommandContext<CommandSource> source) throws CommandSyntaxException
-    	{
-    		EnumCreatureType type = source.getArgument(TYPE, EnumCreatureType.class);
-    		TypesManager manager = TypesManager.get(source.getSource().getWorld());
+    		TypesManager manager = TypesManager.get(source.getWorld());
     		List<ResourceLocation> mobs = manager.mobsOfType(type);
-    		List<String> players = manager.playersOfType(type);
     		
     		ITextComponent typeName = type.getTranslated();
-    		if(mobs.isEmpty() && players.isEmpty())
+    		if(mobs.isEmpty())
     			throw LIST_FAILED_EXCEPTION.create();
     		else
     		{
     			if(!mobs.isEmpty())
     			{
-					source.getSource().sendFeedback(new TranslationTextComponent(translationSlug+"list.success.mobs", mobs.size(), typeName), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success.mobs", mobs.size(), typeName), true);
 					boolean grey = true;
 		    		for(ResourceLocation string : mobs)
 		    		{
 		    			IFormattableTextComponent text = new StringTextComponent("-").append(new StringTextComponent(string.toString()));
 		    			if(grey)
 		    				text.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GRAY); });
-		    			source.getSource().sendFeedback(text, false);
-		    			grey = !grey;
-		    		}
-    			}
-    			if(!players.isEmpty())
-    			{
-					source.getSource().sendFeedback(new TranslationTextComponent(translationSlug+"list.success.players", players.size(), typeName), true);
-					boolean grey = true;
-		    		for(String string : players)
-		    		{
-		    			IFormattableTextComponent text = new StringTextComponent("-").append(new StringTextComponent(string));
-		    			if(grey)
-		    				text.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GRAY); });
-		    			source.getSource().sendFeedback(text, false);
+		    			source.sendFeedback(text, false);
 		    			grey = !grey;
 		    		}
     			}
     		}
     		
-    		return Math.min(mobs.size() + players.size(), 15);
+    		return Math.min(mobs.size(), 15);
     	}
     	
     	public static int listEntityId(ResourceLocation entityId, CommandSource source) throws CommandSyntaxException
@@ -202,7 +160,7 @@ public class CommandTypes extends CommandBase
     			throw LIST_FAILED_EXCEPTION.create();
     		else
     		{
-    			TranslationTextComponent text = new TranslationTextComponent(translationSlug+"list.success", identifier, EnumCreatureType.typesToHeader(types));
+    			TranslationTextComponent text = new TranslationTextComponent(translationSlug+"list.success", identifier, new Types(types).toHeader());
     			if(grey)
     				text.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.GRAY); });
 				source.sendFeedback(text, log);
@@ -220,36 +178,32 @@ public class CommandTypes extends CommandBase
     		return newLiteral("add")
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes((source) -> { return VariantAdd.addToEntity(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource(), true); }))))
+    						.executes((source) -> { return VariantAdd.addTypeRegistry(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource(), true); }))))
 					.then(newLiteral(MOB)
     					.then(newArgument(MOB, EntityArgument.entity()).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes((source) -> { return VariantAdd.addToMob(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource(), true); }))));
+    						.executes((source) -> { return VariantAdd.addTypeEntity(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource(), true); }))));
     	}
     	
-    	public static int addToMob(Entity entity, EnumCreatureType type, CommandSource source, boolean report) throws CommandSyntaxException
+    	public static int addTypeEntity(Entity entity, EnumCreatureType type, CommandSource source, boolean report) throws CommandSyntaxException
     	{
-    		TypesManager manager = TypesManager.get(source.getWorld());
-    		if(entity.getType() == EntityType.PLAYER)
+    		if(entity instanceof LivingEntity)
     		{
-    			if(type.getHandler().canApplyTo(manager.getMobTypes(entity)))
-    			{
-    				manager.addToPlayer(entity.getName().getUnformattedComponentText(), type, report);
-    				
-    				if(report)
-    				{
-		    			source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), entity.getDisplayName()), true);
-						source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
-    				}
-    			}
+    			LivingData data = LivingData.forEntity((LivingEntity)entity);
+    			data.addCustomType(type);
+    			
+				if(report)
+				{
+	    			source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), entity.getDisplayName()), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.getTypes((LivingEntity)entity).toHeader()), false);
+				}
+    			
     			return 15;
     		}
-    		else if(entity instanceof LivingEntity)
-    			return addToEntity(entity.getType().getRegistryName(), type, source, true);
     		
     		throw ADD_FAILED_EXCEPTION.create();
     	}
     	
-    	public static int addToEntity(ResourceLocation registry, EnumCreatureType type, CommandSource source, boolean report) throws CommandSyntaxException
+    	public static int addTypeRegistry(ResourceLocation registry, EnumCreatureType type, CommandSource source, boolean report) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
 			if(type.getHandler().canApplyTo(manager.getMobTypes(registry)))
@@ -259,7 +213,7 @@ public class CommandTypes extends CommandBase
 				if(report)
 				{
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), registry.toString()), true);
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), EnumCreatureType.typesToHeader(manager.getMobTypes(registry))), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), new Types(manager.getMobTypes(registry)).toHeader()), true);
 				}
 			}
 			else if(report)
@@ -278,31 +232,29 @@ public class CommandTypes extends CommandBase
     		return newLiteral("remove")
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes((source) -> { return VariantRemove.removeFromEntity(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))))
+    						.executes((source) -> { return VariantRemove.removeTypeRegistry(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))))
 					.then(newLiteral(MOB)
     					.then(newArgument(MOB, EntityArgument.entity()).then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes((source) -> { return VariantRemove.removeFromMob(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))));
+    						.executes((source) -> { return VariantRemove.removeTypeEntity(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); }))));
     	}
     	
-    	public static int removeFromMob(Entity entity, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
+    	public static int removeTypeEntity(Entity entity, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
-    		TypesManager manager = TypesManager.get(source.getWorld());
-    		if(entity.getType() == EntityType.PLAYER)
+    		if(entity instanceof LivingEntity)
     		{
-    			if(manager.isPlayerOfType((PlayerEntity)entity, type))
-    				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type, true);
+    			LivingEntity living = (LivingEntity)entity;
+    			LivingData data = LivingData.forEntity(living);
+    			data.removeCustomType(type);
     			
-    			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), entity.getDisplayName()), true);
-				source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.typesToHeader(manager.getMobTypes(entity))), false);
+    			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), living.getDisplayName()), true);
+				source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.getTypes(living).toHeader()), false);
     			return 15;
     		}
-    		else if(entity instanceof LivingEntity)
-    			return removeFromEntity(entity.getType().getRegistryName(), type, source);
     		
     		throw REMOVE_FAILED_EXCEPTION.create();
     	}
     	
-    	public static int removeFromEntity(ResourceLocation registry, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
+    	public static int removeTypeRegistry(ResourceLocation registry, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
 			if(manager.isMobOfType(registry, type))
@@ -310,7 +262,7 @@ public class CommandTypes extends CommandBase
 			else
 				throw REMOVE_FAILED_EXCEPTION.create();
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), registry.toString()), true);
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), EnumCreatureType.typesToHeader(manager.getMobTypes(registry))), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), new Types(manager.getMobTypes(registry)).toHeader()), true);
     		return 15;
     	}
 	}
@@ -324,27 +276,22 @@ public class CommandTypes extends CommandBase
     		return newLiteral("clear")
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES)
-    						.executes((source) -> { return VariantClear.clearFromEntity(EntitySummonArgument.getEntityId(source, ENTITY), source.getSource(), true); })))
+    						.executes((source) -> { return VariantClear.clearTypeRegistry(EntitySummonArgument.getEntityId(source, ENTITY), source.getSource(), true); })))
 					.then(newLiteral(MOB)
     					.then(newArgument(MOB, EntityArgument.entity())
-    						.executes((source) -> { return VariantClear.clearFromMob(EntityArgument.getEntity(source, MOB), source.getSource(), true); })));
+    						.executes((source) -> { return VariantClear.clearTypeEntity(EntityArgument.getEntity(source, MOB), source.getSource(), true); })));
     	}
     	
-    	public static int clearFromMob(Entity entity, CommandSource source, boolean report) throws CommandSyntaxException
+    	public static int clearTypeEntity(Entity entity, CommandSource source, boolean report) throws CommandSyntaxException
     	{
-    		if(entity.getType() == EntityType.PLAYER)
+    		if(entity instanceof LivingEntity)
     		{
-        		TypesManager manager = TypesManager.get(source.getWorld());
-    			
-    			for(EnumCreatureType type : manager.getPlayerTypes((PlayerEntity)entity, true))
-    				manager.removeFromPlayer(entity.getName().getUnformattedComponentText(), type, false);
-    			manager.markDirty();
-        		if(report)
-        			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear.success", entity.getDisplayName()), true);
+    			LivingData data = LivingData.forEntity((LivingEntity)entity);
+    			data.clearCustomTypes();
+    			if(report)
+    				source.sendFeedback(new TranslationTextComponent(translationSlug+"clear.success", entity.getDisplayName()), true);
     			return 15;
     		}
-    		else if(entity instanceof LivingEntity)
-    			return clearFromEntity(entity.getType().getRegistryName(), source, true);
     		
     		if(report)
     			throw CLEAR_FAILED_EXCEPTION.create();
@@ -352,7 +299,7 @@ public class CommandTypes extends CommandBase
     		return 0;
     	}
     	
-    	public static int clearFromEntity(ResourceLocation registry, CommandSource source, boolean report)
+    	public static int clearTypeRegistry(ResourceLocation registry, CommandSource source, boolean report)
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		for(EnumCreatureType type : manager.getMobTypes(registry))
@@ -373,22 +320,21 @@ public class CommandTypes extends CommandBase
     		return newLiteral("test")
     				.then(newLiteral(ENTITY)
     					.then(newArgument(ENTITY, EntitySummonArgument.entitySummon()).suggests(SuggestionProviders.SUMMONABLE_ENTITIES).then(newLiteral("is").then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes((source) -> { return VariantTest.testEntityId(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))))
+    						.executes((source) -> { return VariantTest.testTypeRegistry(EntitySummonArgument.getEntityId(source, ENTITY), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))))
 					.then(newLiteral(MOB)
     					.then(newArgument(MOB, EntityArgument.entity()).then(newLiteral("is").then(newArgument(TYPE, EnumArgumentChecked.enumArgument(EnumCreatureType.class)).suggests(TYPE_SUGGEST)
-    						.executes((source) -> { return VariantTest.testEntity(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))));
+    						.executes((source) -> { return VariantTest.testTypeEntity(EntityArgument.getEntity(source, MOB), source.getArgument(TYPE, EnumCreatureType.class), source.getSource()); })))));
     	}
     	
-    	public static int testEntityId(ResourceLocation entityId, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
+    	public static int testTypeRegistry(ResourceLocation entityId, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
     		TypesManager manager = TypesManager.get(source.getWorld());
     		return testForType(manager.getMobTypes(entityId), type, source);
     	}
     	
-    	public static int testEntity(Entity entity, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
+    	public static int testTypeEntity(Entity entity, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
     	{
-    		TypesManager manager = TypesManager.get(source.getWorld());
-    		return testForType(manager.getMobTypes(entity), type, source);
+    		return testForType(EnumCreatureType.getCreatureTypes(entity instanceof LivingEntity ? (LivingEntity)entity : null), type, source);
     	}
     	
     	private static int testForType(List<EnumCreatureType> types, EnumCreatureType type, CommandSource source) throws CommandSyntaxException
@@ -443,32 +389,31 @@ public class CommandTypes extends CommandBase
 		private static int set(ResourceLocation mobRegistry, Entity targetEntity, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
 		{
 			if(mobRegistry != null)
-				return setTypeMob(mobRegistry, source, types);
+				return setTypeRegistry(mobRegistry, source, types);
 			else if(targetEntity != null && targetEntity instanceof LivingEntity)
 				return setTypeEntity(targetEntity, source, types);
 			
 			throw SET_FAILED_EXCEPTION.create();
 		}
 		
-		private static int setTypeMob(ResourceLocation registry, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
+		private static int setTypeRegistry(ResourceLocation registry, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
 		{
-			VariantClear.clearFromEntity(registry, source, false);
+			VariantClear.clearTypeRegistry(registry, source, false);
 			for(EnumCreatureType type : types)
-				VariantAdd.addToEntity(registry, type, source, false);
+				VariantAdd.addTypeRegistry(registry, type, source, false);
 			
 			TypesManager.get(source.getWorld()).markDirty();
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", registry.toString(), EnumCreatureType.typesToHeader(TypesManager.get(source.getWorld()).getMobTypes(registry))), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", registry.toString(), new Types(TypesManager.get(source.getWorld()).getMobTypes(registry)).toHeader()), true);
 			return 15;
 		}
 		
 		private static int setTypeEntity(Entity entity, CommandSource source, EnumCreatureType... types) throws CommandSyntaxException
 		{
-			VariantClear.clearFromMob(entity, source, false);
+			VariantClear.clearTypeEntity(entity, source, false);
 			for(EnumCreatureType type : types)
-				VariantAdd.addToMob(entity, type, source, false);
+				VariantAdd.addTypeEntity(entity, type, source, false);
 			
-			TypesManager.get(source.getWorld()).markDirty();
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", entity.getDisplayName(), EnumCreatureType.typesToHeader(TypesManager.get(source.getWorld()).getMobTypes(entity))), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", entity.getDisplayName(), EnumCreatureType.getTypes((LivingEntity)entity).toHeader()), true);
 			return 15;
 		}
 	}
@@ -478,41 +423,14 @@ public class CommandTypes extends CommandBase
 		public static LiteralArgumentBuilder<CommandSource> build()
 		{
 			return newLiteral("reset")
-					.executes((source) -> { return reset(true, true, source.getSource()); })
-					.then(newLiteral("mobs")
-						.executes((source) -> { return reset(true, false, source.getSource()); }))
-					.then(newLiteral("players")
-						.executes((source) -> { return reset(false, true, source.getSource()); }));
+					.executes((source) -> { return reset(source.getSource()); });
 		}
 		
-		private static int reset(boolean mobs, boolean players, CommandSource source)
+		private static int reset(CommandSource source)
 		{
 			TypesManager manager = TypesManager.get(source.getWorld());
-			if(mobs)
-			{
-				manager.resetMobs();
-				if(!players)
-				{
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.mobs.success"), true);
-					return 15;
-				}
-			}
-			
-			if(players)
-			{
-				List<String> typedPlayers = manager.getTypedPlayers();
-				manager.resetPlayers();
-				List<String> resetPlayers = manager.getTypedPlayers();
-				resetPlayers.removeAll(typedPlayers);
-				typedPlayers.addAll(resetPlayers);
-				if(!mobs)
-				{
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.players.success", typedPlayers.size()), true);
-					return 15;
-				}
-			}
-			
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.success"), true);
+			manager.resetMobs();
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"reset.mobs.success"), true);
 			return 15;
 		}
 	}

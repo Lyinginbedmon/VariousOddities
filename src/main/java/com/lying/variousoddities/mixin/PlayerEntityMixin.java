@@ -6,8 +6,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
-import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.player.PlayerEntity;
 
@@ -21,8 +21,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 		LivingData data = LivingData.forEntity(player);
 		if(data != null && data.checkingFoodRegen)
 		{
-			TypesManager manager = TypesManager.get(world);
-			ActionSet actions = ActionSet.fromTypes(player, manager.getMobTypes(player));
+			ActionSet actions = ActionSet.fromTypes(player, EnumCreatureType.getCreatureTypes(player));
 			if(!actions.regenerates())
 				ci.setReturnValue(false);
 			

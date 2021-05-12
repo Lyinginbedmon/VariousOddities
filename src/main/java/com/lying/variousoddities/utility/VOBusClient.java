@@ -3,7 +3,6 @@ package com.lying.variousoddities.utility;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
-import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.BlockRenderType;
@@ -90,7 +89,7 @@ public class VOBusClient
 	{
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null)
-			return EnumCreatureType.canPhase(player) && getInWallBlockState(player) != null;
+			return AbilityRegistry.canPhase(player) && getInWallBlockState(player) != null;
 		return false;
 	}
 	

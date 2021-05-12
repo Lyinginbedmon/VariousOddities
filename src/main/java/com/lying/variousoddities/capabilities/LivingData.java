@@ -1,6 +1,7 @@
 package com.lying.variousoddities.capabilities;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,14 +14,15 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
+import com.lying.variousoddities.network.PacketTypesCustom;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
 import com.lying.variousoddities.species.SpeciesRegistry;
+import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeBus;
-import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -43,6 +45,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -65,6 +68,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private LivingEntity entity = null;
 	
+	private boolean initialised = false;
 	private List<EnumCreatureType> customTypes = Lists.newArrayList();
 	private List<EnumCreatureType> prevTypes = Lists.newArrayList();
 	private ResourceLocation originDimension = null;
@@ -190,6 +194,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public SpeciesInstance getSpecies(){ return this.species; }
 	public void setSpecies(Species speciesIn){ this.species = speciesIn.create(); }
 	
+	public List<EnumCreatureType> getTypesFromSpecies()
+	{
+		List<EnumCreatureType> types = Lists.newArrayList();
+		types.addAll(this.species.getTypes());
+		return types;
+	}
+	
 	/** True if this object should override the vanilla air value */
 	public boolean overrideAir(){ return this.overridingAir; }
 	
@@ -209,33 +220,54 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
 	public List<EnumCreatureType> getCustomTypes(){ return this.customTypes; }
+	public void clearCustomTypes()
+	{
+		this.customTypes.clear();
+		markDirty();
+	}
+	public void addCustomType(EnumCreatureType type)
+	{
+		if(!this.customTypes.contains(type))
+		{
+			this.customTypes.add(type);
+			markDirty();
+		}
+	}
+	public void removeCustomType(EnumCreatureType type)
+	{
+		if(this.customTypes.contains(type))
+		{
+			this.customTypes.remove(type);
+			markDirty();
+		}
+	}
+	public void setCustomTypes(Collection<EnumCreatureType> typesIn)
+	{
+		this.customTypes.clear();
+		this.customTypes.addAll(typesIn);
+		markDirty();
+	}
 	
 	public void tick(LivingEntity entity)
 	{
-		if(this.originDimension == null)
+		World world = entity.getEntityWorld();
+		if(!this.initialised && (!(entity.getType() == EntityType.PLAYER) || entity.getType() == EntityType.PLAYER && ((PlayerEntity)entity).getGameProfile() != null))
 		{
 			// TODO Check default home dimension registry for creature before setting to current dim
-			this.originDimension = entity.getEntityWorld().getDimensionKey().getLocation();
+			this.originDimension = world.getDimensionKey().getLocation();
+			
+			if(entity.getType() == EntityType.PLAYER)
+			{
+				PlayerEntity player = (PlayerEntity)entity;
+				String name = player.getName().getUnformattedComponentText();
+				if(CreatureTypeDefaults.isTypedPatron(name))
+					setCustomTypes(CreatureTypeDefaults.getPatronTypes(name));
+			}
+			
+			this.initialised = true;
 		}
 		
-		if(!TypeBus.shouldFire()) return;
-		
-		TypesManager manager = TypesManager.get(entity.getEntityWorld());
-		List<EnumCreatureType> typesNow = manager.getMobTypes(entity);
-		boolean isRemote = entity.getEntityWorld().isRemote;
-		
-		List<EnumCreatureType> typesNew = new ArrayList<>();
-		typesNew.addAll(typesNow);
-		typesNew.removeAll(prevTypes);
-		for(EnumCreatureType type : typesNew)
-			MinecraftForge.EVENT_BUS.post(new TypeApplyEvent(entity, type));
-		
-		this.prevTypes.removeAll(typesNow);
-		for(EnumCreatureType type : prevTypes)
-			MinecraftForge.EVENT_BUS.post(new TypeRemoveEvent(entity, type));
-		
-		this.prevTypes.clear();
-		this.prevTypes.addAll(typesNow);
+		handleTypes(entity, world);
 		
 		for(EnumCreatureType type : this.prevTypes)
 			type.getHandler().onLivingTick(entity);
@@ -256,7 +288,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		// Prevent phantoms due to sleeplessness
 		if(!actions.sleeps())
 		{
-			if(isPlayer && !isRemote)
+			if(isPlayer && !world.isRemote)
 			{
 				ServerPlayerEntity serverPlayer = (ServerPlayerEntity)player;
                 ServerStatisticsManager statManager = serverPlayer.getStats();
@@ -267,6 +299,22 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
 		
 		abilities.tick();
+	}
+	
+	/** Manages the application and removal of creature types */
+	public void handleTypes(LivingEntity entity, World world)
+	{
+		List<EnumCreatureType> typesNow = EnumCreatureType.getCreatureTypes(entity);
+		
+		List<EnumCreatureType> typesNew = Lists.newArrayList(typesNow);
+		typesNew.removeAll(prevTypes);
+		typesNew.forEach((type) -> { MinecraftForge.EVENT_BUS.post(new TypeApplyEvent(entity, type)); });
+		
+		this.prevTypes.removeAll(typesNow);
+		prevTypes.forEach((type) -> { MinecraftForge.EVENT_BUS.post(new TypeRemoveEvent(entity, type)); });
+		
+		this.prevTypes.clear();
+		this.prevTypes.addAll(typesNow);
 	}
 	
 	/** Manage base health according to active supertypes */
@@ -363,6 +411,15 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private static AttributeModifier makeModifier(double amount)
 	{
 		return new AttributeModifier(HEALTH_MODIFIER_UUID, "hit_die_modifier", amount, AttributeModifier.Operation.ADDITION);
+	}
+	
+	public void markDirty()
+	{
+		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
+		{
+			// TODO Add LivingData types update packet
+			PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketTypesCustom(entity, this.customTypes));
+		}
 	}
 	
 	public static class Storage implements Capability.IStorage<LivingData>

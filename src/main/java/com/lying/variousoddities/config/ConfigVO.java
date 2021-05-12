@@ -326,7 +326,6 @@ public class ConfigVO
 			private ForgeConfigSpec.BooleanValue chooseTypes;
 			
 			private Map<EnumCreatureType, ForgeConfigSpec.ConfigValue<String>> mobTypes = new HashMap<>();
-			private Map<EnumCreatureType, ForgeConfigSpec.ConfigValue<String>> playerTypes = new HashMap<>();
 			
 			private boolean typesActive = true;
 			private boolean typesScreen = false;
@@ -334,21 +333,14 @@ public class ConfigVO
 			public TypeSettings(ForgeConfigSpec.Builder builder)
 			{
 				builder.push("types");
-				
-				typesMatter = builder.comment("Setting this to FALSE will disable the effects of all types").define("Types Matter", true);
-				
-				chooseTypes = builder.comment("Open the type selection screen when a player first logs in").define("Choose Types on login", false);
-				
-				builder.push("Mobs");
-			        for(EnumCreatureType type : EnumCreatureType.values())
-		        		mobTypes.put(type, builder.define(type.name(), CreatureTypeDefaults.getMobDefaults(type)));
-		        builder.pop();
-				
-		        builder.push("Players");
-			        for(EnumCreatureType type : EnumCreatureType.values())
-			        	playerTypes.put(type, builder.define(type.name(), CreatureTypeDefaults.getPlayerDefaults(type)));
-		        builder.pop();
-		        
+					typesMatter = builder.comment("Setting this to FALSE will disable the effects of all types").define("Types Matter", true);
+					
+					chooseTypes = builder.comment("Open the type selection screen when a player first logs in").define("Choose Types on login", false);
+					
+					builder.push("Mobs");
+				        for(EnumCreatureType type : EnumCreatureType.values())
+			        		mobTypes.put(type, builder.define(type.name(), CreatureTypeDefaults.getMobDefaults(type)));
+			        builder.pop();
 				builder.pop();
 			}
 			
@@ -365,15 +357,6 @@ public class ConfigVO
 				Map<EnumCreatureType, String[]> types = new HashMap<>();
 				for(EnumCreatureType type : mobTypes.keySet())
 					types.put(type, mobTypes.get(type).get().split(","));
-				
-				return types;
-			}
-			
-			public Map<EnumCreatureType, String[]> getPlayerTypes()
-			{
-				Map<EnumCreatureType, String[]> types = new HashMap<>();
-				for(EnumCreatureType type : playerTypes.keySet())
-					types.put(type, playerTypes.get(type).get().split(","));
 				
 				return types;
 			}

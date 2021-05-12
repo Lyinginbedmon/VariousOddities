@@ -13,14 +13,22 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.species.types.EnumCreatureType;
-import com.lying.variousoddities.world.savedata.TypesManager;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.IBlockReader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -116,10 +124,7 @@ public class AbilityRegistry
 		if(entity != null)
 		{
 			// Collect abilities from creature's types
-			TypesManager manager = TypesManager.get(entity.getEntityWorld());
-			if(manager != null)
-				for(EnumCreatureType type : manager.getMobTypes(entity))
-					abilityMap = type.addAbilitiesToMap(abilityMap);
+			EnumCreatureType.getTypes(entity).addAbilitiesToMap(abilityMap);
 			
 			// Collect abilities from creature's LivingData
 			LivingData data = LivingData.forEntity(entity);
@@ -163,5 +168,50 @@ public class AbilityRegistry
 				abilities.add(ability);
 		
 		return abilities;
+	}
+	
+	/** Returns true if the given entity can pass through obstacles at the given position */
+	public static boolean canPhase(IBlockReader worldIn, @Nullable BlockPos pos, LivingEntity entity)
+	{
+		if(entity == null)
+			return false;
+		else
+			return canPhase(entity) && (pos == null ? true : canPhaseThrough(worldIn, pos, entity));
+	}
+	
+	/** Returns true if the creature is of a type that can phase */
+	public static boolean canPhase(LivingEntity entity)
+	{
+		return AbilityRegistry.hasAbility(entity, AbilityIncorporeality.REGISTRY_NAME);
+	}
+	
+	/** Returns true if the given entity can pass through the block at the given position */
+	public static boolean canPhaseThrough(IBlockReader worldIn, @Nonnull BlockPos pos, LivingEntity entity)
+	{
+		// Deny for pre-defined blocks, such as unbreakable blocks and portals
+		BlockState state = worldIn.getBlockState(pos);
+		if(VOBlocks.UNPHASEABLE.contains(state.getBlock()))
+			return false;
+		
+		// Attempt to catch any of the above that haven't already been tagged in data
+		if(state.getBlockHardness(worldIn, pos) < 0F || state.getMaterial() == Material.PORTAL)
+			return false;
+		
+		// Phasing or not is irrelevant here, but prevents pressure plates etc. from firing
+		VoxelShape collision = state.getCollisionShape(worldIn, pos);
+		if(collision == null || collision == VoxelShapes.empty())
+			return true;
+		
+		// Lastly, only allow phasing if any open side exists around the target block
+		double blockTop = pos.getY() + collision.getBoundingBox().maxY;
+		if((entity.getPosY() + 0.5D) <= blockTop)
+			for(Direction direction : Direction.values())
+			{
+				BlockPos offset = pos.offset(direction);
+				BlockState stateAtOffset = worldIn.getBlockState(offset);
+				if(stateAtOffset.getCollisionShape(worldIn, offset) == VoxelShapes.empty() || stateAtOffset.getFluidState().getFluid() != Fluids.EMPTY)
+					return true;
+			}
+		return false;
 	}
 }

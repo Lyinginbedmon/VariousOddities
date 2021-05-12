@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityWaterWalking;
-import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.entity.Entity;
@@ -34,7 +33,7 @@ public abstract class AbstractBlockStateMixin
 		if(context instanceof EntitySelectionContext && entity != null && entity.isAlive() && entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			if(EnumCreatureType.canPhase(worldIn, pos, living))
+			if(AbilityRegistry.canPhase(worldIn, pos, living))
 				ci.setReturnValue(VoxelShapes.empty());
 			else if(AbilityRegistry.hasAbility(living, AbilityWaterWalking.REGISTRY_NAME))
 			{
@@ -53,7 +52,7 @@ public abstract class AbstractBlockStateMixin
 	public void onEntityCollision(World worldIn, BlockPos pos, Entity entityIn, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
-			if(EnumCreatureType.canPhase(worldIn, pos, (LivingEntity)entityIn))
+			if(AbilityRegistry.canPhase(worldIn, pos, (LivingEntity)entityIn))
 				ci.cancel();
 	}
 }

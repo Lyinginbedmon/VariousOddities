@@ -30,13 +30,13 @@ public class CreatureTypeEvent extends Event
 	 * This allows for situational modification of a creature's types.<br>
 	 * @author Lying
 	 */
-	public static class TypeGetEntityTypesEvent extends Event
+	public static class GetEntityTypesEvent extends Event
 	{
 		private final World world;
 		private final LivingEntity entity;
 		private final List<EnumCreatureType> types = new ArrayList<>();
 		
-		public TypeGetEntityTypesEvent(World worldIn, LivingEntity entityIn, Collection<EnumCreatureType> typesIn)
+		public GetEntityTypesEvent(World worldIn, LivingEntity entityIn, Collection<EnumCreatureType> typesIn)
 		{
 			this.world = worldIn;
 			this.entity = entityIn;

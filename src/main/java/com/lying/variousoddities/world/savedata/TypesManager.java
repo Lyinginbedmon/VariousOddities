@@ -7,15 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeGetEntityTypesEvent;
-import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketTypesData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -29,17 +26,13 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.WorldSavedData;
-import net.minecraftforge.common.MinecraftForge;
 
 public class TypesManager extends WorldSavedData
 {
 	protected static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_types";
 	
 	private Map<EnumCreatureType, List<ResourceLocation>> typeToMob = new HashMap<>();
-	private Map<EnumCreatureType, List<String>> typeToPlayer = new HashMap<>();
-	
-	private Map<String, List<EnumCreatureType>> playerTypeCache = new HashMap<>();
-	private Map<String, List<EnumCreatureType>> mobTypeCache = new HashMap<>();
+	private Map<ResourceLocation, List<EnumCreatureType>> mobTypeCache = new HashMap<>();
 	
 	private ServerWorld world = null;
 	
@@ -69,21 +62,6 @@ public class TypesManager extends WorldSavedData
 			
 			typeToMob.put(type, entries);
 		}
-		
-		typeToPlayer.clear();
-		ListNBT players = compound.getList("Players", 10);
-		for(int i=0; i<players.size(); i++)
-		{
-			CompoundNBT typ = players.getCompound(i);
-			EnumCreatureType type = EnumCreatureType.fromName(typ.getString("Type"));
-			
-			ListNBT entr = typ.getList("Entries", 8);
-			List<String> entries = new ArrayList<String>();
-			for(int j=0; j<entr.size(); j++)
-				entries.add(entr.getString(j));
-			
-			typeToPlayer.put(type, entries);
-		}
 	}
 	
 	public CompoundNBT write(CompoundNBT compound)
@@ -101,20 +79,6 @@ public class TypesManager extends WorldSavedData
 			mobs.add(typ);
 		}
 		compound.put("Mobs", mobs);
-		
-		ListNBT players = new ListNBT();
-		for(EnumCreatureType type : typeToPlayer.keySet())
-		{
-			CompoundNBT typ = new CompoundNBT();
-			typ.putString("Type", type.getString());
-			ListNBT entries = new ListNBT();
-			for(String entry : typeToPlayer.get(type))
-				if(entry != null && entry.length() > 0)
-					entries.add(StringNBT.valueOf(entry));
-			typ.put("Entries", entries);
-			players.add(typ);
-		}
-		compound.put("Players", players);
 		return compound;
 	}
 	
@@ -132,7 +96,6 @@ public class TypesManager extends WorldSavedData
 			{
 				manager = (TypesManager)overWorld.getSavedData().getOrCreate(TypesManager::new, DATA_NAME);
 				manager.resetMobs();
-				manager.resetPlayers();
 			}
 			manager.world = world;
 			return manager;
@@ -151,7 +114,6 @@ public class TypesManager extends WorldSavedData
 	
 	public void clearCaches()
 	{
-		playerTypeCache.clear();
 		mobTypeCache.clear();
 	}
 	
@@ -170,38 +132,6 @@ public class TypesManager extends WorldSavedData
 		markDirty();
 	}
 	
-	public void resetPlayers()
-	{
-		typeToPlayer.clear();
-		playerTypeCache.clear();
-		
-		Map<EnumCreatureType, String[]> configuredPlayers = ConfigVO.MOBS.typeSettings.getPlayerTypes();
-		for(EnumCreatureType type : configuredPlayers.keySet())
-			for(String entry : configuredPlayers.get(type))
-				if(entry != null && entry.length() > 0)
-					addToPlayer(entry, type, false);
-		
-		markDirty();
-	}
-	
-	public List<String> getTypedPlayers()
-	{
-		List<String> players = new ArrayList<>();
-		if(!typeToPlayer.isEmpty())
-		{
-			for(EnumCreatureType type : typeToPlayer.keySet())
-			{
-				List<String> members = new ArrayList<>();
-				members.addAll(typeToPlayer.get(type));
-				members.removeAll(players);
-				players.addAll(members);
-			}
-			java.util.Collections.sort(players);
-		}
-		
-		return players;
-	}
-	
 	public List<ResourceLocation> mobsOfType(EnumCreatureType type)
 	{
 		List<ResourceLocation> mobs = typeToMob.getOrDefault(type, Collections.emptyList());
@@ -209,39 +139,16 @@ public class TypesManager extends WorldSavedData
 		return mobs;
 	}
 	
-	public List<String> playersOfType(EnumCreatureType type)
-	{
-		List<String> players = typeToPlayer.getOrDefault(type, Collections.emptyList());
-		java.util.Collections.sort(players);
-		return players;
-	}
-	
 	public List<EnumCreatureType> getMobTypes(Entity entity)
 	{
-		return entity != null && entity instanceof LivingEntity ? getMobTypes((LivingEntity)entity) : Collections.emptyList();
+		return entity != null && entity instanceof LivingEntity ? EnumCreatureType.getCreatureTypes((LivingEntity)entity) : Collections.emptyList();
 	}
-	public List<EnumCreatureType> getMobTypes(LivingEntity entity)
-	{
-		if(entity == null)
-			return Collections.emptyList();
-		if(entity.getType() == EntityType.PLAYER)
-			return getPlayerTypes((PlayerEntity)entity, false);
-		
-		LivingData data = LivingData.forEntity(entity);
-		List<EnumCreatureType> types = data != null && data.hasCustomTypes() ? data.getCustomTypes() : getMobTypes(entity.getType());
-		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(entity.getEntityWorld(), entity, types);
-		MinecraftForge.EVENT_BUS.post(event);
-		return event.getTypes();
-	}
+	
 	public List<EnumCreatureType> getMobTypes(EntityType<?> typeIn)
 	{
 		return getMobTypes(typeIn.getRegistryName());
 	}
 	public List<EnumCreatureType> getMobTypes(ResourceLocation registryName)
-	{
-		return getMobTypes(registryName.toString());
-	}
-	public List<EnumCreatureType> getMobTypes(String registryName)
 	{
 		if(mobTypeCache.containsKey(registryName))
 			return mobTypeCache.get(registryName);
@@ -249,7 +156,7 @@ public class TypesManager extends WorldSavedData
 		List<EnumCreatureType> types = new ArrayList<>();
 		for(EnumCreatureType type : typeToMob.keySet())
 			for(ResourceLocation entry : typeToMob.getOrDefault(type, Collections.emptyList()))
-				if(entry.toString().equalsIgnoreCase(registryName))
+				if(entry.equals(registryName))
 				{
 					types.add(type);
 					break;
@@ -259,91 +166,16 @@ public class TypesManager extends WorldSavedData
 		return types;
 	}
 	
-	public List<EnumCreatureType> getPlayerTypes(PlayerEntity player, boolean customOnly)
-	{
-		
-		List<EnumCreatureType> types = player != null && player.getGameProfile() != null ? getPlayerTypes(player.getName().getUnformattedComponentText(), customOnly) : Collections.emptyList();
-		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(player.getEntityWorld(), player, types);
-		MinecraftForge.EVENT_BUS.post(event);
-		return event.getTypes();
-	}
-	public List<EnumCreatureType> getPlayerTypes(String playerName, boolean customOnly)
-	{
-		if(playerTypeCache.containsKey(playerName))
-			return playerTypeCache.get(playerName);
-		
-		List<EnumCreatureType> types = new ArrayList<>();
-		
-		for(EnumCreatureType type : typeToPlayer.keySet())
-			for(String entry : typeToPlayer.get(type))
-				if(entry.equalsIgnoreCase(playerName))
-				{
-					types.add(type);
-					break;
-				}
-		
-		if(types.isEmpty() && !customOnly)
-			types.addAll(getMobTypes(EntityType.PLAYER));
-		
-		playerTypeCache.put(playerName, types);
-		return types;
-	}
-	
-	public boolean isEvil(LivingEntity input)	{ return isMobOfType(input, EnumCreatureType.EVIL); }
-	public boolean isGolem(LivingEntity input)	{ return isMobOfType(input, EnumCreatureType.CONSTRUCT); }
-	public boolean isHoly(LivingEntity input)	{ return isMobOfType(input, EnumCreatureType.HOLY); }
-	public boolean isUndead(LivingEntity input)	{ return isMobOfType(input, EnumCreatureType.UNDEAD); }
-	
-	public boolean hasCustomAttributes(LivingEntity input)
-	{
-		return !getCreatureAttributes(input).isEmpty();
-	}
-	
-	public boolean hasCustomTypes(LivingEntity input)
-	{
-		return !getMobTypes(input).isEmpty();
-	}
-	
-	public boolean hasPlayerCustomTypes(PlayerEntity input)
-	{
-		return !getPlayerTypes(input, true).isEmpty();
-	}
-	
 	public boolean isMobOfType(ResourceLocation input, EnumCreatureType group)
 	{
 		if(group == null) return false;
 		return getMobTypes(input).contains(group);
 	}
 	
-	public boolean isMobOfType(LivingEntity input, EnumCreatureType group)
+	public static boolean isMobOfType(LivingEntity input, EnumCreatureType group)
 	{
 		if(group == null) return false;
-		return getMobTypes(input).contains(group);
-	}
-	
-	/**
-	 * Returns true if the given player is considered of the given type.<br>
-	 * Only checks their custom types, not those specified for minecraft:player
-	 */
-	public boolean isPlayerOfType(PlayerEntity input, EnumCreatureType group)
-	{
-		return isPlayerOfType(input.getName().getUnformattedComponentText(), group);
-	}
-	
-	public boolean isPlayerOfType(String name, EnumCreatureType group)
-	{
-		if(group == null || name == null || name.length() == 0) return false;
-		return getPlayerTypes(name, true).contains(group);
-	}
-	
-	/** Returns all vanilla types applicable to the given entity */
-	public List<CreatureAttribute> getCreatureAttributes(LivingEntity mobIn)
-	{
-		List<CreatureAttribute> attributes = new ArrayList<CreatureAttribute>();
-		for(EnumCreatureType type : getMobTypes(mobIn))
-			if(type.hasParentAttribute())
-				attributes.add(type.getParentAttribute());
-		return attributes;
+		return EnumCreatureType.getCreatureTypes(input).contains(group);
 	}
 	
 	public void addToEntity(ResourceLocation entity, EnumCreatureType type, boolean notify)
@@ -370,36 +202,6 @@ public class TypesManager extends WorldSavedData
 			entries.remove(entity);
 		typeToMob.put(type, entries);
 		mobTypeCache.remove(entity.toString());
-		
-		if(notify)
-			markDirty();
-	}
-	
-	public void addToPlayer(String player, EnumCreatureType type, boolean notify)
-	{
-		if(player == null || player.length() == 0 || isPlayerOfType(player, type))
-			return;
-		
-		List<String> entries = new ArrayList<String>();
-			entries.addAll(typeToPlayer.getOrDefault(type, Collections.emptyList()));
-			entries.add(player);
-		typeToPlayer.put(type, entries);
-		playerTypeCache.remove(player);
-		
-		if(notify)
-			markDirty();
-	}
-	
-	public void removeFromPlayer(String player, EnumCreatureType type, boolean notify)
-	{
-		if(player == null || player.length() == 0 || !isPlayerOfType(player, type))
-			return;
-		
-		List<String> entries = new ArrayList<String>();
-			entries.addAll(typeToPlayer.getOrDefault(type, Collections.emptyList()));
-			entries.remove(player);
-		typeToPlayer.put(type, entries);
-		playerTypeCache.remove(player);
 		
 		if(notify)
 			markDirty();

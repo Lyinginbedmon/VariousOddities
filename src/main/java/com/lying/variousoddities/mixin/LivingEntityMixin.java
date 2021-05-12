@@ -13,7 +13,6 @@ import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler;
-import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -49,9 +48,8 @@ public class LivingEntityMixin extends EntityMixin
 	public void isPotionApplicable(EffectInstance effectInstanceIn, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		TypesManager manager = TypesManager.get(entity.getEntityWorld());
 		boolean isParalysis = VOPotions.isParalysisEffect(effectInstanceIn);
-		for(EnumCreatureType mobType : manager.getMobTypes(entity))
+		for(EnumCreatureType mobType : EnumCreatureType.getCreatureTypes(entity))
 		{
 			TypeHandler handler = mobType.getHandler();
 			if(effectInstanceIn.getPotion() == Effects.POISON && !handler.canBePoisoned())
@@ -73,15 +71,14 @@ public class LivingEntityMixin extends EntityMixin
 	public void isEntityUndead(final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		TypesManager manager = TypesManager.get(entity.getEntityWorld());
-		if(manager.hasCustomAttributes(entity))
-			ci.setReturnValue(manager.isUndead(entity));
+		if(EnumCreatureType.getTypes(entity).isUndead())
+			ci.setReturnValue(true);
 	}
 	
 	@Inject(method = "isEntityInsideOpaqueBlock", at = @At("HEAD"), cancellable = true)
 	public void isEntityInsideOpaqueBlock(final CallbackInfoReturnable<Boolean> ci)
 	{
-		if(EnumCreatureType.canPhase(world, null, (LivingEntity)(Object)this))
+		if(AbilityRegistry.canPhase(world, null, (LivingEntity)(Object)this))
 			ci.setReturnValue(false);
 	}
 	

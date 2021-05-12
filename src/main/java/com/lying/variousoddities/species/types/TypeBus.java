@@ -70,8 +70,7 @@ public class TypeBus
 		if(event.getPlayer() != null && event.getPos() != null)
 		{
 			PlayerEntity player = event.getPlayer();
-			TypesManager manager = TypesManager.get(player.getEntityWorld());
-			if(!EnumCreatureType.ActionSet.fromTypes(player, manager.getMobTypes(player)).sleeps())
+			if(!ActionSet.fromTypes(player, EnumCreatureType.getCreatureTypes(player)).sleeps())
 			{
 				event.setResult(SleepResult.NOT_POSSIBLE_NOW);
 				if(!player.getEntityWorld().isRemote)
@@ -91,8 +90,7 @@ public class TypeBus
 		if(!shouldFire()) return;
 		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
 		{
-			TypesManager manager = TypesManager.get(event.getTarget().getEntityWorld());
-			for(EnumCreatureType mobType : manager.getMobTypes(event.getEntityLiving()))
+			for(EnumCreatureType mobType : EnumCreatureType.getCreatureTypes(event.getEntityLiving()))
 			{
 				if(!mobType.getHandler().canCriticalHit())
 				{
@@ -113,9 +111,8 @@ public class TypeBus
 		if(!shouldFire()) return;
 		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
 		{
-			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
-			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
-			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(event.getEntityLiving(), types);
+			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(event.getEntityLiving());
+			ActionSet actions = ActionSet.fromTypes(event.getEntityLiving(), types);
 			DamageSource source = event.getSource();
 			
 			// Creatures that don't need to breathe cannot drown or suffocate
@@ -148,9 +145,8 @@ public class TypeBus
 		if(!shouldFire()) return;
 		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
 		{
-			TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
-			List<EnumCreatureType> types = manager.getMobTypes(event.getEntityLiving());
-			ActionSet actions = EnumCreatureType.ActionSet.fromTypes(event.getEntityLiving(), types);
+			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(event.getEntityLiving());
+			ActionSet actions = ActionSet.fromTypes(event.getEntityLiving(), types);
 			
 			DamageSource source = event.getSource();
 			// Creatures that don't need to breathe cannot drown or suffocate
@@ -193,8 +189,7 @@ public class TypeBus
 	{
 		if(!shouldFire()) return;
 		
-		TypesManager manager = TypesManager.get(event.getEntityLiving().getEntityWorld());
-		if(!manager.hasCustomAttributes(event.getEntityLiving())) return;
+		if(!EnumCreatureType.getTypes(event.getEntityLiving()).isUndead()) return;
 		
 		if(event.getSource().getTrueSource() != null && event.getSource().getTrueSource() instanceof LivingEntity)
 		{
@@ -202,7 +197,7 @@ public class TypeBus
 			if(!livingSource.getHeldItemMainhand().isEmpty() && livingSource.getHeldItemMainhand().isEnchanted())
 			{
 				CreatureAttribute actualType = event.getEntityLiving().getCreatureAttribute();
-				List<CreatureAttribute> configTypes = manager.getCreatureAttributes(event.getEntityLiving());
+				List<CreatureAttribute> configTypes = EnumCreatureType.getTypes(event.getEntityLiving()).getAttributes();
 				
 				Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(livingSource.getHeldItemMainhand());
 				
@@ -241,15 +236,12 @@ public class TypeBus
 	{
 		if(!shouldFire()) return;
 		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
-		{
-			TypesManager manager = TypesManager.get(event.getTarget().getEntityWorld());
-			for(EnumCreatureType mobType : manager.getMobTypes((LivingEntity)event.getTarget()))
+			for(EnumCreatureType mobType : EnumCreatureType.getCreatureTypes((LivingEntity)event.getTarget()))
 				if(!mobType.getHandler().canSpellAffect(event.getSpellData().getSpell()))
 				{
 					event.setCanceled(true);
 					return;
 				}
-		}
 	}
 	
 	@SubscribeEvent
@@ -258,13 +250,12 @@ public class TypeBus
 		if(!shouldFire()) return;
 		PlayerEntity player = event.getPlayer();
 		if(player.getEntityWorld().isRemote) return;
-		TypesManager manager = TypesManager.get(player.getEntityWorld());
 		
-		if(manager.isMobOfType(player, EnumCreatureType.AQUATIC) || manager.isMobOfType(player, EnumCreatureType.WATER))
+		if(TypesManager.isMobOfType(player, EnumCreatureType.AQUATIC) || TypesManager.isMobOfType(player, EnumCreatureType.WATER))
 			if(player.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(player))
 				event.setNewSpeed(event.getNewSpeed() * 5F);
 		
-		if(manager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
+		if(TypesManager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
 			event.setNewSpeed(event.getNewSpeed() * 1.3F);
 	}
 }

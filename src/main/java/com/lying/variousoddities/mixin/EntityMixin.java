@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
-import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -62,7 +61,7 @@ public class EntityMixin extends CapabilityProviderMixin
 	public void incorporealPushOutOfBlock(double x, double y, double z, final CallbackInfo ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && EnumCreatureType.canPhase(world, null, (LivingEntity)(Object)this))
+		if(ent instanceof LivingEntity && AbilityRegistry.canPhase(world, null, (LivingEntity)(Object)this))
 			ci.cancel();
 	}
 	
