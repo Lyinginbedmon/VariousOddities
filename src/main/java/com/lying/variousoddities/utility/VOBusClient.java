@@ -1,9 +1,9 @@
 package com.lying.variousoddities.utility;
 
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.abilities.AbilityBlind;
-import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityBlind;
+import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.BlockRenderType;

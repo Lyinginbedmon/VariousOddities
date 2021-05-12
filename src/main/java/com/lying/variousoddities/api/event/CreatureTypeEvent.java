@@ -6,8 +6,8 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
+import com.lying.variousoddities.species.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.World;

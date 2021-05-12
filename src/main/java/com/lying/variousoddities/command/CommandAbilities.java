@@ -3,11 +3,12 @@ package com.lying.variousoddities.command;
 import java.util.Map;
 
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.SpeciesRegistry;
-import com.lying.variousoddities.types.abilities.Ability;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -233,8 +234,15 @@ public class CommandAbilities extends CommandBase
 	private static class VariantSpecies
 	{
 	 	public static final SuggestionProvider<CommandSource> SPECIES_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("species_names"), (context, builder) -> {
-	 		return ISuggestionProvider.suggestIterable(SpeciesRegistry.speciesNames(), builder);
+	 		return ISuggestionProvider.suggestIterable(VORegistries.SPECIES.getKeys(), builder);
 	 		});
+	 	
+		private static final DynamicCommandExceptionType SPECIES_MISSING_EXCEPTION = new DynamicCommandExceptionType((p_208922_0_) -> {
+			return new TranslationTextComponent("command.varodd.abilities.species.missing", p_208922_0_);
+		});
+		private static final DynamicCommandExceptionType SPECIES_INVALID_EXCEPTION = new DynamicCommandExceptionType((p_208922_0_) -> {
+			return new TranslationTextComponent("command.varodd.abilities.species.invalid", p_208922_0_);
+		});
 		
 		private static final String NAME = "species";
 		
@@ -252,6 +260,10 @@ public class CommandAbilities extends CommandBase
 			{
 				LivingEntity living = (LivingEntity)entity;
 				LivingData data = LivingData.forEntity(living);
+				if(data.getSpecies() != null)
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"species.get", data.getSpecies().getRegistryName()), true);
+				else
+					throw SPECIES_MISSING_EXCEPTION.create(living.getDisplayName());
 			}
 			return 15;
 		}
@@ -271,8 +283,11 @@ public class CommandAbilities extends CommandBase
 				Species species = SpeciesRegistry.getSpecies(name);
 				if(species != null)
 				{
-					;
+					data.setSpecies(species);
+					source.sendFeedback(new StringTextComponent("Found species: "+name), true);
 				}
+				else
+					throw SPECIES_INVALID_EXCEPTION.create(name);
 			}
 			return 15;
 		}

@@ -30,12 +30,9 @@ public class VOSpeciesProvider implements IDataProvider
 	
 	public void act(DirectoryCache cache) throws IOException
 	{
-		if(SpeciesRegistry.SPECIES.isEmpty())
-			SpeciesRegistry.initDefaultSpecies();
-		
 		Path path = this.dataGenerator.getOutputFolder();
 		Map<ResourceLocation, Species> map = Maps.newHashMap();
-		SpeciesRegistry.SPECIES.forEach((species) -> 
+		SpeciesRegistry.DEFAULT_SPECIES.forEach((species) -> 
 			{
 				if(map.put(species.getRegistryName(), species) != null)
 					throw new IllegalStateException("Duplicate species "+species.getRegistryName());

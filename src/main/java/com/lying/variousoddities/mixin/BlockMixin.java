@@ -5,8 +5,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;

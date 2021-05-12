@@ -8,11 +8,12 @@ import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeGetEntityTypesEvent;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketTypesData;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
@@ -226,7 +227,8 @@ public class TypesManager extends WorldSavedData
 		if(entity.getType() == EntityType.PLAYER)
 			return getPlayerTypes((PlayerEntity)entity, false);
 		
-		List<EnumCreatureType> types = getMobTypes(entity.getType());
+		LivingData data = LivingData.forEntity(entity);
+		List<EnumCreatureType> types = data != null && data.hasCustomTypes() ? data.getCustomTypes() : getMobTypes(entity.getType());
 		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(entity.getEntityWorld(), entity, types);
 		MinecraftForge.EVENT_BUS.post(event);
 		return event.getTypes();
@@ -259,6 +261,7 @@ public class TypesManager extends WorldSavedData
 	
 	public List<EnumCreatureType> getPlayerTypes(PlayerEntity player, boolean customOnly)
 	{
+		
 		List<EnumCreatureType> types = player != null && player.getGameProfile() != null ? getPlayerTypes(player.getName().getUnformattedComponentText(), customOnly) : Collections.emptyList();
 		TypeGetEntityTypesEvent event = new TypeGetEntityTypesEvent(player.getEntityWorld(), player, types);
 		MinecraftForge.EVENT_BUS.post(event);

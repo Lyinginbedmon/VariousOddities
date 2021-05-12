@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
+import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.player.PlayerEntity;

@@ -1,6 +1,6 @@
 package com.lying.variousoddities.api.event;
 
-import com.lying.variousoddities.types.TypeHandler.DamageResist;
+import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.DamageSource;

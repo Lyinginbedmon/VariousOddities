@@ -2,7 +2,7 @@ package com.lying.variousoddities.api.event;
 
 import java.util.Map;
 
-import com.lying.variousoddities.types.abilities.Ability;
+import com.lying.variousoddities.species.abilities.Ability;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;

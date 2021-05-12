@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.TypeHandler;
-import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.TypeHandler;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.Entity;

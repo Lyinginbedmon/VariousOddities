@@ -21,7 +21,7 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.potion.PotionSleep;
-import com.lying.variousoddities.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;

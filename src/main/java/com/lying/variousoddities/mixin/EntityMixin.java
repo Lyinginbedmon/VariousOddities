@@ -7,10 +7,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.abilities.AbilityHoldBreath;
-import com.lying.variousoddities.types.abilities.AbilityIncorporeality;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
+import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;

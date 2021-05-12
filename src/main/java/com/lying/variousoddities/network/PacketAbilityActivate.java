@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.proxy.CommonProxy;
-import com.lying.variousoddities.types.abilities.Ability;
-import com.lying.variousoddities.types.abilities.ActivatedAbility;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.ActivatedAbility;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;

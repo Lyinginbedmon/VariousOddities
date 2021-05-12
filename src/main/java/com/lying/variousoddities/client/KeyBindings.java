@@ -10,8 +10,8 @@ import com.lying.variousoddities.client.gui.ScreenAbilityMenu;
 import com.lying.variousoddities.network.PacketAbilityActivate;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
-import com.lying.variousoddities.types.abilities.ActivatedAbility;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.ActivatedAbility;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;

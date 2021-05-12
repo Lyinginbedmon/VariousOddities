@@ -15,13 +15,14 @@ import com.lying.variousoddities.faction.FactionBus;
 import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VOCommands;
 import com.lying.variousoddities.init.VODamageSource;
+import com.lying.variousoddities.init.VORegistryHandler;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.ClientProxy;
 import com.lying.variousoddities.proxy.IProxy;
 import com.lying.variousoddities.proxy.ServerProxy;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.types.TypeBus;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.SpeciesRegistry;
+import com.lying.variousoddities.species.types.TypeBus;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.lying.variousoddities.utility.VOBusServer;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
@@ -30,6 +31,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -51,6 +53,8 @@ public class VariousOddities
 	
 	public static IProxy proxy = new ServerProxy();
 	
+	private final VORegistryHandler registries;
+	
 	@SuppressWarnings("deprecation")
 	public VariousOddities()
 	{
@@ -62,11 +66,14 @@ public class VariousOddities
         bus.addListener(this::doClientSetup);
         bus.addListener(this::doLoadComplete);
         bus.addListener(VODataGenerators::onGatherData);
+        MinecraftForge.EVENT_BUS.register(this);
+        
+        bus.register(registries = new VORegistryHandler());
+        MinecraftForge.EVENT_BUS.register(registries);
         
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigVO.server_spec);
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigVO.client_spec);
         bus.addListener(this::onConfigEvent);
-        MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.addListener(VODamageSource::livingHurtEvent);
 	}
 	
@@ -75,8 +82,6 @@ public class VariousOddities
     	PacketHandler.init();
     	PlayerData.register();
     	LivingData.register();
-    	AbilityRegistry.initAbilities();
-    	AbilityRegistry.registerAbilityListeners();
     	event.enqueueWork(VOCommands::registerArguments);
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
     	MinecraftForge.EVENT_BUS.register(SettlementManagerServer.class);
@@ -123,4 +128,10 @@ public class VariousOddities
     
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event){ VOCommands.onCommandRegister(event); }
+	
+    @SubscribeEvent
+	public void onReloadListenersEvent(AddReloadListenerEvent event)
+	{
+		event.addListener(SpeciesRegistry.getInstance());
+	}
 }

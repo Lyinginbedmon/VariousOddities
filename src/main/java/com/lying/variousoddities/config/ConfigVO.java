@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.lying.variousoddities.entity.NaturalSpawns;
 import com.lying.variousoddities.init.VOEntities;
-import com.lying.variousoddities.types.CreatureTypeDefaults;
-import com.lying.variousoddities.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.CreatureTypeDefaults;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.FactionManager;
 
 import net.minecraft.entity.EntityType;

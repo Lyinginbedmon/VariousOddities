@@ -12,8 +12,8 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.network.PacketAbilitiesSync;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketHandler;
-import com.lying.variousoddities.types.abilities.Ability;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;

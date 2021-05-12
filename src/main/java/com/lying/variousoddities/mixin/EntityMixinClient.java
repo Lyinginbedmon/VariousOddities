@@ -5,8 +5,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.types.abilities.AbilityBlindsight;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityBlindsight;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;

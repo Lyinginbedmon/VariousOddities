@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
@@ -13,9 +14,12 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.EnumCreatureType.ActionSet;
-import com.lying.variousoddities.types.TypeBus;
+import com.lying.variousoddities.species.Species;
+import com.lying.variousoddities.species.Species.SpeciesInstance;
+import com.lying.variousoddities.species.SpeciesRegistry;
+import com.lying.variousoddities.species.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
+import com.lying.variousoddities.species.types.TypeBus;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.block.Blocks;
@@ -61,10 +65,11 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private LivingEntity entity = null;
 	
-	private List<EnumCreatureType> prevTypes = new ArrayList<>();
+	private List<EnumCreatureType> customTypes = Lists.newArrayList();
+	private List<EnumCreatureType> prevTypes = Lists.newArrayList();
 	private ResourceLocation originDimension = null;
 	
-//	private Species species = null;
+	private Species.SpeciesInstance species = null;
 //	private List<Template> templates = Lists.newArrayList();
 	
 	private Abilities abilities = new Abilities();
@@ -127,10 +132,21 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			compound.putInt("Air", this.air);
 			
+			if(this.species != null)
+				compound.put("Species", this.species.writeToNBT(new CompoundNBT()));
+			
 			ListNBT types = new ListNBT();
 			for(EnumCreatureType type : prevTypes)
 				types.add(StringNBT.valueOf(type.getString()));
 			compound.put("Types", types);
+			
+			if(!this.customTypes.isEmpty())
+			{
+				ListNBT customTypes = new ListNBT();
+				for(EnumCreatureType type : this.customTypes)
+					customTypes.add(StringNBT.valueOf(type.getString()));
+				compound.put("CustomTypes", customTypes);
+			}
 			
 			compound.put("Abilities", this.abilities.serializeNBT());
 		return compound;
@@ -143,10 +159,24 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.air = nbt.getInt("Air");
 		
+		if(nbt.contains("Species", 10))
+		{
+			CompoundNBT speciesData = nbt.getCompound("Species");
+			this.species = SpeciesRegistry.instanceFromNBT(speciesData);
+		}
+		
 		ListNBT types = nbt.getList("Types", 8);
 		prevTypes.clear();
 		for(int i=0; i<types.size(); i++)
 			prevTypes.add(EnumCreatureType.fromName(types.getString(i)));
+		
+		this.customTypes.clear();
+		if(nbt.contains("CustomTypes", 9))
+		{
+			ListNBT customTypes = nbt.getList("CustomTypes", 8);
+			for(int i=0; i<customTypes.size(); i++)
+				this.customTypes.add(EnumCreatureType.fromName(types.getString(i)));
+		}
 		
 		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
 	}
@@ -155,6 +185,10 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; }
 	
 	public Abilities getAbilities(){ return this.abilities; }
+	
+	public boolean hasSpecies(){ return this.species != null; }
+	public SpeciesInstance getSpecies(){ return this.species; }
+	public void setSpecies(Species speciesIn){ this.species = speciesIn.create(); }
 	
 	/** True if this object should override the vanilla air value */
 	public boolean overrideAir(){ return this.overridingAir; }
@@ -172,6 +206,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	{
 		return Math.min(currentAir + 4, entityIn.getMaxAir());
 	}
+	
+	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
+	public List<EnumCreatureType> getCustomTypes(){ return this.customTypes; }
 	
 	public void tick(LivingEntity entity)
 	{

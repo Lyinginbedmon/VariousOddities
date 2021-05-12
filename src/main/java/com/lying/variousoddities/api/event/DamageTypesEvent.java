@@ -2,7 +2,7 @@ package com.lying.variousoddities.api.event;
 
 import java.util.EnumSet;
 
-import com.lying.variousoddities.types.abilities.DamageType;
+import com.lying.variousoddities.species.abilities.DamageType;
 
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.eventbus.api.Event;

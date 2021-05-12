@@ -6,9 +6,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.types.EnumCreatureType;
-import com.lying.variousoddities.types.abilities.AbilityRegistry;
-import com.lying.variousoddities.types.abilities.AbilityWaterWalking;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityWaterWalking;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.entity.Entity;
