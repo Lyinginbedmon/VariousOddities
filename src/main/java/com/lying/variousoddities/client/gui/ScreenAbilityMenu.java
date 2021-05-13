@@ -18,6 +18,7 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
+import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -34,6 +35,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 
@@ -47,7 +49,7 @@ public class ScreenAbilityMenu extends Screen
 	private final List<ActivatedAbility> abilities = Lists.newArrayList();
 	private final List<ActivatedAbility> abilitySet = Lists.newArrayList();
 	
-	private static final int startup = 6;
+	private static final int startup = 4;
 	private int openTicks = 0;
 	
 	int index = 0;
@@ -159,63 +161,68 @@ public class ScreenAbilityMenu extends Screen
 	
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
-		int xOff = 0;
-		
-		int maxRadius = (int)((this.height * 0.5D) * 0.75D);
+		int maxRadius = (int)(this.height * 0.375D);
 		int yOff = Math.min(maxRadius, (maxRadius / 2) + (int)((maxRadius / 2) * ((double)openTicks / (double)startup)));
+		
 		double angleInc = Math.toRadians(360F / (abilitySet.size() + 1));
-		Vector2f vec = rotateVector(new Vector2f(xOff, yOff), angleInc);
+		Vector2f vec = rotateVector(new Vector2f(0F, yOff), angleInc);
+		Vector2f vec2 = rotateVector(new Vector2f(0F, this.height * 0.375F), angleInc);
 		float angle = (float)-angleInc * 0.5F;
 		
 		ActivatedAbility currentlySelected = getAbilitySlice(mouseX, mouseY);
+		int index = 0;
+		for(ActivatedAbility ability : abilitySet)
+		{
+			
+			int colour = ability.canTrigger(thePlayer) ? (currentlySelected != null && ability.getMapName().equals(currentlySelected.getMapName()) ? -1 : (index%2 == 0 ? 9868950 : 8553090)) : 0;
+			drawRadialSlice(matrixStack, angle, (float)angleInc, yOff, colour, partialTicks);
+			
+			if(this.openTicks >= startup)
+				if(theData.getAbilities().isFavourite(ability.getMapName()) || theData.getAbilities().hasEmptyFavourites())
+					drawFavouriteButtonAt(matrixStack, vec2.x + this.width / 2, vec2.y + this.height / 2, theData.getAbilities().isFavourite(ability.getMapName()) ? 1F : 0.5F);
+			
+			vec = rotateVector(vec, angleInc);
+			vec2 = rotateVector(vec2, angleInc);
+			angle -= angleInc;
+			index++;
+		}
 		
-		drawRadialSlice(matrixStack, angle, (float)angleInc, -1, partialTicks);
-		
-//		for(ActivatedAbility ability : abilitySet)
-//		{
-//			int x = (int)vec.x;
-//			int y = (int)vec.y;
-//			
-//			int colour = ability.canTrigger(thePlayer) ? -1 : 0;
-//			if(currentlySelected != null && ability.getMapName().equals(currentlySelected.getMapName()))
-//			{
-//				x = (int)((double)x * 0.75D);
-//				y = (int)((double)y * 0.75D);
-//				
-//				if(isFavourite(mouseX, mouseY))
-//					colour = 8453920;
-//			}
-//			
-//			drawRadialSlice(matrixStack, angle, (float)angleInc, colour, partialTicks);
-//			
-//			if(theData.getAbilities().isFavourite(ability.getMapName()) || theData.getAbilities().hasEmptyFavourites())
-//			{
-//				Vector2f vec2 = new Vector2f(vec.x * 1.2F, vec.y * 1.2F);
-//				drawFavouriteButtonAt(matrixStack, vec2.x + this.width / 2, vec2.y + this.height / 2, theData.getAbilities().isFavourite(ability.getMapName()) ? 1F : 0.5F);
-//			}
-//			
-//			// TODO Rotate text outwards from screen centre
-//			int textY = (int)((y * 0.6F) + (this.height - font.FONT_HEIGHT) / 2);
-//			List<ITextProperties> messageLines = VOHelper.getWrappedText(ability.getDisplayName(), font, 90);
-//			if(messageLines.size() > 1)
-//			{
-//				textY = y + (this.height - font.FONT_HEIGHT / 2) / 2;
-//				textY -= (int)((double)messageLines.size() / 2D * 8);
-//			}
-//			
-//			for(ITextProperties line : messageLines)
-//			{
-//				drawCenteredString(matrixStack, font, line.getString(), (int)((x * 0.6F) + this.width / 2), textY, colour);
-//				textY += 8;
-//			}
-//			
-//			vec = rotateVector(vec, angleInc);
-//			angle -= angleInc;
-//		}
+		if(this.openTicks >= startup)
+			drawAbilityNames(matrixStack);
 		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
 	
+	public void drawAbilityNames(MatrixStack matrixStack)
+	{
+		int maxRadius = (int)(this.height * 0.375D);
+		double angleInc = Math.toRadians(360F / (abilitySet.size() + 1));
+		matrixStack.push();
+			Vector2f vec = rotateVector(new Vector2f(0F, maxRadius), angleInc);
+			for(ActivatedAbility ability : abilitySet)
+			{
+				// TODO Rotate text outwards from screen centre
+				int y = (int)vec.y;
+				int textY = (int)((y * 0.6F) + (this.height - font.FONT_HEIGHT) / 2);
+				List<ITextProperties> messageLines = VOHelper.getWrappedText(ability.getDisplayName(), font, 90);
+				if(messageLines.size() > 1)
+				{
+					textY = y + (this.height - font.FONT_HEIGHT / 2) / 2;
+					textY -= (int)((double)messageLines.size() / 2D * 8);
+				}
+				
+				for(ITextProperties line : messageLines)
+				{
+					drawCenteredString(matrixStack, font, line.getString(), (int)((vec.x * 0.6F) + this.width / 2), textY, -1);
+					textY += 8;
+				}
+				
+				vec = rotateVector(vec, angleInc);
+			}
+		matrixStack.pop();
+	}
+	
+	@SuppressWarnings("deprecation")
 	public void drawFavouriteButtonAt(MatrixStack matrix, double posX, double posY, float brightness)
 	{
 		posX -= 8;
@@ -232,66 +239,27 @@ public class ScreenAbilityMenu extends Screen
 		double endX = posX + 16;
 		double endY = posY + 16;
 		
+		RenderSystem.enableTexture();
+		RenderSystem.shadeModel(GL11.GL_FLAT);
 		matrix.push();
 			Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
 			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, brightness);
 		matrix.pop();
 	}
 	
-	public void drawRadialSlice(MatrixStack stackIn, float angle, float angleInc, int colour, float partialTicks)
+	@SuppressWarnings("deprecation")
+	private void drawArc(MatrixStack stackIn, float initialAngle, float angleInc, float radius, int colour, int alpha, float partialTicks)
 	{
-		// TODO fix rendering of radial slices
-		// Lying is REALLY bad at graphics code so this could take a while to get working
-		
-		/*
-		 * Step 1: Draw a square in the middle of the screen
-		 * Step 2: Draw a regular polygon
-		 * Step 3: Draw a section of a regular polygon
-		 */
-		
 		float width = (float)this.width;
 		float height = (float)this.height;
 		float midX = width * 0.5F;
 		float midY = height * 0.5F;
 		
-//		int maxRadius = (int)((this.height * 0.5D) * 0.75D);
-//		Vector2f vec2 = rotateVector(new Vector2f(0F, maxRadius), angle);
-//		Vector2f vec3 = rotateVector(vec2, angleInc);
-//		
-//		vec2 = new Vector2f(vec2.x + midX, vec2.y + midY);
-//		vec3 = new Vector2f(vec3.x + midX, vec3.y + midY);
+		RenderSystem.disableCull();
+		RenderSystem.disableTexture();
+		RenderSystem.enableBlend();
+		RenderSystem.shadeModel(GL11.GL_FLAT);
 		
-		// Draw a square
-//		drawSquare(stackIn, midX, midY);
-		
-		// Draw a regular polygon
-		drawPolygon(stackIn, midX, midY);
-		
-		// Draw a section of a regular polygon
-		drawPolygonSection(stackIn, midX, midY);
-	}
-	
-	@SuppressWarnings("unused")
-	private void drawSquare(MatrixStack stackIn, float midX, float midY)
-	{
-		stackIn.push();
-			Matrix4f matrix4f = stackIn.getLast().getMatrix();
-			BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-				buffer.pos(matrix4f, midX -50, midY +50, 0F).color(255, 255, 255, 255).endVertex();
-				buffer.pos(matrix4f, midX +50, midY +50, 0F).color(255, 255, 255, 255).endVertex();
-				buffer.pos(matrix4f, midX +50, midY -50, 0F).color(255, 255, 255, 255).endVertex();
-				buffer.pos(matrix4f, midX -50, midY -50, 0F).color(255, 255, 255, 255).endVertex();
-			buffer.finishDrawing();
-			WorldVertexBufferUploader.draw(buffer);
-		stackIn.pop();
-	}
-	
-	private void drawPolygon(MatrixStack stackIn, float midX, float midY)
-	{
-		int sides = 5;
-		double angle = Math.toRadians(360D / sides);
-		float radius = 50;
 		stackIn.push();
 			Matrix4f matrix4f = stackIn.getLast().getMatrix();
 			BufferBuilder buffer = Tessellator.getInstance().getBuffer();
@@ -299,21 +267,26 @@ public class ScreenAbilityMenu extends Screen
 				// Centre vertex
 				buffer.pos(matrix4f, midX, midY, 0F).color(255, 255, 255, 255).endVertex();
 				
-				Vector2f vec = new Vector2f(0F, radius);
+				Vector2f vec = rotateVector(new Vector2f(0F, radius), -initialAngle);
+				int rotationsPerArc = 8;
 				// Perimeter vertices in pairs
-				for(int i=0; i<sides; i++)
+				for(int i=0; i<=rotationsPerArc; i++)
 				{
-					buffer.pos(matrix4f, midX + vec.x, midY + vec.y, 0F).color(255, 255, 255, 255).endVertex();
-					vec = rotateVector(vec, angle);
+					buffer.pos(matrix4f, midX + vec.x, midY + vec.y, 0F).color(colour, colour, colour, alpha).endVertex();
+					vec = rotateVector(vec, angleInc / rotationsPerArc);
 				}
 			buffer.finishDrawing();
 			WorldVertexBufferUploader.draw(buffer);
 		stackIn.pop();
+		RenderSystem.enableCull();
+		RenderSystem.enableTexture();
+		RenderSystem.disableBlend();
 	}
 	
-	private void drawPolygonSection(MatrixStack stackIn, float midX, float midY)
+	public void drawRadialSlice(MatrixStack stackIn, float angle, float angleInc, float radius, int colour, float partialTicks)
 	{
-		
+		drawArc(stackIn, angle, angleInc, radius * 1.15F, colour, 69, partialTicks);
+		drawArc(stackIn, angle, angleInc, radius * 0.85F, colour, 120, partialTicks);
 	}
 	
 	public void activateAbility(@Nonnull ActivatedAbility ability, boolean favourite, LivingData data)
