@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
@@ -83,9 +85,11 @@ public class TypesManager extends WorldSavedData
 		return compound;
 	}
 	
-	public static TypesManager get(World worldIn)
+	public static TypesManager get(@Nonnull World worldIn)
 	{
-		if(worldIn.isRemote)
+		if(worldIn == null)
+			return null;
+		else if(worldIn.isRemote)
 			return VariousOddities.proxy.getTypesManager();
 		else
 		{

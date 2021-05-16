@@ -31,7 +31,7 @@ public class KeyBindings
 {
 	private static final List<KeyBinding> KEYS = Lists.newArrayList();
 	private static final String CATEGORY = "keys."+Reference.ModInfo.MOD_ID+".category";
-
+	
 	private static final String OPEN_ABILITY_MENU = "keys."+Reference.ModInfo.MOD_ID+".ability_menu";
 	private static final String ACTIVATE_ABILITY_1 = "keys."+Reference.ModInfo.MOD_ID+".ability_1";
 	private static final String ACTIVATE_ABILITY_2 = "keys."+Reference.ModInfo.MOD_ID+".ability_2";
