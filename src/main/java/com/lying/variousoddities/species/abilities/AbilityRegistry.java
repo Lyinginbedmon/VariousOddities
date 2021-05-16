@@ -78,6 +78,7 @@ public class AbilityRegistry
 		registry.register(new AbilityStatusEffect.Builder());
 		registry.register(new AbilityTeleportToHome.Builder());
 		registry.register(new AbilityTeleportToPos.Builder());
+		registry.register(new AbilityTremorsense.Builder());
 		registry.register(new AbilityWaterWalking.Builder());
 		
 		VariousOddities.log.info("Initialised "+registry.getEntries().size()+" abilities");

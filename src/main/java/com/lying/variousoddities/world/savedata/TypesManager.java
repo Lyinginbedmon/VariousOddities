@@ -13,6 +13,7 @@ import com.lying.variousoddities.network.PacketTypesData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
+import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -161,6 +162,25 @@ public class TypesManager extends WorldSavedData
 					types.add(type);
 					break;
 				}
+		
+		if(types.isEmpty())
+		{
+			EntityType<?> ent = EntityType.byKey(registryName.toString()).get();
+			if(ent != null && ent.create(this.world) instanceof LivingEntity)
+			{
+				LivingEntity entity = (LivingEntity)ent.create(this.world);
+				CreatureAttribute attribute = entity.getCreatureAttribute();
+				if(attribute == CreatureAttribute.UNDEAD)
+					types.add(EnumCreatureType.UNDEAD);
+				else if(attribute == CreatureAttribute.ARTHROPOD)
+					types.add(EnumCreatureType.VERMIN);
+				else
+					types.add(EnumCreatureType.HUMANOID);
+				
+				if(attribute == CreatureAttribute.WATER)
+					types.add(EnumCreatureType.AQUATIC);
+			}
+		}
 		
 		mobTypeCache.put(registryName, types);
 		return types;

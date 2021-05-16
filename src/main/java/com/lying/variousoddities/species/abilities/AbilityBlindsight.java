@@ -2,48 +2,43 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class AbilityBlindsight extends Ability
+public class AbilityBlindsight extends AbilityVision
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "blindsight");
 	
-	private double range;
-	private double rangeMin = 0D;
-	
 	public AbilityBlindsight(double rangeIn)
 	{
-		super(REGISTRY_NAME);
-		this.range = Math.max(4D, rangeIn);
+		super(REGISTRY_NAME, Math.max(4D, rangeIn));
 	}
 	
 	public AbilityBlindsight(double rangeIn, double rangeMinIn)
 	{
 		this(rangeIn);
-		this.rangeMin = rangeMinIn;
 	}
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".blindsight", (int)range); }
 	
-	public Type getType(){ return Ability.Type.UTILITY; }
-	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public boolean testEntity(Entity entity, LivingEntity player)
 	{
-		compound.putDouble("Max", this.range);
-		compound.putDouble("Min", this.rangeMin);
-		return compound;
+		Vector3d eyePos = new Vector3d(player.getPosX(), player.getPosYEye(), player.getPosZ());
+		for(int i=5; i>0; i--)
+		{
+			Vector3d pos = new Vector3d(entity.getPosX(), entity.getPosY() + (double)i / 5 * entity.getHeight(), entity.getPosZ());
+			if(player.getEntityWorld().rayTraceBlocks(new RayTraceContext(eyePos, pos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, player)).getType() == BlockRayTraceResult.Type.MISS)
+				return true;
+		}
+		return false;
 	}
-	
-	public void readFromNBT(CompoundNBT compound)
-	{
-		this.range = compound.getDouble("Max");
-		this.rangeMin = compound.getDouble("Min");
-	}
-	
-	public boolean isInRange(double range){ return range <= this.range && range >= this.rangeMin; }
 	
 	public static class Builder extends Ability.Builder
 	{

@@ -14,7 +14,7 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
-import com.lying.variousoddities.network.PacketTypesCustom;
+import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
@@ -60,6 +60,8 @@ import net.minecraftforge.common.util.LazyOptional;
  */
 public class LivingData implements ICapabilitySerializable<CompoundNBT>
 {
+	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
+	
 	@CapabilityInject(LivingData.class)
 	public static final Capability<LivingData> CAPABILITY = null;
 	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "living_data");
@@ -83,7 +85,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean checkingFoodRegen = false;
 	
-	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
+	private boolean dirty = false;
 	
 	public LivingData()
 	{
@@ -131,6 +133,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public CompoundNBT serializeNBT()
 	{
 		CompoundNBT compound = new CompoundNBT();
+			compound.putBoolean("Initialised", this.initialised);
+			
 			if(this.originDimension != null)
 				compound.putString("HomeDim", this.originDimension.toString());
 			
@@ -158,6 +162,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void deserializeNBT(CompoundNBT nbt)
 	{
+		this.initialised = nbt.getBoolean("Initialised");
+		
 		if(nbt.contains("HomeDim", 8))
 			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
 		
@@ -186,12 +192,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	}
 	
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
-	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; }
+	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; markDirty(); }
 	
 	public Abilities getAbilities(){ return this.abilities; }
 	
 	public boolean hasSpecies(){ return this.species != null; }
 	public SpeciesInstance getSpecies(){ return this.species; }
+	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; }
 	public void setSpecies(Species speciesIn){ this.species = speciesIn.create(); }
 	
 	public List<EnumCreatureType> getTypesFromSpecies()
@@ -254,17 +261,21 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(!this.initialised && (!(entity.getType() == EntityType.PLAYER) || entity.getType() == EntityType.PLAYER && ((PlayerEntity)entity).getGameProfile() != null))
 		{
 			// TODO Check default home dimension registry for creature before setting to current dim
-			this.originDimension = world.getDimensionKey().getLocation();
+			setHomeDimension(world.getDimensionKey().getLocation());
 			
 			if(entity.getType() == EntityType.PLAYER)
 			{
 				PlayerEntity player = (PlayerEntity)entity;
 				String name = player.getName().getUnformattedComponentText();
 				if(CreatureTypeDefaults.isTypedPatron(name))
+				{
 					setCustomTypes(CreatureTypeDefaults.getPatronTypes(name));
+					VariousOddities.log.info("Initialised patron "+name+" as "+EnumCreatureType.getTypes(player).toHeader().getString());
+				}
 			}
 			
 			this.initialised = true;
+			markDirty();
 		}
 		
 		handleTypes(entity, world);
@@ -299,6 +310,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
 		
 		abilities.tick();
+		
+		if(this.dirty)
+		{
+			if(this.entity != null && !this.entity.getEntityWorld().isRemote)
+				PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketSyncLivingData(entity.getUniqueID(), this));
+			this.dirty = false;
+		}
 	}
 	
 	/** Manages the application and removal of creature types */
@@ -312,6 +330,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.prevTypes.removeAll(typesNow);
 		prevTypes.forEach((type) -> { MinecraftForge.EVENT_BUS.post(new TypeRemoveEvent(entity, type)); });
+
+		if(!typesNew.isEmpty() || !prevTypes.isEmpty())
+			markDirty();
 		
 		this.prevTypes.clear();
 		this.prevTypes.addAll(typesNow);
@@ -415,11 +436,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void markDirty()
 	{
-		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
-		{
-			// TODO Add LivingData types update packet
-			PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketTypesCustom(entity, this.customTypes));
-		}
+		this.dirty = true;
 	}
 	
 	public static class Storage implements Capability.IStorage<LivingData>

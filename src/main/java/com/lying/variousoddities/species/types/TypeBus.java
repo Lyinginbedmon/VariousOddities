@@ -7,7 +7,10 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.DamageResistanceEvent;
 import com.lying.variousoddities.api.event.SpellEvent.SpellAffectEntityEvent;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSyncTypesCustom;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -46,7 +49,11 @@ public class TypeBus
 		{
 			World world = event.getWorld();
 			if(world != null && !world.isRemote)
-				TypesManager.get(world).notifyPlayer((PlayerEntity)event.getEntity());
+			{
+				ServerPlayerEntity player = (ServerPlayerEntity)event.getEntity();
+				TypesManager.get(world).notifyPlayer(player);
+				PacketHandler.sendToNearby(world, player, new PacketSyncTypesCustom(player, LivingData.forEntity(player).getCustomTypes()));
+			}
 		}
 	}
 	

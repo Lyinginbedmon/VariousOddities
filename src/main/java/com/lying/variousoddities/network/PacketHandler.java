@@ -35,11 +35,12 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketTypesData.class, PacketTypesData::encode, PacketTypesData::decode, PacketTypesData::handle);
 		HANDLER.registerMessage(id++, PacketSyncAir.class, PacketSyncAir::encode, PacketSyncAir::decode, PacketSyncAir::handle);
 		HANDLER.registerMessage(id++, PacketAbilityActivate.class, PacketAbilityActivate::encode, PacketAbilityActivate::decode, PacketAbilityActivate::handle);
-		HANDLER.registerMessage(id++, PacketAbilitiesSync.class, PacketAbilitiesSync::encode, PacketAbilitiesSync::decode, PacketAbilitiesSync::handle);
+		HANDLER.registerMessage(id++, PacketSyncAbilities.class, PacketSyncAbilities::encode, PacketSyncAbilities::decode, PacketSyncAbilities::handle);
 		HANDLER.registerMessage(id++, PacketAbilityCooldown.class, PacketAbilityCooldown::encode, PacketAbilityCooldown::decode, PacketAbilityCooldown::handle);
 		HANDLER.registerMessage(id++, PacketAbilityFavourite.class, PacketAbilityFavourite::encode, PacketAbilityFavourite::decode, PacketAbilityFavourite::handle);
 		HANDLER.registerMessage(id++, PacketParalysisResignation.class, PacketParalysisResignation::encode, PacketParalysisResignation::decode, PacketParalysisResignation::handle);
-		HANDLER.registerMessage(id++, PacketTypesCustom.class, PacketTypesCustom::encode, PacketTypesCustom::decode, PacketTypesCustom::handle);
+		HANDLER.registerMessage(id++, PacketSyncTypesCustom.class, PacketSyncTypesCustom::encode, PacketSyncTypesCustom::decode, PacketSyncTypesCustom::handle);
+		HANDLER.registerMessage(id++, PacketSyncLivingData.class, PacketSyncLivingData::encode, PacketSyncLivingData::decode, PacketSyncLivingData::handle);
 	}
 	
 	/**

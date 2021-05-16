@@ -142,14 +142,14 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(VOEntities.SCORPION_GIANT,		EnumCreatureType.VERMIN);
 		
 		// Individual player settings (added on first login)
-		addPatron("_Booked",					EnumCreatureType.FEY, EnumCreatureType.OUTSIDER, EnumCreatureType.AQUATIC);
+		addPatron("_Booked",					EnumCreatureType.FEY, EnumCreatureType.AQUATIC);
 		addPatron("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);
 		addPatron("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH, EnumCreatureType.FIRE);
 		addPatron("chmobian",					EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.EARTH, EnumCreatureType.EXTRAPLANAR);
-		addPatron("Dusty21134",					EnumCreatureType.OUTSIDER, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
+		addPatron("Dusty21134",					EnumCreatureType.DRAGON, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
 		addPatron("Kurloz_M",					EnumCreatureType.PLANT, EnumCreatureType.EARTH);
 		addPatron("Kyofushin",					EnumCreatureType.UNDEAD, EnumCreatureType.FEY);
-		addPatron("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER, EnumCreatureType.FIRE);
+		addPatron("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER);
 		addPatron("Princessfirefly9",			EnumCreatureType.FEY, EnumCreatureType.AIR);
 		addPatron("Pyrodance",					EnumCreatureType.FEY, EnumCreatureType.SHAPECHANGER);
 		addPatron("SakuraWolfe",				EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);

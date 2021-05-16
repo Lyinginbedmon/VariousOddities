@@ -20,6 +20,7 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
+import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
@@ -39,6 +40,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -78,20 +80,22 @@ public class VOBusServer
 		{
 			PlayerEntity player = (PlayerEntity)event.getEntity();
 			LivingData data = LivingData.forEntity(player);
-			if(data == null)
-				return;
-			PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(data.getAir()));
-			data.getAbilities().markDirty();
+			if(data != null)
+			{
+				PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(data.getAir()));
+				data.getAbilities().markDirty();
+			}
 		}
 	}
 	
 	@SubscribeEvent
 	public static void onPlayerLogInEvent(PlayerLoggedInEvent event)
 	{
-		LivingData data = LivingData.forEntity(event.getPlayer());
+		PlayerEntity player = event.getPlayer();
+		LivingData data = LivingData.forEntity(player);
 		if(data != null)
 		{
-			PacketHandler.sendTo((ServerPlayerEntity)event.getPlayer(), new PacketSyncAir(data.getAir()));
+			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), data));
 			data.getAbilities().markDirty();
 		}
 	}
@@ -103,6 +107,8 @@ public class VOBusServer
 		LivingData newData = LivingData.forEntity(event.getPlayer());
 		if(oldData != null && newData != null)
 		{
+			newData.setCustomTypes(oldData.getCustomTypes());
+			newData.setSpecies(oldData.getSpecies());
 			newData.getAbilities().copy(oldData.getAbilities());
 			newData.getAbilities().markDirty();
 		}
@@ -120,6 +126,9 @@ public class VOBusServer
 	public static void addEntityBehaviours(EntityJoinWorldEvent event)
 	{
 		Entity theEntity = event.getEntity();
+		if(theEntity instanceof LivingEntity && !theEntity.getEntityWorld().isRemote)
+			PacketHandler.sendToAll((ServerWorld)theEntity.getEntityWorld(), new PacketSyncLivingData(theEntity.getUniqueID(), LivingData.forEntity((LivingEntity)theEntity)));
+		
 		if(theEntity.getType() == EntityType.CAT || theEntity.getType() == EntityType.OCELOT)
 		{
 			MobEntity feline = (MobEntity)theEntity;

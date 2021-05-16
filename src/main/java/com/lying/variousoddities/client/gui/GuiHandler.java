@@ -30,6 +30,7 @@ import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -205,7 +206,7 @@ public class GuiHandler
 			
 			if(displayStyle != EnumNameDisplay.SNEAKING || player.isSneaking())
 			{
-				int textColor = canTrigger ? -1 : 10526880;
+				int textColor = ability.isActive() ? TextFormatting.GOLD.getColor() : canTrigger ? -1 : 10526880;
 				String name = ability.getDisplayName().getString();
 				String displayName = name;
 				if(name.length() > 15 && displayStyle == EnumNameDisplay.CROPPED)

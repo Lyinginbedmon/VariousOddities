@@ -7,13 +7,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityTremorsense;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -27,23 +25,21 @@ public class EntityMixinClient
 		Entity ent = (Entity)(Object)this;
 		
 		PlayerEntity player = Minecraft.getInstance().player;
-		if(player != null && ent != player && AbilityRegistry.hasAbility(player, AbilityBlindsight.REGISTRY_NAME))
+		if(player != null && ent != player)
 		{
-			AbilityBlindsight blindsight = (AbilityBlindsight)AbilityRegistry.getAbilityByName(player, AbilityBlindsight.REGISTRY_NAME);
 			double dist = Math.sqrt(player.getDistanceSq(ent));
-			
-			if(blindsight.isInRange(dist))
+			if(AbilityRegistry.hasAbility(player, AbilityTremorsense.REGISTRY_NAME))
 			{
-				Vector3d eyePos = new Vector3d(player.getPosX(), player.getPosYEye(), player.getPosZ());
-				for(int i=5; i>0; i--)
-				{
-					Vector3d pos = new Vector3d(ent.getPosX(), ent.getPosY() + (double)i / 5 * ent.getHeight(), ent.getPosZ());
-					if(player.getEntityWorld().rayTraceBlocks(new RayTraceContext(eyePos, pos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, player)).getType() == Type.MISS)
-					{
-						ci.setReturnValue(true);
-						break;
-					}
-				}
+				AbilityTremorsense tremorsense = (AbilityTremorsense)AbilityRegistry.getAbilityByName(player, AbilityTremorsense.REGISTRY_NAME);
+				if(tremorsense.isInRange(dist) && tremorsense.testEntity(ent, player))
+					ci.setReturnValue(true);
+			}
+			
+			if(AbilityRegistry.hasAbility(player, AbilityBlindsight.REGISTRY_NAME))
+			{
+				AbilityBlindsight blindsight = (AbilityBlindsight)AbilityRegistry.getAbilityByName(player, AbilityBlindsight.REGISTRY_NAME);
+				if(blindsight.isInRange(dist) && blindsight.testEntity(ent, player))
+					ci.setReturnValue(true);
 			}
 		}
 	}

@@ -4,46 +4,48 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class PacketAbilitiesSync
+public class PacketSyncAbilities
 {
 	private final UUID uuid;
 	private CompoundNBT abilitiesData = new CompoundNBT();
 	
-	public PacketAbilitiesSync(UUID entityUUID)
+	public PacketSyncAbilities(UUID entityUUID)
 	{
 		this.uuid = entityUUID;
 	}
-	public PacketAbilitiesSync(UUID entityUUID, CompoundNBT abilitiesIn)
+	public PacketSyncAbilities(UUID entityUUID, CompoundNBT abilitiesIn)
 	{
 		this(entityUUID);
 		abilitiesData = abilitiesIn;
 	}
 	
-	public static PacketAbilitiesSync decode(PacketBuffer par1Buffer)
+	public static PacketSyncAbilities decode(PacketBuffer par1Buffer)
 	{
-		PacketAbilitiesSync packet = new PacketAbilitiesSync(par1Buffer.readUniqueId());
+		PacketSyncAbilities packet = new PacketSyncAbilities(par1Buffer.readUniqueId());
 		packet.abilitiesData = par1Buffer.readCompoundTag();
 		return packet;
 	}
 	
-	public static void encode(PacketAbilitiesSync msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncAbilities msg, PacketBuffer par1Buffer)
 	{
 		par1Buffer.writeUniqueId(msg.uuid);
 		par1Buffer.writeCompoundTag(msg.abilitiesData);
 	}
 	
-	public static void handle(PacketAbilitiesSync msg, Supplier<NetworkEvent.Context> cxt)
+	public static void handle(PacketSyncAbilities msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isClient())
@@ -68,6 +70,16 @@ public class PacketAbilitiesSync
 						data.getAbilities().deserializeNBT(msg.abilitiesData);
 					}
 				}
+			}
+		}
+		else
+		{
+			ServerPlayerEntity sender = context.getSender();
+			if(sender != null)
+			{
+				Abilities abilities = LivingData.forEntity(sender).getAbilities();
+				CompoundNBT data = abilities.serializeNBT();
+				PacketHandler.sendToNearby(sender.getEntityWorld(), sender, new PacketSyncAbilities(sender.getUniqueID(), data));
 			}
 		}
 		context.setPacketHandled(true);

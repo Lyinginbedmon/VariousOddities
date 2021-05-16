@@ -1,7 +1,10 @@
 package com.lying.variousoddities.command;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
@@ -86,11 +89,10 @@ public class CommandAbilities extends CommandBase
 			LivingEntity living = (LivingEntity)entity;
 			Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(living);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"list", living.getDisplayName(), abilityMap.size()), true);
-			for(ResourceLocation mapName : abilityMap.keySet())
-			{
-				Ability ability = abilityMap.get(mapName);
+			List<Ability> abilities = Lists.newArrayList(abilityMap.values());
+			Collections.sort(abilities, Ability.SORT_ABILITY);
+			for(Ability ability : abilities)
 				source.sendFeedback(new StringTextComponent("  ").append(getAbilityWithEdit(ability, living)), false);
-			}
 		}
 		return 15;
 	}

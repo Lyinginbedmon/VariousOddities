@@ -57,7 +57,6 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	private BlockState blockToPlace = Blocks.FIRE.getDefaultState();
 	
 	private int duration = Reference.Values.TICKS_PER_SECOND * 3;
-	private int activeTicks = 0;
 	
 	public AbilityBreathWeapon()
 	{
@@ -91,8 +90,6 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		compound.put("Damage", damageData);
 		
 		compound.putString("Particle", this.particle.getParameters());
-		
-		compound.putInt("Active", this.activeTicks);
 		return compound;
 	}
 	
@@ -131,8 +128,6 @@ public class AbilityBreathWeapon extends ActivatedAbility
 				this.particle = ParticleTypes.FLAME;
 			}
 		}
-		
-		this.activeTicks = compound.contains("Active", 3) ? compound.getInt("Active") : 0;
 	}
 	
 	public boolean canTrigger(LivingEntity entity)
@@ -163,8 +158,6 @@ public class AbilityBreathWeapon extends ActivatedAbility
 				break;
 		}
 	}
-	
-	public boolean isActive(){ return this.activeTicks > 0; }
 	
 	public void addListeners(IEventBus bus)
 	{

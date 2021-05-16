@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.network.PacketAbilitiesSync;
+import com.lying.variousoddities.network.PacketSyncAbilities;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.species.abilities.Ability;
@@ -37,7 +37,7 @@ public class Abilities
 	{
 		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
 		{
-			PacketAbilitiesSync packet = new PacketAbilitiesSync(this.entity.getUniqueID(), serializeNBT());
+			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUniqueID(), serializeNBT());
 			PacketHandler.sendToNearby(entity.getEntityWorld(), entity, packet);
 		}
 	}

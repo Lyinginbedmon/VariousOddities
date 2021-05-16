@@ -28,7 +28,6 @@ public class AbilityExplode extends ActivatedAbility
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "explode");
 	
 	private boolean ignited = false;
-	private int active = 0;
 	private int fuse = 30;
 	private int radius = 3;
 	private boolean charged = false;
@@ -50,6 +49,7 @@ public class AbilityExplode extends ActivatedAbility
 				break;
 			default:
 				this.ignited = true;
+				this.activeTicks = this.fuse;
 				entity.getEntityWorld().playSound(null, entity.getPosition(), SoundEvents.ENTITY_CREEPER_PRIMED, SoundCategory.HOSTILE, 1.0F, 0.5F);
 				putOnCooldown(entity);
 				break;
@@ -61,7 +61,6 @@ public class AbilityExplode extends ActivatedAbility
 		super.writeToNBT(compound);
 		compound.putBoolean("Ignited", this.ignited);
 		compound.putBoolean("Charged", this.charged);
-		compound.putInt("Active", this.active);
 		compound.putInt("Fuse", this.fuse);
 		compound.putInt("Radius", this.radius);
 		return compound;
@@ -72,7 +71,6 @@ public class AbilityExplode extends ActivatedAbility
 		super.readFromNBT(compound);
 		this.ignited = compound.getBoolean("Ignited");
 		this.charged = compound.getBoolean("Charged");
-		this.active = compound.getInt("Active");
 		this.fuse = compound.getInt("Fuse");
 		this.radius = compound.getInt("Radius");
 	}
@@ -115,7 +113,7 @@ public class AbilityExplode extends ActivatedAbility
 				}
 				else
 				{
-					if(ability.active++ >= ability.fuse)
+					if(--ability.activeTicks < 0)
 					{
 						// Do Explosion
 						Explosion.Mode mode = net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(world, entity) ? Explosion.Mode.DESTROY : Explosion.Mode.NONE;
@@ -126,7 +124,7 @@ public class AbilityExplode extends ActivatedAbility
 						
 						ability.ignited = false;
 						ability.charged = false;
-						ability.active = 0;
+						ability.activeTicks = 0;
 					}
 					markForUpdate(entity);
 				}

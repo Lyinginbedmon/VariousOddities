@@ -1,5 +1,6 @@
 package com.lying.variousoddities.utility;
 
+import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
@@ -18,6 +19,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -46,6 +48,16 @@ public class VOBusClient
 			event.setRed(0F);
 			event.setBlue(0F);
 			event.setGreen(0F);
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onMouseScroll(GuiScreenEvent.MouseScrollEvent.Pre event)
+	{
+		if(Minecraft.getInstance().currentScreen != null && Minecraft.getInstance().currentScreen instanceof IScrollableGUI)
+		{
+			((IScrollableGUI)Minecraft.getInstance().currentScreen).onScroll((int)Math.signum(event.getScrollDelta()));
+			event.setCanceled(true);
 		}
 	}
 	

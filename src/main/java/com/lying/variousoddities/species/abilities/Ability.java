@@ -1,5 +1,10 @@
 package com.lying.variousoddities.species.abilities;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -11,6 +16,22 @@ import net.minecraftforge.registries.ForgeRegistryEntry;
 
 public abstract class Ability
 {
+	public static final Comparator<Ability> SORT_ABILITY = new Comparator<Ability>()
+	{
+		public int compare(Ability o1, Ability o2)
+		{
+			String name1 = o1.getDisplayName().getString();
+			String name2 = o2.getDisplayName().getString();
+			
+			List<String> names = Arrays.asList(name1, name2);
+			Collections.sort(names);
+			
+			int index1 = names.indexOf(name1);
+			int index2 = names.indexOf(name2);
+			return (index1 > index2 ? 1 : index1 < index2 ? -1 : 0);
+		}
+	};
+	
 	private ITextComponent displayName = null;
 	private final ResourceLocation registryName;
 	
@@ -30,6 +51,8 @@ public abstract class Ability
 	
 	/** Returns true if this ability is active without needing to be triggered. */
 	public final boolean passive(){ return !(this instanceof ActivatedAbility); }
+	
+	public boolean isActive(){ return true; }
 	
 	/** Registers any necessary listeners needed for this ability to function */
 	public void addListeners(IEventBus bus){ }

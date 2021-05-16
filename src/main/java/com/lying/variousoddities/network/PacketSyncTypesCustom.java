@@ -16,21 +16,21 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class PacketTypesCustom
+public class PacketSyncTypesCustom
 {
 	private UUID entityID;
 	private List<EnumCreatureType> types = Lists.newArrayList();
 	
-	public PacketTypesCustom(){ }
-	public PacketTypesCustom(LivingEntity entity, List<EnumCreatureType> typesIn)
+	public PacketSyncTypesCustom(){ }
+	public PacketSyncTypesCustom(LivingEntity entity, List<EnumCreatureType> typesIn)
 	{
 		this.entityID = entity.getUniqueID();
 		this.types = typesIn;
 	}
 	
-	public static PacketTypesCustom decode(PacketBuffer par1Buffer)
+	public static PacketSyncTypesCustom decode(PacketBuffer par1Buffer)
 	{
-		PacketTypesCustom packet = new PacketTypesCustom();
+		PacketSyncTypesCustom packet = new PacketSyncTypesCustom();
 		packet.entityID = par1Buffer.readUniqueId();
 		
 		int count = par1Buffer.readInt();
@@ -40,7 +40,7 @@ public class PacketTypesCustom
 		return packet;
 	}
 	
-	public static void encode(PacketTypesCustom msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncTypesCustom msg, PacketBuffer par1Buffer)
 	{
 		par1Buffer.writeUniqueId(msg.entityID);
 		
@@ -48,7 +48,7 @@ public class PacketTypesCustom
 		msg.types.forEach((type) -> { par1Buffer.writeEnumValue(type); });
 	}
 	
-	public static void handle(PacketTypesCustom msg, Supplier<NetworkEvent.Context> cxt)
+	public static void handle(PacketSyncTypesCustom msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
 		if(!context.getDirection().getReceptionSide().isServer())
