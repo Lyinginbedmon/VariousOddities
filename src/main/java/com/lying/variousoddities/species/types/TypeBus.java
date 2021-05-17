@@ -51,7 +51,10 @@ public class TypeBus
 			if(world != null && !world.isRemote)
 			{
 				ServerPlayerEntity player = (ServerPlayerEntity)event.getEntity();
-				TypesManager.get(world).notifyPlayer(player);
+				TypesManager manager = TypesManager.get(world);
+				if(manager != null)
+					manager.notifyPlayer(player);
+				
 				PacketHandler.sendToNearby(world, player, new PacketSyncTypesCustom(player, LivingData.forEntity(player).getCustomTypes()));
 			}
 		}

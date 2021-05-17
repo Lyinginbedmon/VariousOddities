@@ -75,6 +75,7 @@ public class AbilityRegistry
 		registry.register(new AbilityNaturalArmour.Builder());
 		registry.register(new AbilityNaturalRegen.Builder());
 		registry.register(new AbilityPoison.Builder());
+		registry.register(new AbilityResistanceSpell.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
 		registry.register(new AbilityTeleportToHome.Builder());
 		registry.register(new AbilityTeleportToPos.Builder());

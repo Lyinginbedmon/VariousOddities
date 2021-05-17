@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -24,6 +25,8 @@ public class Species extends ForgeRegistryEntry<Species>
 {
 	private boolean canPlayerSelect = true;
 	private int power = 0;
+	
+	private ResourceLocation origin = null;
 	private final List<Ability> abilities = Lists.newArrayList();
 	private final List<EnumCreatureType> types = Lists.newArrayList();
 	
@@ -32,6 +35,9 @@ public class Species extends ForgeRegistryEntry<Species>
 		setRegistryName(name);
 	}
 	
+	/**
+	 * Whether this species should be selectable from the species select screen.
+	 */
 	public boolean isPlayerSelectable(){ return this.canPlayerSelect; }
 	
 	public Species setPlayerSelect(boolean bool)
@@ -40,11 +46,22 @@ public class Species extends ForgeRegistryEntry<Species>
 		return this;
 	}
 	
+	/**
+	 * A rating of how powerful this species is in comparison to others.<br>
+	 * Such as high health & powerful abilities vs low health and utility abilities.<br>
+	 * Purely cosmetic, meant as a way of comparing player-selectable species.
+	 */
 	public int getPower(){ return this.power; }
 	
 	public Species setPower(@Nonnull int par1Int)
 	{
 		this.power = MathHelper.clamp(par1Int, 0, 10);
+		return this;
+	}
+	
+	public Species setOriginDimension(@Nullable ResourceLocation dimension)
+	{
+		this.origin = dimension;
 		return this;
 	}
 	
@@ -74,6 +91,9 @@ public class Species extends ForgeRegistryEntry<Species>
 		json.addProperty("CanPlayerSelect", this.isPlayerSelectable());
 		json.addProperty("Power", getPower());
 		
+		if(origin != null)
+			json.addProperty("Dimension", origin.toString());
+		
 		JsonArray types = new JsonArray();
 			for(EnumCreatureType type : this.types)
 				types.add(type.getString());
@@ -89,12 +109,13 @@ public class Species extends ForgeRegistryEntry<Species>
 	
 	public SpeciesInstance create()
 	{
-		return new SpeciesInstance(getRegistryName()).addTypes(this.types).addAbilities(this.abilities);
+		return new SpeciesInstance(getRegistryName()).addOriginDimension(this.origin).addTypes(this.types).addAbilities(this.abilities);
 	}
 	
 	public class SpeciesInstance
 	{
 		private final ResourceLocation registryName;
+		private ResourceLocation originDimension = null;
 		private final List<Ability> abilities = Lists.newArrayList();
 		private final List<EnumCreatureType> types = Lists.newArrayList();
 		
@@ -105,6 +126,7 @@ public class Species extends ForgeRegistryEntry<Species>
 		
 		public ResourceLocation getRegistryName(){ return this.registryName; }
 		
+		private SpeciesInstance addOriginDimension(@Nullable ResourceLocation dimension){ this.originDimension = dimension; return this; }
 		private SpeciesInstance addTypes(Collection<EnumCreatureType> typesIn){ this.types.addAll(typesIn); return this; }
 		private SpeciesInstance addAbilities(Collection<Ability> abilitiesIn){ this.abilities.addAll(abilitiesIn); return this; }
 		
@@ -118,6 +140,9 @@ public class Species extends ForgeRegistryEntry<Species>
 		public CompoundNBT writeToNBT(CompoundNBT compound)
 		{
 			compound.putString("Name", getRegistryName().toString());
+			
+			if(originDimension != null)
+				compound.putString("Dimension", this.originDimension.toString());
 			
 			ListNBT types = new ListNBT();
 				for(EnumCreatureType type : this.types)
@@ -133,6 +158,9 @@ public class Species extends ForgeRegistryEntry<Species>
 		
 		public void readFromNBT(CompoundNBT compound)
 		{
+			if(compound.contains("Dimension", 8))
+				this.originDimension = new ResourceLocation(compound.getString("Dimension"));
+			
 			this.types.clear();
 			ListNBT typeList = compound.getList("Types", 8);
 			for(int i=0; i<typeList.size(); i++)

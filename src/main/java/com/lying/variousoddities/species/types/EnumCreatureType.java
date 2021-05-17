@@ -14,12 +14,12 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
-import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -40,6 +40,7 @@ public enum EnumCreatureType implements IStringSerializable
 	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AIR(null, new TypeHandler()
 		{
+			// TODO Convert flight into an ability rather than just adding it as a property of the AIR subtype
 			public void onLivingTick(LivingEntity living)
 			{
 				if(living.getType() == EntityType.PLAYER)
@@ -76,28 +77,33 @@ public enum EnumCreatureType implements IStringSerializable
 	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AQUATIC(null, new TypeHandlerAquatic(false)),
 	AUGMENTED(),
-	COLD(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))),
-	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler()
-	{
-		public boolean canSpellAffect(IMagicEffect spellIn)
-		{
-			if(spellIn.getSchool() == MagicSchool.ENCHANTMENT) return false;
-			if(spellIn.getSchool() == MagicSchool.NECROMANCY || spellIn.getDescriptors().contains(MagicSubType.DEATH)) return false;
-			return true;
-		}
-	}.noCriticalHit().noParalysis().noPoison().addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE)), Action.NONE, 10),
+	COLD(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE))
+		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))),
+	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))
+		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
+		.addAbility(new AbilityResistanceSpell(MagicSchool.NECROMANCY))
+		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH)), Action.NONE, 10),
 	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler().noParalysis(), Action.STANDARD, 12),
 	EARTH(),
 	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison(), Action.REGEN_ONLY, 8),
 	EXTRAPLANAR(),
-	EVIL(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))),
-	FEY(CreatureAttribute.UNDEFINED, new TypeHandler().addAbility(new AbilityDamageReduction(4, DamageType.SILVER)), Action.STANDARD, 6),
-	FIRE(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.VULNERABLE))),
+	EVIL(null, new TypeHandler()
+		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.IMMUNE))
+		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))),
+	FEY(CreatureAttribute.UNDEFINED, new TypeHandler()
+		.addAbility(new AbilityDamageReduction(4, DamageType.SILVER)), Action.STANDARD, 6),
+	FIRE(null, new TypeHandler()
+		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.IMMUNE))
+		.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.VULNERABLE))),
 	GIANT(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	GOBLIN(),
-	HOLY(null, new TypeHandler().addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.IMMUNE)).addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.VULNERABLE))),
+	HOLY(null, new TypeHandler()
+		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.IMMUNE))
+		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.VULNERABLE))),
 	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
-	INCORPOREAL(null, new TypeHandler().addAbility(new AbilityIncorporeality()).addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))),
+	INCORPOREAL(null, new TypeHandler().addAbility(new AbilityIncorporeality())
+		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))),
 	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 10),
 	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	OUTSIDER(CreatureAttribute.UNDEFINED, new TypeHandler(), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
@@ -106,30 +112,18 @@ public enum EnumCreatureType implements IStringSerializable
 			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
 			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(OUTSIDER); }
 		}),
-	PLANT(CreatureAttribute.UNDEFINED, new TypeHandler()
-		{
-			public boolean canSpellAffect(IMagicEffect spellIn)
-			{
-				MagicSchool school = spellIn.getSchool();
-				return !(school == MagicSchool.ENCHANTMENT || school == MagicSchool.TRANSMUTATION);
-			}
-		}.noCriticalHit().noParalysis().noPoison().addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
+	PLANT(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))
+		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
+		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
 	REPTILE(),
 	SHAPECHANGER(),
-	OOZE(CreatureAttribute.UNDEFINED, new TypeHandler()
-		{
-			public boolean canSpellAffect(IMagicEffect spellIn)
-			{
-				return spellIn.getSchool() != MagicSchool.TRANSMUTATION;
-			}
-		}.noCriticalHit().noParalysis().noPoison(), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
-	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler()
-		{
-			public boolean canSpellAffect(IMagicEffect spellIn)
-			{
-				return !(spellIn.getSchool() == MagicSchool.ENCHANTMENT || spellIn.getDescriptors().contains(MagicSubType.DEATH));
-			}
-		}.noCriticalHit().noParalysis().noPoison().addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE)), Action.NONE, 12),
+	OOZE(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
+	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler().noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))
+		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
+		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH)), Action.NONE, 12),
 	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(), Action.STANDARD, 8),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(true));
 	
@@ -272,7 +266,12 @@ public enum EnumCreatureType implements IStringSerializable
 		// Apply contextual type effects, eg. native vs extraplanar
 		GetEntityTypesEvent event = new GetEntityTypesEvent(entity.getEntityWorld(), entity, types);
 		MinecraftForge.EVENT_BUS.post(event);
-		return event.getTypes();
+		
+		// Final QA: Ensure each entry is unique (usually true, but sometimes broken through GetEntityTypesEvent.set etc.)
+		List<EnumCreatureType> typesFinal = Lists.newArrayList();
+		event.getTypes().forEach((type) -> { if(!typesFinal.contains(type)) typesFinal.add(type); });
+		
+		return typesFinal;
 	}
 	
 	public static Types getTypes(LivingEntity entity)

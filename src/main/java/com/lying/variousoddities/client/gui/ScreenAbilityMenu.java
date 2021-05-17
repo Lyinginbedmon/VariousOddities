@@ -256,14 +256,21 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		
 		if(!passives.isEmpty())
 		{
-			int textY = (int)(this.height * 0.5F - (passives.size() * (font.FONT_HEIGHT + 2) * 0.5F));
-			int textInc = font.FONT_HEIGHT + 2;
-			for(int i=0; i<Math.min(passives.size(), 1 + openTicks); i++)
-			{
-				Ability passive = passives.get(i);
-				drawString(matrixStack, font, passive.getDisplayName(), (int)(midX + maxRadius * 1.25F), textY, -1);
-				textY += textInc;
-			}
+			matrixStack.push();
+				matrixStack.translate(midX + maxRadius * 1.25D, midY, 0D);
+				matrixStack.push();
+					float scale = 0.75F;
+					matrixStack.scale(scale, scale, scale);
+					int textY = (int)(-(passives.size() * (font.FONT_HEIGHT + 2) * 0.5F));
+					int textInc = font.FONT_HEIGHT + 2;
+					for(int i=0; i<Math.min(passives.size(), 1 + openTicks); i++)
+					{
+						Ability passive = passives.get(i);
+						drawString(matrixStack, font, passive.getDisplayName(), 0, textY, -1);
+						textY += textInc;
+					}
+				matrixStack.pop();
+			matrixStack.pop();
 		}
 		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);

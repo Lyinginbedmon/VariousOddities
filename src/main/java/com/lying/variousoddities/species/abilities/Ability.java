@@ -16,6 +16,7 @@ import net.minecraftforge.registries.ForgeRegistryEntry;
 
 public abstract class Ability
 {
+	/** Sorts abilities alphabetically by their display name */
 	public static final Comparator<Ability> SORT_ABILITY = new Comparator<Ability>()
 	{
 		public int compare(Ability o1, Ability o2)

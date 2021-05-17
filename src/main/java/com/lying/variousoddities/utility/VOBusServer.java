@@ -242,6 +242,9 @@ public class VOBusServer
 		if(data.getHomeDimension() != null)
 		{
 			List<EnumCreatureType> types = event.getTypes();
+			if(types.contains(EnumCreatureType.EXTRAPLANAR) || types.contains(EnumCreatureType.NATIVE))
+				return;
+			
 			ResourceLocation currentDim = entity.getEntityWorld().getDimensionKey().getLocation();
 			if(currentDim.equals(data.getHomeDimension()))
 			{

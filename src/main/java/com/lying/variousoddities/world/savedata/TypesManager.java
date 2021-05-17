@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
@@ -85,6 +86,7 @@ public class TypesManager extends WorldSavedData
 		return compound;
 	}
 	
+	@Nullable
 	public static TypesManager get(@Nonnull World worldIn)
 	{
 		if(worldIn == null)

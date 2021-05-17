@@ -22,8 +22,10 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
@@ -467,7 +469,7 @@ public interface IMagicEffect
 		CUSTOM;
 	}
 	
-	public enum MagicSchool
+	public enum MagicSchool implements IStringSerializable
 	{
 		ABJURATION(-1, TextFormatting.GRAY),
 		CONJURATION(16449280, TextFormatting.YELLOW),
@@ -487,12 +489,21 @@ public interface IMagicEffect
 			textColour = textIn;
 		}
 		
+		public String getString(){ return this.name().toLowerCase(); }
 		public int getColour(){ return this.colour; }
 		public TextFormatting getTextColour(){ return this.textColour; }
-		public String translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_PREFIX+"magic_school."+this.name().toLowerCase())).getUnformattedComponentText(); }
+		public ITextComponent translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".magic_school."+getString())); }
+		
+		public static MagicSchool fromString(String nameIn)
+		{
+			for(MagicSchool school : values())
+				if(school.getString().equalsIgnoreCase(nameIn))
+					return school;
+			return null;
+		}
 	}
 	
-	public enum MagicSubType
+	public enum MagicSubType implements IStringSerializable
 	{
 		ACID,
 		AIR,
@@ -526,6 +537,15 @@ public interface IMagicEffect
 			return string;
 		}
 		
-		public String translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_PREFIX+"magic_subtype."+this.name().toLowerCase())).getUnformattedComponentText(); }
+		public static MagicSubType fromString(String nameIn)
+		{
+			for(MagicSubType subtype : values())
+				if(subtype.getString().equalsIgnoreCase(nameIn))
+					return subtype;
+			return null;
+		}
+		
+		public String getString(){ return this.name().toLowerCase(); }
+		public ITextComponent translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".magic_subtype."+getString())); }
 	}
 }
