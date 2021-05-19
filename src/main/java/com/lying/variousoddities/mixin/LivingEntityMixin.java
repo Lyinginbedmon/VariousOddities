@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
@@ -90,5 +91,14 @@ public class LivingEntityMixin extends EntityMixin
 			ci.cancel();
 		else if(entityIn instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityIncorporeality.REGISTRY_NAME))
 			ci.cancel();		
+	}
+	
+	@Inject(method = "isOnLadder()Z", at = @At("HEAD"), cancellable = true)
+	public void onClimbWall(final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		if(AbilityRegistry.hasAbility(entity, AbilityClimb.REGISTRY_NAME) && ((AbilityClimb)AbilityRegistry.getAbilityByName(entity, AbilityClimb.REGISTRY_NAME)).active())
+			if(entity.collidedHorizontally)
+				ci.setReturnValue(true);
 	}
 }

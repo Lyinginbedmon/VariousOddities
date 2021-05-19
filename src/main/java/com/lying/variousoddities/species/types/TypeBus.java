@@ -6,7 +6,6 @@ import java.util.Map;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.DamageResistanceEvent;
-import com.lying.variousoddities.api.event.SpellEvent.SpellAffectEntityEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
@@ -235,23 +234,6 @@ public class TypeBus
 				event.setAmount(event.getAmount() - appliedMod + configMod);
 			}
 		}
-	}
-	
-	/**
-	 * Prevents magic effects from affecting mobs and players immune to them, such as death effects
-	 * @param event
-	 */
-	@SubscribeEvent
-	public static void onSpellAffectEntityEvent(SpellAffectEntityEvent event)
-	{
-		if(!shouldFire()) return;
-		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
-			for(EnumCreatureType mobType : EnumCreatureType.getCreatureTypes((LivingEntity)event.getTarget()))
-				if(!mobType.getHandler().canSpellAffect(event.getSpellData().getSpell()))
-				{
-					event.setCanceled(true);
-					return;
-				}
 	}
 	
 	@SubscribeEvent

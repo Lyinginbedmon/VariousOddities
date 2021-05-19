@@ -13,11 +13,12 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent;
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
+import com.lying.variousoddities.species.abilities.AbilityFlight;
+import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
 import com.lying.variousoddities.species.abilities.DamageType;
@@ -25,10 +26,8 @@ import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -39,37 +38,7 @@ public enum EnumCreatureType implements IStringSerializable
 {
 	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(), Action.STANDARD, 8),
 	AIR(null, new TypeHandler()
-		{
-			// TODO Convert flight into an ability rather than just adding it as a property of the AIR subtype
-			public void onLivingTick(LivingEntity living)
-			{
-				if(living.getType() == EntityType.PLAYER)
-				{
-					PlayerEntity player = (PlayerEntity)living;
-					if(!VOPotions.isParalysed(player))
-					{
-						if(!(player.isCreative() || player.isSpectator()) && !player.abilities.allowFlying)
-						{
-							player.abilities.allowFlying = true;
-							player.sendPlayerAbilities();
-						}
-					}
-				}
-			}
-			
-			public void onRemove(LivingEntity living)
-			{
-				if(living.getType() == EntityType.PLAYER)
-				{
-					PlayerEntity player = (PlayerEntity)living;
-					if(!player.isCreative() && !player.isSpectator())
-					{
-						player.abilities.allowFlying = false;
-						player.sendPlayerAbilities();
-					}
-				}
-			}
-		}),
+		.addAbility(new AbilityFlight(Grade.PERFECT, 0.7D))),
 	AMPHIBIOUS(null, new TypeHandler()
 		{
 			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(AQUATIC); }

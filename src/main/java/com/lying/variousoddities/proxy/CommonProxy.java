@@ -9,4 +9,6 @@ public abstract class CommonProxy implements IProxy
 	{
 		return ctx.getSender();
 	}
+	
+	public void clearSettlements(){ }
 }

@@ -38,15 +38,12 @@ public class AbilityRegistry
 	/*
 	 * Enderman
 	 * 	Silk Touch
-	 * Enderdragon
-	 * 	Flight
 	 * Vex
 	 * 	Etherealness
 	 * Blaze
 	 * 	#Fireballs
 	 * Spider
 	 * 	#Web
-	 * 	Climbing
 	 * Rat
 	 * 	Disease (# when used on held item)
 	 * 
@@ -63,10 +60,12 @@ public class AbilityRegistry
 		registry.register(new AbilityBlind.Builder());
 		registry.register(new AbilityBlindsight.Builder());
 		registry.register(new AbilityBreathWeapon.Builder());
+		registry.register(new AbilityClimb.Builder());
 		registry.register(new AbilityDamageReduction.Builder());
 		registry.register(new AbilityDamageResistance.Builder());
 		registry.register(new AbilityExplode.Builder());
 		registry.register(new AbilityFastHealing.Builder());
+		registry.register(new AbilityFlight.Builder());
 		registry.register(new AbilityGhostForm.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());

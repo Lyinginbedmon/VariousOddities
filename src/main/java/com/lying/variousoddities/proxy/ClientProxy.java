@@ -63,6 +63,8 @@ public class ClientProxy extends CommonProxy
 		return settlements;
 	}
 	
+	public void clearSettlements(){ settlements = null; }
+	
 	public SpellManager getSpells()
 	{
 		return spells;

@@ -9,10 +9,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.network.PacketSyncAbilities;
+import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSyncAbilities;
 import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
 import net.minecraft.entity.EntityType;
@@ -21,6 +23,9 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraftforge.common.MinecraftForge;
 
 public class Abilities
 {
@@ -29,6 +34,9 @@ public class Abilities
 	protected Map<ResourceLocation, Ability> abilities = new HashMap<>();
 	protected Map<ResourceLocation, Integer> cooldowns = new HashMap<>();
 	protected ResourceLocation[] favourites = new ResourceLocation[FAVOURITE_SLOTS];
+	
+	public boolean canAirJump = false;
+	public int airJumpTimer = 0;
 	
 	public LivingEntity entity = null;
 	
@@ -63,16 +71,18 @@ public class Abilities
 			}
 			compound.put("Abilities", abilityList);
 		}
+		compound.putBoolean("CanJump", this.canAirJump);
+		compound.putInt("JumpTimer", this.airJumpTimer);
 		return compound;
 	}
 	
 	public void deserializeNBT(CompoundNBT nbt)
 	{
+		this.abilities.clear();
+		this.cooldowns.clear();
 		if(nbt.contains("Abilities", 9))
 		{
 			ListNBT abilityList = nbt.getList("Abilities", 10);
-			this.abilities.clear();
-			this.cooldowns.clear();
 			this.favourites = new ResourceLocation[this.favourites.length];
 			for(int i=0; i<abilityList.size(); i++)
 			{
@@ -91,6 +101,9 @@ public class Abilities
 				}
 			}
 		}
+		
+		this.canAirJump = nbt.getBoolean("CanJump");
+		this.airJumpTimer = nbt.getInt("JumpTimer");
 	}
 	
 	public Collection<ResourceLocation> names(){ return this.abilities.keySet(); }
@@ -230,10 +243,29 @@ public class Abilities
 					unfavourite(favourite);
 					dirty = true;
 				}
+			
+			MinecraftForge.EVENT_BUS.post(new AbilityUpdateEvent(this.entity, this));
 		}
 		
 		if(dirty)
 			markDirty();
+	}
+	
+	public void doAirJump()
+	{
+		if(this.entity == null || !AbilityRegistry.hasAbility(this.entity, AbilityFlight.REGISTRY_NAME) || this.entity.isOnGround())
+			return;
+		
+		AbilityFlight flight = (AbilityFlight)AbilityRegistry.getAbilityByName(this.entity, AbilityFlight.REGISTRY_NAME);
+		double scale = flight.flySpeed();
+		Vector3d motion = entity.getLookVec();
+		entity.setMotion(motion.x * scale, motion.y * scale, motion.z * scale);
+		
+		if(entity.getRNG().nextInt(4) == 0)
+			entity.getEntityWorld().playSound(entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, entity.getSoundCategory(), 5.0F, 0.8F + entity.getRNG().nextFloat() * 0.3F, false);
+		
+		this.canAirJump = false;
+		markDirty();
 	}
 	
 	public void copy(Abilities data)

@@ -11,3 +11,6 @@ Abilities
 	Implement JSON handling of species & templates
 	Implement optional first-login species selection screen
 	Replace Creative flight from Air subtype with corresponding ability
+Potions
+	Icon textures for paralysis and sleep
+	Fix sleep effect on players
