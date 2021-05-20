@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
 import net.minecraft.block.Block;
@@ -21,7 +21,7 @@ public class BlockMixin
 	public void incorporealFallOn(World worldIn, BlockPos pos, Entity entityIn, float fallDistance, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
-			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityIncorporeality.REGISTRY_NAME))
+			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityPhasing.class))
 				ci.cancel();
 	}
 	
@@ -29,7 +29,7 @@ public class BlockMixin
 	public void incorporealWalkOn(World worldIn, BlockPos pos, Entity entityIn, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
-			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityIncorporeality.REGISTRY_NAME))
+			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityPhasing.class))
 				ci.cancel();
 	}
 }

@@ -1,5 +1,7 @@
 package com.lying.variousoddities.mixin;
 
+import java.util.Collection;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -8,12 +10,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
-import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
 @Mixin(Entity.class)
@@ -76,15 +80,19 @@ public class EntityMixin extends CapabilityProviderMixin
 	public void incorporealPushOutOfBlock(double x, double y, double z, final CallbackInfo ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.canPhase(world, null, (LivingEntity)(Object)this))
-			ci.cancel();
+		if(ent instanceof LivingEntity)
+		{
+			LivingEntity living = (LivingEntity)ent;
+			Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
+			phasings.forEach((ability) -> { if(ability.canPhase(world, null, living)) ci.cancel(); });
+		}
 	}
 	
 	@Inject(method = "updateFallState", at = @At("HEAD"))
 	public void incorporealFall(final CallbackInfo ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityIncorporeality.REGISTRY_NAME))
+		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityPhasing.class))
 			ent.fallDistance = 0F;
 	}
 	
@@ -92,7 +100,7 @@ public class EntityMixin extends CapabilityProviderMixin
 	public void incorporealStepCarefully(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityIncorporeality.REGISTRY_NAME) && !isSprinting())
+		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityPhasing.class) && !isSprinting())
 			ci.setReturnValue(true);
 	}
 	
@@ -102,5 +110,17 @@ public class EntityMixin extends CapabilityProviderMixin
 		Entity ent = (Entity)(Object)this;
 		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityHoldBreath.REGISTRY_NAME))
 			ci.setReturnValue(ci.getReturnValueI() * 2);
+	}
+	
+	@Inject(method = "setMotionMultiplier(Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/vector/Vector3d;)V", at = @At("HEAD"), cancellable = true)
+	public void cancelWebSlowdown(BlockState state, Vector3d multiplier, final CallbackInfo ci)
+	{
+		Entity ent = (Entity)(Object)this;
+		if(ent instanceof LivingEntity)
+		{
+			LivingEntity living = (LivingEntity)ent;
+			if(AbilityRegistry.hasAbility(living, AbilityPhasing.class))
+				ci.cancel();
+		}
 	}
 }

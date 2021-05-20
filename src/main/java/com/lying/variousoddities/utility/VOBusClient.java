@@ -15,7 +15,7 @@ import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
-import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
+import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -143,7 +143,7 @@ public class VOBusClient
 			skipRenderEvent = false;
 		else if(renderTarget instanceof PlayerEntity)
 		{
-			if(AbilityRegistry.hasAbility(renderTarget, AbilityIncorporeality.REGISTRY_NAME))
+			if(!AbilityRegistry.getAbilitiesOfType(renderTarget, AbilityPhasing.class).isEmpty())
 			{
 	            event.setCanceled(true);
 	            IRenderTypeBuffer.Impl iRenderTypeBuffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
@@ -226,7 +226,7 @@ public class VOBusClient
 	{
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null)
-			return AbilityRegistry.canPhase(player) && getInWallBlockState(player) != null;
+			return AbilityRegistry.hasAbility(player, AbilityPhasing.class) && getInWallBlockState(player) != null;
 		return false;
 	}
 	

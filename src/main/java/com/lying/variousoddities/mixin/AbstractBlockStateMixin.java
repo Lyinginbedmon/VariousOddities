@@ -1,11 +1,14 @@
 package com.lying.variousoddities.mixin;
 
+import java.util.Collection;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityWaterWalking;
 
@@ -33,8 +36,10 @@ public abstract class AbstractBlockStateMixin
 		if(context instanceof EntitySelectionContext && entity != null && entity.isAlive() && entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			if(AbilityRegistry.canPhase(worldIn, pos, living))
-				ci.setReturnValue(VoxelShapes.empty());
+			Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
+			
+			if(!phasings.isEmpty())
+				phasings.forEach((ability) -> { if(ability.canPhase(worldIn, pos, living)) ci.setReturnValue(VoxelShapes.empty()); });
 			else if(AbilityRegistry.hasAbility(living, AbilityWaterWalking.REGISTRY_NAME))
 			{
 				AbilityWaterWalking ability = (AbilityWaterWalking)AbilityRegistry.getAbilityByName(living, AbilityWaterWalking.REGISTRY_NAME);
@@ -52,7 +57,10 @@ public abstract class AbstractBlockStateMixin
 	public void onEntityCollision(World worldIn, BlockPos pos, Entity entityIn, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
-			if(AbilityRegistry.canPhase(worldIn, pos, (LivingEntity)entityIn))
-				ci.cancel();
+		{
+			LivingEntity living = (LivingEntity)entityIn;
+			Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
+			phasings.forEach((ability) -> { if(ability.canPhase(worldIn, pos, living)) ci.cancel(); });
+		}
 	}
 }

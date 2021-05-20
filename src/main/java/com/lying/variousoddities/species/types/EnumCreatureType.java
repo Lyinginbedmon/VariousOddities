@@ -15,6 +15,8 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
+import com.lying.variousoddities.species.abilities.AbilityBlind;
+import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
@@ -88,7 +90,9 @@ public enum EnumCreatureType implements IStringSerializable
 	REPTILE(),
 	SHAPECHANGER(),
 	OOZE(CreatureAttribute.UNDEFINED, new TypeHandler().noCriticalHit().noParalysis().noPoison()
-		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
+		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
+		.addAbility(new AbilityBlind())
+		.addAbility(new AbilityBlindsight(16D)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
 	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler().noCriticalHit().noParalysis().noPoison()
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))

@@ -412,6 +412,8 @@
 	"ability.varodd.climb.inactive": "Climb",
 	"ability.varodd:epic_resilience": "Epic Resilience",
 	"ability.varodd.epic_resilience.value": "Epic Resilience %s",
+	"ability.varodd:etherealness": "Etherealness",
+	"ability.varodd:gaseous_form": "Gaseous Form",
 		"_comment15": "Keybindings",
 	"keys.varodd.category": "Various Oddities",
 	"keys.varodd.ability_menu": "Open activated ability menu",

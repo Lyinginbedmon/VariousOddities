@@ -27,7 +27,9 @@ public class AbilityClimb extends AbilityMoveMode
 		
 		public Ability create(CompoundNBT compound)
 		{
-			return new AbilityClimb();
+			AbilityClimb climb = new AbilityClimb();
+			climb.isActive = compound.getBoolean("IsActive");
+			return climb;
 		}
 	}
 }
