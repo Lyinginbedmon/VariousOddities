@@ -410,6 +410,8 @@
 	"ability.varodd.flying.inactive": "Flight (%s)",
 	"ability.varodd.climb.active": "Climbing",
 	"ability.varodd.climb.inactive": "Climb",
+	"ability.varodd:epic_resilience": "Epic Resilience",
+	"ability.varodd.epic_resilience.value": "Epic Resilience %s",
 		"_comment15": "Keybindings",
 	"keys.varodd.category": "Various Oddities",
 	"keys.varodd.ability_menu": "Open activated ability menu",

@@ -16,7 +16,8 @@
 		"MerchantResultSlotMixin",
 		"NearestAttackableTargetGoalMixin",
 		"PlayerEntityMixin",
-		"ServerWorldMixin"
+		"ServerWorldMixin",
+		"ServerPlayNetHandlerMixin"
 	],
 	"client":
 	[
@@ -25,6 +26,7 @@
 		"GameSettingsMixin",
 		"OverlayRendererMixin",
 		"TileEntityRenderDispatcherMixin",
-		"WorldRendererMixin"
+		"WorldRendererMixin",
+		"ElytraMixinClient"
 	]
 }

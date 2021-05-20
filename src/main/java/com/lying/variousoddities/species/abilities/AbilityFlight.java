@@ -90,7 +90,7 @@ public class AbilityFlight extends AbilityMoveMode
 				}
 				else
 				{
-					AttributeModifier modifier = makeModifier(flight.quality);
+					AttributeModifier modifier = makeModifier(flight.quality.gravity * (entity.isElytraFlying() ? 0.5F : 1F));
 					if(mod != null && mod.getAmount() != modifier.getAmount())
 					{
 						gravity.removeModifier(GRAVITY_UUID);
@@ -123,9 +123,9 @@ public class AbilityFlight extends AbilityMoveMode
 		}
 	}
 	
-	public static AttributeModifier makeModifier(Grade grade)
+	public static AttributeModifier makeModifier(double gravity)
 	{
-		return new AttributeModifier(GRAVITY_UUID, "gravity_modifier", -grade.gravity, AttributeModifier.Operation.MULTIPLY_TOTAL);
+		return new AttributeModifier(GRAVITY_UUID, "gravity_modifier", -gravity, AttributeModifier.Operation.MULTIPLY_TOTAL);
 	}
 	
 	public static class Builder extends Ability.Builder

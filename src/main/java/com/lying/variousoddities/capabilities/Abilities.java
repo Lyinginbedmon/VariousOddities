@@ -253,10 +253,13 @@ public class Abilities
 	
 	public void doAirJump()
 	{
-		if(this.entity == null || !AbilityRegistry.hasAbility(this.entity, AbilityFlight.REGISTRY_NAME) || this.entity.isOnGround())
+		if(this.entity == null || this.entity.isOnGround())
+			return;
+		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(this.entity);
+		if(!abilities.containsKey(AbilityFlight.REGISTRY_NAME))
 			return;
 		
-		AbilityFlight flight = (AbilityFlight)AbilityRegistry.getAbilityByName(this.entity, AbilityFlight.REGISTRY_NAME);
+		AbilityFlight flight = (AbilityFlight)abilities.get(AbilityFlight.REGISTRY_NAME);
 		double scale = flight.flySpeed();
 		Vector3d motion = entity.getLookVec();
 		entity.setMotion(motion.x * scale, motion.y * scale, motion.z * scale);

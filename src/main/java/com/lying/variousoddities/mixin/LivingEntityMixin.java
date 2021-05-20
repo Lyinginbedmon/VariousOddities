@@ -31,6 +31,9 @@ public class LivingEntityMixin extends EntityMixin
 	@Shadow
 	public float getMaxHealth(){ return 0F; }
 	
+	@Shadow
+	public boolean isElytraFlying(){ return false; }
+	
 	@Inject(method = "baseTick", at = @At("TAIL"))
 	public void baseTick(CallbackInfo callbackInfo)
 	{

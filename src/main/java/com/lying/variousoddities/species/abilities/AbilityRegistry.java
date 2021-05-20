@@ -61,6 +61,7 @@ public class AbilityRegistry
 		registry.register(new AbilityBlindsight.Builder());
 		registry.register(new AbilityBreathWeapon.Builder());
 		registry.register(new AbilityClimb.Builder());
+		registry.register(new AbilityDamageCap.Builder());
 		registry.register(new AbilityDamageReduction.Builder());
 		registry.register(new AbilityDamageResistance.Builder());
 		registry.register(new AbilityExplode.Builder());

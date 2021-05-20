@@ -57,6 +57,21 @@ public class EntityMixin extends CapabilityProviderMixin
 		return false;
 	}
 	
+	@Shadow
+	public boolean isSneaking()
+	{
+		return false;
+	}
+	
+	@Shadow
+	public boolean isOnGround()
+	{
+		return false;
+	}
+	
+	@Shadow
+	public void setFlag(int flag, boolean set){ }
+	
 	@Inject(method = "pushOutOfBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;<init>(DDD)V"), cancellable = true)
 	public void incorporealPushOutOfBlock(double x, double y, double z, final CallbackInfo ci)
 	{
