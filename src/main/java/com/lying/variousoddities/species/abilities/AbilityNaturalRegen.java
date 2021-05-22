@@ -16,6 +16,8 @@ public class AbilityNaturalRegen extends Ability
 	
 	public Type getType(){ return Type.UTILITY; }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public void addListeners(IEventBus bus)
 	{
 		bus.addListener(this::addNaturalRegen);

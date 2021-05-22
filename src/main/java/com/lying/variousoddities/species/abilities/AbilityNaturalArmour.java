@@ -29,6 +29,8 @@ public class AbilityNaturalArmour extends Ability
 		this.amount = amountIn;
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Type.DEFENSE; }
 	
 	public ITextComponent translatedName()

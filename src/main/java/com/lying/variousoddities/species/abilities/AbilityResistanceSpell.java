@@ -41,6 +41,8 @@ public class AbilityResistanceSpell extends Ability
 		this.school = null;
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Type.DEFENSE; }
 	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_spell_"+(descriptor == null ? school.getString() : descriptor.getString())); }

@@ -14,6 +14,7 @@ import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VORegistries;
+import com.lying.variousoddities.species.abilities.Ability.Nature;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.LivingEntity;
@@ -97,6 +98,9 @@ public class AbilityRegistry
 		
 		if(compound.contains("CustomName", 8))
 			ability.setDisplayName(ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomName")));
+		
+		if(compound.contains("CustomNature", 8))
+			ability.setCustomNature(Nature.fromString(compound.getString("CustomNature")));
 		
 		return ability;
 	}

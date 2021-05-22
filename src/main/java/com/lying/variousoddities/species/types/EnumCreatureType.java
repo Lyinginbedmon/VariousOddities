@@ -234,6 +234,20 @@ public enum EnumCreatureType implements IStringSerializable
 			TypesManager manager = TypesManager.get(entity.getEntityWorld());
 			if(manager != null)
 				types.addAll(manager.getMobTypes(entity.getType()));
+			
+			if(types.isEmpty())
+			{
+				CreatureAttribute attribute = entity.getCreatureAttribute();
+				if(attribute == CreatureAttribute.UNDEAD)
+					types.add(EnumCreatureType.UNDEAD);
+				else if(attribute == CreatureAttribute.ARTHROPOD)
+					types.add(EnumCreatureType.VERMIN);
+				else
+					types.add(EnumCreatureType.HUMANOID);
+				
+				if(attribute == CreatureAttribute.WATER)
+					types.add(EnumCreatureType.AQUATIC);
+			}
 		}
 		
 		// Apply contextual type effects, eg. native vs extraplanar

@@ -22,6 +22,8 @@ public class AbilityIncorporeality extends AbilityPhasing
 	
 	public AbilityIncorporeality(){ super(REGISTRY_NAME); }
 	
+	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
 	public Type getType(){ return Ability.Type.UTILITY; }
 	
 	public boolean ignoresNonMagicDamage(){ return true; }

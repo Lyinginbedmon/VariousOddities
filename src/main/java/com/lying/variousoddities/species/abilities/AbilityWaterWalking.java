@@ -28,6 +28,8 @@ public class AbilityWaterWalking extends Ability
 		this.affectLava = lava;
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SPELL_LIKE; }
+	
 	public Type getType(){ return Type.UTILITY; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)

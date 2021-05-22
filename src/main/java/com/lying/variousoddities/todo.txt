@@ -10,5 +10,4 @@ Abilities
 	Implement JSON handling of species & templates
 	Implement optional first-login species selection screen
 Potions
-	Icon textures for paralysis and sleep
 	Fix sleep effect on players

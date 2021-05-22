@@ -17,6 +17,8 @@ public class AbilityEtherealness extends AbilityPhasing
 		super(REGISTRY_NAME);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
 	public boolean ignoresNonMagicDamage(){ return true; }
 	
 	protected boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)

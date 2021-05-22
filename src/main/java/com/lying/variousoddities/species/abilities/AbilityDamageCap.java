@@ -39,6 +39,8 @@ public class AbilityDamageCap extends Ability
 			return super.translatedName();
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Type.DEFENSE; }
 	
 	public void addListeners(IEventBus bus)

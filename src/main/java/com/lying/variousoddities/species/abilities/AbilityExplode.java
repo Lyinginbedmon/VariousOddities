@@ -39,6 +39,8 @@ public class AbilityExplode extends ActivatedAbility
 	
 	public ITextComponent translatedName(){ return this.charged ? new TranslationTextComponent("ability."+getMapName()+"_charged") : super.translatedName(); }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Ability.Type.ATTACK; }
 	
 	public void trigger(LivingEntity entity, Dist side)

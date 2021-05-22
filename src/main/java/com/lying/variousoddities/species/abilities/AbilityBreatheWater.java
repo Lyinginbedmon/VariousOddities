@@ -14,6 +14,8 @@ public class AbilityBreatheWater extends Ability
 	
 	public AbilityBreatheWater(){ super(REGISTRY_NAME); }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Type.UTILITY; }
 	
 	public void addListeners(IEventBus bus)

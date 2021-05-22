@@ -31,6 +31,8 @@ public class AbilityStatusEffect extends Ability
 		this(REGISTRY_NAME, effectIn);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+effect.getEffectName().toLowerCase()); }
 	
 	public ITextComponent getTranslatedName()

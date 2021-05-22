@@ -11,6 +11,8 @@ public class AbilityHoldBreath extends Ability
 	
 	public AbilityHoldBreath(){ super(REGISTRY_NAME); }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Ability.Type.UTILITY; }
 	
 	public static class Builder extends Ability.Builder

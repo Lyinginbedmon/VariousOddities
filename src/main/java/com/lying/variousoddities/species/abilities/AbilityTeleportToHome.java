@@ -33,6 +33,8 @@ public class AbilityTeleportToHome extends ActivatedAbility
 		super(REGISTRY_NAME, Reference.Values.TICKS_PER_MINUTE);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SPELL_LIKE; }
+	
 	public Type getType(){ return Ability.Type.UTILITY; }
 	
 	public boolean canTrigger(LivingEntity entity)

@@ -67,6 +67,8 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".breath_weapon", (int)distance, type.translated(damage)); }
 	
+	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
 	public Type getType(){ return Ability.Type.ATTACK; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)

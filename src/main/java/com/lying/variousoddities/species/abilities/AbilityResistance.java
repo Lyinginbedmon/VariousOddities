@@ -29,6 +29,8 @@ public class AbilityResistance extends Ability
 		return new TranslationTextComponent("ability.varodd.damage_resistance", damage.getTranslated(), amount);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Ability.Type.DEFENSE; }
 	
 	public int getAmount(){ return Math.max(4, amount); }

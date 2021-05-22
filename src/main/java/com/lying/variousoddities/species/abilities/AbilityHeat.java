@@ -26,6 +26,8 @@ public class AbilityHeat extends Ability
 		ignite = shouldIgnite;
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Ability.Type.ATTACK; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)

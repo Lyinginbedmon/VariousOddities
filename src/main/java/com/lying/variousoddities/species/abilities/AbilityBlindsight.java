@@ -26,6 +26,8 @@ public class AbilityBlindsight extends AbilityVision
 		this(rangeIn);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".blindsight", (int)range); }
 	
 	public boolean testEntity(Entity entity, LivingEntity player)

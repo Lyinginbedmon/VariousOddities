@@ -33,6 +33,8 @@ public class AbilityPoison extends Ability
 	
 	public Type getType(){ return Type.ATTACK; }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
 		compound.putFloat("Chance", this.triggerChance);

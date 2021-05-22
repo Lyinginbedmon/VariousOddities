@@ -39,6 +39,8 @@ public class AbilityFastHealing extends Ability
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".fast_healing", (int)rate); }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Type.DEFENSE; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)

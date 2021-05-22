@@ -51,6 +51,8 @@ public class AbilityDamageReduction extends Ability
 		return new TranslationTextComponent("ability.varodd.damage_reduction", amount, exceptionTranslated);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Ability.Type.DEFENSE; }
 	
 	public int getAmount(){ return Math.max(4, amount); }

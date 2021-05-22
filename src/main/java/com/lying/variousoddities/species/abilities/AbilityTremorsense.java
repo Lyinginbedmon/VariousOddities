@@ -25,6 +25,8 @@ public class AbilityTremorsense extends AbilityVision
 		this(rangeIn);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".tremorsense", (int)range); }
 	
 	public boolean testEntity(Entity entity, LivingEntity player)

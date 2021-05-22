@@ -20,6 +20,8 @@ public class AbilityGhostForm extends ActivatedAbility
 		super(REGISTRY_NAME, Reference.Values.TICKS_PER_SECOND * 10);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
 	public Type getType(){ return Ability.Type.UTILITY; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)

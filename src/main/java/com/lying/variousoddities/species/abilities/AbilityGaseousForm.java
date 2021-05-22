@@ -21,6 +21,8 @@ public class AbilityGaseousForm extends AbilityPhasing
 		super(REGISTRY_NAME);
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
 	public void addListeners(IEventBus bus)
 	{
 		super.addListeners(bus);

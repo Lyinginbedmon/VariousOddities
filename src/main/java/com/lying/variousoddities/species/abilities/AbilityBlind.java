@@ -21,6 +21,8 @@ public class AbilityBlind extends AbilityStatusEffect
 	public ResourceLocation getMapName(){ return REGISTRY_NAME; }
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public Type getType(){ return Ability.Type.WEAKNESS; }
 	
 	public static class Builder extends Ability.Builder

@@ -37,6 +37,8 @@ public class AbilityFlight extends AbilityMoveMode
 		this.speed = speedIn;
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
 		super.writeToNBT(compound);

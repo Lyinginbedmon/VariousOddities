@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -34,6 +35,7 @@ public abstract class Ability
 	};
 	
 	private ITextComponent displayName = null;
+	private Nature customNature = null;
 	private final ResourceLocation registryName;
 	
 	protected Ability(@Nonnull ResourceLocation registryNameIn)
@@ -68,6 +70,8 @@ public abstract class Ability
 			this.displayName = null;
 	}
 	
+	public void setCustomNature(Nature natureIn){ this.customNature = natureIn; }
+	
 	public ITextComponent getDisplayName()
 	{
 		return hasCustomName() ? this.displayName : translatedName();
@@ -84,6 +88,9 @@ public abstract class Ability
 		
 		if(hasCustomName())
 			compound.putString("CustomName", ITextComponent.Serializer.toJson(this.displayName));
+		
+		if(this.customNature != null)
+			compound.putString("CustomNature", this.customNature.getString());
 		
 		CompoundNBT tag = writeToNBT(new CompoundNBT());
 		if(!tag.isEmpty())
@@ -102,6 +109,10 @@ public abstract class Ability
 	}
 	
 	public abstract Type getType();
+	
+	public Nature getNature(){ return this.customNature != null ? this.customNature : getDefaultNature(); }
+	
+	protected abstract Nature getDefaultNature();
 	
 	public static abstract class Builder extends ForgeRegistryEntry<Ability.Builder>
 	{
@@ -123,5 +134,31 @@ public abstract class Ability
 		{
 			this.texIndex = index;
 		}
+	}
+	
+	public static enum Nature implements IStringSerializable
+	{
+		SUPERNATURAL(false),
+		EXTRAORDINARY(true),
+		SPELL_LIKE(false);
+		
+		private final boolean useInAntiMagic;
+		
+		private Nature(boolean useInAntiMagic)
+		{
+			this.useInAntiMagic = useInAntiMagic;
+		}
+		
+		public String getString(){ return this.name().toLowerCase(); }
+		
+		public static Nature fromString(String nameIn)
+		{
+			for(Nature nature : values())
+				if(nature.getString().equalsIgnoreCase(nameIn))
+					return nature;
+			return EXTRAORDINARY;
+		}
+		
+		public boolean canBeUsedInAntiMagic(){ return this.useInAntiMagic; }
 	}
 }

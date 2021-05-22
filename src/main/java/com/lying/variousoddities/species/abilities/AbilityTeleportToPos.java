@@ -41,6 +41,8 @@ public class AbilityTeleportToPos extends ActivatedAbility
 		this.maxRange = compound.contains("Range", 6) ? compound.getDouble("Range") : 16D;
 	}
 	
+	protected Nature getDefaultNature(){ return Nature.SPELL_LIKE; }
+	
 	public Ability.Type getType(){ return Ability.Type.UTILITY; }
 	
 	public boolean canTrigger(LivingEntity entity)

@@ -33,6 +33,8 @@ public class AbilityDamageResistance extends Ability
 	
 	public Type getType(){ return resistType == DamageResist.VULNERABLE ? Ability.Type.WEAKNESS : Ability.Type.DEFENSE; }
 	
+	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
+	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
 		compound.putString("Damage", this.damageType.getString());
