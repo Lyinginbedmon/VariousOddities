@@ -71,6 +71,8 @@ public class Species extends ForgeRegistryEntry<Species>
 		return this;
 	}
 	
+	public List<Ability> getAbilities(){ return this.abilities; }
+	
 	public Species addType(@Nonnull EnumCreatureType typeIn)
 	{
 		if(!this.types.contains(typeIn))
@@ -84,6 +86,8 @@ public class Species extends ForgeRegistryEntry<Species>
 			addType(type);
 		return this;
 	}
+	
+	public List<EnumCreatureType> getTypes(){ return this.types; }
 	
 	public JsonObject toJson()
 	{

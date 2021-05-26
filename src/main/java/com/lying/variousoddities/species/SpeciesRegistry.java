@@ -42,7 +42,7 @@ public class SpeciesRegistry extends JsonReloadListener
 {
 	private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
 	
-	public static final List<Species> DEFAULT_SPECIES = Lists.newArrayList();
+	private static final List<Species> DEFAULT_SPECIES = Lists.newArrayList();
 	
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
@@ -64,9 +64,16 @@ public class SpeciesRegistry extends JsonReloadListener
 		super(GSON, "varodd_species");
 	}
 	
+	public static List<Species> getDefaultSpecies(){ return Lists.newArrayList(DEFAULT_SPECIES); }
+	
 	public static void onRegisterSpecies(RegistryEvent.Register<Species> event)
 	{
-		DEFAULT_SPECIES.forEach((species) -> { event.getRegistry().register(species); });
+		/*
+		 * Load species from datapack files
+		 */
+		
+		if(VORegistries.SPECIES.isEmpty())
+			DEFAULT_SPECIES.forEach((species) -> { event.getRegistry().register(species); });
 	}
 	
 	protected void apply(Map<ResourceLocation, JsonElement> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn)

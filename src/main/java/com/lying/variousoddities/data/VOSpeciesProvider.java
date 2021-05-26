@@ -32,7 +32,7 @@ public class VOSpeciesProvider implements IDataProvider
 	{
 		Path path = this.dataGenerator.getOutputFolder();
 		Map<ResourceLocation, Species> map = Maps.newHashMap();
-		SpeciesRegistry.DEFAULT_SPECIES.forEach((species) -> 
+		SpeciesRegistry.getDefaultSpecies().forEach((species) -> 
 			{
 				if(map.put(species.getRegistryName(), species) != null)
 					throw new IllegalStateException("Duplicate species "+species.getRegistryName());

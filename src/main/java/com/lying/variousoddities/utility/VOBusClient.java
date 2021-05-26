@@ -1,5 +1,6 @@
 package com.lying.variousoddities.utility;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
+import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketAirJump;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.CommonProxy;
@@ -26,16 +28,21 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.play.client.CEntityActionPacket;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
@@ -48,6 +55,8 @@ import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.data.EmptyModelData;
@@ -193,8 +202,69 @@ public class VOBusClient
 		
 		// Supplementary rendering to aid blind players in basic functioning
 		if(VOBusClient.playerIsBlind() && mc.gameSettings.getPointOfView() == PointOfView.FIRST_PERSON)
-			for(BlockPos pos : BLIND_RENDERS.keySet())
+		{
+			BlockPos playerPos = new BlockPos(player.getPosX(), player.getPosYEye(), player.getPosZ());
+			List<BlockPos> blindRenders = Lists.newArrayList();
+			blindRenders.addAll(BLIND_RENDERS.keySet());
+			blindRenders.sort(new Comparator<BlockPos>()
+					{
+						public int compare(BlockPos o1, BlockPos o2)
+						{
+							double o1Dist = o1.distanceSq(playerPos);
+							double o2Dist = o2.distanceSq(playerPos);
+							return o1Dist > o2Dist ? -1 : o1Dist < o2Dist ? 1 : 0;
+						}
+					});
+			for(BlockPos pos : blindRenders)
 				renderBlock(world.getBlockState(pos), pos, world, event.getMatrixStack(), partialTicks);
+		}
+	}
+	
+	private static int dazzledTime = 0;
+	
+	@SuppressWarnings("deprecation")
+	@SubscribeEvent
+	public static void onRenderDazzled(RenderGameOverlayEvent.Pre event)
+	{
+		Minecraft mc = Minecraft.getInstance();
+		if(event.getType() != ElementType.VIGNETTE || mc.player == null)
+			return;
+		
+		PlayerEntity player = mc.player;
+		EffectInstance dazzle = player.getActivePotionEffect(VOPotions.DAZZLED);
+		if(dazzle != null && dazzle.getDuration() > 0)
+		{
+			int scaledWidth = mc.getMainWindow().getScaledWidth();
+			int scaledHeight = mc.getMainWindow().getScaledHeight();
+			
+			int fadeTime = Reference.Values.TICKS_PER_SECOND * 5;
+			int time = 0;
+			if(dazzle.getDuration() >= fadeTime)
+				time = dazzledTime++;
+			else
+				time = dazzledTime = dazzle.getDuration();
+			float alpha = Math.min(1F, (float)time / (float)fadeTime);
+			
+			RenderSystem.disableDepthTest();
+		    RenderSystem.depthMask(false);
+		    RenderSystem.color4f(1.0F, 1.0F, 1.0F, alpha);
+			mc.getTextureManager().bindTexture(new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/misc/vignette_dazzled.png"));
+		    Tessellator tessellator = Tessellator.getInstance();
+		    BufferBuilder bufferbuilder = tessellator.getBuffer();
+		    bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+			    bufferbuilder.pos(0.0D, (double)scaledHeight, -90.0D).tex(0.0F, 1.0F).endVertex();
+			    bufferbuilder.pos((double)scaledWidth, (double)scaledHeight, -90.0D).tex(1.0F, 1.0F).endVertex();
+			    bufferbuilder.pos((double)scaledWidth, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
+			    bufferbuilder.pos(0.0D, 0.0D, -90.0D).tex(0.0F, 0.0F).endVertex();
+		    tessellator.draw();
+		    RenderSystem.depthMask(true);
+		    RenderSystem.enableDepthTest();
+		    RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			
+			event.setCanceled(true);
+		}
+		else
+			dazzledTime = 0;
 	}
 	
 	private static void renderBlock(BlockState state, BlockPos pos, World world, MatrixStack stack, float partialTicks)

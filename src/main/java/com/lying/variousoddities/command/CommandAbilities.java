@@ -6,10 +6,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.species.Species;
-import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.mojang.brigadier.CommandDispatcher;
@@ -52,11 +49,6 @@ public class CommandAbilities extends CommandBase
 	
 	public static void register(CommandDispatcher<CommandSource> dispatcher)
 	{
-		/**
-		 * Apply
-		 * 	Species
-		 * 	Template
-		 */
 		LiteralArgumentBuilder<CommandSource> literal = newLiteral("abilities").requires((source) -> { return source.hasPermissionLevel(2); } )
 			.then(newArgument(ENTITY, EntityArgument.entity())
 				.then(newLiteral("list").executes((source) -> { return listAbilities(EntityArgument.getEntity(source, ENTITY), source.getSource()); }))
@@ -64,8 +56,7 @@ public class CommandAbilities extends CommandBase
 				.then(VariantAdd.build())
 				.then(VariantEdit.build())
 				.then(VariantRemove.build())
-				.then(newLiteral("clear").executes((source) -> { return clearAbilities(EntityArgument.getEntity(source, ENTITY), source.getSource()); }))
-				.then(VariantSpecies.build()));
+				.then(newLiteral("clear").executes((source) -> { return clearAbilities(EntityArgument.getEntity(source, ENTITY), source.getSource()); })));
 		
 		dispatcher.register(literal);
 	}
@@ -228,68 +219,6 @@ public class CommandAbilities extends CommandBase
 				LivingData data = LivingData.forEntity(living);
 				data.getAbilities().remove(mapName);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"remove", mapName, living.getDisplayName()), true);
-			}
-			return 15;
-		}
-	}
-	
-	private static class VariantSpecies
-	{
-	 	public static final SuggestionProvider<CommandSource> SPECIES_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("species_names"), (context, builder) -> {
-	 		return ISuggestionProvider.suggestIterable(VORegistries.SPECIES.getKeys(), builder);
-	 		});
-	 	
-		private static final DynamicCommandExceptionType SPECIES_MISSING_EXCEPTION = new DynamicCommandExceptionType((p_208922_0_) -> {
-			return new TranslationTextComponent("command.varodd.abilities.species.missing", p_208922_0_);
-		});
-		private static final DynamicCommandExceptionType SPECIES_INVALID_EXCEPTION = new DynamicCommandExceptionType((p_208922_0_) -> {
-			return new TranslationTextComponent("command.varodd.abilities.species.invalid", p_208922_0_);
-		});
-		
-		private static final String NAME = "species";
-		
-		public static LiteralArgumentBuilder<CommandSource> build()
-		{
-			return newLiteral("species")
-					.executes((source) -> { return getSpecies(EntityArgument.getEntity(source, ENTITY), source.getSource()); })
-					.then(newArgument(NAME, ResourceLocationArgument.resourceLocation()).suggests(SPECIES_SUGGESTIONS)
-						.executes((source) -> { return setSpecies(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, NAME), source.getSource()); }));
-		}
-		
-		private static int getSpecies(Entity entity, CommandSource source) throws CommandSyntaxException
-		{
-			if(entity instanceof LivingEntity)
-			{
-				LivingEntity living = (LivingEntity)entity;
-				LivingData data = LivingData.forEntity(living);
-				if(data.getSpecies() != null)
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"species.get", data.getSpecies().getRegistryName()), true);
-				else
-					throw SPECIES_MISSING_EXCEPTION.create(living.getDisplayName());
-			}
-			return 15;
-		}
-		
-		private static int setSpecies(Entity entity, ResourceLocation name, CommandSource source) throws CommandSyntaxException
-		{
-			if(entity instanceof LivingEntity)
-			{
-				LivingEntity living = (LivingEntity)entity;
-				LivingData data = LivingData.forEntity(living);
-				
-				/*
-				 * Retrieve species from name
-				 * Remove existing species (if any) from entity
-				 * Apply new species to entity
-				 */
-				Species species = SpeciesRegistry.getSpecies(name);
-				if(species != null)
-				{
-					data.setSpecies(species);
-					source.sendFeedback(new StringTextComponent("Found species: "+name), true);
-				}
-				else
-					throw SPECIES_INVALID_EXCEPTION.create(name);
 			}
 			return 15;
 		}

@@ -65,6 +65,7 @@ public class AbilityRegistry
 		registry.register(new AbilityIncorporeality.Builder());
 		registry.register(new AbilityInvisibility.Builder());
 		registry.register(new AbilityNaturalArmour.Builder());
+		registry.register(new AbilityLightSensitivity.Builder());
 		registry.register(new AbilityNaturalRegen.Builder());
 		registry.register(new AbilityPoison.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());
@@ -117,7 +118,6 @@ public class AbilityRegistry
 	public static Map<ResourceLocation, Ability> getCreatureAbilities(@Nonnull LivingEntity entity)
 	{
 		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
-		
 		if(entity != null)
 		{
 			// Collect abilities from creature's types

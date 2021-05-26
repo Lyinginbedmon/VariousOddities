@@ -150,8 +150,10 @@ public class CommandTypes extends CommandBase
     	
     	public static int listEntity(Entity entity, CommandSource source) throws CommandSyntaxException
     	{
-    		TypesManager manager = TypesManager.get(source.getWorld());
-    		return listTypes(manager.getMobTypes(entity), entity.getDisplayName(), source, false, true);
+    		if(entity instanceof LivingEntity)
+        		return listTypes(EnumCreatureType.getCreatureTypes((LivingEntity)entity), entity.getDisplayName(), source, false, true);
+    		else
+    			throw LIST_FAILED_EXCEPTION.create();
     	}
     	
     	private static int listTypes(List<EnumCreatureType> types, ITextComponent identifier, CommandSource source, boolean grey, boolean log) throws CommandSyntaxException
