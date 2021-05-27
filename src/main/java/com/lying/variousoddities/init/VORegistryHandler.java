@@ -1,7 +1,5 @@
 package com.lying.variousoddities.init;
 
-import com.lying.variousoddities.species.Species;
-import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
@@ -24,9 +22,9 @@ public class VORegistryHandler
 		AbilityRegistry.onRegisterAbilities(event);
     }
 	
-	@SubscribeEvent
-    public void onRegisterSpecies(RegistryEvent.Register<Species> event)
-    {
-    	SpeciesRegistry.onRegisterSpecies(event);
-    }
+//	@SubscribeEvent
+//    public void onRegisterSpecies(RegistryEvent.Register<Species> event)
+//    {
+//    	SpeciesRegistry.onRegisterSpecies(event);
+//    }
 }

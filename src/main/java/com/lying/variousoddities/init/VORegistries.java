@@ -1,5 +1,8 @@
 package com.lying.variousoddities.init;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.abilities.Ability;
@@ -11,16 +14,17 @@ import net.minecraftforge.registries.RegistryBuilder;
 
 public class VORegistries
 {
-	private static final ResourceLocation ABILITY_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities"); 
-	private static final ResourceLocation SPECIES_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "species"); 
+	private static final ResourceLocation ABILITY_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities");
+	
+//	private static final ResourceLocation SPECIES_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "species");
 	
 	public static final IForgeRegistry<Ability.Builder> ABILITIES;
-	public static final IForgeRegistry<Species> SPECIES;
+	public static final Map<ResourceLocation, Species> SPECIES = new HashMap<>();
 	
 	static
 	{
 		ABILITIES = makeRegistry(ABILITY_REG, Ability.Builder.class, Integer.MAX_VALUE >> 5);
-		SPECIES = makeRegistry(SPECIES_REG, Species.class, Integer.MAX_VALUE >> 5);
+//		SPECIES = makeRegistry(SPECIES_REG, Species.class, Integer.MAX_VALUE >> 5);
 	}
 	
 	public static void init(){ }

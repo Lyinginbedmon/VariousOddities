@@ -36,7 +36,6 @@ import net.minecraft.potion.Effects;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.event.RegistryEvent;
 
 public class SpeciesRegistry extends JsonReloadListener
 {
@@ -61,20 +60,20 @@ public class SpeciesRegistry extends JsonReloadListener
 	
 	public SpeciesRegistry()
 	{
-		super(GSON, "varodd_species");
+		super(GSON, "varodd/species");
 	}
 	
 	public static List<Species> getDefaultSpecies(){ return Lists.newArrayList(DEFAULT_SPECIES); }
 	
-	public static void onRegisterSpecies(RegistryEvent.Register<Species> event)
-	{
-		/*
-		 * Load species from datapack files
-		 */
-		
-		if(VORegistries.SPECIES.isEmpty())
-			DEFAULT_SPECIES.forEach((species) -> { event.getRegistry().register(species); });
-	}
+//	public static void onRegisterSpecies(RegistryEvent.Register<Species> event)
+//	{
+//		/*
+//		 * Load species from datapack files
+//		 */
+//		
+//		if(VORegistries.SPECIES.isEmpty())
+//			DEFAULT_SPECIES.forEach((species) -> { event.getRegistry().register(species); });
+//	}
 	
 	protected void apply(Map<ResourceLocation, JsonElement> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn)
 	{
@@ -93,7 +92,11 @@ public class SpeciesRegistry extends JsonReloadListener
             }
         });
 		
-		loaded.forEach((name,species) -> { VORegistries.SPECIES.register(species); });
+		loaded.forEach((name,species) -> { VORegistries.SPECIES.put(species.getRegistryName(), species); });
+		
+		// If no species were found in the datapack, load the defaults
+//		if(loaded.isEmpty())
+//			DEFAULT_SPECIES.forEach((species) -> { VORegistries.SPECIES.put(species.getRegistryName(), species); });
 	}
 	
 	static
@@ -156,7 +159,7 @@ public class SpeciesRegistry extends JsonReloadListener
 	public static Species getSpecies(ResourceLocation nameIn)
 	{
 		if(VORegistries.SPECIES.containsKey(nameIn))
-			return VORegistries.SPECIES.getValue(nameIn);
+			return VORegistries.SPECIES.get(nameIn);
 		else
 			return null;
 	}

@@ -35,7 +35,7 @@ import net.minecraft.util.text.event.HoverEvent;
 public class CommandSpecies extends CommandBase
 {
  	public static final SuggestionProvider<CommandSource> SPECIES_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("species_names"), (context, builder) -> {
- 		return ISuggestionProvider.suggestIterable(VORegistries.SPECIES.getKeys(), builder);
+ 		return ISuggestionProvider.suggestIterable(VORegistries.SPECIES.keySet(), builder);
  		});
  	
 	private static final DynamicCommandExceptionType SPECIES_MISSING_EXCEPTION = new DynamicCommandExceptionType((p_208922_0_) -> {
@@ -85,7 +85,7 @@ public class CommandSpecies extends CommandBase
 	
 	private static int listSpecies(CommandSource source)
 	{
-		Set<ResourceLocation> speciesNames = VORegistries.SPECIES.getKeys();
+		Set<ResourceLocation> speciesNames = VORegistries.SPECIES.keySet();
 		source.sendFeedback(new TranslationTextComponent(translationSlug+"list", speciesNames.size()), true);
 		for(ResourceLocation name : speciesNames)
 			source.sendFeedback(new StringTextComponent(" -").append(getSpeciesWithInfo(name)), false);
@@ -95,7 +95,7 @@ public class CommandSpecies extends CommandBase
 	
 	private static int detailSpecies(ResourceLocation speciesName, CommandSource source) throws CommandSyntaxException
 	{
-		Species species = VORegistries.SPECIES.getValue(speciesName);
+		Species species = VORegistries.SPECIES.get(speciesName);
 		if(species == null)
 			throw SPECIES_INVALID_EXCEPTION.create(speciesName);
 		
