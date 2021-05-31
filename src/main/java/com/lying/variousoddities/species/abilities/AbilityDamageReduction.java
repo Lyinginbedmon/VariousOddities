@@ -104,14 +104,18 @@ public class AbilityDamageReduction extends Ability
 	
 	public boolean applysTo(DamageSource source)
 	{
-		if(!source.isUnblockable())
+		if(source.isUnblockable())
+			return false;
+		else
 		{
+			// Check if source has every damage type exception
 			EnumSet<DamageType> damageTypes = DamageType.getDamageTypes(source);
 			for(DamageType type : exceptions)
 				if(!damageTypes.contains(type))
 					return true;
+			
+			return false;
 		}
-		return false;
 	}
 	
 	public static class Builder extends Ability.Builder

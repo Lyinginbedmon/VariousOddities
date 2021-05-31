@@ -410,7 +410,7 @@
 	"ability.varodd:natural_regen": "Unnatural Resilience",
 	"ability.varodd:water_walking": "Water Walking",
 	"ability.varodd.tremorsense": "Tremorsense %sm",
-	"ability.varodd.resistance_spell": "Immune to %s",
+	"ability.varodd.resistance_spell": "Immune to %s spells",
 	"ability.varodd.flying.active": "Flying (%s)",
 	"ability.varodd.flying.inactive": "Flight (%s)",
 	"ability.varodd.climb.active": "Climbing",

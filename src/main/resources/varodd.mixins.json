@@ -27,6 +27,7 @@
 		"OverlayRendererMixin",
 		"TileEntityRenderDispatcherMixin",
 		"WorldRendererMixin",
-		"ElytraMixinClient"
+		"ElytraMixinClient",
+		"MovementInputMixin"
 	]
 }

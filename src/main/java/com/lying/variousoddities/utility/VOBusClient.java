@@ -55,6 +55,7 @@ import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -162,6 +163,14 @@ public class VOBusClient
 	            event.getMatrixStack().pop();
 	        }
 		}
+	}
+	
+	@SubscribeEvent
+	public static void onDazedClickEvent(InputEvent.ClickInputEvent event)
+	{
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && VOPotions.isPotionActive(player, VOPotions.DAZED))
+			event.setCanceled(true);
 	}
 	
 	private static final Map<BlockPos, Integer> BLIND_RENDERS = new HashMap<>();

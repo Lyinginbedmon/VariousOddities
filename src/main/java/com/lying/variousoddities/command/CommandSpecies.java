@@ -22,7 +22,6 @@ import net.minecraft.command.arguments.ResourceLocationArgument;
 import net.minecraft.command.arguments.SuggestionProviders;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -59,8 +58,6 @@ public class CommandSpecies extends CommandBase
 				.then(newLiteral("info")
 					.then(newArgument(NAME, ResourceLocationArgument.resourceLocation()).suggests(SPECIES_SUGGESTIONS)
 						.executes((source) -> { return detailSpecies(ResourceLocationArgument.getResourceLocation(source, NAME), source.getSource()); })))
-				.then(newLiteral("reload")
-					.executes((source) -> { return reloadSpecies(source.getSource()); }))
 				.then(newLiteral("get")
 					.then(newArgument(ENTITY, EntityArgument.entity())
 						.executes((source) -> { return getSpecies(EntityArgument.getEntity(source, ENTITY), source.getSource()); })))
@@ -100,21 +97,14 @@ public class CommandSpecies extends CommandBase
 			throw SPECIES_INVALID_EXCEPTION.create(speciesName);
 		
 		source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", species.getRegistryName().toString()), true);
-		source.sendFeedback((new Types(species.getTypes())).toHeader(), false);
+		if(species.hasTypes())
+			source.sendFeedback(new Types(species.getTypes()).toHeader(), false);
 		if(!species.getAbilities().isEmpty())
 		{
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_abilities"), false);
 			for(Ability ability : species.getAbilities())
 				source.sendFeedback(new StringTextComponent(" -").append(ability.getDisplayName()), false);
 		}
-		
-		return 15;
-	}
-	
-	private static int reloadSpecies(CommandSource source)
-	{
-		MinecraftServer server = source.getServer();
-		server.getDataPackRegistries().getResourceManager();
 		return 15;
 	}
 	

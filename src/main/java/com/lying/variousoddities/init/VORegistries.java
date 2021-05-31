@@ -16,15 +16,12 @@ public class VORegistries
 {
 	private static final ResourceLocation ABILITY_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities");
 	
-//	private static final ResourceLocation SPECIES_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "species");
-	
 	public static final IForgeRegistry<Ability.Builder> ABILITIES;
 	public static final Map<ResourceLocation, Species> SPECIES = new HashMap<>();
 	
 	static
 	{
 		ABILITIES = makeRegistry(ABILITY_REG, Ability.Builder.class, Integer.MAX_VALUE >> 5);
-//		SPECIES = makeRegistry(SPECIES_REG, Species.class, Integer.MAX_VALUE >> 5);
 	}
 	
 	public static void init(){ }

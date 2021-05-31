@@ -60,20 +60,10 @@ public class SpeciesRegistry extends JsonReloadListener
 	
 	public SpeciesRegistry()
 	{
-		super(GSON, "varodd/species");
+		super(GSON, "species");
 	}
 	
 	public static List<Species> getDefaultSpecies(){ return Lists.newArrayList(DEFAULT_SPECIES); }
-	
-//	public static void onRegisterSpecies(RegistryEvent.Register<Species> event)
-//	{
-//		/*
-//		 * Load species from datapack files
-//		 */
-//		
-//		if(VORegistries.SPECIES.isEmpty())
-//			DEFAULT_SPECIES.forEach((species) -> { event.getRegistry().register(species); });
-//	}
 	
 	protected void apply(Map<ResourceLocation, JsonElement> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn)
 	{
@@ -82,21 +72,32 @@ public class SpeciesRegistry extends JsonReloadListener
 		objectIn.forEach((name, json) -> {
             try
             {
-                Species builder = GSON.fromJson(json, Species.class);
+                Species builder = Species.fromJson(json);
                 if(builder != null)
+                {
+                	VariousOddities.log.info(" -Loaded: "+name.toString());
+                	builder.setRegistryName(name);
                     loaded.put(name, builder);
+                }
             }
             catch (IllegalArgumentException | JsonParseException e)
             {
                 VariousOddities.log.error("Failed to load species {}: {}", name);
             }
+            catch(Exception e)
+            {
+            	VariousOddities.log.error("Unrecognised error loading species {}", name);
+            }
         });
 		
-		loaded.forEach((name,species) -> { VORegistries.SPECIES.put(species.getRegistryName(), species); });
+		loaded.forEach((name,species) -> { VORegistries.SPECIES.put(name, species); });
 		
 		// If no species were found in the datapack, load the defaults
-//		if(loaded.isEmpty())
-//			DEFAULT_SPECIES.forEach((species) -> { VORegistries.SPECIES.put(species.getRegistryName(), species); });
+		if(loaded.isEmpty())
+		{
+			VariousOddities.log.warn("No species found, loading defaults");
+			DEFAULT_SPECIES.forEach((species) -> { VORegistries.SPECIES.put(species.getRegistryName(), species); });
+		}
 	}
 	
 	static
@@ -171,7 +172,7 @@ public class SpeciesRegistry extends JsonReloadListener
 		Species species = getSpecies(name);
 		if(species != null)
 		{
-			SpeciesInstance instance = species.create();
+			SpeciesInstance instance = species.createInstance();
 			instance.readFromNBT(compound);
 			return instance;
 		}

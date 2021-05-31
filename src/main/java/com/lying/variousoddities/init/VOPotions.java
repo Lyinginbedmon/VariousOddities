@@ -7,9 +7,7 @@ import java.util.Map;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.lying.variousoddities.potion.PotionDazzled;
-import com.lying.variousoddities.potion.PotionParalysis;
-import com.lying.variousoddities.potion.PotionSleep;
+import com.lying.variousoddities.potion.*;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -32,6 +30,7 @@ public class VOPotions
 	public static final Effect SLEEP				= addPotion(new PotionSleep(3973574));
 	public static final Effect PARALYSIS			= addPotion(new PotionParalysis(-1));
 	public static final Effect DAZZLED				= addPotion(new PotionDazzled(-1));
+	public static final Effect DAZED				= addPotion(new PotionDazed(-1));
 	
 	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
 	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();

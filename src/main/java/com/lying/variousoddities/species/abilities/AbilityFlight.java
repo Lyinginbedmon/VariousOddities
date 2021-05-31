@@ -67,15 +67,15 @@ public class AbilityFlight extends AbilityMoveMode
 	public void addSlowFalling(LivingUpdateEvent event)
 	{
 		LivingEntity entity = event.getEntityLiving();
+		
+		ModifiableAttributeInstance gravity = entity.getAttribute(ForgeMod.ENTITY_GRAVITY.get());
+		if(gravity == null)
+			return;
+		AttributeModifier mod = gravity.getModifier(GRAVITY_UUID);
+		
 		if(AbilityRegistry.hasAbility(entity, REGISTRY_NAME))
 		{
 			AbilityFlight flight = (AbilityFlight)AbilityRegistry.getAbilityByName(entity, getMapName());
-			
-			ModifiableAttributeInstance gravity = entity.getAttribute(ForgeMod.ENTITY_GRAVITY.get());
-			if(gravity == null)
-				return;
-			
-			AttributeModifier mod = gravity.getModifier(GRAVITY_UUID);
 			if(!flight.active())
 			{
 				if(mod != null)
@@ -103,6 +103,8 @@ public class AbilityFlight extends AbilityMoveMode
 				}
 			}
 		}
+		else if(mod != null)
+			gravity.removeModifier(GRAVITY_UUID);
 	}
 	
 	public void handleAirJumps(AbilityUpdateEvent event)

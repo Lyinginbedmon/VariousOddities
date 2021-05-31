@@ -199,7 +199,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public boolean hasSpecies(){ return this.species != null; }
 	public SpeciesInstance getSpecies(){ return this.species; }
 	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; }
-	public void setSpecies(Species speciesIn){ this.species = speciesIn.create(); }
+	public void setSpecies(Species speciesIn){ this.species = speciesIn.createInstance(); }
 	
 	public List<EnumCreatureType> getTypesFromSpecies()
 	{

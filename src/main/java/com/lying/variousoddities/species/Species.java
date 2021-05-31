@@ -9,20 +9,23 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 
-public class Species extends ForgeRegistryEntry<Species>
+public class Species
 {
+	private ResourceLocation registryName;
+	
 	private boolean canPlayerSelect = true;
 	private int power = 0;
 	
@@ -32,8 +35,12 @@ public class Species extends ForgeRegistryEntry<Species>
 	
 	public Species(ResourceLocation name)
 	{
-		setRegistryName(name);
+		this.registryName = name;
 	}
+	
+	public final void setRegistryName(ResourceLocation name){ this.registryName = name; }
+	
+	public final ResourceLocation getRegistryName(){ return this.registryName; }
 	
 	/**
 	 * Whether this species should be selectable from the species select screen.
@@ -87,11 +94,14 @@ public class Species extends ForgeRegistryEntry<Species>
 		return this;
 	}
 	
+	public boolean hasTypes(){ return !this.types.isEmpty(); }
+	
 	public List<EnumCreatureType> getTypes(){ return this.types; }
 	
 	public JsonObject toJson()
 	{
 		JsonObject json = new JsonObject();
+		
 		json.addProperty("CanPlayerSelect", this.isPlayerSelectable());
 		json.addProperty("Power", getPower());
 		
@@ -111,7 +121,54 @@ public class Species extends ForgeRegistryEntry<Species>
 		return json;
 	}
 	
-	public SpeciesInstance create()
+	public static Species fromJson(@Nullable JsonElement json)
+	{
+		if(json == null)
+			return null;
+		JsonObject object = json.getAsJsonObject();
+		
+		Species species = new Species(null);
+		
+		if(object.has("CanPlayerSelect"))
+			species.setPlayerSelect(object.get("CanPlayerSelect").getAsBoolean());
+		
+		if(object.has("Power"))
+			species.setPower(object.get("Power").getAsInt());
+		
+		if(object.has("Dimension"))
+			species.setOriginDimension(new ResourceLocation(object.get("Dimension").getAsString()));
+		
+		if(object.has("Types"))
+		{
+			JsonArray typeList = object.get("Types").getAsJsonArray();
+			for(int i=0; i<typeList.size(); i++)
+			{
+				EnumCreatureType type = EnumCreatureType.fromName(typeList.get(i).getAsString());
+				if(type != null)
+					species.addType(type);
+			}
+		}
+		
+		if(object.has("Abilities"))
+		{
+			JsonArray abilityList = object.get("Abilities").getAsJsonArray();
+			for(int i=0; i<abilityList.size(); i++)
+			{
+				try
+				{
+					CompoundNBT data = JsonToNBT.getTagFromJson(abilityList.get(i).getAsString());
+					Ability ability = AbilityRegistry.getAbility(data);
+					if(ability != null)
+						species.addAbility(ability);
+				}
+				catch(Exception e){ }
+			}
+		}
+		
+		return species;
+	}
+	
+	public SpeciesInstance createInstance()
 	{
 		return new SpeciesInstance(getRegistryName()).addOriginDimension(this.origin).addTypes(this.types).addAbilities(this.abilities);
 	}
