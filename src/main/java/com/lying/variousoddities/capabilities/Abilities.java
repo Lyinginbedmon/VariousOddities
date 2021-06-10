@@ -1,21 +1,25 @@
 package com.lying.variousoddities.capabilities;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.api.event.AbilityEvent.AbilityAddEvent;
+import com.lying.variousoddities.api.event.AbilityEvent.AbilityRemoveEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
+import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAbilities;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -29,11 +33,16 @@ import net.minecraftforge.common.MinecraftForge;
 
 public class Abilities
 {
+	private static final UUID UUID_ABILITIES = UUID.fromString("f7bc7eeb-69ea-43c7-8b3a-e85f1abbc817");
+	
 	public static int FAVOURITE_SLOTS = 5;
 	
-	protected Map<ResourceLocation, Ability> abilities = new HashMap<>();
+	protected Map<ResourceLocation, Ability> customAbilities = new HashMap<>();
 	protected Map<ResourceLocation, Integer> cooldowns = new HashMap<>();
 	protected ResourceLocation[] favourites = new ResourceLocation[FAVOURITE_SLOTS];
+	
+	private Map<ResourceLocation, Ability> cachedAbilities = new HashMap<>();
+	private boolean cacheDirty = false;
 	
 	public boolean canAirJump = false;
 	public int airJumpTimer = 0;
@@ -50,13 +59,15 @@ public class Abilities
 		}
 	}
 	
+	public void markForRecache(){ this.cacheDirty = true; }
+	
 	public CompoundNBT serializeNBT()
 	{
 		CompoundNBT compound = new CompoundNBT();
-		if(!abilities.isEmpty())
+		if(!customAbilities.isEmpty())
 		{
 			ListNBT abilityList = new ListNBT();
-			for(Ability ability : abilities.values())
+			for(Ability ability : customAbilities.values())
 			{
 				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
 				ResourceLocation mapName = ability.getMapName();
@@ -71,6 +82,24 @@ public class Abilities
 			}
 			compound.put("Abilities", abilityList);
 		}
+		if(!cachedAbilities.isEmpty())
+		{
+			ListNBT abilityList = new ListNBT();
+			for(Ability ability : cachedAbilities.values())
+			{
+				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				ResourceLocation mapName = ability.getMapName();
+				
+				if(isAbilityOnCooldown(mapName))
+					abilityData.putInt("Cooldown", this.cooldowns.get(mapName));
+				
+				if(isFavourite(mapName))
+					abilityData.putInt("Favourite", favouriteIndex(mapName));
+				
+				abilityList.add(abilityData);
+			}
+			compound.put("CachedAbilities", abilityList);
+		}
 		compound.putBoolean("CanJump", this.canAirJump);
 		compound.putInt("JumpTimer", this.airJumpTimer);
 		return compound;
@@ -78,7 +107,8 @@ public class Abilities
 	
 	public void deserializeNBT(CompoundNBT nbt)
 	{
-		this.abilities.clear();
+		this.customAbilities.clear();
+		this.cachedAbilities.clear();
 		this.cooldowns.clear();
 		if(nbt.contains("Abilities", 9))
 		{
@@ -90,7 +120,7 @@ public class Abilities
 				Ability ability = AbilityRegistry.getAbility(abilityData);
 				if(ability != null)
 				{
-					add(ability);
+					addCustomAbility(ability);
 					
 					ResourceLocation mapName = ability.getMapName();
 					if(abilityData.contains("Cooldown", 3))
@@ -101,38 +131,86 @@ public class Abilities
 				}
 			}
 		}
+		if(nbt.contains("CachedAbilities", 9))
+		{
+			ListNBT abilityList = nbt.getList("CachedAbilities", 10);
+			this.favourites = new ResourceLocation[this.favourites.length];
+			for(int i=0; i<abilityList.size(); i++)
+			{
+				CompoundNBT abilityData = abilityList.getCompound(i);
+				Ability ability = AbilityRegistry.getAbility(abilityData);
+				if(ability != null)
+				{
+					cacheAbility(ability);
+					
+					ResourceLocation mapName = ability.getMapName();
+					if(abilityData.contains("Cooldown", 3))
+						this.cooldowns.put(mapName, abilityData.getInt("Cooldown"));
+					
+					if(abilityData.contains("Favourite", 3))
+						this.favourites[abilityData.getInt("Favourite") % this.favourites.length] = mapName;
+				}
+			}
+			markForRecache();
+			markDirty();
+		}
 		
 		this.canAirJump = nbt.getBoolean("CanJump");
 		this.airJumpTimer = nbt.getInt("JumpTimer");
 	}
 	
-	public Collection<ResourceLocation> names(){ return this.abilities.keySet(); }
+	public int size(){ return this.customAbilities.size(); }
 	
-	public int size(){ return this.abilities.size(); }
-	
-	public void add(@Nonnull Ability ability)
+	private void cacheAbility(@Nonnull Ability ability)
 	{
 		try
 		{
-			this.abilities.put(ability.getMapName(), ability);
+			this.cachedAbilities.put(ability.getMapName(), ability);
 			markDirty();
 		}
 		catch(Exception e){ }
 	}
 	
-	public void remove(ResourceLocation mapName)
+	private void uncacheAbility(@Nonnull ResourceLocation mapName)
 	{
-		this.abilities.remove(mapName);
+		try
+		{
+			this.cachedAbilities.remove(mapName);
+			markDirty();
+		}
+		catch(Exception e){ }
+	}
+	
+	public void addCustomAbility(@Nonnull Ability ability)
+	{
+		try
+		{
+			this.customAbilities.put(ability.getMapName(), ability.setSourceId(UUID_ABILITIES));
+			if(this.entity != null)
+				ability.onAbilityAdded(this.entity);
+			markForRecache();
+			markDirty();
+		}
+		catch(Exception e){ }
+	}
+	
+	public void removeCustomAbility(ResourceLocation mapName)
+	{
+		Ability ability = this.customAbilities.get(mapName);
+		if(ability != null && this.entity != null)
+			ability.onAbilityRemoved(this.entity);
+		this.customAbilities.remove(mapName);
+		markForRecache();
 		markDirty();
 	}
 	
-	public void remove(Ability ability){ remove(ability.getMapName()); };
+	public void removeCustomAbility(Ability ability){ removeCustomAbility(ability.getMapName()); uncacheAbility(ability.getMapName()); };
 	
-	public void clear(){ this.abilities.clear(); markDirty(); }
+	public void clearCustomAbilities(){ this.customAbilities.clear(); markForRecache(); markDirty(); }
 	
-	public Map<ResourceLocation, Ability> addToMap(Map<ResourceLocation, Ability> abilityMap)
+	public Map<ResourceLocation, Ability> addCustomToMap(Map<ResourceLocation, Ability> abilityMap)
 	{
-		for(Ability ability : abilities.values())
+		for(Ability ability : customAbilities.values())
 			abilityMap.put(ability.getMapName(), ability);
 		return abilityMap;
 	}
@@ -215,6 +293,10 @@ public class Abilities
 		boolean dirty = false;
 		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
 		{
+			// Refresh cached abilities
+			if(this.cacheDirty)
+				updateAbilityCache();
+			
 			// Manage cooldowns
 			List<ResourceLocation> finishedCooldowns = Lists.newArrayList();
 			for(ResourceLocation mapName : cooldowns.keySet())
@@ -251,6 +333,81 @@ public class Abilities
 			markDirty();
 	}
 	
+	public Map<ResourceLocation, Ability> getCachedAbilities()
+	{
+		return this.cachedAbilities;
+	}
+	
+	private Map<ResourceLocation, Ability> getCurrentAbilities()
+	{
+		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
+		if(this.entity != null)
+		{
+			// Collect abilities from creature's types
+			EnumCreatureType.getTypes(this.entity).addAbilitiesToMap(abilityMap);
+			
+			// Collect abilities from creature's LivingData
+			LivingData data = LivingData.forEntity(this.entity);
+			if(data != null)
+			{
+				if(data.hasSpecies())
+					abilityMap = data.getSpecies().addToMap(abilityMap);
+				abilityMap = data.getAbilities().addCustomToMap(abilityMap);
+			}
+			
+			GatherAbilitiesEvent event = new GatherAbilitiesEvent(this.entity, abilityMap);
+			MinecraftForge.EVENT_BUS.post(event);
+			
+			abilityMap = event.getAbilityMap();
+		}
+		
+		return abilityMap;
+	}
+	
+	private void updateAbilityCache()
+	{
+		if(this.entity == null)
+			return;
+		
+		boolean dirty = false;
+		
+		Map<ResourceLocation, Ability> currentAbilities = getCurrentAbilities();
+		// If a map name in cachedAbilities doesn't exist in currentAbilities, remove it from cachedAbilities
+		List<ResourceLocation> removedAbilities = Lists.newArrayList();
+		cachedAbilities.keySet().forEach((mapname) -> { if(!currentAbilities.containsKey(mapname)) removedAbilities.add(mapname); });
+		if(!removedAbilities.isEmpty())
+			dirty = true;
+		removedAbilities.forEach((mapname) -> 
+		{
+			Ability ability = cachedAbilities.get(mapname);
+			ability.onAbilityRemoved(this.entity);
+			MinecraftForge.EVENT_BUS.post(new AbilityRemoveEvent(this.entity, ability, this));
+			uncacheAbility(mapname);
+		});
+		
+		List<ResourceLocation> overrides = Lists.newArrayList();
+		currentAbilities.forEach((mapname,ability) -> 
+		{
+			// If a map name exists in currentAbilities that isn't in cachedAbilities, add it to cachedAbilities
+			// If the source ID of an ability in currentAbilities doesn't match its counterpart in cachedAbilities, overwrite it in cachedAbilities
+			if(!cachedAbilities.containsKey(mapname) || !ability.getSourceId().equals(cachedAbilities.get(mapname).getSourceId()))
+				overrides.add(mapname);
+		});
+		if(!overrides.isEmpty())
+			dirty = true;
+		overrides.forEach((mapname) -> 
+		{
+			Ability ability = currentAbilities.get(mapname);
+			ability.onAbilityAdded(this.entity);
+			MinecraftForge.EVENT_BUS.post(new AbilityAddEvent(this.entity, ability, this));
+			cacheAbility(ability);
+		});
+		
+		if(dirty)
+			markDirty();
+		this.cacheDirty = false;
+	}
+	
 	public void doAirJump()
 	{
 		if(this.entity == null || this.entity.isOnGround())
@@ -260,6 +417,9 @@ public class Abilities
 			return;
 		
 		AbilityFlight flight = (AbilityFlight)abilities.get(AbilityFlight.REGISTRY_NAME);
+		if(!flight.isActive())
+			return;
+		
 		double scale = flight.flySpeed();
 		Vector3d motion = entity.getLookVec();
 		entity.setMotion(motion.x * scale, motion.y * scale, motion.z * scale);
@@ -268,14 +428,15 @@ public class Abilities
 			entity.getEntityWorld().playSound(entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, entity.getSoundCategory(), 5.0F, 0.8F + entity.getRNG().nextFloat() * 0.3F, false);
 		
 		this.canAirJump = false;
+		this.airJumpTimer = 0;
 		markDirty();
 	}
 	
 	public void copy(Abilities data)
 	{
-		this.abilities.clear();
-		for(Ability ability : data.abilities.values())
-			this.abilities.put(ability.getMapName(), ability);
+		this.customAbilities.clear();
+		for(Ability ability : data.customAbilities.values())
+			this.customAbilities.put(ability.getMapName(), ability);
 		
 		this.cooldowns.clear();
 		for(ResourceLocation mapName : data.cooldowns.keySet())

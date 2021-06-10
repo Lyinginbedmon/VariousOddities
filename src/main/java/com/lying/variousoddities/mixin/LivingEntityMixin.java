@@ -1,6 +1,5 @@
 package com.lying.variousoddities.mixin;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,8 +13,8 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
-import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler;
 
@@ -88,17 +87,23 @@ public class LivingEntityMixin extends EntityMixin
 	public void isEntityInsideOpaqueBlock(final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(entity, AbilityPhasing.class);
-		phasings.forEach((ability) -> { if(ability.canPhase(world, null, entity)) ci.setReturnValue(false); });
+		if(IPhasingAbility.isPhasing(entity))
+			ci.setReturnValue(false);
+		
+//		AbilityRegistry.getAbilitiesOfType(entity, IPhasingAbility.class).forEach((ability) -> 
+//		{
+//			if(ability.canPhase(world, null, entity))
+//				ci.setReturnValue(false);
+//		});
 	}
 	
 	@Inject(method = "applyEntityCollision(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
 	public void applyEntityCollision(Entity entityIn, final CallbackInfo ci)
 	{
-		if(AbilityRegistry.hasAbility((LivingEntity)(Object)this, AbilityPhasing.class))
+		if(IPhasingAbility.isPhasing((LivingEntity)(Object)this))
 			ci.cancel();
 		else if(entityIn instanceof LivingEntity)
-			if(AbilityRegistry.hasAbility((LivingEntity)entityIn, AbilityPhasing.class))
+			if(IPhasingAbility.isPhasing((LivingEntity)entityIn))
 				ci.cancel();
 	}
 	
@@ -107,7 +112,7 @@ public class LivingEntityMixin extends EntityMixin
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilityMap.containsKey(AbilityClimb.REGISTRY_NAME) && ((AbilityClimb)abilityMap.get(AbilityClimb.REGISTRY_NAME)).active())
+		if(abilityMap.containsKey(AbilityClimb.REGISTRY_NAME) && abilityMap.get(AbilityClimb.REGISTRY_NAME).isActive())
 			if(entity.collidedHorizontally)
 				ci.setReturnValue(true);
 	}

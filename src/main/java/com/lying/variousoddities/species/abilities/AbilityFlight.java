@@ -1,5 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
+import java.util.Map;
 import java.util.UUID;
 
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
@@ -54,7 +55,7 @@ public class AbilityFlight extends AbilityMoveMode
 		this.speed = compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.5D;
 	}
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.flying."+(active() ? "active" : "inactive"), quality.getString()); }
+	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.flying."+(isActive() ? "active" : "inactive"), quality.getString()); }
 	
 	public void addListeners(IEventBus bus)
 	{
@@ -73,18 +74,17 @@ public class AbilityFlight extends AbilityMoveMode
 			return;
 		AttributeModifier mod = gravity.getModifier(GRAVITY_UUID);
 		
-		if(AbilityRegistry.hasAbility(entity, REGISTRY_NAME))
+		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
+		if(abilityMap.containsKey(REGISTRY_NAME))
 		{
-			AbilityFlight flight = (AbilityFlight)AbilityRegistry.getAbilityByName(entity, getMapName());
-			if(!flight.active())
+			AbilityFlight flight = (AbilityFlight)abilityMap.get(REGISTRY_NAME);
+			if(!flight.isActive())
 			{
 				if(mod != null)
 					gravity.removeModifier(GRAVITY_UUID);
 			}
 			else
 			{
-				entity.fallDistance = 0F;
-				
 				if(entity.isSneaking())
 				{
 					if(mod != null)
@@ -92,6 +92,8 @@ public class AbilityFlight extends AbilityMoveMode
 				}
 				else
 				{
+					entity.fallDistance = 0F;
+					
 					AttributeModifier modifier = makeModifier(flight.quality.gravity * (entity.isElytraFlying() ? 0.5F : 1F));
 					if(mod != null && mod.getAmount() != modifier.getAmount())
 					{
@@ -110,19 +112,28 @@ public class AbilityFlight extends AbilityMoveMode
 	public void handleAirJumps(AbilityUpdateEvent event)
 	{
 		LivingEntity entity = event.getEntityLiving();
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
+		if(abilityMap.containsKey(REGISTRY_NAME))
 		{
-			AbilityFlight flight = (AbilityFlight)AbilityRegistry.getAbilityByName(entity, getMapName());
-			if(flight.active())
+			AbilityFlight flight = (AbilityFlight)abilityMap.get(REGISTRY_NAME);
+			if(flight.isActive())
 			{
 				Abilities abilities = event.getAbilities();
-				if(!abilities.canAirJump)
+				if(entity.isOnGround())
+				{
+					abilities.canAirJump = false;
+					abilities.airJumpTimer = -(Reference.Values.TICKS_PER_SECOND / 2);
+					abilities.markDirty();
+				}
+				else if(!abilities.canAirJump)
+				{
 					if(entity.isOnGround() || abilities.airJumpTimer++ >= flight.quality.jumpRate)
 					{
 						abilities.canAirJump = true;
 						abilities.airJumpTimer = 0;
 						abilities.markDirty();
 					}
+				}
 			}
 		}
 	}

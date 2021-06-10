@@ -1,7 +1,5 @@
 package com.lying.variousoddities.mixin;
 
-import java.util.Collection;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,13 +7,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
-import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.IPhasingAbility;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Pose;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -76,6 +76,9 @@ public class EntityMixin extends CapabilityProviderMixin
 	@Shadow
 	public void setFlag(int flag, boolean set){ }
 	
+	@Shadow
+	public void setPose(Pose pose){ }
+	
 	@Inject(method = "pushOutOfBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;<init>(DDD)V"), cancellable = true)
 	public void incorporealPushOutOfBlock(double x, double y, double z, final CallbackInfo ci)
 	{
@@ -83,8 +86,8 @@ public class EntityMixin extends CapabilityProviderMixin
 		if(ent instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)ent;
-			Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
-			phasings.forEach((ability) -> { if(ability.canPhase(world, null, living)) ci.cancel(); });
+			if(!IPhasingAbility.isPhasing(living))
+				ci.cancel();
 		}
 	}
 	
@@ -92,15 +95,24 @@ public class EntityMixin extends CapabilityProviderMixin
 	public void incorporealFall(final CallbackInfo ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityPhasing.class))
-			ent.fallDistance = 0F;
+		if(ent instanceof LivingEntity && IPhasingAbility.isPhasing((LivingEntity)ent))
+			for(IPhasingAbility phasing : AbilityRegistry.getAbilitiesOfType((LivingEntity)ent, IPhasingAbility.class))
+				if(phasing.preventsFallDamage((Ability)phasing))
+				{
+					Ability ability = (Ability)phasing;
+					if(ability.passive() || ability.isActive())
+					{
+						ent.fallDistance = 0F;
+						return;
+					}
+				}
 	}
 	
 	@Inject(method = "isSteppingCarefully()Z", at = @At("HEAD"), cancellable = true)
 	public void incorporealStepCarefully(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityPhasing.class) && !isSprinting())
+		if(ent instanceof LivingEntity && IPhasingAbility.isPhasing((LivingEntity)ent) && !isSprinting())
 			ci.setReturnValue(true);
 	}
 	
@@ -119,7 +131,7 @@ public class EntityMixin extends CapabilityProviderMixin
 		if(ent instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)ent;
-			if(AbilityRegistry.hasAbility(living, AbilityPhasing.class))
+			if(IPhasingAbility.isPhasing(living))
 				ci.cancel();
 		}
 	}

@@ -95,7 +95,7 @@ public class CommandAbilities extends CommandBase
 			LivingEntity living = (LivingEntity)entity;
 			LivingData data = LivingData.forEntity(living);
 			int tally = data.getAbilities().size();
-			data.getAbilities().clear();
+			data.getAbilities().clearCustomAbilities();
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear", tally, living.getDisplayName()), true);
 		}
 		return 15;
@@ -152,7 +152,7 @@ public class CommandAbilities extends CommandBase
 				LivingData data = LivingData.forEntity(living);
 				Ability ability = AbilityRegistry.getAbility(registryName, nbt);
 				if(ability != null)
-					data.getAbilities().add(ability);
+					data.getAbilities().addCustomAbility(ability);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"add", getAbilityWithEdit(ability, living), living.getDisplayName()), true);
 			}
 			return 15;
@@ -188,8 +188,8 @@ public class CommandAbilities extends CommandBase
 					Ability ability2 = AbilityRegistry.getAbility(originalNBT);
 					if(ability2 != null)
 					{
-						data.getAbilities().remove(ability);
-						data.getAbilities().add(ability2);
+						data.getAbilities().removeCustomAbility(ability);
+						data.getAbilities().addCustomAbility(ability2);
 						source.sendFeedback(new TranslationTextComponent(translationSlug+"add", getAbilityWithEdit(ability2, living), living.getDisplayName()), true);
 					}
 					else
@@ -217,7 +217,7 @@ public class CommandAbilities extends CommandBase
 			{
 				LivingEntity living = (LivingEntity)entity;
 				LivingData data = LivingData.forEntity(living);
-				data.getAbilities().remove(mapName);
+				data.getAbilities().removeCustomAbility(mapName);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"remove", mapName, living.getDisplayName()), true);
 			}
 			return 15;

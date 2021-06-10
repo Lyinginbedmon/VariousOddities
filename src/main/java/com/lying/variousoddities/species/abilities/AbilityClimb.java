@@ -18,7 +18,7 @@ public class AbilityClimb extends AbilityMoveMode
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.climb."+(active() ? "active" : "inactive")); }
+	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.climb."+(isActive() ? "active" : "inactive")); }
 	
 	public static class Builder extends Ability.Builder
 	{

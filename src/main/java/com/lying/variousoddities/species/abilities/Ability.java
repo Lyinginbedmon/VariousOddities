@@ -4,9 +4,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
@@ -37,6 +39,7 @@ public abstract class Ability
 	private ITextComponent displayName = null;
 	private Nature customNature = null;
 	private final ResourceLocation registryName;
+	private UUID sourceId = null;
 	
 	protected Ability(@Nonnull ResourceLocation registryNameIn)
 	{
@@ -51,6 +54,14 @@ public abstract class Ability
 	 * Map name should otherwise reflect some unique property of an ability instance.
 	 */
 	public ResourceLocation getMapName(){ return getRegistryName(); }
+	
+	/**
+	 * Returns the source UUID for this ability.<br>
+	 * The source ID determines if two instances of the same ability originate from separate places.<br>
+	 * Used in Abilities when refreshing the cache.
+	 */
+	public UUID getSourceId(){ return this.sourceId; }
+	public Ability setSourceId(UUID idIn){ this.sourceId = idIn; return this; }
 	
 	/** Returns true if this ability is active without needing to be triggered. */
 	public final boolean passive(){ return !(this instanceof ActivatedAbility); }
@@ -85,6 +96,8 @@ public abstract class Ability
 	public final CompoundNBT writeAtomically(CompoundNBT compound)
 	{
 		compound.putString("Name", getRegistryName().toString());
+		if(this.sourceId != null)
+			compound.putString("UUID", this.sourceId.toString());
 		
 		if(hasCustomName())
 			compound.putString("CustomName", ITextComponent.Serializer.toJson(this.displayName));
@@ -107,6 +120,10 @@ public abstract class Ability
 	{
 		
 	}
+	
+	public void onAbilityAdded(LivingEntity entity){ }
+	
+	public void onAbilityRemoved(LivingEntity entity){ }
 	
 	public abstract Type getType();
 	

@@ -15,10 +15,12 @@ import com.lying.variousoddities.network.PacketAirJump;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -119,8 +121,9 @@ public class VOBusClient
 			ClientPlayerEntity player = (ClientPlayerEntity)event.getEntityLiving();
 			LivingData data = LivingData.forEntity(event.getEntityLiving());
 			Abilities abilities = data.getAbilities();
+			Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 			if(!player.isOnGround() && abilities.canAirJump && player.movementInput.jump)
-				if(AbilityRegistry.hasAbility(player, AbilityFlight.REGISTRY_NAME) && ((AbilityFlight)AbilityRegistry.getAbilityByName(player, AbilityFlight.REGISTRY_NAME)).active())
+				if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
 				{
 					abilities.doAirJump();
 					player.connection.sendPacket(new CEntityActionPacket(player, CEntityActionPacket.Action.START_FALL_FLYING));
@@ -305,7 +308,7 @@ public class VOBusClient
 	{
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null)
-			return AbilityRegistry.hasAbility(player, AbilityPhasing.class) && getInWallBlockState(player) != null;
+			return IPhasingAbility.isPhasing(player) && getInWallBlockState(player) != null;
 		return false;
 	}
 	

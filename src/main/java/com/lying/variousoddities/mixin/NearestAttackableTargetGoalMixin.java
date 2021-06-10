@@ -10,7 +10,6 @@ import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 import com.lying.variousoddities.faction.FactionReputation.EnumInteraction;
-import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.FactionManager;
 import com.lying.variousoddities.world.savedata.FactionManager.Faction;
 
@@ -39,7 +38,7 @@ public class NearestAttackableTargetGoalMixin
 			public boolean test(LivingEntity target)
 			{
 				// Undead mobs do not target other undead
-				if(EnumCreatureType.getTypes(target).isUndead() && goalOwnerIn.isNonBoss())
+				if(target.isEntityUndead() && goalOwnerIn.isEntityUndead() && goalOwnerIn.isNonBoss())
 					return false;
 				
 				// Faction mobs do not attack mobs with good reputation

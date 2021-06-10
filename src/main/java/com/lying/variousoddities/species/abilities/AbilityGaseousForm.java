@@ -37,7 +37,7 @@ public class AbilityGaseousForm extends AbilityPhasing
 	
 	public boolean ignoresNonMagicDamage(){ return false; }
 	
-	protected boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
 	{
 		return false;
 	}

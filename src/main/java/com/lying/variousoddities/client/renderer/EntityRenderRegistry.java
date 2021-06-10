@@ -13,14 +13,17 @@ import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerDazed;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
+import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.entity.model.FoxModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -56,7 +59,9 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.WARG, new EntityWargRenderer.RenderFactory());
 		registerRenderer(VOEntities.GHASTLING, new EntityGhastlingRenderer.RenderFactory());
 		
-		LivingRenderer foxRenderer = (LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)Minecraft.getInstance().getRenderManager().renderers.get(EntityType.FOX);
+		Minecraft mc = Minecraft.getInstance();
+		EntityRendererManager renderManager = mc.getRenderManager();
+		LivingRenderer foxRenderer = (LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)renderManager.renderers.get(EntityType.FOX);
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));
 		if(ConfigVO.GENERAL.verboseLogs())
 			VariousOddities.log.info("  -Registered fox accessories layer");
@@ -68,7 +73,14 @@ public class EntityRenderRegistry
 			renderer.addLayer(new LayerGhastlingShoulder(renderer));
 			if(ConfigVO.GENERAL.verboseLogs())
 				VariousOddities.log.info("  -Registered ghastling shoulder layer for "+entry);
+			renderer.addLayer(new LayerDazed(renderer));
 		}
+		
+		renderManager.renderers.forEach((type, renderer) -> 
+		{
+			if(renderer instanceof LivingRenderer && ((LivingRenderer)renderer).getEntityModel() instanceof BipedModel)
+				((LivingRenderer)renderer).addLayer(new LayerDazed((LivingRenderer)renderer));
+		});
 	}
 	
 	private static <T extends Entity> void registerRenderer(EntityType<T> entityClass, IRenderFactory<? super T> renderFactory)

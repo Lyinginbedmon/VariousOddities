@@ -7,7 +7,10 @@ Warg
 	Chests
 	Sit command
 Abilities
-	Implement JSON handling of species & templates
-	Implement optional first-login species selection screen
+	Implement swimming
+Species
+	Implement templates
 Potions
 	Fix sleep effect on players
+	Fix dazed birds not appearing on others
+	Add textures for Dazed & Dazzled

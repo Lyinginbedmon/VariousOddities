@@ -14,7 +14,6 @@ import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
-import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.CreatureAttribute;
@@ -247,7 +246,7 @@ public class TypeBus
 			if(player.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(player))
 				event.setNewSpeed(event.getNewSpeed() * 5F);
 		
-		if(TypesManager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
-			event.setNewSpeed(event.getNewSpeed() * 1.3F);
+//		if(TypesManager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
+//			event.setNewSpeed(event.getNewSpeed() * 1.3F);
 	}
 }

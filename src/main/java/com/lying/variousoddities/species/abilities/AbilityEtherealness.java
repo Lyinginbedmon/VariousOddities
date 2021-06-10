@@ -21,7 +21,7 @@ public class AbilityEtherealness extends AbilityPhasing
 	
 	public boolean ignoresNonMagicDamage(){ return true; }
 	
-	protected boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
 	{
 		return entity.getPosition().getY() <= pos.getY() || entity.isSneaking();
 	}

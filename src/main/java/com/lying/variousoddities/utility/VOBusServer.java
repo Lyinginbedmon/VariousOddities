@@ -18,9 +18,11 @@ import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncLivingData;
+import com.lying.variousoddities.network.PacketSyncSpecies;
 import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
@@ -61,6 +63,7 @@ public class VOBusServer
 		if(event.getObject() instanceof LivingEntity)
 		{
 			LivingData dataLiving = new LivingData();
+			dataLiving.getAbilities().markForRecache();
 			event.addCapability(LivingData.IDENTIFIER, dataLiving);
 			event.addListener(dataLiving.handler()::invalidate);
 			
@@ -92,6 +95,8 @@ public class VOBusServer
 	public static void onPlayerLogInEvent(PlayerLoggedInEvent event)
 	{
 		PlayerEntity player = event.getPlayer();
+		PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncSpecies(VORegistries.SPECIES));
+		
 		LivingData data = LivingData.forEntity(player);
 		if(data != null)
 		{

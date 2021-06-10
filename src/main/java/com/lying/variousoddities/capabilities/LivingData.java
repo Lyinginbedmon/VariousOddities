@@ -13,6 +13,7 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.reference.Reference;
@@ -37,7 +38,9 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectUtils;
+import net.minecraft.potion.Effects;
 import net.minecraft.stats.ServerStatisticsManager;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
@@ -75,6 +78,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private List<EnumCreatureType> prevTypes = Lists.newArrayList();
 	private ResourceLocation originDimension = null;
 	
+	private boolean selectedSpecies = false;
 	private Species.SpeciesInstance species = null;
 //	private List<Template> templates = Lists.newArrayList();
 	
@@ -142,6 +146,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			if(this.species != null)
 				compound.put("Species", this.species.writeToNBT(new CompoundNBT()));
+			compound.putBoolean("SelectedSpecies", this.selectedSpecies);
 			
 			ListNBT types = new ListNBT();
 			for(EnumCreatureType type : prevTypes)
@@ -174,6 +179,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			CompoundNBT speciesData = nbt.getCompound("Species");
 			this.species = SpeciesRegistry.instanceFromNBT(speciesData);
 		}
+		else
+			this.species = null;
+		this.selectedSpecies = nbt.getBoolean("SelectedSpecies");
 		
 		ListNBT types = nbt.getList("Types", 8);
 		prevTypes.clear();
@@ -198,8 +206,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean hasSpecies(){ return this.species != null; }
 	public SpeciesInstance getSpecies(){ return this.species; }
-	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; }
-	public void setSpecies(Species speciesIn){ this.species = speciesIn.createInstance(); }
+	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; this.abilities.markForRecache(); markDirty(); }
+	public void setSpecies(Species speciesIn){ setSpecies(speciesIn.createInstance()); }
 	
 	public List<EnumCreatureType> getTypesFromSpecies()
 	{
@@ -230,6 +238,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void clearCustomTypes()
 	{
 		this.customTypes.clear();
+		this.abilities.markForRecache();
 		markDirty();
 	}
 	public void addCustomType(EnumCreatureType type)
@@ -237,6 +246,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(!this.customTypes.contains(type))
 		{
 			this.customTypes.add(type);
+			this.abilities.markForRecache();
 			markDirty();
 		}
 	}
@@ -245,6 +255,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(this.customTypes.contains(type))
 		{
 			this.customTypes.remove(type);
+			this.abilities.markForRecache();
 			markDirty();
 		}
 	}
@@ -252,6 +263,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	{
 		this.customTypes.clear();
 		this.customTypes.addAll(typesIn);
+		this.abilities.markForRecache();
 		markDirty();
 	}
 	
@@ -273,10 +285,27 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					VariousOddities.log.info("Initialised patron "+name+" as "+EnumCreatureType.getTypes(player).toHeader().getString());
 				}
 			}
+			else
+				this.selectedSpecies = true;
 			
 			this.initialised = true;
 			markDirty();
 		}
+		
+		if(ConfigVO.MOBS.selectSpeciesOnLogin.get())
+		{
+			if(!this.selectedSpecies)
+			{
+				if(!world.isRemote && entity.getType() == EntityType.PLAYER)
+					PacketHandler.sendTo((ServerPlayerEntity)entity, new PacketSpeciesOpenScreen());
+				
+				entity.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_MINUTE, 15, true, false));
+			}
+			else if(entity.isPotionActive(Effects.RESISTANCE) && entity.getActivePotionEffect(Effects.RESISTANCE).getAmplifier() == 15)
+				entity.removeActivePotionEffect(Effects.RESISTANCE);
+		}
+		else
+			this.selectedSpecies = true;
 		
 		handleTypes(entity, world);
 		
@@ -318,6 +347,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			this.dirty = false;
 		}
 	}
+	
+	public void setSpeciesSelected(){ this.selectedSpecies = true; }
 	
 	/** Manages the application and removal of creature types */
 	public void handleTypes(LivingEntity entity, World world)

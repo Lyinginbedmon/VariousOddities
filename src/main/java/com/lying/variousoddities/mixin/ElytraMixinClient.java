@@ -41,6 +41,6 @@ public class ElytraMixinClient extends PlayerEntityMixin
 	{
 		ClientPlayerEntity living = (ClientPlayerEntity)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(living);
-		return abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && ((AbilityFlight)abilityMap.get(AbilityFlight.REGISTRY_NAME)).active();
+		return abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive();
 	}
 }

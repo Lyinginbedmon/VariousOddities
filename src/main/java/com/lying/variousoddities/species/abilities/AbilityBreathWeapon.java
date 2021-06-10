@@ -48,19 +48,28 @@ public class AbilityBreathWeapon extends ActivatedAbility
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "breath_weapon");
 	
-	private BreathType type = BreathType.CONE;
-	private double distance = 6D;
+	private BreathType type;
+	private double distance;
 	private IParticleData particle = ParticleTypes.FLAME;
 	
-	private DamageType damage = DamageType.FIRE;
-	private Pair<Float, Float> dmgAmount = Pair.of(1F, 8F);
-	private BlockState blockToPlace = Blocks.FIRE.getDefaultState();
+	private DamageType damage;
+	private Pair<Float, Float> dmgAmount;
+	private BlockState blockToPlace = Blocks.AIR.getDefaultState();
 	
 	private int duration = Reference.Values.TICKS_PER_SECOND * 3;
 	
-	public AbilityBreathWeapon()
+	public AbilityBreathWeapon(DamageType damageIn, BreathType typeIn, double dist, Pair<Float, Float> dmgIn)
 	{
 		super(REGISTRY_NAME, Reference.Values.TICKS_PER_MINUTE);
+		this.damage = damageIn;
+		this.type = typeIn;
+		this.distance = dist;
+		this.dmgAmount = dmgIn;
+	}
+	
+	public AbilityBreathWeapon(DamageType damageIn, BreathType typeIn, double dist, float dmgMin, float dmgMax)
+	{
+		this(damageIn, typeIn, dist, Pair.of(dmgMin, dmgMax));
 	}
 	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "breath_weapon_"+damage.getString()); }
@@ -68,6 +77,10 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".breath_weapon", (int)distance, type.translated(damage)); }
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
+	
+	public AbilityBreathWeapon setParticle(IParticleData particleIn){ this.particle = particleIn; return this; }
+	
+	public AbilityBreathWeapon setBlock(BlockState state){ this.blockToPlace = state; return this; }
 	
 	public Type getType(){ return Ability.Type.ATTACK; }
 	
@@ -301,7 +314,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		return false;
 	}
 	
-	private static enum BreathType implements IStringSerializable
+	public static enum BreathType implements IStringSerializable
 	{
 		LINE,
 		CONE;
@@ -359,10 +372,36 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		
 		public Ability create(CompoundNBT compound)
 		{
-			AbilityBreathWeapon weapon = new AbilityBreathWeapon();
-			CompoundNBT nbt = weapon.writeToNBT(new CompoundNBT());
-			nbt.merge(compound);
-			weapon.readFromNBT(nbt);
+			BreathType type = compound.contains("Type", 8) ? BreathType.fromString(compound.getString("Type")) : BreathType.CONE;
+			double distance = compound.contains("Distance", 6) ? compound.getDouble("Distance") : 8.0D;
+			
+			CompoundNBT damageData = compound.getCompound("Damage");
+			DamageType damage = damageData.contains("Type", 8) ? DamageType.fromString(damageData.getString("Type")) : DamageType.FIRE;
+			Pair<Float, Float> dmgAmount;
+			if(damageData.contains("Amount", 5))
+				dmgAmount = Pair.of(damageData.getFloat("Amount"), damageData.getFloat("Amount"));
+			else if(damageData.contains("Min", 5))
+				dmgAmount = Pair.of(damageData.getFloat("Min"), damageData.getFloat("Max"));
+			else
+				dmgAmount = Pair.of(1F, 8F);
+			
+			AbilityBreathWeapon weapon = new AbilityBreathWeapon(damage, type, distance, dmgAmount);
+			
+			if(damageData.contains("BlockToPlace", 10))
+				weapon.setBlock(NBTUtil.readBlockState(damageData.getCompound("BlockToPlace")));
+			
+			if(compound.contains("Particle", 8))
+			{
+				IParticleData particle = null;
+				try
+				{
+					particle = ParticleArgument.parseParticle(new StringReader(compound.getString("Particle")));
+				}
+				catch(CommandSyntaxException e){ }
+				if(particle != null)
+					weapon.setParticle(particle);
+			}
+			
 			return weapon;
 		}
 	}

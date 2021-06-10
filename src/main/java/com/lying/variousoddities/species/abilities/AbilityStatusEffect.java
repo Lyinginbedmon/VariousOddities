@@ -7,6 +7,7 @@ import com.lying.variousoddities.reference.Reference;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -17,6 +18,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public class AbilityStatusEffect extends Ability
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect");
+	public static int TIME = Reference.Values.TICKS_PER_SECOND * 5;
 	
 	private EffectInstance effect;
 	
@@ -35,7 +37,7 @@ public class AbilityStatusEffect extends Ability
 	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+effect.getEffectName().toLowerCase()); }
 	
-	public ITextComponent getTranslatedName()
+	public ITextComponent translatedName()
 	{
 		String name = I18n.format(this.effect.getPotion().getName());
 		int amp = this.effect.getAmplifier();
@@ -69,9 +71,24 @@ public class AbilityStatusEffect extends Ability
 		{
 			AbilityStatusEffect status = (AbilityStatusEffect)ability;
 			EffectInstance effect = status.effect;
-			if(!entity.isPotionActive(effect.getPotion()) || entity.getActivePotionEffect(effect.getPotion()).getDuration() < effect.getDuration())
-				entity.addPotionEffect(new EffectInstance(effect.getPotion(), effect.getDuration() + Reference.Values.TICKS_PER_SECOND, effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles()));
+			Effect potion = effect.getPotion();
+			boolean shouldApply = !entity.isPotionActive(potion);
+			if(entity.isPotionActive(potion))
+			{
+				EffectInstance active = entity.getActivePotionEffect(potion);
+				shouldApply = active.getAmplifier() < effect.getAmplifier() || (active.getAmplifier() == effect.getAmplifier() && active.getDuration() < TIME);
+			}
+			
+			if(shouldApply)
+				entity.addPotionEffect(new EffectInstance(effect.getPotion(), TIME, effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles()));
 		}
+	}
+	
+	public void onAbilityRemoved(LivingEntity entity)
+	{
+		Effect potion = effect.getPotion();
+		if(entity.isPotionActive(potion) && entity.getActivePotionEffect(potion).getAmplifier() == effect.getAmplifier())
+			entity.removeActivePotionEffect(potion);
 	}
 	
 	public static class Builder extends Ability.Builder

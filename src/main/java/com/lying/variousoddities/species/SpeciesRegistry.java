@@ -15,9 +15,14 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
+import com.lying.variousoddities.species.abilities.AbilityBreathWeapon;
+import com.lying.variousoddities.species.abilities.AbilityBreathWeapon.BreathType;
+import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityFastHealing;
+import com.lying.variousoddities.species.abilities.AbilityFlight;
+import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.species.abilities.AbilityNaturalRegen;
@@ -31,6 +36,7 @@ import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
 import net.minecraft.client.resources.JsonReloadListener;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.profiler.IProfiler;
@@ -44,6 +50,7 @@ public class SpeciesRegistry extends JsonReloadListener
 	private static final List<Species> DEFAULT_SPECIES = Lists.newArrayList();
 	
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
+	public static final ResourceLocation SPECIES_DRAGON_GREEN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "green_dragon");
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
 	public static final ResourceLocation SPECIES_NECROPOLITAN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "necropolitan");
 	public static final ResourceLocation SPECIES_SKELETON		= new ResourceLocation(Reference.ModInfo.MOD_ID, "skeleton");
@@ -131,6 +138,14 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityResistance(5, DamageType.MAGIC))
 				.addAbility(new AbilityTeleportToPos(16D))
 				.addAbility(new AbilityTeleportToHome()));
+		DEFAULT_SPECIES.add(new Species(SPECIES_DRAGON_GREEN)
+				.setPower(5)
+				.addType(EnumCreatureType.DRAGON, EnumCreatureType.AIR)
+				.addAbility(new AbilityNaturalArmour(7D))
+				.addAbility(new AbilityDamageResistance(DamageType.ACID, DamageResist.IMMUNE))
+				.addAbility(new AbilityBreatheWater())
+				.addAbility(new AbilityFlight(Grade.POOR))
+				.addAbility(new AbilityBreathWeapon(DamageType.ACID, BreathType.CONE, 9D, 4F, 24F).setParticle(ParticleTypes.DRAGON_BREATH)));
 		DEFAULT_SPECIES.add(new Species(SPECIES_LIZARDFOLK)
 				.setPower(1)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)

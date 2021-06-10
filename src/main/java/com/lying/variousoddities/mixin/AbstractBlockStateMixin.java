@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityWaterWalking;
+import com.lying.variousoddities.species.abilities.IPhasingAbility;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.entity.Entity;
@@ -36,11 +36,18 @@ public abstract class AbstractBlockStateMixin
 		if(context instanceof EntitySelectionContext && entity != null && entity.isAlive() && entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
+			if(IPhasingAbility.isPhasing(living))
+			{
+				Collection<IPhasingAbility> phasings = AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class);
+				if(!phasings.isEmpty())
+					phasings.forEach((ability) -> 
+					{
+						if(ability.canPhase(worldIn, pos, living))
+							ci.setReturnValue(VoxelShapes.empty());
+					});
+			}
 			
-			if(!phasings.isEmpty())
-				phasings.forEach((ability) -> { if(ability.canPhase(worldIn, pos, living)) ci.setReturnValue(VoxelShapes.empty()); });
-			else if(AbilityRegistry.hasAbility(living, AbilityWaterWalking.REGISTRY_NAME))
+			if(AbilityRegistry.hasAbility(living, AbilityWaterWalking.REGISTRY_NAME))
 			{
 				AbilityWaterWalking ability = (AbilityWaterWalking)AbilityRegistry.getAbilityByName(living, AbilityWaterWalking.REGISTRY_NAME);
 				if(worldIn.getBlockState(pos).getFluidState() != null && ability.affectsFluid(worldIn.getBlockState(pos).getFluidState()))
@@ -59,8 +66,13 @@ public abstract class AbstractBlockStateMixin
 		if(entityIn instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entityIn;
-			Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
-			phasings.forEach((ability) -> { if(ability.canPhase(worldIn, pos, living)) ci.cancel(); });
+			if(!IPhasingAbility.isPhasing(living))
+				return;
+			
+			AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class).forEach((ability) -> 
+			{
+				if(ability.canPhase(worldIn, pos, living)) ci.cancel();
+			});
 		}
 	}
 }

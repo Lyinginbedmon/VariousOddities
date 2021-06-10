@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.magic.IMagicEffect;
@@ -29,6 +30,8 @@ import net.minecraftforge.event.entity.player.CriticalHitEvent;
  */
 public class TypeHandler
 {
+	public final UUID sourceID;
+	
 	private boolean canBreatheAir = true;
 	private boolean canCriticalHit = true;
 	private boolean canPoison = true;
@@ -36,8 +39,13 @@ public class TypeHandler
 	
 	private final List<Ability> abilities = Lists.newArrayList();
 	
+	public TypeHandler(UUID idIn)
+	{
+		this.sourceID = idIn;
+	}
+	
 	/** Returns a default instance */
-	public static final TypeHandler get(){ return new TypeHandler(); }
+	public static final TypeHandler get(UUID idIn){ return new TypeHandler(idIn); }
 	
 	/** Called when the type is first applied in LivingData */
 	public void onApply(LivingEntity entity){ }
@@ -60,7 +68,7 @@ public class TypeHandler
 	
 	public TypeHandler addAbility(Ability abilityIn)
 	{
-		this.abilities.add(abilityIn);
+		this.abilities.add(abilityIn.setSourceId(this.sourceID));
 		return this;
 	}
 	

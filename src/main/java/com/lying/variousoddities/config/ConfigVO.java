@@ -136,6 +136,8 @@ public class ConfigVO
 		public final TypeSettings typeSettings;
 		public final FactionSettings factionSettings;
 		
+		public final ForgeConfigSpec.BooleanValue selectSpeciesOnLogin;
+		
 		public Mobs(ForgeConfigSpec.Builder builder)
 		{
 			builder.push("mobs");
@@ -146,6 +148,8 @@ public class ConfigVO
 			
 			typeSettings = new TypeSettings(builder);
 			factionSettings = new FactionSettings(builder);
+			
+			selectSpeciesOnLogin = builder.comment("Open species select screen when players first log-in").define("selectSpeciesOnLogin", true);
 			
 			builder.pop();
 		}

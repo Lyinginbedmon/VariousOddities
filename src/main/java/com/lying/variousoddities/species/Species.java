@@ -3,6 +3,7 @@ package com.lying.variousoddities.species;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,9 +22,12 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class Species
 {
+	private static final UUID UUID_SPECIES = UUID.fromString("d5da3b78-e6ca-4d2e-878b-0e7c3c57a668");
 	private ResourceLocation registryName;
 	
 	private boolean canPlayerSelect = true;
@@ -33,6 +37,9 @@ public class Species
 	private final List<Ability> abilities = Lists.newArrayList();
 	private final List<EnumCreatureType> types = Lists.newArrayList();
 	
+	private ITextComponent customName = null;
+	
+	private Species(){ }
 	public Species(ResourceLocation name)
 	{
 		this.registryName = name;
@@ -41,6 +48,15 @@ public class Species
 	public final void setRegistryName(ResourceLocation name){ this.registryName = name; }
 	
 	public final ResourceLocation getRegistryName(){ return this.registryName; }
+	
+	public ITextComponent getDisplayName()
+	{
+		if(this.customName != null)
+			return this.customName;
+		String path = this.registryName.getPath();
+		path = (path.substring(0, 1).toUpperCase() + path.substring(1)).replace('_', ' ');
+		return new StringTextComponent(path);
+	}
 	
 	/**
 	 * Whether this species should be selectable from the species select screen.
@@ -74,7 +90,7 @@ public class Species
 	
 	public Species addAbility(@Nonnull Ability abilityIn)
 	{
-		this.abilities.add(abilityIn);
+		this.abilities.add(abilityIn.setSourceId(UUID_SPECIES));
 		return this;
 	}
 	
@@ -97,6 +113,68 @@ public class Species
 	public boolean hasTypes(){ return !this.types.isEmpty(); }
 	
 	public List<EnumCreatureType> getTypes(){ return this.types; }
+	
+	public CompoundNBT storeInNBT(CompoundNBT nbt)
+	{
+		nbt.putString("Name", this.getRegistryName().toString());
+		nbt.putBoolean("CanPlayerSelect", this.isPlayerSelectable());
+		nbt.putInt("Power", getPower());
+		
+		if(origin != null)
+			nbt.putString("Dimension", origin.toString());
+		
+		ListNBT types = new ListNBT();
+			for(EnumCreatureType type : this.types)
+				types.add(StringNBT.valueOf(type.getString()));
+			nbt.put("Types", types);
+		
+		ListNBT abilities = new ListNBT();
+			for(Ability ability : this.abilities)
+				abilities.add(ability.writeAtomically(new CompoundNBT()));
+		nbt.put("Abilities", abilities);
+		return nbt;
+	}
+	
+	public static Species createFromNBT(CompoundNBT nbt)
+	{
+		ResourceLocation registryName = new ResourceLocation(nbt.getString("Name"));
+		Species species = new Species(registryName);
+		
+		species.setPlayerSelect(nbt.getBoolean("CanPlayerSelect"));
+		species.setPower(nbt.getInt("Power"));
+		
+		if(nbt.contains("Dimension", 8))
+			species.setOriginDimension(new ResourceLocation(nbt.getString("Dimension")));
+		
+		if(nbt.contains("Types", 9))
+		{
+			ListNBT typeList = nbt.getList("Types", 8);
+			for(int i=0; i<typeList.size(); i++)
+			{
+				EnumCreatureType type = EnumCreatureType.fromName(typeList.getString(i));
+				if(type != null)
+					species.addType(type);
+			}
+		}
+		
+		if(nbt.contains("Abilities", 9))
+		{
+			ListNBT abilityList = nbt.getList("Abilities", 10);
+			for(int i=0; i<abilityList.size(); i++)
+			{
+				try
+				{
+					CompoundNBT data = abilityList.getCompound(i);
+					Ability ability = AbilityRegistry.getAbility(data);
+					if(ability != null)
+						species.addAbility(ability);
+				}
+				catch(Exception e){ }
+			}
+		}
+		
+		return species;
+	}
 	
 	public JsonObject toJson()
 	{
@@ -127,7 +205,7 @@ public class Species
 			return null;
 		JsonObject object = json.getAsJsonObject();
 		
-		Species species = new Species(null);
+		Species species = new Species();
 		
 		if(object.has("CanPlayerSelect"))
 			species.setPlayerSelect(object.get("CanPlayerSelect").getAsBoolean());
@@ -230,7 +308,7 @@ public class Species
 			this.abilities.clear();
 			ListNBT abilityList = compound.getList("Abilities", 10);
 			for(int i=0; i<abilityList.size(); i++)
-				this.abilities.add(AbilityRegistry.getAbility(abilityList.getCompound(i)));
+				this.abilities.add(AbilityRegistry.getAbility(abilityList.getCompound(i)).setSourceId(UUID_SPECIES));
 		}
 	}
 }

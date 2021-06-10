@@ -15,7 +15,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
-public class AbilityPoison extends Ability
+public class AbilityPoison extends AbilityMeleeDamage
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "poison");
 	
@@ -69,15 +69,18 @@ public class AbilityPoison extends Ability
 	{
 		DamageSource source = event.getSource();
 		LivingEntity victim = event.getEntityLiving();
-		if(source.getImmediateSource() != null && source.getImmediateSource() instanceof LivingEntity && source.getImmediateSource().isAlive())
+		if(isValidDamageSource(source))
 		{
 			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
-			if(attacker != null && AbilityRegistry.hasAbility(attacker, getMapName()) && attacker.getHeldItemMainhand().isEmpty())
+			if(attacker != null && AbilityRegistry.hasAbility(attacker, getMapName()))
 			{
 				AbilityPoison poison = (AbilityPoison)AbilityRegistry.getAbilityByName(attacker, getMapName());
 				if(attacker.getRNG().nextFloat() < poison.triggerChance)
 					for(EffectInstance effect : poison.effects)
-						victim.addPotionEffect(effect);
+					{
+						EffectInstance instance = new EffectInstance(effect.getPotion(), effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles());
+						victim.addPotionEffect(instance);
+					}
 			}
 		}
 	}

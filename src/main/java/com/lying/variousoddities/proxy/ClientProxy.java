@@ -7,6 +7,7 @@ import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementManagerClient;
 import com.lying.variousoddities.client.SpellManagerClient;
 import com.lying.variousoddities.client.gui.GuiHandler;
+import com.lying.variousoddities.client.gui.ScreenSpeciesSelect;
 import com.lying.variousoddities.client.renderer.ColorHandler;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
@@ -68,5 +69,11 @@ public class ClientProxy extends CommonProxy
 	public SpellManager getSpells()
 	{
 		return spells;
+	}
+	
+	public void openSpeciesSelectScreen(PlayerEntity entity)
+	{
+		if(Minecraft.getInstance().currentScreen == null)
+			Minecraft.getInstance().displayGuiScreen(new ScreenSpeciesSelect(entity));
 	}
 }

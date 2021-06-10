@@ -1,5 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -9,7 +10,7 @@ import net.minecraftforge.api.distmarker.Dist;
 
 public abstract class AbilityMoveMode extends ActivatedAbility
 {
-	protected boolean isActive = true;
+	protected boolean isActive = false;
 	
 	protected AbilityMoveMode(ResourceLocation registryName)
 	{
@@ -31,6 +32,11 @@ public abstract class AbilityMoveMode extends ActivatedAbility
 		this.isActive = compound.getBoolean("IsActive");
 	}
 	
+	public boolean canTrigger(LivingEntity entity)
+	{
+		return AbilityRegistry.hasAbility(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName());
+	}
+	
 	public void trigger(LivingEntity entity, Dist side)
 	{
 		switch(side)
@@ -44,5 +50,5 @@ public abstract class AbilityMoveMode extends ActivatedAbility
 		}
 	}
 	
-	public boolean active(){ return this.isActive; }
+	public boolean isActive(){ return this.isActive; }
 }

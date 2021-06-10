@@ -1,14 +1,11 @@
 package com.lying.variousoddities.mixin;
 
-import java.util.Collection;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.species.abilities.AbilityPhasing;
-import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.Minecraft;
@@ -26,7 +23,9 @@ public class OverlayRendererMixin
 	private static void renderBlockOverlay(Minecraft minecraftIn, TextureAtlasSprite spriteIn, MatrixStack stackIn, CallbackInfo ci)
 	{
 		PlayerEntity living = minecraftIn.player;
-		Collection<AbilityPhasing> phasings = AbilityRegistry.getAbilitiesOfType(living, AbilityPhasing.class);
-		phasings.forEach((ability) -> { if(ability.canPhase(minecraftIn.world, null, living)) ci.cancel(); });
+		if(IPhasingAbility.isPhasing(living))
+			ci.cancel();
+//		Collection<IPhasingAbility> phasings = AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class);
+//		phasings.forEach((ability) -> { if(ability.canPhase(minecraftIn.world, null, living)) ci.cancel(); });
 	}
 }

@@ -4,6 +4,8 @@ import java.util.Set;
 
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VORegistries;
+import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.SpeciesRegistry;
@@ -22,6 +24,8 @@ import net.minecraft.command.arguments.ResourceLocationArgument;
 import net.minecraft.command.arguments.SuggestionProviders;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
@@ -46,6 +50,7 @@ public class CommandSpecies extends CommandBase
 	
 	private static final String translationSlug = "command."+Reference.ModInfo.MOD_ID+".species.";
 	private static final String ENTITY = "entity";
+	private static final String PLAYER = "player";
 	private static final String NAME = "species";
 	
 	private static IFormattableTextComponent CLICK_INFO = new TranslationTextComponent(translationSlug+"list_click").modifyStyle((style2) -> { return style2.setFormatting(TextFormatting.AQUA); });
@@ -63,7 +68,9 @@ public class CommandSpecies extends CommandBase
 						.executes((source) -> { return getSpecies(EntityArgument.getEntity(source, ENTITY), source.getSource()); })))
 				.then(newLiteral("set")
 					.then(newArgument(ENTITY, EntityArgument.entity()).then(newLiteral("to")).then(newArgument(NAME, ResourceLocationArgument.resourceLocation()).suggests(SPECIES_SUGGESTIONS)
-						.executes((source) -> { return setSpecies(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, NAME), source.getSource()); }))));
+						.executes((source) -> { return setSpecies(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, NAME), source.getSource()); }))))
+				.then(newLiteral("select").then(newArgument(PLAYER, EntityArgument.player())
+					.executes((source) -> { return selectSpecies(EntityArgument.getEntity(source, PLAYER), source.getSource()); })));
 		
 		dispatcher.register(literal);
 	}
@@ -137,6 +144,17 @@ public class CommandSpecies extends CommandBase
 			}
 			else
 				throw SPECIES_INVALID_EXCEPTION.create(name);
+		}
+		return 15;
+	}
+	
+	private static int selectSpecies(Entity entity, CommandSource source)
+	{
+		if(entity instanceof PlayerEntity)
+		{
+			PlayerEntity player = (PlayerEntity)entity;
+			if(!player.world.isRemote)
+				PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen());
 		}
 		return 15;
 	}

@@ -2,6 +2,7 @@ package com.lying.variousoddities.species.types;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.UUID;
 
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
@@ -17,8 +18,9 @@ public class TypeHandlerAquatic extends TypeHandler
 {
 	private final boolean breathesAir;
 	
-	public TypeHandlerAquatic(boolean breatheAir)
+	public TypeHandlerAquatic(UUID idIn, boolean breatheAir)
 	{
+		super(idIn);
 		this.breathesAir = breatheAir;
 		addAbility(new AbilityBreatheWater());
 	}
