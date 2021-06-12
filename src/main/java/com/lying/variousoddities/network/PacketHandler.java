@@ -45,6 +45,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketSpeciesOpenScreen.class, PacketSpeciesOpenScreen::encode, PacketSpeciesOpenScreen::decode, PacketSpeciesOpenScreen::handle);
 		HANDLER.registerMessage(id++, PacketSpeciesSelected.class, PacketSpeciesSelected::encode, PacketSpeciesSelected::decode, PacketSpeciesSelected::handle);
 		HANDLER.registerMessage(id++, PacketSyncSpecies.class, PacketSyncSpecies::encode, PacketSyncSpecies::decode, PacketSyncSpecies::handle);
+		HANDLER.registerMessage(id++, PacketVisualPotion.class, PacketVisualPotion::encode, PacketVisualPotion::decode, PacketVisualPotion::handle);
 	}
 	
 	/**

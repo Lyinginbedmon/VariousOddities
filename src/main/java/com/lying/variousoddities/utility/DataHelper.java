@@ -70,4 +70,23 @@ public class DataHelper
 		    return val;
 		}
 	}
+	
+	public static class Bytes
+	{
+		/** Returns the value of the given bit in the given value (0-indexed) */
+		public static boolean getBit(int value, int index)
+		{
+//    		return (val & (1 << n) >> 0) == 1; // Flying's original code
+			return (((byte)value >> index) & 1) == 1;
+		}
+		
+		public static int setBit(int value, int index, boolean val)
+		{
+			if(val)
+				value |= 1 << index;
+			else
+				value &= ~(1 << index);
+			return value;
+		}
+	}
 }

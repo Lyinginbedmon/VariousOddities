@@ -12,10 +12,12 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncLivingData;
+import com.lying.variousoddities.network.PacketVisualPotion;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
@@ -24,6 +26,7 @@ import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeBus;
+import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -38,6 +41,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
@@ -83,6 +87,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 //	private List<Template> templates = Lists.newArrayList();
 	
 	private Abilities abilities = new Abilities();
+	
+	private byte visualPotions = (byte)0;
 	
 	private int air = Reference.Values.TICKS_PER_DAY;
 	private boolean overridingAir = false;
@@ -162,6 +168,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			}
 			
 			compound.put("Abilities", this.abilities.serializeNBT());
+			
+			compound.putByte("Potions", this.visualPotions);
 		return compound;
 	}
 	
@@ -197,12 +205,39 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
+		
+		this.visualPotions = nbt.getByte("Potions");
 	}
 	
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
 	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; markDirty(); }
 	
 	public Abilities getAbilities(){ return this.abilities; }
+	
+	public boolean getVisualPotion(Effect potion){ return getVisualPotion(VOPotions.getVisualPotionIndex(potion)); }
+	public boolean getVisualPotion(int index)
+	{
+		if(index < 0)
+			return false;
+		
+		return DataHelper.Bytes.getBit(visualPotions, index);
+	}
+	public void setVisualPotion(int index, boolean bool)
+	{
+		if(index < 0)
+			return;
+		
+		boolean initial = getVisualPotion(index);
+		if(initial == bool)
+			return;
+		
+		// Set bit in visualPotions
+		this.visualPotions = (byte)DataHelper.Bytes.setBit(visualPotions, index, bool);
+		
+		// Packet to nearby players to sync
+		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
+			PacketHandler.sendToNearby(this.entity.getEntityWorld(), this.entity, new PacketVisualPotion(this.entity.getUniqueID(), index, bool));
+	}
 	
 	public boolean hasSpecies(){ return this.species != null; }
 	public SpeciesInstance getSpecies(){ return this.species; }

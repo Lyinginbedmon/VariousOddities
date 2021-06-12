@@ -21,6 +21,7 @@ import com.lying.variousoddities.species.types.TypeHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
@@ -37,6 +38,27 @@ public class LivingEntityMixin extends EntityMixin
 	
 	@Shadow
 	public boolean isElytraFlying(){ return false; }
+	
+	@Inject(method = "updatePotionEffects", at = @At("HEAD"))
+	public void updatePotionEffects(final CallbackInfo ci)
+	{
+		LivingEntity living = (LivingEntity)(Object)this;
+		if(!living.getEntityWorld().isRemote)
+		{
+			LivingData livingData = LivingData.forEntity(living);
+			if(livingData == null)
+				return;
+			
+			for(Effect visual : VOPotions.VISUALS.keySet())
+			{
+				int index = VOPotions.getVisualPotionIndex(visual);
+				boolean active = living.isPotionActive(visual);
+				
+				if(livingData.getVisualPotion(index) != active)
+					livingData.setVisualPotion(index, active);
+			}
+		}
+	}
 	
 	@Inject(method = "baseTick", at = @At("TAIL"))
 	public void baseTick(CallbackInfo callbackInfo)
@@ -89,12 +111,6 @@ public class LivingEntityMixin extends EntityMixin
 		LivingEntity entity = (LivingEntity)(Object)this;
 		if(IPhasingAbility.isPhasing(entity))
 			ci.setReturnValue(false);
-		
-//		AbilityRegistry.getAbilitiesOfType(entity, IPhasingAbility.class).forEach((ability) -> 
-//		{
-//			if(ability.canPhase(world, null, entity))
-//				ci.setReturnValue(false);
-//		});
 	}
 	
 	@Inject(method = "applyEntityCollision(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)

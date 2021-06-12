@@ -5,7 +5,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierManager;
 import net.minecraft.potion.EffectType;
 
-public class PotionDazed extends PotionImmobility
+public class PotionDazed extends PotionImmobility implements IVisualPotion
 {
 	public PotionDazed(int colorIn)
 	{

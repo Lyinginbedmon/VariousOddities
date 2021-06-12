@@ -1,13 +1,17 @@
 package com.lying.variousoddities.init;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.lying.variousoddities.potion.*;
+import com.google.common.collect.Lists;
+import com.lying.variousoddities.potion.IVisualPotion;
+import com.lying.variousoddities.potion.PotionDazed;
+import com.lying.variousoddities.potion.PotionDazzled;
+import com.lying.variousoddities.potion.PotionParalysis;
+import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -23,7 +27,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class VOPotions
 {
-	private static final List<Effect> EFFECTS = new ArrayList<Effect>();
+	private static final List<Effect> EFFECTS = Lists.newArrayList();
+	public static final Map<Effect, Integer> VISUALS = new HashMap<>();
 	
 	public static boolean isRegistered = false;
 	
@@ -35,7 +40,20 @@ public class VOPotions
 	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
 	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();
 	
-	private static Effect addPotion(Effect potionIn){ EFFECTS.add(potionIn); return potionIn; } 
+	private static Effect addPotion(Effect potionIn)
+	{
+		EFFECTS.add(potionIn);
+		if(potionIn instanceof IVisualPotion)
+			VISUALS.put(potionIn, VISUALS.size());
+		return potionIn;
+	}
+	
+	public static int getVisualPotionIndex(Effect potionIn)
+	{
+		if(VISUALS.containsKey(potionIn))
+			return VISUALS.get(potionIn);
+		return -1;
+	}
 	
 	@SubscribeEvent
 	public static void registerPotions(RegistryEvent.Register<Effect> event)

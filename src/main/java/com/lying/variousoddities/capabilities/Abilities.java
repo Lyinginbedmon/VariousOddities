@@ -361,6 +361,12 @@ public class Abilities
 			abilityMap = event.getAbilityMap();
 		}
 		
+		// Remove any abilities not possessing a source ID
+		List<ResourceLocation> invalid = Lists.newArrayList();
+		abilityMap.forEach((mapName, ability) -> { if(ability.getSourceId() == null) invalid.add(mapName); });
+		for(ResourceLocation mapName : invalid)
+			abilityMap.remove(mapName);
+		
 		return abilityMap;
 	}
 	

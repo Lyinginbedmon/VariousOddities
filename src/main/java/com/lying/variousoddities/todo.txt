@@ -12,5 +12,4 @@ Species
 	Implement templates
 Potions
 	Fix sleep effect on players
-	Fix dazed birds not appearing on others
 	Add textures for Dazed & Dazzled

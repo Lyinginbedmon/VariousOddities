@@ -44,10 +44,7 @@ public class EntityMixin extends CapabilityProviderMixin
 	}
 	
 	@Shadow
-	public EntityDataManager getDataManager()
-	{
-		return null;
-	}
+	public EntityDataManager getDataManager(){ return null; }
 	
 	@Shadow
 	public int getMaxAir(){ return 0; }

@@ -1,5 +1,6 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.model.entity.ModelDazed;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
@@ -27,9 +28,9 @@ public class LayerDazed<T extends LivingEntity, M extends BipedModel<T>> extends
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
+	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entityIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		if(entitylivingbaseIn.isPotionActive(VOPotions.DAZED))
+		if(LivingData.forEntity(entityIn).getVisualPotion(VOPotions.DAZED))
 		{
 			matrixStackIn.push();
 				float scale = 1.2F;
@@ -40,7 +41,7 @@ public class LayerDazed<T extends LivingEntity, M extends BipedModel<T>> extends
 				RenderSystem.color4f(1F, 1F, 1F, 1F);
 				RenderSystem.disableBlend();
 				IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getEnergySwirl(dazedTextured, 0F, time * 0.05F));
-				dazedModel.setRotationAngles(entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+				dazedModel.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 				dazedModel.render(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 0.8F);
 				RenderSystem.enableBlend();
 			matrixStackIn.pop();

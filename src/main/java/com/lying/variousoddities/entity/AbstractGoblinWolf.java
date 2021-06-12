@@ -13,6 +13,7 @@ import com.lying.variousoddities.entity.ai.passive.EntityAIGoblinWolfBeg;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
@@ -489,10 +490,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	 */
     	public boolean gene(int n)
     	{
-    		n = Math.max(0, Math.min(7, n));
-    		
-//    		return (val & (1 << n) >> 0) == 1; // Flying's original
-    		return (((byte)value >> n) & 1) == 1;
+    		return DataHelper.Bytes.getBit((byte)value, n);
     	}
     	
     	/** Returns a random cross of the given genetics, with additional random mutation */
@@ -508,7 +506,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     			if(rand.nextFloat() < MUTATION)
     				gene = !gene;
     			
-    			val = val | (gene ? 1 << i : 0);
+    			val = DataHelper.Bytes.setBit(val, i, gene);
     		}
     		
     		return new Genetics(val);
@@ -519,7 +517,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	{
     		int val = 0;
     		for(int i=0; i<8; i++)
-    			val = val | (rand.nextBoolean() || i >= 4 ? 1 << i : 0);
+    			val = DataHelper.Bytes.setBit(val, i, rand.nextBoolean());
     		
     		return new Genetics(val);
     	}
