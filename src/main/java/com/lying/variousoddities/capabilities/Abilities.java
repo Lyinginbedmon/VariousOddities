@@ -16,9 +16,14 @@ import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAbilities;
+import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilitySwim;
+import com.lying.variousoddities.species.abilities.IBonusJumpAbility;
+import com.lying.variousoddities.species.abilities.IBonusJumpAbility.JumpType;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.EntityType;
@@ -44,8 +49,9 @@ public class Abilities
 	private Map<ResourceLocation, Ability> cachedAbilities = new HashMap<>();
 	private boolean cacheDirty = false;
 	
-	public boolean canAirJump = false;
-	public int airJumpTimer = 0;
+	public boolean canBonusJump = false;
+	public int bonusJumpTimer = 0;
+	private JumpType currentJumpType = null;
 	
 	public LivingEntity entity = null;
 	
@@ -100,8 +106,8 @@ public class Abilities
 			}
 			compound.put("CachedAbilities", abilityList);
 		}
-		compound.putBoolean("CanJump", this.canAirJump);
-		compound.putInt("JumpTimer", this.airJumpTimer);
+		compound.putBoolean("CanJump", this.canBonusJump);
+		compound.putInt("JumpTimer", this.bonusJumpTimer);
 		return compound;
 	}
 	
@@ -155,8 +161,8 @@ public class Abilities
 			markDirty();
 		}
 		
-		this.canAirJump = nbt.getBoolean("CanJump");
-		this.airJumpTimer = nbt.getInt("JumpTimer");
+		this.canBonusJump = nbt.getBoolean("CanJump");
+		this.bonusJumpTimer = nbt.getInt("JumpTimer");
 	}
 	
 	public int size(){ return this.customAbilities.size(); }
@@ -326,6 +332,8 @@ public class Abilities
 					dirty = true;
 				}
 			
+			updateBonusJumpAbilities();
+			
 			MinecraftForge.EVENT_BUS.post(new AbilityUpdateEvent(this.entity, this));
 		}
 		
@@ -353,6 +361,10 @@ public class Abilities
 				if(data.hasSpecies())
 					abilityMap = data.getSpecies().addToMap(abilityMap);
 				abilityMap = data.getAbilities().addCustomToMap(abilityMap);
+				
+				if(data.hasTemplates())
+					for(Template template : data.getTemplates())
+						template.applyAbilityOperations(abilityMap);
 			}
 			
 			GatherAbilitiesEvent event = new GatherAbilitiesEvent(this.entity, abilityMap);
@@ -414,6 +426,48 @@ public class Abilities
 		this.cacheDirty = false;
 	}
 	
+	public void updateBonusJumpAbilities()
+	{
+		if(this.entity == null || !this.entity.isAlive())
+			return;
+		
+		List<Ability> bonusJumps = Lists.newArrayList();
+		this.cachedAbilities.values().forEach((ability) -> { if(ability instanceof IBonusJumpAbility) bonusJumps.add(ability); });
+		
+		boolean noneValid = true;
+		for(Ability ability : bonusJumps)
+		{
+			if(!ability.passive() && !ability.isActive())
+				continue;
+			
+			IBonusJumpAbility jump = (IBonusJumpAbility)ability;
+			// Start and/or increment jump timer
+			if(jump.isValid(this.entity, this.entity.getEntityWorld()) && (this.currentJumpType == null || this.currentJumpType == jump.jumpType()))
+			{
+				this.currentJumpType = jump.jumpType();
+				if(!canBonusJump)
+					if(bonusJumpTimer++ >= jump.getRate())
+					{
+						canBonusJump = true;
+						bonusJumpTimer = 0;
+						markDirty();
+					}
+				
+				noneValid = false;
+				break;
+			}
+		}
+		
+		if(bonusJumps.isEmpty() || noneValid)
+		{
+			canBonusJump = false;
+			bonusJumpTimer = -(Reference.Values.TICKS_PER_SECOND / 2);
+			currentJumpType = null;
+			markDirty();
+			return;
+		}
+	}
+	
 	public void doAirJump()
 	{
 		if(this.entity == null || this.entity.isOnGround())
@@ -433,8 +487,30 @@ public class Abilities
 		if(entity.getRNG().nextInt(4) == 0)
 			entity.getEntityWorld().playSound(entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, entity.getSoundCategory(), 5.0F, 0.8F + entity.getRNG().nextFloat() * 0.3F, false);
 		
-		this.canAirJump = false;
-		this.airJumpTimer = 0;
+		resetBonusJump();
+	}
+	
+	public void doWaterJump()
+	{
+		if(this.entity == null || !AbilitySwim.isEntitySwimming(this.entity))
+			return;
+		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(this.entity);
+		if(!abilities.containsKey(AbilitySwim.REGISTRY_NAME))
+			return;
+		
+		double scale = 0.7D;
+		Vector3d motion = entity.getLookVec();
+		entity.addVelocity(motion.x * scale, motion.y * scale, motion.z * scale);
+		
+		entity.getEntityWorld().playSound(entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ITEM_TRIDENT_RIPTIDE_1, entity.getSoundCategory(), 5.0F, 0.8F + entity.getRNG().nextFloat() * 0.3F, false);
+		
+		resetBonusJump();
+	}
+	
+	private void resetBonusJump()
+	{
+		this.canBonusJump = false;
+		this.bonusJumpTimer = 0;
 		markDirty();
 	}
 	

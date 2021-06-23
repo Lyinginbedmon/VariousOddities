@@ -1,0 +1,13 @@
+{
+  "CanPlayerSelect": false,
+  "Power": 0,
+  "Types": [
+    "undead"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:2.0d},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:natural_armour\"}",
+    "{Tag:{Type:\"immune\",Damage:\"cold\"},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:damage_resistance\"}",
+    "{Tag:{Amount:3},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:damage_reduction\"}",
+    "{Tag:{Ambient:1b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:0b,ShowParticles:0b,Duration:0,Id:1b,Amplifier:0b},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:status_effect\"}"
+  ]
+}

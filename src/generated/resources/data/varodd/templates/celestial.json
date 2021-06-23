@@ -1,0 +1,32 @@
+{
+  "UUID": "c70089ac-ff68-487c-abd1-3e4cab1cb336",
+  "CanPlayerSelect": true,
+  "Power": 2,
+  "Operations": [
+    {
+      "Action": "add",
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"extraplanar\"]}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"cold\",Amount:5},Name:\"varodd:resistance\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"acid\",Amount:5},Name:\"varodd:resistance\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"lightning\",Amount:5},Name:\"varodd:resistance\"}}"
+    }
+  ]
+}

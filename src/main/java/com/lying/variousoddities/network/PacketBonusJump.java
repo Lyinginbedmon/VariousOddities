@@ -11,21 +11,27 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class PacketAirJump
+public class PacketBonusJump
 {
-	public PacketAirJump(){ }
+	boolean isAir = true;
 	
-	public static PacketAirJump decode(PacketBuffer par1Buffer)
+	public PacketBonusJump(){ }
+	public PacketBonusJump(boolean isAirJump)
 	{
-		return new PacketAirJump();
+		this.isAir = isAirJump;
 	}
 	
-	public static void encode(PacketAirJump msg, PacketBuffer par1Buffer)
+	public static PacketBonusJump decode(PacketBuffer par1Buffer)
 	{
-		
+		return new PacketBonusJump(par1Buffer.readBoolean());
 	}
 	
-	public static void handle(PacketAirJump msg, Supplier<NetworkEvent.Context> cxt)
+	public static void encode(PacketBonusJump msg, PacketBuffer par1Buffer)
+	{
+		par1Buffer.writeBoolean(msg.isAir);
+	}
+	
+	public static void handle(PacketBonusJump msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
@@ -37,8 +43,11 @@ public class PacketAirJump
 				if(data != null)
 				{
 					Abilities abilities = data.getAbilities();
-					if(abilities.canAirJump)
-						abilities.doAirJump();
+					if(abilities.canBonusJump)
+						if(msg.isAir)
+							abilities.doAirJump();
+						else
+							abilities.doWaterJump();
 				}
 			}
 		}

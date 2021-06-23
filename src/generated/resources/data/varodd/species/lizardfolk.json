@@ -1,0 +1,12 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 1,
+  "Types": [
+    "humanoid",
+    "reptile"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:5.0d},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:natural_armour\"}",
+    "{UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:hold_breath\"}"
+  ]
+}

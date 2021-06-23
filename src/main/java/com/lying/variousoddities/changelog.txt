@@ -9,6 +9,7 @@ Additions
 	Worgs and wargs are now tameable using bones, can be healed using most raw foods, and worgs can be bred (wargs cannot breed)
 	Worgs and wargs have genetics that affect their offspring, ranging from purely cosmetic features to behavioural changes to the creation of wargs
 	Silversheen enchantment can now be applied temporarily to an item to bypass Fey damage reduction
+	Added the Dazed status effect, which prevents most interactions and movement but does not disable camera control
 
 Known bugs
 	Boundary line rendering of settlement rooms is very glitchy, especially when not viewed in first person (stable when viewed first person w/ HUD off)

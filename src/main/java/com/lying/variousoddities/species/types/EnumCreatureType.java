@@ -16,6 +16,7 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
+import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityBurrow;
@@ -229,6 +230,12 @@ public enum EnumCreatureType implements IStringSerializable
 			// If creature has species, use its types
 			else if(data.hasSpecies())
 				types.addAll(data.getTypesFromSpecies());
+			
+			if(data.hasTemplates())
+			{
+				for(Template template : data.getTemplates())
+					template.applyTypeOperations(types);
+			}
 		}
 		
 		if(types.isEmpty())

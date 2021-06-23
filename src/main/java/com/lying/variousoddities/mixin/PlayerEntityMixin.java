@@ -55,7 +55,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 		if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
 		{
-			if(!player.isOnGround() && !player.isElytraFlying() && abilities.canAirJump)
+			if(!player.isOnGround() && !player.isElytraFlying() && abilities.canBonusJump)
 			{
 				player.startFallFlying();
 				ci.setReturnValue(true);

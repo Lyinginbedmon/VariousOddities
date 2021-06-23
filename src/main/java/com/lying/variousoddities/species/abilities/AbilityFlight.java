@@ -3,8 +3,6 @@ package com.lying.variousoddities.species.abilities;
 import java.util.Map;
 import java.util.UUID;
 
-import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
-import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -15,11 +13,12 @@ import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
-public class AbilityFlight extends AbilityMoveMode
+public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 {
 	public static UUID GRAVITY_UUID = UUID.fromString("8b21d611-ec03-4e91-a20c-bcb48f2c5dc1");
 	public static ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "flight");
@@ -60,7 +59,6 @@ public class AbilityFlight extends AbilityMoveMode
 	public void addListeners(IEventBus bus)
 	{
 		bus.addListener(this::addSlowFalling);
-		bus.addListener(this::handleAirJumps);
 	}
 	
 	public double flySpeed(){ return this.speed; }
@@ -109,34 +107,14 @@ public class AbilityFlight extends AbilityMoveMode
 			gravity.removeModifier(GRAVITY_UUID);
 	}
 	
-	public void handleAirJumps(AbilityUpdateEvent event)
+	public int getRate(){ return quality.jumpRate; }
+	
+	public boolean isValid(LivingEntity entity, World world)
 	{
-		LivingEntity entity = event.getEntityLiving();
-		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilityMap.containsKey(REGISTRY_NAME))
-		{
-			AbilityFlight flight = (AbilityFlight)abilityMap.get(REGISTRY_NAME);
-			if(flight.isActive())
-			{
-				Abilities abilities = event.getAbilities();
-				if(entity.isOnGround())
-				{
-					abilities.canAirJump = false;
-					abilities.airJumpTimer = -(Reference.Values.TICKS_PER_SECOND / 2);
-					abilities.markDirty();
-				}
-				else if(!abilities.canAirJump)
-				{
-					if(entity.isOnGround() || abilities.airJumpTimer++ >= flight.quality.jumpRate)
-					{
-						abilities.canAirJump = true;
-						abilities.airJumpTimer = 0;
-						abilities.markDirty();
-					}
-				}
-			}
-		}
+		return isActive() && !entity.isOnGround();
 	}
+	
+	public JumpType jumpType(){ return JumpType.AIR; }
 	
 	public static AttributeModifier makeModifier(double gravity)
 	{

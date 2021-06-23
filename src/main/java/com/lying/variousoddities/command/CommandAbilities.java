@@ -13,6 +13,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.command.CommandSource;
@@ -39,6 +40,8 @@ public class CommandAbilities extends CommandBase
  	public static final SuggestionProvider<CommandSource> ABILITY_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("ability_names"), (context, builder) -> {
  		return ISuggestionProvider.suggestIterable(AbilityRegistry.getAbilityNames(), builder);
  		});
+ 	
+    private static final SimpleCommandExceptionType INVALID_ENTITY_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent("argument.entity.invalid"));
  	
 	private static final String translationSlug = "command."+Reference.ModInfo.MOD_ID+".abilities.";
 	private static final String ENTITY = "entity";
@@ -73,7 +76,7 @@ public class CommandAbilities extends CommandBase
 		return abilityEntry;
 	}
 	
-	private static int listAbilities(Entity entity, CommandSource source)
+	private static int listAbilities(Entity entity, CommandSource source) throws CommandSyntaxException
 	{
 		if(entity instanceof LivingEntity)
 		{
@@ -85,10 +88,12 @@ public class CommandAbilities extends CommandBase
 			for(Ability ability : abilities)
 				source.sendFeedback(new StringTextComponent("  ").append(getAbilityWithEdit(ability, living)), false);
 		}
+		else
+			throw INVALID_ENTITY_EXCEPTION.create();
 		return 15;
 	}
 	
-	private static int clearAbilities(Entity entity, CommandSource source)
+	private static int clearAbilities(Entity entity, CommandSource source) throws CommandSyntaxException
 	{
 		if(entity instanceof LivingEntity)
 		{
@@ -98,6 +103,8 @@ public class CommandAbilities extends CommandBase
 			data.getAbilities().clearCustomAbilities();
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"clear", tally, living.getDisplayName()), true);
 		}
+		else
+			throw INVALID_ENTITY_EXCEPTION.create();
 		return 15;
 	}
 	
@@ -128,6 +135,8 @@ public class CommandAbilities extends CommandBase
 				else
 					throw GET_INVALID_EXCEPTION.create(mapName);
 			}
+			else
+				throw INVALID_ENTITY_EXCEPTION.create();
 			return 15;
 		}
 	}
@@ -144,7 +153,7 @@ public class CommandAbilities extends CommandBase
 							.executes((source) -> { return addAbility(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, ABILITY), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); })));
 		}
 		
-		private static int addAbility(Entity entity, ResourceLocation registryName, CompoundNBT nbt, CommandSource source)
+		private static int addAbility(Entity entity, ResourceLocation registryName, CompoundNBT nbt, CommandSource source) throws CommandSyntaxException
 		{
 			if(entity instanceof LivingEntity)
 			{
@@ -155,6 +164,8 @@ public class CommandAbilities extends CommandBase
 					data.getAbilities().addCustomAbility(ability);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"add", getAbilityWithEdit(ability, living), living.getDisplayName()), true);
 			}
+			else
+				throw INVALID_ENTITY_EXCEPTION.create();
 			return 15;
 		}
 	}
@@ -198,6 +209,8 @@ public class CommandAbilities extends CommandBase
 				else
 					throw EDIT_INVALID_EXCEPTION.create(mapName);
 			}
+			else
+				throw INVALID_ENTITY_EXCEPTION.create();
 			return 15;
 		}
 	}
@@ -211,7 +224,7 @@ public class CommandAbilities extends CommandBase
 						.executes((source) -> { return removeAbility(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, ABILITY), source.getSource()); }));
 		}
 		
-		private static int removeAbility(Entity entity, ResourceLocation mapName, CommandSource source)
+		private static int removeAbility(Entity entity, ResourceLocation mapName, CommandSource source) throws CommandSyntaxException
 		{
 			if(entity instanceof LivingEntity)
 			{
@@ -220,6 +233,8 @@ public class CommandAbilities extends CommandBase
 				data.getAbilities().removeCustomAbility(mapName);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"remove", mapName, living.getDisplayName()), true);
 			}
+			else
+				throw INVALID_ENTITY_EXCEPTION.create();
 			return 15;
 		}
 	}

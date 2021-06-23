@@ -11,7 +11,7 @@ import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.init.VOPotions;
-import com.lying.variousoddities.network.PacketAirJump;
+import com.lying.variousoddities.network.PacketBonusJump;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.reference.Reference;
@@ -20,6 +20,7 @@ import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -122,13 +123,26 @@ public class VOBusClient
 			LivingData data = LivingData.forEntity(event.getEntityLiving());
 			Abilities abilities = data.getAbilities();
 			Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
-			if(!player.isOnGround() && abilities.canAirJump && player.movementInput.jump)
-				if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
+			if(player.movementInput.jump && abilities.canBonusJump)
+			{
+				if(AbilitySwim.isEntitySwimming(player))
 				{
-					abilities.doAirJump();
-					player.connection.sendPacket(new CEntityActionPacket(player, CEntityActionPacket.Action.START_FALL_FLYING));
-					PacketHandler.sendToServer(new PacketAirJump());
+					if(abilityMap.containsKey(AbilitySwim.REGISTRY_NAME))
+					{
+						abilities.doWaterJump();
+						PacketHandler.sendToServer(new PacketBonusJump(false));
+					}
 				}
+				else if(!player.isOnGround())
+				{
+					if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
+					{
+						abilities.doAirJump();
+						player.connection.sendPacket(new CEntityActionPacket(player, CEntityActionPacket.Action.START_FALL_FLYING));
+						PacketHandler.sendToServer(new PacketBonusJump());
+					}
+				}
+			}
 		}
 	}
 	

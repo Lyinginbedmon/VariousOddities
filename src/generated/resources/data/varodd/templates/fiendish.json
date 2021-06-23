@@ -1,0 +1,27 @@
+{
+  "UUID": "ff6ac129-6eaf-4015-bbc3-75ec226e5bf6",
+  "CanPlayerSelect": true,
+  "Power": 2,
+  "Operations": [
+    {
+      "Action": "add",
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"extraplanar\"]}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"cold\",Amount:5},Name:\"varodd:resistance\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"fire\",Amount:5},Name:\"varodd:resistance\"}}"
+    }
+  ]
+}

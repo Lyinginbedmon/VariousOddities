@@ -32,6 +32,8 @@ public class ConfigVO
 		
 		public final ForgeConfigSpec.BooleanValue holdKeyForMenu;
 		
+		public final ForgeConfigSpec.BooleanValue eternalPride;
+		
 		public Client(ForgeConfigSpec.Builder builder)
 		{
 			builder.push("hud");
@@ -40,6 +42,7 @@ public class ConfigVO
 				abilityCorner = builder.defineEnum("HUD_corner", EnumCorner.TOP_LEFT);
 				nameDisplay = builder.defineEnum("name_display_style", EnumNameDisplay.CROPPED);
 				holdKeyForMenu = builder.define("hold_key_for_ability_menu", false);
+				eternalPride = builder.define("year-round Pride visuals", false);
 			builder.pop();
 		}
 		

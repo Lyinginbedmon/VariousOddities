@@ -1,0 +1,16 @@
+{
+  "CanPlayerSelect": false,
+  "Power": 10,
+  "Types": [
+    "fey",
+    "holy"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:5.0d},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:natural_armour\"}",
+    "{Tag:{Amount:10,Exceptions:[\"silver\"]},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:damage_reduction\"}",
+    "{Tag:{Rate:3.0f,Ticks:0,Damage:0.0f},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:fast_healing\"}",
+    "{Tag:{Type:\"magic\",Amount:5},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:resistance\"}",
+    "{Tag:{Active:0,Cooldown:120,Range:16.0d},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:teleport_to_position\"}",
+    "{Tag:{Active:0,Cooldown:1200},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:teleport_to_home\"}"
+  ]
+}

@@ -2,6 +2,7 @@ package com.lying.variousoddities.init;
 
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.templates.TemplateOperation;
 
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -22,9 +23,9 @@ public class VORegistryHandler
 		AbilityRegistry.onRegisterAbilities(event);
     }
 	
-//	@SubscribeEvent
-//    public void onRegisterSpecies(RegistryEvent.Register<Species> event)
-//    {
-//    	SpeciesRegistry.onRegisterSpecies(event);
-//    }
+	@SubscribeEvent
+    public void onRegisterOperations(RegistryEvent.Register<TemplateOperation.Builder> event)
+    {
+		TemplateOperation.onRegisterOperations(event);
+    }
 }

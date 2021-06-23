@@ -3,6 +3,7 @@ package com.lying.variousoddities.client.renderer.entity.layer;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemHeldFlag.EnumPrideType;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -28,12 +29,10 @@ public class LayerHeldItemPride<T extends LivingEntity, M extends EntityModel<T>
 	{
 		super(p_i50934_1_);
 	}
-
+	
 	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		if(!isJune())
-			super.render(matrixStackIn, bufferIn, packedLightIn, entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
-		else
+		if(isJune() || ConfigVO.CLIENT.eternalPride.get())
 		{
 			boolean flag = entitylivingbaseIn.getPrimaryHand() == HandSide.RIGHT;
 			ItemStack itemLeft = flag ? entitylivingbaseIn.getHeldItemOffhand() : entitylivingbaseIn.getHeldItemMainhand();
@@ -59,6 +58,8 @@ public class LayerHeldItemPride<T extends LivingEntity, M extends EntityModel<T>
 				matrixStackIn.pop();
 			}
 		}
+		else
+			super.render(matrixStackIn, bufferIn, packedLightIn, entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
 	}
 	
 	private void renderItem(LivingEntity livingEntity, ItemStack itemStack, ItemCameraTransforms.TransformType camera, HandSide handSide, MatrixStack matrix, IRenderTypeBuffer buffer, int packedLight)

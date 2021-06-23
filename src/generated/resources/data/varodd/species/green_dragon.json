@@ -1,0 +1,15 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 5,
+  "Types": [
+    "dragon",
+    "air"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:7.0d},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:natural_armour\"}",
+    "{Tag:{Type:\"immune\",Damage:\"acid\"},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:damage_resistance\"}",
+    "{UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:water_breathing\"}",
+    "{Tag:{Speed:0.7d,Active:0,Cooldown:20,IsActive:0b,Quality:\"poor\"},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:flight\"}",
+    "{Tag:{Particle:\"minecraft:dragon_breath\",Active:0,Type:\"cone\",Cooldown:1200,Duration:60,Damage:{Type:\"acid\",Min:4.0f,Max:24.0f},Distance:9.0d},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:breath_weapon\"}"
+  ]
+}

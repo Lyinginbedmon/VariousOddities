@@ -164,9 +164,6 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.SPEED, 0, 0, true, false))));
 		DEFAULT_SPECIES.add(new Species(SPECIES_ZOMBIE)
 				.setPlayerSelect(false)
-				.addType(EnumCreatureType.UNDEAD)
-				.addAbility(new AbilityNaturalArmour(2D))
-				.addAbility(new AbilityDamageReduction(3))
 				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.STRENGTH, 0, 0, true, false)))
 				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.SLOWNESS, 0, 0, true, false))));
 	}

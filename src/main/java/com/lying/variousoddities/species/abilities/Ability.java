@@ -73,12 +73,13 @@ public abstract class Ability
 	
 	public boolean hasCustomName(){ return this.displayName != null; }
 	
-	public void setDisplayName(ITextComponent nameIn)
+	public Ability setDisplayName(ITextComponent nameIn)
 	{
 		if(nameIn != null)
 			this.displayName = nameIn;
 		else
 			this.displayName = null;
+		return this;
 	}
 	
 	public void setCustomNature(Nature natureIn){ this.customNature = natureIn; }

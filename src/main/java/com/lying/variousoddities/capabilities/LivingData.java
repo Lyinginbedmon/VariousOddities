@@ -2,7 +2,9 @@ package com.lying.variousoddities.capabilities;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -13,6 +15,7 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
@@ -22,6 +25,7 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
 import com.lying.variousoddities.species.SpeciesRegistry;
+import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
@@ -84,7 +88,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private boolean selectedSpecies = false;
 	private Species.SpeciesInstance species = null;
-//	private List<Template> templates = Lists.newArrayList();
+	private Map<ResourceLocation, Template> templates = new HashMap<>();
 	
 	private Abilities abilities = new Abilities();
 	
@@ -154,6 +158,14 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				compound.put("Species", this.species.writeToNBT(new CompoundNBT()));
 			compound.putBoolean("SelectedSpecies", this.selectedSpecies);
 			
+			if(!this.templates.isEmpty())
+			{
+				ListNBT templateList = new ListNBT();
+				for(ResourceLocation template : templates.keySet())
+					templateList.add(StringNBT.valueOf(template.toString()));
+				compound.put("Templates", templateList);
+			}
+			
 			ListNBT types = new ListNBT();
 			for(EnumCreatureType type : prevTypes)
 				types.add(StringNBT.valueOf(type.getString()));
@@ -181,15 +193,26 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
 		
 		this.air = nbt.getInt("Air");
-		
+
+		this.species = null;
 		if(nbt.contains("Species", 10))
 		{
 			CompoundNBT speciesData = nbt.getCompound("Species");
 			this.species = SpeciesRegistry.instanceFromNBT(speciesData);
 		}
-		else
-			this.species = null;
 		this.selectedSpecies = nbt.getBoolean("SelectedSpecies");
+		
+		this.templates.clear();
+		if(nbt.contains("Templates", 9))
+		{
+			ListNBT templateList = nbt.getList("Templates", 8);
+			for(int i=0; i<templateList.size(); i++)
+			{
+				ResourceLocation registryName = new ResourceLocation(templateList.getString(i));
+				if(VORegistries.TEMPLATES.containsKey(registryName))
+					this.templates.put(registryName, VORegistries.TEMPLATES.get(registryName));
+			}
+		}
 		
 		ListNBT types = nbt.getList("Types", 8);
 		prevTypes.clear();
@@ -243,6 +266,43 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public SpeciesInstance getSpecies(){ return this.species; }
 	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; this.abilities.markForRecache(); markDirty(); }
 	public void setSpecies(Species speciesIn){ setSpecies(speciesIn.createInstance()); }
+	
+	public void addTemplate(Template templateIn)
+	{
+		if(this.templates.containsKey(templateIn.getRegistryName()))
+			return;
+		
+		this.templates.put(templateIn.getRegistryName(), templateIn);
+		this.abilities.markForRecache();
+		this.markDirty();
+	}
+	
+	public void removeTemplate(Template templateIn)
+	{
+		removeTemplate(templateIn.getRegistryName());
+	}
+	
+	public void removeTemplate(ResourceLocation registryName)
+	{
+		if(!hasTemplate(registryName))
+			return;
+		
+		this.templates.remove(registryName);
+		this.abilities.markForRecache();
+		this.markDirty();
+	}
+	
+	public void clearTemplates()
+	{
+		this.templates.clear();
+		this.abilities.markForRecache();
+		this.markDirty();
+	}
+	
+	public Collection<Template> getTemplates(){ return this.templates.values(); }
+	
+	public boolean hasTemplates(){ return !this.templates.isEmpty(); }
+	public boolean hasTemplate(ResourceLocation registryName){ return this.templates.containsKey(registryName); }
 	
 	public List<EnumCreatureType> getTypesFromSpecies()
 	{

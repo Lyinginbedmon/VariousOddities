@@ -37,10 +37,9 @@ public class LayerDazed<T extends LivingEntity, M extends BipedModel<T>> extends
 				matrixStackIn.scale(scale, scale, scale);
 				matrixStackIn.translate(0D, -0.8D, 0D);
 				
-				float time = ageInTicks + partialTicks;
 				RenderSystem.color4f(1F, 1F, 1F, 1F);
 				RenderSystem.disableBlend();
-				IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getEnergySwirl(dazedTextured, 0F, time * 0.05F));
+				IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getEntityCutout(dazedTextured));
 				dazedModel.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 				dazedModel.render(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 0.8F);
 				RenderSystem.enableBlend();

@@ -1,0 +1,47 @@
+{
+  "UUID": "0f52db4b-4388-4fde-8e55-34ff8a68ca85",
+  "CanPlayerSelect": false,
+  "Power": 4,
+  "Operations": [
+    {
+      "Action": "remove_all",
+      "Name": "varodd:type",
+      "Tag": "{Supertypes:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"undead\"]}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:5.0d},Name:\"varodd:natural_armour\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:15,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"immune\",Damage:\"cold\"},Name:\"varodd:damage_resistance\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"immune\",Damage:\"lightning\"},Name:\"varodd:damage_resistance\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Descriptor:\"mind_affecting\"},Name:\"varodd:resistance_spell\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{CustomName:'{\"translate\":\"ability.varodd:lich_touch\"}',Tag:{Effects:[{Ambient:0b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:1b,ShowParticles:1b,Duration:300,Id:33b,Amplifier:0b}],Chance:0.65f},Name:\"varodd:poison\"}}"
+    }
+  ]
+}

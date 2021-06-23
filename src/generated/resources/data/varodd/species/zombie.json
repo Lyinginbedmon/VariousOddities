@@ -1,0 +1,9 @@
+{
+  "CanPlayerSelect": false,
+  "Power": 0,
+  "Types": [],
+  "Abilities": [
+    "{Tag:{Ambient:1b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:0b,ShowParticles:0b,Duration:0,Id:5b,Amplifier:0b},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:status_effect\"}",
+    "{Tag:{Ambient:1b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:0b,ShowParticles:0b,Duration:0,Id:2b,Amplifier:0b},UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:status_effect\"}"
+  ]
+}

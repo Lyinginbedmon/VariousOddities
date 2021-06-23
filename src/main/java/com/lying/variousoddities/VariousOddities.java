@@ -22,6 +22,7 @@ import com.lying.variousoddities.proxy.IProxy;
 import com.lying.variousoddities.proxy.ServerProxy;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.SpeciesRegistry;
+import com.lying.variousoddities.species.TemplateRegistry;
 import com.lying.variousoddities.species.types.TypeBus;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.lying.variousoddities.utility.VOBusServer;
@@ -133,5 +134,6 @@ public class VariousOddities
 	public void onReloadListenersEvent(AddReloadListenerEvent event)
 	{
 		event.addListener(SpeciesRegistry.getInstance());
+		event.addListener(TemplateRegistry.getInstance());
 	}
 }

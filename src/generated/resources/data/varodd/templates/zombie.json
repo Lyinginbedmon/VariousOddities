@@ -1,0 +1,32 @@
+{
+  "UUID": "eec62733-5e7b-4c47-a939-9590b9a6f492",
+  "CanPlayerSelect": false,
+  "Power": 1,
+  "Operations": [
+    {
+      "Action": "remove_all",
+      "Name": "varodd:type",
+      "Tag": "{Supertypes:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"undead\"]}"
+    },
+    {
+      "Action": "remove_all",
+      "Name": "varodd:ability",
+      "Tag": "{Nature:[\"spell_like\",\"supernatural\"]}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:2.0d},Name:\"varodd:natural_armour\"}}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:3},Name:\"varodd:damage_reduction\"}}"
+    }
+  ]
+}

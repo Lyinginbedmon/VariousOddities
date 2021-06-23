@@ -38,7 +38,6 @@ public class AbilityRegistry
 	 * 
 	 * Darkvision
 	 * Low-light Vision
-	 * Light Sensitivity
 	 * Blindsense
 	 */
 	
@@ -69,8 +68,10 @@ public class AbilityRegistry
 		registry.register(new AbilityNaturalRegen.Builder());
 		registry.register(new AbilityPoison.Builder());
 		registry.register(new AbilityRend.Builder());
+		registry.register(new AbilityResistance.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
+		registry.register(new AbilitySwim.Builder());
 		registry.register(new AbilityTeleportToHome.Builder());
 		registry.register(new AbilityTeleportToPos.Builder());
 		registry.register(new AbilityTremorsense.Builder());

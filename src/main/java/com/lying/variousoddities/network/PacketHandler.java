@@ -41,7 +41,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketParalysisResignation.class, PacketParalysisResignation::encode, PacketParalysisResignation::decode, PacketParalysisResignation::handle);
 		HANDLER.registerMessage(id++, PacketSyncTypesCustom.class, PacketSyncTypesCustom::encode, PacketSyncTypesCustom::decode, PacketSyncTypesCustom::handle);
 		HANDLER.registerMessage(id++, PacketSyncLivingData.class, PacketSyncLivingData::encode, PacketSyncLivingData::decode, PacketSyncLivingData::handle);
-		HANDLER.registerMessage(id++, PacketAirJump.class, PacketAirJump::encode, PacketAirJump::decode, PacketAirJump::handle);
+		HANDLER.registerMessage(id++, PacketBonusJump.class, PacketBonusJump::encode, PacketBonusJump::decode, PacketBonusJump::handle);
 		HANDLER.registerMessage(id++, PacketSpeciesOpenScreen.class, PacketSpeciesOpenScreen::encode, PacketSpeciesOpenScreen::decode, PacketSpeciesOpenScreen::handle);
 		HANDLER.registerMessage(id++, PacketSpeciesSelected.class, PacketSpeciesSelected::encode, PacketSpeciesSelected::decode, PacketSpeciesSelected::handle);
 		HANDLER.registerMessage(id++, PacketSyncSpecies.class, PacketSyncSpecies::encode, PacketSyncSpecies::decode, PacketSyncSpecies::handle);
