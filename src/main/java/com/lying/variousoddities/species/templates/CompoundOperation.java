@@ -1,12 +1,18 @@
 package com.lying.variousoddities.species.templates;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
 
 /** A template operation containing a set of sub operations */
@@ -14,7 +20,7 @@ public class CompoundOperation extends TemplateOperation
 {
 	private static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "compound");
 	
-	private List<TemplateOperation> subOperations = Lists.newArrayList();
+	protected List<TemplateOperation> subOperations = Lists.newArrayList();
 	
 	public CompoundOperation()
 	{
@@ -23,26 +29,53 @@ public class CompoundOperation extends TemplateOperation
 	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundNBT writeToNBT(CompoundNBT compound){ return compound; }
+	public void readFromNBT(CompoundNBT compound){ }
+	
+	@Override
+	public JsonObject writeToJson(JsonObject json)
 	{
-		ListNBT operationList = new ListNBT();
+		json.addProperty("Name", getRegistryName().toString());
+		
+		JsonArray operations = new JsonArray();
 		for(TemplateOperation operation : subOperations)
-			operationList.add(operation.write(new CompoundNBT()));
-		compound.put("Operations", operationList);
-		return compound;
+			operations.add(operation.writeToJson(new JsonObject()));
+		
+		json.add("Operations", operations);
+		return json;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	@Override
+	public void readFromJson(JsonObject json)
 	{
-		// TODO Auto-generated method stub
-		ListNBT operationList = compound.getList("Operations", 10);
-		for(int i=0; i<operationList.size(); i++)
+		JsonArray operations = json.getAsJsonArray("Operations");
+		for(int i=0; i<operations.size(); i++)
 		{
-			
+			TemplateOperation operation = TemplateOperation.getFromJson(operations.get(i).getAsJsonObject());
+			if(operation != null)
+				this.subOperations.add(operation);
 		}
 	}
 	
 	public CompoundOperation addOperation(TemplateOperation operationIn){ this.subOperations.add(operationIn); return this; }
+	
+	public void applyToEntity(LivingEntity entity)
+	{
+		for(TemplateOperation operation : subOperations)
+			operation.applyToEntity(entity);
+	}
+	
+	public void applyToTypes(Collection<EnumCreatureType> typeSet)
+	{
+		for(TemplateOperation operation : subOperations)
+			operation.applyToTypes(typeSet);
+	}
+	
+	public void applyToAbilities(Map<ResourceLocation, Ability> abilityMap)
+	{
+		for(TemplateOperation operation : subOperations)
+			operation.applyToAbilities(abilityMap);
+	}
 	
 	public static class Builder extends TemplateOperation.Builder
 	{

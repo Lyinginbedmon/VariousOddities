@@ -40,30 +40,17 @@ public abstract class TemplateOperation
 	
 	public void setTemplateID(UUID uuidIn){ this.templateID = uuidIn;  }
 	
-	public ITextComponent translate(){ return new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
+	public ITextComponent translate(){ return new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
 	
 	public void applyToEntity(LivingEntity entity){ }
+	
+	public boolean ifTypes(Collection<EnumCreatureType> typesIn){ return true; }
 	
 	public void applyToTypes(Collection<EnumCreatureType> typeSet){ }
 	
 	public void applyToAbilities(Map<ResourceLocation, Ability> abilityMap){ }
 	
-	public CompoundNBT write(CompoundNBT compound)
-	{
-		compound.putString("Name", getRegistryName().toString());
-		compound.putString("Action", this.action.getString());
-		
-		compound.put("Tag", writeToNBT(new CompoundNBT()));
-		return compound;
-	}
-	
 	public abstract CompoundNBT writeToNBT(CompoundNBT compound);
-	
-	public void read(CompoundNBT compound)
-	{
-		this.action = Operation.fromString(compound.getString("Action"));
-		readFromNBT(compound.getCompound("Tag"));
-	}
 	
 	public abstract void readFromNBT(CompoundNBT compound);
 	
@@ -101,6 +88,8 @@ public abstract class TemplateOperation
 		
 		registry.register(new TypeOperation.Builder());
 		registry.register(new AbilityOperation.Builder());
+		registry.register(new CompoundOperation.Builder());
+		registry.register(new OperationReplaceSupertypes.Builder());
 		
 		VariousOddities.log.info("Initialised "+registry.getEntries().size()+" template operations");
 		if(ConfigVO.GENERAL.verboseLogs())
@@ -116,17 +105,7 @@ public abstract class TemplateOperation
 			if(VORegistries.OPERATIONS.containsKey(registryName))
 			{
 				TemplateOperation operation = VORegistries.OPERATIONS.getValue(registryName).create();
-				operation.action = Operation.fromString(json.get("Action").getAsString());
-				
-				CompoundNBT tag = new CompoundNBT();
-				try
-				{
-					tag = JsonToNBT.getTagFromJson(json.get("Tag").getAsString());
-				}
-				catch (CommandSyntaxException e){ }
-				if(!tag.isEmpty())
-					operation.readFromNBT(tag);
-				
+				operation.readFromJson(json);
 				return operation;
 			}
 			else

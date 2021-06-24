@@ -73,11 +73,6 @@ public class CommandFaction extends CommandBase
 			return faction;
 	}
 	
-	public static ITextComponent factionToInfo(Faction faction)
-	{
-		return factionToInfo(faction);
-	}
-	
 	public static ITextComponent factionToInfo(String faction)
 	{
 		return new StringTextComponent(faction).modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new TranslationTextComponent("command.varodd.faction.manage.click"))).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/faction manage info "+faction))); } );
@@ -108,7 +103,7 @@ public class CommandFaction extends CommandBase
     	private static int givePlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
     	{
     		FactionReputation.addPlayerReputation(player, faction.name, ReputationChange.COMMAND, amount, null);
-    		source.sendFeedback(new TranslationTextComponent(translationSlug+"give.success", player.getDisplayName(), amount, factionToInfo(faction)), true);
+    		source.sendFeedback(new TranslationTextComponent(translationSlug+"give.success", player.getDisplayName(), amount, factionToInfo(faction.name)), true);
     		return (int)(15F * ((float)(FactionReputation.getPlayerReputation(player, faction.name) + 100) / 200F));
     	}
 	}
@@ -128,7 +123,7 @@ public class CommandFaction extends CommandBase
     	private static int setPlayerRep(PlayerEntity player, Faction faction, int amount, CommandSource source)
     	{
     		FactionReputation.setPlayerReputation(player, faction.name, amount);
-    		source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", player.getDisplayName(), factionToInfo(faction), amount), true);
+    		source.sendFeedback(new TranslationTextComponent(translationSlug+"set.success", player.getDisplayName(), factionToInfo(faction.name), amount), true);
     		return repToStrength(FactionReputation.getPlayerReputation(player, faction.name));
     	}
 	}
@@ -172,7 +167,7 @@ public class CommandFaction extends CommandBase
     	private static int getPlayerRep(PlayerEntity player, Faction faction, CommandSource source)
     	{
     		int reputation = FactionReputation.getPlayerReputation(player, faction.name);
-    		source.sendFeedback(new TranslationTextComponent(translationSlug+"get.success", player.getDisplayName(), factionToInfo(faction), reputation), true);
+    		source.sendFeedback(new TranslationTextComponent(translationSlug+"get.success", player.getDisplayName(), factionToInfo(faction.name), reputation), true);
     		return repToStrength(reputation);
     	}
 	}

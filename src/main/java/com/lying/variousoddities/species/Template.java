@@ -93,14 +93,12 @@ public class Template
 	
 	public void applyTypeOperations(Collection<EnumCreatureType> typesIn)
 	{
-		for(TemplateOperation operation : operations)
-			operation.applyToTypes(typesIn);
+		operations.forEach((operation) -> { operation.applyToTypes(typesIn); });
 	}
 	
 	public void applyAbilityOperations(Map<ResourceLocation, Ability> abilityMap)
 	{
-		for(TemplateOperation operation : operations)
-			operation.applyToAbilities(abilityMap);
+		operations.forEach((operation) -> { operation.applyToAbilities(abilityMap); });
 	}
 	
 	public static Template fromJson(@Nullable JsonElement json)

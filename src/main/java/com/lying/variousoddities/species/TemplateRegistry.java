@@ -24,9 +24,12 @@ import com.lying.variousoddities.species.abilities.AbilityResistance;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.templates.AbilityOperation;
+import com.lying.variousoddities.species.templates.OperationReplaceSupertypes;
 import com.lying.variousoddities.species.templates.TemplateOperation;
 import com.lying.variousoddities.species.templates.TemplateOperation.Operation;
 import com.lying.variousoddities.species.templates.TypeOperation;
+import com.lying.variousoddities.species.templates.TypeOperation.Condition;
+import com.lying.variousoddities.species.templates.TypeOperation.Condition.Style;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
@@ -123,6 +126,7 @@ public class TemplateRegistry extends JsonReloadListener
 		DEFAULT_TEMPLATES.add(new Template(TEMPLATE_FIENDISH, UUID_FIENDISH)
 				.setPower(2)
 				.setPlayerSelect(true)
+				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
 				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.EXTRAPLANAR))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageReduction(5, DamageType.MAGIC)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityResistance(5, DamageType.COLD)))
@@ -130,6 +134,7 @@ public class TemplateRegistry extends JsonReloadListener
 		DEFAULT_TEMPLATES.add(new Template(TEMPLATE_CELESTIAL, UUID_CELESTIAL)
 				.setPower(2)
 				.setPlayerSelect(true)
+				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
 				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.EXTRAPLANAR))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageReduction(5, DamageType.MAGIC)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityResistance(5, DamageType.COLD)))
@@ -138,16 +143,14 @@ public class TemplateRegistry extends JsonReloadListener
 		DEFAULT_TEMPLATES.add(new Template(TEMPLATE_ZOMBIE, UUID_ZOMBIE)
 				.setPower(1)
 				.setPlayerSelect(false)
-				.addOperation(new TypeOperation(Operation.REMOVE_ALL, true))
-				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.UNDEAD))
+				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
 				.addOperation(new AbilityOperation(Operation.REMOVE_ALL, Nature.SPELL_LIKE, Nature.SUPERNATURAL))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityNaturalArmour(2D)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageReduction(3))));
 		DEFAULT_TEMPLATES.add(new Template(TEMPLATE_LICH, UUID_LICH)
 				.setPower(4)
 				.setPlayerSelect(false)
-				.addOperation(new TypeOperation(Operation.REMOVE_ALL, true))
-				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.UNDEAD))
+				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityNaturalArmour(5D)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageReduction(15, DamageType.MAGIC)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)))

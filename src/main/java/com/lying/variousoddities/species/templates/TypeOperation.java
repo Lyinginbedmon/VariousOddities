@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
@@ -12,7 +14,9 @@ import com.lying.variousoddities.species.types.Types;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -21,13 +25,9 @@ public class TypeOperation extends TemplateOperation
 {
 	private static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "type");
 	
-	private EnumCreatureType[] types = null;
+	protected EnumCreatureType[] types = null;
 	private boolean removalType = false;
-	
-	public TypeOperation(Operation actionIn, EnumCreatureType typeIn)
-	{
-		this(actionIn, new EnumCreatureType[]{typeIn});
-	}
+	protected Condition condition = null;
 	
 	public TypeOperation(Operation actionIn, EnumCreatureType... typesIn)
 	{
@@ -43,25 +43,32 @@ public class TypeOperation extends TemplateOperation
 	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
 	
+	public TypeOperation setCondition(Condition conditionIn){ this.condition = conditionIn; return this; }
+	
 	public ITextComponent translate()
 	{
+		ITextComponent translation = null;
 		String translationBase = "operation."+Reference.ModInfo.MOD_ID+".type.";
 		switch(this.action)
 		{
 			case ADD:
-				return new TranslationTextComponent(translationBase+"add", typesToString());
+				translation = new TranslationTextComponent(translationBase+"add", typesToString(this.types));
+				break;
 			case REMOVE:
-				return new TranslationTextComponent(translationBase+"remove", typesToString());
+				translation = new TranslationTextComponent(translationBase+"remove", typesToString(this.types));
+				break;
 			case REMOVE_ALL:
-				return new TranslationTextComponent(translationBase+"remove_all."+(removalType ? "supertypes" : "subtypes"));
+				translation = new TranslationTextComponent(translationBase+"remove_all."+(removalType ? "supertypes" : "subtypes"));
+				break;
 			case SET:
-				return new TranslationTextComponent(translationBase+"set", (new Types(Arrays.asList(this.types)).toHeader()));
-			default:
-				return super.translate();
+				translation = new TranslationTextComponent(translationBase+"set", (new Types(Arrays.asList(this.types)).toHeader()));
+				break;
 		}
+		
+		return condition == null ? translation : condition.translate().append(translation);
 	}
 	
-	private StringTextComponent typesToString()
+	protected static StringTextComponent typesToString(EnumCreatureType... types)
 	{
 		StringTextComponent text = new StringTextComponent("[");
 		for(int i=0; i<types.length; i++)
@@ -107,8 +114,31 @@ public class TypeOperation extends TemplateOperation
 			this.removalType = compound.getBoolean("Supertypes");
 	}
 	
+	public JsonObject writeToJson(JsonObject json)
+	{
+		if(this.condition != null)
+			json.add("Condition", this.condition.writeToJson(new JsonObject()));
+		super.writeToJson(json);
+		return json;
+	}
+	
+	public void readFromJson(JsonObject json)
+	{
+		if(json.has("Condition"))
+			this.condition = Condition.readFromJson(json.getAsJsonObject("Condition"));
+		super.readFromJson(json);
+	}
+	
+	public boolean conditionsValid(Collection<EnumCreatureType> typeSet)
+	{
+		return this.condition == null || this.condition.isValid(typeSet);
+	}
+	
 	public void applyToTypes(Collection<EnumCreatureType> typeSet)
 	{
+		if(!conditionsValid(typeSet))
+			return;
+		
 		switch(this.action)
 		{
 			case ADD:			// Add all types of this operation
@@ -149,6 +179,95 @@ public class TypeOperation extends TemplateOperation
 		public TemplateOperation create()
 		{
 			return new TypeOperation(Operation.ADD);
+		}
+	}
+	
+	public static class Condition
+	{
+		private Style style;
+		private EnumCreatureType[] types;
+		
+		public Condition(Style styleIn, EnumCreatureType... typesIn)
+		{
+			this.style = styleIn;
+			this.types = typesIn;
+		}
+		
+		public JsonObject writeToJson(JsonObject json)
+		{
+			json.addProperty("Style", this.style.getString());
+			
+			JsonArray typesList = new JsonArray();
+			for(EnumCreatureType type : types)
+				typesList.add(type.getString());
+			json.add("Types", typesList);
+			return json;
+		}
+		
+		public static Condition readFromJson(JsonObject json)
+		{
+			Style style = Style.fromString(json.get("Style").getAsString());
+			
+			JsonArray typesList = json.getAsJsonArray("Types");
+			EnumCreatureType[] types = new EnumCreatureType[typesList.size()];
+			for(int i=0; i<typesList.size(); i++)
+				types[i] = EnumCreatureType.fromName(typesList.get(i).getAsString());
+			
+			return new Condition(style, types);
+		}
+		
+		public boolean isValid(Collection<EnumCreatureType> typesIn)
+		{
+			if(types == null || types.length == 0)
+				return true;
+			
+			switch(this.style)
+			{
+				case AND:
+					for(EnumCreatureType type : this.types)
+						if(!typesIn.contains(type))
+							return false;
+					return true;
+				case OR:
+					for(EnumCreatureType type : this.types)
+						if(typesIn.contains(type))
+							return true;
+					return false;
+				case XOR:
+					boolean found = false;
+					for(EnumCreatureType type : this.types)
+						if(typesIn.contains(type))
+						{
+							if(found)
+								return false;
+							else
+								found = true;
+						}
+					return found;
+			}
+			return false;
+		}
+		
+		public IFormattableTextComponent translate()
+		{
+			return new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+".type.condition."+this.style.getString(), typesToString(this.types));
+		}
+		
+		public static enum Style implements IStringSerializable
+		{
+			AND,
+			OR,
+			XOR;
+			
+			public String getString(){ return name().toLowerCase(); }
+			
+			public static Style fromString(String nameIn)
+			{
+				for(Style style : values())
+					if(style.getString().equalsIgnoreCase(nameIn))
+						return style;
+				return AND;
+			}
 		}
 	}
 }
