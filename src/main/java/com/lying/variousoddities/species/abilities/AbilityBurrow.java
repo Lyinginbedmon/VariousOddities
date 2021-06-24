@@ -41,6 +41,17 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 		this.leavesTunnel = tunnel;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityBurrow burrow = (AbilityBurrow)abilityIn;
+		if(burrow.canBurrowStone && !canBurrowStone)
+			return -1;
+		else if(canBurrowStone && !burrow.canBurrowStone)
+			return 1;
+		
+		return 0;
+	}
+	
 	public Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.burrow."+(isActive() ? "active" : "inactive")); }

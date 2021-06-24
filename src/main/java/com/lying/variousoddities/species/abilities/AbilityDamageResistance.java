@@ -26,6 +26,14 @@ public class AbilityDamageResistance extends Ability
 	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "damage_resistance_"+damageType.getString()); }
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityDamageResistance resistance = (AbilityDamageResistance)abilityIn;
+		if(resistance.damageType == damageType)
+			return resistance.resistType.val() < resistType.val() ? -1 : resistance.resistType.val() > resistType.val() ? 1 : 0;
+		return 0;
+	}
+	
 	public ITextComponent translatedName()
 	{
 		return resistType.getTranslated(damageType);

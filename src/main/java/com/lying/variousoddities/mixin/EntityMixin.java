@@ -118,7 +118,7 @@ public class EntityMixin extends CapabilityProviderMixin
 	{
 		Entity ent = (Entity)(Object)this;
 		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityHoldBreath.REGISTRY_NAME))
-			ci.setReturnValue(ci.getReturnValueI() * 2);
+			ci.setReturnValue(600);
 	}
 	
 	@Inject(method = "setMotionMultiplier(Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/vector/Vector3d;)V", at = @At("HEAD"), cancellable = true)

@@ -39,6 +39,14 @@ public class AbilityExplode extends ActivatedAbility
 	
 	public ITextComponent translatedName(){ return this.charged ? new TranslationTextComponent("ability."+getMapName()+"_charged") : super.translatedName(); }
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityExplode explode = (AbilityExplode)abilityIn;
+		if(explode.radius != radius)
+			return explode.radius < radius ? 1 : -1;
+		return explode.fuse > fuse ? 1 : explode.fuse < fuse ? -1 : 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Ability.Type.ATTACK; }

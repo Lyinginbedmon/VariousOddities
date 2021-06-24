@@ -22,6 +22,7 @@ public class AbilityOperation extends TemplateOperation
 	private static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "ability");
 	
 	private Ability ability = null;
+	private boolean unlessBetter = true;
 	private Nature[] natures = null;
 	
 	public AbilityOperation(Operation actionIn, Nature... natureIn)
@@ -32,8 +33,14 @@ public class AbilityOperation extends TemplateOperation
 	
 	public AbilityOperation(Operation actionIn, Ability abilityIn)
 	{
+		this(actionIn, true, abilityIn);
+	}
+	
+	public AbilityOperation(Operation actionIn, boolean unlessBetterIn, Ability abilityIn)
+	{
 		super(actionIn);
 		this.ability = abilityIn;
+		this.unlessBetter = unlessBetterIn;
 	}
 	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
@@ -71,7 +78,10 @@ public class AbilityOperation extends TemplateOperation
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
 		if(this.ability != null)
+		{
 			compound.put("Ability", this.ability.writeAtomically(new CompoundNBT()));
+			compound.putBoolean("UnlessBetter", this.unlessBetter);
+		}
 		else if(this.natures != null)
 		{
 			ListNBT natureList = new ListNBT();
@@ -91,6 +101,7 @@ public class AbilityOperation extends TemplateOperation
 				this.ability = AbilityRegistry.getAbility(compound.getCompound("Ability"));
 			}
 			catch(Exception e){ }
+			this.unlessBetter = compound.getBoolean("UnlessBetter");
 		}
 		else if(compound.contains("Nature", 9))
 		{
@@ -107,16 +118,19 @@ public class AbilityOperation extends TemplateOperation
 	
 	public void applyToAbilities(Map<ResourceLocation, Ability> abilityMap)
 	{
+		ResourceLocation abilityName = ability == null ? null : ability.getMapName();
 		switch(this.action)
 		{
 			case SET:			// Overwrite the existing ability
 			case ADD:			// Add the given ability
 				if(ability == null) return;
-				abilityMap.put(ability.getMapName(), ability.setSourceId(templateID));
+				if(abilityMap.containsKey(abilityName) && unlessBetter && abilityMap.get(abilityName).compare(ability) > 0)
+					return;
+				abilityMap.put(abilityName, ability.setSourceId(templateID));
 				break;
 			case REMOVE:		// Remove the ability, if it is present
-				if(ability != null && abilityMap.containsKey(ability.getMapName()))
-					abilityMap.remove(ability.getMapName());
+				if(ability != null && abilityMap.containsKey(abilityName))
+					abilityMap.remove(abilityName);
 				break;
 			case REMOVE_ALL:	// Remove all abilities of the selected nature
 				if(this.natures != null)

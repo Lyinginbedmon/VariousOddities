@@ -63,6 +63,9 @@ public abstract class Ability
 	public UUID getSourceId(){ return this.sourceId; }
 	public Ability setSourceId(UUID idIn){ this.sourceId = idIn; return this; }
 	
+	/** Compares this ability to the given one and returns an assessment of relative strength */
+	public int compare(Ability abilityIn){ return 0; }
+	
 	/** Returns true if this ability is active without needing to be triggered. */
 	public final boolean passive(){ return !(this instanceof ActivatedAbility); }
 	

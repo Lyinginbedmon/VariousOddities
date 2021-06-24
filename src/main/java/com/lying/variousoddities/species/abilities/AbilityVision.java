@@ -22,6 +22,12 @@ public abstract class AbilityVision extends Ability
 		this.rangeMin = rangeMinIn;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityVision vision = (AbilityVision)abilityIn;
+		return vision.range > this.range ? -1 : vision.range < this.range ? 1 : 0;
+	}
+	
 	public Type getType(){ return Ability.Type.UTILITY; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)

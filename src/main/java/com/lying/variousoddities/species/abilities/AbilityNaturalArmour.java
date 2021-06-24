@@ -29,6 +29,12 @@ public class AbilityNaturalArmour extends Ability
 		this.amount = amountIn;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityNaturalArmour armour = (AbilityNaturalArmour)abilityIn;
+		return armour.amount < amount ? 1 : armour.amount > amount ? -1 : 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Type.DEFENSE; }

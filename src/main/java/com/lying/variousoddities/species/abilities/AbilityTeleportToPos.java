@@ -41,6 +41,12 @@ public class AbilityTeleportToPos extends ActivatedAbility
 		this.maxRange = compound.contains("Range", 6) ? compound.getDouble("Range") : 16D;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityTeleportToPos teleport = (AbilityTeleportToPos)abilityIn;
+		return teleport.maxRange < maxRange ? 1 : teleport.maxRange > maxRange ? -1 : 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.SPELL_LIKE; }
 	
 	public Ability.Type getType(){ return Ability.Type.UTILITY; }

@@ -34,6 +34,12 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 		this.speed = speedIn;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilitySwim swim = (AbilitySwim)abilityIn;
+		return swim.speed < speed ? 1 : swim.speed > speed ? -1 : 0;
+	}
+	
 	public Type getType() { return Type.UTILITY; }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }

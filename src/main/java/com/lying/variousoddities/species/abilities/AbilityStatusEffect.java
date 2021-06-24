@@ -33,6 +33,14 @@ public class AbilityStatusEffect extends Ability
 		this(REGISTRY_NAME, effectIn);
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityStatusEffect statusEffect = (AbilityStatusEffect)abilityIn;
+		if(statusEffect.effect.getPotion() == effect.getPotion())
+			return statusEffect.effect.getAmplifier() < effect.getAmplifier() ? 1 : statusEffect.effect.getAmplifier() > effect.getAmplifier() ? -1 : 0;
+		return 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+effect.getEffectName().toLowerCase()); }

@@ -47,6 +47,7 @@ public class AbilityRegistry
 		
 		registry.register(new AbilityBlind.Builder());
 		registry.register(new AbilityBlindsight.Builder());
+		registry.register(new AbilityBreatheWater.Builder());
 		registry.register(new AbilityBreathWeapon.Builder());
 		registry.register(new AbilityBurrow.Builder());
 		registry.register(new AbilityClimb.Builder());
@@ -63,8 +64,8 @@ public class AbilityRegistry
 		registry.register(new AbilityHoldBreath.Builder());
 		registry.register(new AbilityIncorporeality.Builder());
 		registry.register(new AbilityInvisibility.Builder());
-		registry.register(new AbilityNaturalArmour.Builder());
 		registry.register(new AbilityLightSensitivity.Builder());
+		registry.register(new AbilityNaturalArmour.Builder());
 		registry.register(new AbilityNaturalRegen.Builder());
 		registry.register(new AbilityPoison.Builder());
 		registry.register(new AbilityRend.Builder());

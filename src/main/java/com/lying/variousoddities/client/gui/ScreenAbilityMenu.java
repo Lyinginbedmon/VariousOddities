@@ -197,9 +197,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		
 		float midX = this.width * 0.5F;
 		float midY = this.height * 0.5F;
-		if(abilitySet.isEmpty())
-			drawCenteredString(matrixStack, font, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".abilities_menu.empty"), (int)midX, (int)(midY + 50), -1);
-		else if(abilities.size() > 7)
+		if(abilities.size() > 7)
 		{
 			drawCenteredString(matrixStack, font, new StringTextComponent("..."), (int)midX, (int)(midY + 50), -1);
 			if(index > 0)
@@ -252,6 +250,12 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 			
 			if(isLoaded())
 				drawAbilityNames(matrixStack);
+		}
+		else
+		{
+			// Draw full circle
+			drawRadialSlice(matrixStack, midX, midY, angle, (float)angleInc, currentRadius, 200, 230, 255, 90, partialTicks);
+			drawCenteredString(matrixStack, font, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".abilities_menu.empty"), (int)midX, (int)(midY + 50), -1);
 		}
 		
 		if(!passives.isEmpty())
@@ -363,7 +367,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 				buffer.pos(matrix4f, originX, originY, 0F).color(255, 255, 255, 255).endVertex();
 				
 				Vector2f vec = rotateVector(new Vector2f(0F, radius), -initialAngle);
-				int rotationsPerArc = 8;
+				int rotationsPerArc = 16;
 				// Perimeter vertices in pairs
 				for(int i=0; i<=rotationsPerArc; i++)
 				{

@@ -25,6 +25,12 @@ public class AbilityRend extends AbilityMeleeDamage
 		this.dmgAmount = amount;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityRend rend = (AbilityRend)abilityIn;
+		return rend.dmgAmount < dmgAmount ? 1 : rend.dmgAmount > dmgAmount ? -1 : 0;
+	}
+	
 	public Type getType(){ return Type.ATTACK; }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }

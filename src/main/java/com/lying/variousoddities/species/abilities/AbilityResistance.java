@@ -29,6 +29,14 @@ public class AbilityResistance extends Ability
 		return new TranslationTextComponent("ability.varodd.resistance", damage.getTranslated(), amount);
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityResistance resistance = (AbilityResistance)abilityIn;
+		if(resistance.damage == damage)
+			return resistance.amount < amount ? 1 : resistance.amount > amount ? -1 : 0;
+		return 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Ability.Type.DEFENSE; }

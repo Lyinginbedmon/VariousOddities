@@ -121,6 +121,8 @@ public class TypeHandler
 		
 		public float apply(float amount){ return amount * (1F + mult); }
 		
+		public float val(){ return mult; }
+		
 		public String getString(){ return name().toLowerCase(); }
 		
 		public ITextComponent getTranslated(DamageType typeIn)

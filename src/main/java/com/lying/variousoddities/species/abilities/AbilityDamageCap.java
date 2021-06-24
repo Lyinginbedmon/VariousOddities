@@ -31,6 +31,14 @@ public class AbilityDamageCap extends Ability
 		this.soft = Math.min(hardCap, softCap);
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityDamageCap damage = (AbilityDamageCap)abilityIn;
+		if(damage.hard != hard)
+			return damage.hard < hard ? -1 : 1;
+		return damage.soft < soft ? -1 : damage.soft > soft ? 1 : 0;
+	}
+	
 	public ITextComponent translatedName()
 	{
 		if(this.hard > 0 || this.soft > 0)

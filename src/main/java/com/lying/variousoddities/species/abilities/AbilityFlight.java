@@ -37,6 +37,14 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 		this.speed = speedIn;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityFlight flight = (AbilityFlight)abilityIn;
+		if(flight.quality != quality)
+			return flight.quality.value < quality.value ? 1 : flight.quality.value > quality.value ? -1 : 0;
+		return flight.speed < speed ? 1 : flight.speed > speed ? -1 : 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
@@ -135,17 +143,19 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 	
 	public static enum Grade implements IStringSerializable
 	{
-		PERFECT(0.95D, 4),
-		GOOD(0.71D, 3),
-		AVERAGE(0.48D, 2),
-		POOR(0.24D, 2),
-		CLUMSY(0D, 2);
+		PERFECT(4, 0.95D, 4),
+		GOOD(3, 0.71D, 3),
+		AVERAGE(2, 0.48D, 2),
+		POOR(1, 0.24D, 2),
+		CLUMSY(0, 0D, 2);
 		
 		private final double gravity;
 		private final int jumpRate;
+		private final int value;
 		
-		private Grade(double gravIn, int jumpsIn)
+		private Grade(int valueIn, double gravIn, int jumpsIn)
 		{
+			value = valueIn;
 			gravity = gravIn;
 			jumpRate = jumpsIn;
 		}

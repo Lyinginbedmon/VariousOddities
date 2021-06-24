@@ -37,6 +37,12 @@ public class AbilityFastHealing extends Ability
 		this.rate = rate;
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityFastHealing healing = (AbilityFastHealing)abilityIn;
+		return healing.rate < rate ? -1 : healing.rate > rate ? 1 : 0;
+	}
+	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".fast_healing", (int)rate); }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }

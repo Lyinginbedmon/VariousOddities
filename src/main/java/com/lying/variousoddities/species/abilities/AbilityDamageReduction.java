@@ -51,6 +51,15 @@ public class AbilityDamageReduction extends Ability
 		return new TranslationTextComponent("ability.varodd.damage_reduction", amount, exceptionTranslated);
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityDamageReduction reduction = (AbilityDamageReduction)abilityIn;
+		if(reduction.getAmount() != getAmount())
+			return reduction.getAmount() < getAmount() ? 1 : -1;
+		
+		return reduction.exceptions.length < exceptions.length ? -1 : reduction.exceptions.length > exceptions.length ? 1 : 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Ability.Type.DEFENSE; }
