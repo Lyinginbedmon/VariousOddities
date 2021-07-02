@@ -438,6 +438,7 @@
 	"ability.varodd:rend": "Rend",
 	"ability.varodd:swim": "Swim",
 	"ability.varodd:lich_touch": "Paralyzing Touch",
+	"ability.varodd:darkvision": "Darkvision",
 		"_comment18": "Template operations",
 	"operation.varodd.type.remove_all.supertypes": "Lose all supertypes",
 	"operation.varodd.type.remove_all.subtypes": "Lose all subtypes",

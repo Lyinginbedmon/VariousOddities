@@ -72,6 +72,8 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		this(damageIn, typeIn, dist, Pair.of(dmgMin, dmgMax));
 	}
 	
+	// TODO Add comparator function for breath weapons
+	
 	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "breath_weapon_"+damage.getString()); }
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".breath_weapon", (int)distance, type.translated(damage)); }

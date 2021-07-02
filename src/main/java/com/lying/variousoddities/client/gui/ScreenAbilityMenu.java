@@ -87,9 +87,9 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	public void onScroll(int wheel)
 	{
 		int initialIndex = index;
+		
 		index -= wheel;
-		if(index != initialIndex)
-			init();
+		if(index != initialIndex) init();
 	}
 	
 	public void init()
@@ -99,8 +99,8 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		abilitySet.clear();
 		if(!abilities.isEmpty())
 		{
-			index = MathHelper.clamp(index, 0, abilities.size() > 7 ? abilities.size() - 7 : abilities.size());
-			indexEnd = Math.min(index+7, abilities.size());
+			index = MathHelper.clamp(index, 0, Math.max(abilities.size() - 7, 0));
+			indexEnd = Math.min(index + 7, abilities.size());
 			abilitySet.addAll(this.abilities.subList(index, indexEnd));
 		}
 	}

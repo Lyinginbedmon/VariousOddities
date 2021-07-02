@@ -114,6 +114,8 @@ public class VOBusServer
 		{
 			newData.setCustomTypes(oldData.getCustomTypes());
 			newData.setSpecies(oldData.getSpecies());
+			newData.setSelectedSpecies(oldData.hasSelectedSpecies());
+			newData.setTemplates(oldData.getTemplates());
 			newData.getAbilities().copy(oldData.getAbilities());
 			newData.getAbilities().markDirty();
 		}
@@ -227,8 +229,8 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onFireworkBlastEvent(FireworkExplosionEvent event)
 	{
-		ListNBT explosions = event.fireworkData() == null ? null : event.fireworkData().getList("Explosions", 10);
-		if(explosions != null && !explosions.isEmpty())
+		ListNBT explosions = event.fireworkData().getList("Explosions", 10);
+		if(!explosions.isEmpty())
 		{
 			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 1, 1).offset(event.position()).grow(16 * explosions.size());
 			for(EntityWorg worg : event.world().getEntitiesWithinAABB(EntityWorg.class, bounds))

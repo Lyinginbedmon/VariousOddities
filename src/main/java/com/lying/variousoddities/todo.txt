@@ -8,8 +8,5 @@ Warg
 	Sit command
 Species
 	Refine species-select screen
-	Implement templates
 Potions
 	Fix sleep effect on players
-	Fix visual potion effects not displaying if loaded post-application
-	Add textures for Dazed & Dazzled

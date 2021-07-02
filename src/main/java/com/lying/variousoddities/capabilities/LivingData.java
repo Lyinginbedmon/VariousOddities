@@ -93,6 +93,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private Abilities abilities = new Abilities();
 	
 	private byte visualPotions = (byte)0;
+	private int potionSyncTimer = 0;
 	
 	private int air = Reference.Values.TICKS_PER_DAY;
 	private boolean overridingAir = false;
@@ -237,12 +238,14 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public Abilities getAbilities(){ return this.abilities; }
 	
-	public boolean getVisualPotion(Effect potion){ return getVisualPotion(VOPotions.getVisualPotionIndex(potion)); }
+	public byte getVisualPotions(){ return this.visualPotions; }
+	public boolean getVisualPotion(@Nullable Effect potion){ return potion == null ? false : getVisualPotion(VOPotions.getVisualPotionIndex(potion)); }
 	public boolean getVisualPotion(int index)
 	{
-		if(index < 0)
-			return false;
+		if(index < 0) return false;
 		
+		if(visualPotions == 0)
+			return false;
 		return DataHelper.Bytes.getBit(visualPotions, index);
 	}
 	public void setVisualPotion(int index, boolean bool)
@@ -262,10 +265,23 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			PacketHandler.sendToNearby(this.entity.getEntityWorld(), this.entity, new PacketVisualPotion(this.entity.getUniqueID(), index, bool));
 	}
 	
+	public void setVisualPotions(byte value)
+	{
+		this.visualPotions = (byte)Math.max(0, value);
+	}
+	
 	public boolean hasSpecies(){ return this.species != null; }
 	public SpeciesInstance getSpecies(){ return this.species; }
 	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; this.abilities.markForRecache(); markDirty(); }
 	public void setSpecies(Species speciesIn){ setSpecies(speciesIn.createInstance()); }
+	
+	public boolean hasSelectedSpecies(){ return this.selectedSpecies; }
+	public void setSelectedSpecies(boolean bool)
+	{
+		if(bool != this.selectedSpecies)
+			markDirty();
+		this.selectedSpecies = bool;
+	}
 	
 	public void addTemplate(Template templateIn)
 	{
@@ -297,6 +313,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.templates.clear();
 		this.abilities.markForRecache();
 		this.markDirty();
+	}
+	
+	public void setTemplates(Collection<Template> templatesIn)
+	{
+		clearTemplates();
+		templatesIn.forEach((template) -> { this.templates.put(template.getRegistryName(), template); });
 	}
 	
 	public Collection<Template> getTemplates(){ return this.templates.values(); }
@@ -440,6 +462,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			if(this.entity != null && !this.entity.getEntityWorld().isRemote)
 				PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketSyncLivingData(entity.getUniqueID(), this));
 			this.dirty = false;
+		}
+		
+		if(world.isRemote && --this.potionSyncTimer <= 0)
+		{
+			this.potionSyncTimer = Reference.Values.TICKS_PER_MINUTE;
+			// Ping server for visualPotion value
+			
 		}
 	}
 	

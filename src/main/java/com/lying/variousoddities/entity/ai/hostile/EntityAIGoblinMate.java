@@ -26,7 +26,7 @@ public class EntityAIGoblinMate extends Goal
 			{
 				public boolean apply(EntityGoblin input)
 				{
-					return input.isAlive() && !input.isInLove();
+					return input.isAlive() && input.isInLove();
 				}
 			};
 	
@@ -51,10 +51,17 @@ public class EntityAIGoblinMate extends Goal
 			return false;
 		}
 		
-		if(theWorld.getEntitiesWithinAABB(EntityGoblin.class, theGoblin.getBoundingBox().grow(16), searchPredicate).isEmpty())
-			return false;
+		if(theGoblin.isCarrying())
+			return true;
 		
-		return (theGoblin.isCarrying() || theGoblin.getGrowingAge() == 0 && !theGoblin.isChild()) && theGoblin.getRNG().nextInt(100) == 0;
+		if(theWorld.getEntitiesWithinAABB(EntityGoblin.class, theGoblin.getBoundingBox().grow(16), searchPredicate).size() < 2)
+		{
+			theGoblin.setInLove(false);
+			theGoblin.setGrowingAge(1200);
+			return false;
+		}
+		
+		return (theGoblin.getGrowingAge() == 0 && !theGoblin.isChild()) && theGoblin.getRNG().nextInt(100) == 0;
 	}
 	
 	public boolean shouldContinueExecuting()

@@ -28,17 +28,18 @@ public class EntityMixinClient
 		if(player != null && ent != player)
 		{
 			double dist = Math.sqrt(player.getDistanceSq(ent));
+			
 			if(AbilityRegistry.hasAbility(player, AbilityTremorsense.REGISTRY_NAME))
 			{
 				AbilityTremorsense tremorsense = (AbilityTremorsense)AbilityRegistry.getAbilityByName(player, AbilityTremorsense.REGISTRY_NAME);
-				if(tremorsense.isInRange(dist) && tremorsense.testEntity(ent, player))
+				if(tremorsense != null && tremorsense.isInRange(dist) && tremorsense.testEntity(ent, player))
 					ci.setReturnValue(true);
 			}
 			
 			if(AbilityRegistry.hasAbility(player, AbilityBlindsight.REGISTRY_NAME))
 			{
 				AbilityBlindsight blindsight = (AbilityBlindsight)AbilityRegistry.getAbilityByName(player, AbilityBlindsight.REGISTRY_NAME);
-				if(blindsight.isInRange(dist) && blindsight.testEntity(ent, player))
+				if(blindsight != null && blindsight.isInRange(dist) && blindsight.testEntity(ent, player))
 					ci.setReturnValue(true);
 			}
 		}

@@ -38,8 +38,9 @@ public class NearestAttackableTargetGoalMixin
 			public boolean test(LivingEntity target)
 			{
 				// Undead mobs do not target other undead
-				if(target.isEntityUndead() && goalOwnerIn.isEntityUndead() && goalOwnerIn.isNonBoss())
-					return false;
+				if(goalOwnerIn.isNonBoss() && goalOwnerIn.isEntityUndead())
+					if(target.isEntityUndead())
+						return false;
 				
 				// Faction mobs do not attack mobs with good reputation
 				if(goalOwnerIn instanceof IFactionMob)

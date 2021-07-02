@@ -54,6 +54,7 @@ public class AbilityRegistry
 		registry.register(new AbilityDamageCap.Builder());
 		registry.register(new AbilityDamageReduction.Builder());
 		registry.register(new AbilityDamageResistance.Builder());
+		registry.register(new AbilityDarkvision.Builder());
 		registry.register(new AbilityEtherealness.Builder());
 		registry.register(new AbilityExplode.Builder());
 		registry.register(new AbilityFastHealing.Builder());
@@ -138,7 +139,8 @@ public class AbilityRegistry
 	
 	public static boolean hasAbility(LivingEntity entity, ResourceLocation mapName)
 	{
-		return getCreatureAbilities(entity).containsKey(mapName);
+		Map<ResourceLocation, Ability> abilities = getCreatureAbilities(entity);
+		return abilities.containsKey(mapName) && abilities.get(mapName) != null;
 	}
 	
 	public static boolean hasAbility(LivingEntity entity, Class<?> classIn)
@@ -150,10 +152,7 @@ public class AbilityRegistry
 	@Nullable
 	public static Ability getAbilityByName(LivingEntity entity, ResourceLocation mapName)
 	{
-		for(Ability ability : getCreatureAbilities(entity).values())
-			if(ability.getMapName().equals(mapName))
-				return ability;
-		return null;
+		return getCreatureAbilities(entity).get(mapName);
 	}
 	
 	/** Returns a list of all abilities of the given entity with the given registry name. */

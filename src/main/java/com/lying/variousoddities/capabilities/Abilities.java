@@ -468,9 +468,15 @@ public class Abilities
 		}
 	}
 	
+	/** Returns true if the entity is alive, not mounted, and not sleeping */
+	public static boolean canBonusJump(@Nullable LivingEntity entity)
+	{
+		return entity != null && entity.isAlive() && entity.getRidingEntity() == null && !entity.isSleeping();
+	}
+	
 	public void doAirJump()
 	{
-		if(this.entity == null || this.entity.isOnGround())
+		if(!canBonusJump(this.entity) || this.entity.isOnGround())
 			return;
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(this.entity);
 		if(!abilities.containsKey(AbilityFlight.REGISTRY_NAME))
@@ -492,7 +498,7 @@ public class Abilities
 	
 	public void doWaterJump()
 	{
-		if(this.entity == null || !AbilitySwim.isEntitySwimming(this.entity))
+		if(!canBonusJump(this.entity) || !AbilitySwim.isEntitySwimming(this.entity))
 			return;
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(this.entity);
 		if(!abilities.containsKey(AbilitySwim.REGISTRY_NAME))

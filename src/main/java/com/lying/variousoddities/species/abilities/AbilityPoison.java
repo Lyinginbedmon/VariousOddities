@@ -72,7 +72,7 @@ public class AbilityPoison extends AbilityMeleeDamage
 		if(isValidDamageSource(source))
 		{
 			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
-			if(attacker != null && AbilityRegistry.hasAbility(attacker, getMapName()))
+			if(attacker != null && victim != attacker && AbilityRegistry.hasAbility(attacker, getMapName()))
 			{
 				AbilityPoison poison = (AbilityPoison)AbilityRegistry.getAbilityByName(attacker, getMapName());
 				if(attacker.getRNG().nextFloat() < poison.triggerChance)

@@ -13,6 +13,7 @@ import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketBonusJump;
 import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSyncVisualPotions;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
@@ -39,12 +40,15 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.play.client.CEntityActionPacket;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -65,6 +69,7 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -112,6 +117,13 @@ public class VOBusClient
 			((IScrollableGUI)Minecraft.getInstance().currentScreen).onScroll((int)Math.signum(event.getScrollDelta()));
 			event.setCanceled(true);
 		}
+	}
+	
+	@SubscribeEvent
+	public static void onEntityLoadEvent(EntityJoinWorldEvent event)
+	{
+		if(event.getWorld().isRemote)
+			PacketHandler.sendToServer(new PacketSyncVisualPotions(event.getEntity().getUniqueID()));
 	}
 	
 	@SubscribeEvent
@@ -306,7 +318,23 @@ public class VOBusClient
 				IModelData modelData = model.getModelData(world, pos, state, EmptyModelData.INSTANCE);
 				renderer.getBlockModelRenderer().renderModelSmooth(world, model, state, pos, stack, vertex, false, world.rand, 0L, OverlayTexture.NO_OVERLAY, modelData);
 			ForgeHooksClient.setRenderLayer(null);
+			
+			if(state.hasTileEntity())
+			{
+				TileEntity tile = world.getTileEntity(pos);
+				renderTile(tile, stack, partialTicks);
+			}
 		stack.pop();
+	}
+	
+	private static <E extends TileEntity> void renderTile(E tile, MatrixStack stack, float partialTicks)
+	{
+		TileEntityRenderer<E> tileRenderer = TileEntityRendererDispatcher.instance.getRenderer(tile);
+		if(tileRenderer != null)
+		{
+	        IRenderTypeBuffer.Impl buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+			tileRenderer.render(tile, partialTicks, stack, buffer, 15, OverlayTexture.NO_OVERLAY);
+		}
 	}
 	
 	@SuppressWarnings("deprecation")

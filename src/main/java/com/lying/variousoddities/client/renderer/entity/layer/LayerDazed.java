@@ -30,7 +30,8 @@ public class LayerDazed<T extends LivingEntity, M extends BipedModel<T>> extends
 	@SuppressWarnings("deprecation")
 	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entityIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		if(LivingData.forEntity(entityIn).getVisualPotion(VOPotions.DAZED))
+		LivingData data = LivingData.forEntity(entityIn);
+		if(data != null && data.getVisualPotion(VOPotions.DAZED))
 		{
 			matrixStackIn.push();
 				float scale = 1.2F;

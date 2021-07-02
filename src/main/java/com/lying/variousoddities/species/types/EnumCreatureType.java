@@ -22,6 +22,7 @@ import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityBurrow;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
+import com.lying.variousoddities.species.abilities.AbilityDarkvision;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
@@ -41,7 +42,8 @@ import net.minecraftforge.common.MinecraftForge;
 
 public enum EnumCreatureType implements IStringSerializable
 {
-	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("2145fe0a-c00c-405c-9ecf-a5d3e636834c")), Action.STANDARD, 8),
+	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("2145fe0a-c00c-405c-9ecf-a5d3e636834c"))
+		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
 	AIR(null, new TypeHandler(UUID.fromString("6c8fc47e-8485-465a-a1a9-c79f125c9286"))
 		.addAbility(new AbilityFlight(Grade.PERFECT, 0.7D))),
 	AMPHIBIOUS(null, new TypeHandler(UUID.fromString("b4728431-bea6-4d37-894c-d45a629a1109"))
@@ -54,14 +56,17 @@ public enum EnumCreatureType implements IStringSerializable
 	COLD(null, new TypeHandler(UUID.fromString("9bef87fa-7f6e-47f0-b227-a9d3a7b7fed1")).addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))),
 	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("423958a4-5b86-4389-990c-f1899925f47a")).noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.NECROMANCY))
 		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH)), Action.NONE, 10),
-	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e")).noParalysis(), Action.STANDARD, 12),
+	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e")).noParalysis()
+		.addAbility(new AbilityDarkvision()), Action.STANDARD, 12),
 	EARTH(null, new TypeHandler(UUID.fromString("c1f5d866-365d-495c-9aa6-c5adaef000de"))
 		.addAbility(new AbilityBurrow(true, false))),
-	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b0047670-88a2-41a0-aaae-7c9da5a79a4b")).noCriticalHit().noParalysis().noPoison(), Action.REGEN_ONLY, 8),
+	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b0047670-88a2-41a0-aaae-7c9da5a79a4b")).noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityDarkvision()), Action.REGEN_ONLY, 8),
 	EXTRAPLANAR(UUID.fromString("27f5fb29-f904-4af6-8fcd-1ab39b385813")),
 	EVIL(null, new TypeHandler(UUID.fromString("c03386d7-96e2-487c-905d-974777a889ea"))
 		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.IMMUNE))
@@ -79,9 +84,12 @@ public enum EnumCreatureType implements IStringSerializable
 	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("77bc6296-eab6-4ccd-963a-84caeb703e4c")), Action.STANDARD, 8),
 	INCORPOREAL(null, new TypeHandler(UUID.fromString("aba0ffd1-cf26-4363-85bd-0866a5fdea10")).addAbility(new AbilityIncorporeality())
 		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))),
-	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("4e2f8461-9965-43db-ab1b-8de4ce8dcd30")), Action.STANDARD, 10),
-	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("6f5802ec-231c-48f4-a535-08c64e5aaf0f")), Action.STANDARD, 8),
-	OUTSIDER(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b71f6adc-179b-4f13-b1fd-d7f2372f7ad0")), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
+	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("4e2f8461-9965-43db-ab1b-8de4ce8dcd30"))
+		.addAbility(new AbilityDarkvision()), Action.STANDARD, 10),
+	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("6f5802ec-231c-48f4-a535-08c64e5aaf0f"))
+		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
+	OUTSIDER(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b71f6adc-179b-4f13-b1fd-d7f2372f7ad0"))
+		.addAbility(new AbilityDarkvision()), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
 	NATIVE(null, new TypeHandler(UUID.fromString("d7dc8434-e8f3-454d-b51c-2f6c9a24589b"))
 		{
 			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
@@ -98,10 +106,12 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityBlind())
 		.addAbility(new AbilityBlindsight(16D)), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
 	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler(UUID.fromString("1e5ae3b8-b509-447f-b790-51ed71d090b7")).noCriticalHit().noParalysis().noPoison()
+		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH)), Action.NONE, 12),
-	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef")), Action.STANDARD, 8),
+	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef"))
+		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(UUID.fromString("98c06c81-ed84-4974-bb47-e5d728ce83b8"), true));
 	
 	public static final Predicate<EnumCreatureType> IS_SUPERTYPE = new Predicate<EnumCreatureType>()

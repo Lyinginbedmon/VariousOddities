@@ -3,6 +3,7 @@ package com.lying.variousoddities.species.abilities;
 import java.util.Map;
 import java.util.UUID;
 
+import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -84,7 +85,7 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 		if(abilityMap.containsKey(REGISTRY_NAME))
 		{
 			AbilityFlight flight = (AbilityFlight)abilityMap.get(REGISTRY_NAME);
-			if(!flight.isActive())
+			if(!flight.isActive() || !Abilities.canBonusJump(entity))
 			{
 				if(mod != null)
 					gravity.removeModifier(GRAVITY_UUID);
