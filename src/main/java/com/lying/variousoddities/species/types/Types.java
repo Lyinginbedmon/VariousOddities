@@ -57,6 +57,23 @@ public class Types
 	public boolean isHoly()		{ return includesType(EnumCreatureType.HOLY); }
 	public boolean isUndead()	{ return includesType(EnumCreatureType.UNDEAD); }
 	
+	/** Returns how much health a player with these types would have */
+	public double getPlayerHealth()
+	{
+		EnumSet<EnumCreatureType> supertypes = supertypes();
+		double hitDieModifier = 0D;
+		if(!supertypes.isEmpty())
+		{
+			for(EnumCreatureType type : supertypes)
+			{
+				double health = ((double)type.getHitDie() / (double)EnumCreatureType.HUMANOID.getHitDie()) * 20D;
+				hitDieModifier += health - 20D;
+			}
+			hitDieModifier /= Math.max(1, supertypes.size());
+		}
+		return 20D + hitDieModifier;
+	}
+	
 	public Map<ResourceLocation, Ability> addAbilitiesToMap(Map<ResourceLocation, Ability> map)
 	{
 		this.types.forEach((type) -> 
@@ -83,7 +100,7 @@ public class Types
 			{
 				if(supertype.getSiblings().size() > 0)
 					supertype.append(new StringTextComponent(" "));
-				supertype.append(sup.getTranslated());
+				supertype.append(sup.getTranslated(true));
 			}
 		
 		StringTextComponent subtype = new StringTextComponent("");
@@ -94,7 +111,7 @@ public class Types
 			{
 				if(subtype.getSiblings().size() > 0)
 					subtype.append(new StringTextComponent(", "));
-				subtype.append(sup.getTranslated());
+				subtype.append(sup.getTranslated(true));
 			}
 			subtype.append(new StringTextComponent(")"));
 		}

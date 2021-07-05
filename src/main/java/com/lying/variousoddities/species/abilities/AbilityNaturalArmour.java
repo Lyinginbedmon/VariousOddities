@@ -39,6 +39,8 @@ public class AbilityNaturalArmour extends Ability
 	
 	public Type getType(){ return Type.DEFENSE; }
 	
+	public double amount(){ return this.amount; }
+	
 	public ITextComponent translatedName()
 	{
 		return new TranslationTextComponent("ability.varodd.natural_armour", (int)amount);

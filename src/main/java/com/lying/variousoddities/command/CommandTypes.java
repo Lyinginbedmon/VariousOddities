@@ -98,14 +98,14 @@ public class CommandTypes extends CommandBase
     		{
     			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.all.supertypes").modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent(translationSlug+"list.all.supertypes.definition"))); }), false);
     			for(EnumCreatureType type : supertypes)
-    				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated().modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
+    				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated(true).modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
     		}
     		
     		if(!subtypes.isEmpty())
     		{
     			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.all.subtypes").modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent(translationSlug+"list.all.subtypes.definition"))); }), false);
     			for(EnumCreatureType type : subtypes)
-    				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated().modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
+    				source.sendFeedback(new StringTextComponent(" -").append(type.getTranslated(true).modifyStyle((style) -> { return style.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/types list type "+type.name().toLowerCase()))); })), false);
     		}
     		
     		if(supertypes.isEmpty() && subtypes.isEmpty())
@@ -119,7 +119,7 @@ public class CommandTypes extends CommandBase
     		TypesManager manager = TypesManager.get(source.getWorld());
     		List<ResourceLocation> mobs = manager.mobsOfType(type);
     		
-    		ITextComponent typeName = type.getTranslated();
+    		ITextComponent typeName = type.getTranslated(false);
     		if(mobs.isEmpty())
     			throw LIST_FAILED_EXCEPTION.create();
     		else
@@ -195,7 +195,7 @@ public class CommandTypes extends CommandBase
     			
 				if(report)
 				{
-	    			source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), entity.getDisplayName()), true);
+	    			source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(false), entity.getDisplayName()), true);
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.getTypes((LivingEntity)entity).toHeader()), false);
 				}
     			
@@ -214,7 +214,7 @@ public class CommandTypes extends CommandBase
 				
 				if(report)
 				{
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(), registry.toString()), true);
+					source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", type.getTranslated(false), registry.toString()), true);
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), new Types(manager.getMobTypes(registry)).toHeader()), true);
 				}
 			}
@@ -248,7 +248,7 @@ public class CommandTypes extends CommandBase
     			LivingData data = LivingData.forEntity(living);
     			data.removeCustomType(type);
     			
-    			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), living.getDisplayName()), true);
+    			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(false), living.getDisplayName()), true);
 				source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", entity.getDisplayName(), EnumCreatureType.getTypes(living).toHeader()), false);
     			return 15;
     		}
@@ -263,7 +263,7 @@ public class CommandTypes extends CommandBase
 				manager.removeFromEntity(registry, type, true);
 			else
 				throw REMOVE_FAILED_EXCEPTION.create();
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(), registry.toString()), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", type.getTranslated(false), registry.toString()), true);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.success", registry.toString(), new Types(manager.getMobTypes(registry)).toHeader()), true);
     		return 15;
     	}
@@ -343,7 +343,7 @@ public class CommandTypes extends CommandBase
     	{
     		if(types.contains(type))
     		{
-    			source.sendFeedback(new TranslationTextComponent(translationSlug+"test.success", type.getTranslated()), true);
+    			source.sendFeedback(new TranslationTextComponent(translationSlug+"test.success", type.getTranslated(false)), true);
     			return 15;
     		}
     		else

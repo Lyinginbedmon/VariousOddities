@@ -112,7 +112,7 @@ public class CommandSpecies extends CommandBase
 		
 		source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", species.getRegistryName().toString()), true);
 		if(species.hasTypes())
-			source.sendFeedback(new Types(species.getTypes()).toHeader(), false);
+			source.sendFeedback(new Types(species.getCreatureTypes()).toHeader(), false);
 		if(!species.getAbilities().isEmpty())
 		{
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_abilities"), false);

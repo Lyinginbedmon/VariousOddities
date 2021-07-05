@@ -201,10 +201,17 @@ public enum EnumCreatureType implements IStringSerializable
 	}
 	public int getHitDie(){ return hitDie; }
 	
-	/** Returns the translated name of the given creature type, with a hover event displaying its definition */
-	public IFormattableTextComponent getTranslated()
+	/** Returns the translated name of the given creature type, with a hover event displaying its definition and optionally its abilities */
+	public IFormattableTextComponent getTranslated(boolean details)
 	{
-		return new TranslationTextComponent(getName()).modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent(getDefinition()))); });
+		IFormattableTextComponent displayText = new TranslationTextComponent(getDefinition());
+		if(details)
+			displayText.append(this.handler.getDetails());
+		
+		return new TranslationTextComponent(getName()).modifyStyle((style) -> 
+		{
+			return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, displayText));
+		});
 	}
 	
 	public static EnumCreatureType fromName(String nameIn)

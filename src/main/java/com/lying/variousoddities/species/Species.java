@@ -1,6 +1,7 @@
 package com.lying.variousoddities.species;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
+import com.lying.variousoddities.species.types.Types;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.JsonToNBT;
@@ -94,7 +96,20 @@ public class Species
 		return this;
 	}
 	
-	public List<Ability> getAbilities(){ return this.abilities; }
+	/** Returns a list of all abilities in this species, including from creature types */
+	public List<Ability> getAbilities()
+	{
+		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
+		
+		this.types.forEach((type) -> { if(type.isSupertype()) type.getHandler().getAbilities().forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); }); });
+		this.types.forEach((type) -> { if(!type.isSupertype()) type.getHandler().getAbilities().forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); }); });
+		
+		this.abilities.forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); });
+		
+		List<Ability> abilities = Lists.newArrayList();
+		abilities.addAll(abilityMap.values());
+		return abilities;
+	}
 	
 	public Species addType(@Nonnull EnumCreatureType typeIn)
 	{
@@ -112,7 +127,9 @@ public class Species
 	
 	public boolean hasTypes(){ return !this.types.isEmpty(); }
 	
-	public List<EnumCreatureType> getTypes(){ return this.types; }
+	public List<EnumCreatureType> getCreatureTypes(){ return this.types; }
+	
+	public Types getTypes(){ return new Types(this.types); }
 	
 	public CompoundNBT storeInNBT(CompoundNBT nbt)
 	{

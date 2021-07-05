@@ -73,7 +73,7 @@ public class TypeOperation extends TemplateOperation
 		StringTextComponent text = new StringTextComponent("[");
 		for(int i=0; i<types.length; i++)
 		{
-			text.append(types[i].getTranslated());
+			text.append(types[i].getTranslated(true));
 			if(i < types.length - 1)
 				text.append(new StringTextComponent(", "));
 		}

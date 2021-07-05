@@ -18,6 +18,7 @@ import com.lying.variousoddities.species.Species.SpeciesInstance;
 import com.lying.variousoddities.species.abilities.AbilityBreathWeapon;
 import com.lying.variousoddities.species.abilities.AbilityBreathWeapon.BreathType;
 import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
+import com.lying.variousoddities.species.abilities.AbilityDamageCap;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityFastHealing;
@@ -54,7 +55,6 @@ public class SpeciesRegistry extends JsonReloadListener
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
 	public static final ResourceLocation SPECIES_NECROPOLITAN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "necropolitan");
 	public static final ResourceLocation SPECIES_SKELETON		= new ResourceLocation(Reference.ModInfo.MOD_ID, "skeleton");
-	public static final ResourceLocation SPECIES_ZOMBIE			= new ResourceLocation(Reference.ModInfo.MOD_ID, "zombie");
 	
 	private static SpeciesRegistry instance;
 	
@@ -122,10 +122,8 @@ public class SpeciesRegistry extends JsonReloadListener
 		 * Kobold
 		 * Lizardfolk
 		 * Orc
-		 * Skeleton
 		 * Tiefling
 		 * Troglodyte
-		 * Zombie
 		 */
 		
 		DEFAULT_SPECIES.add(new Species(SPECIES_ARCHFEY)
@@ -136,6 +134,7 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityDamageReduction(10, DamageType.SILVER))
 				.addAbility(new AbilityFastHealing(3F))
 				.addAbility(new AbilityResistance(5, DamageType.MAGIC))
+				.addAbility(new AbilityDamageCap(20F, 10F))
 				.addAbility(new AbilityTeleportToPos(16D))
 				.addAbility(new AbilityTeleportToHome()));
 		DEFAULT_SPECIES.add(new Species(SPECIES_DRAGON_GREEN)
@@ -162,10 +161,6 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE))
 				.addAbility(new AbilityDamageReduction(3))
 				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.SPEED, 0, 0, true, false))));
-		DEFAULT_SPECIES.add(new Species(SPECIES_ZOMBIE)
-				.setPlayerSelect(false)
-				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.STRENGTH, 0, 0, true, false)))
-				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.SLOWNESS, 0, 0, true, false))));
 	}
 	
 	@Nullable

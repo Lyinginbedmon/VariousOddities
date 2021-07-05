@@ -14,7 +14,7 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.Ability.Type;
-import com.lying.variousoddities.species.types.Types;
+import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -37,7 +37,10 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class ScreenSpeciesSelect extends Screen
 {
+	public static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/species_select.png");
 	public static final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
+	public static final ResourceLocation GUI_ICONS_LOCATION = new ResourceLocation("textures/gui/icons.png");
+	
 	private static final Comparator<Ability> ABILITY_SORT = new Comparator<Ability>()
 	{
 		public int compare(Ability o1, Ability o2)
@@ -96,29 +99,96 @@ public class ScreenSpeciesSelect extends Screen
 		selectButton.visible = selectButton.active = !selectables.isEmpty();
 		if(selectables.isEmpty())
 		{
-			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID(), null));
+			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID()));
 			Minecraft.getInstance().displayGuiScreen(null);
 		}
 	}
 	
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
-		this.renderDirtBackground(0);
-		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 40, 16777215);
+		renderBackground(matrixStack);
+		renderBackgroundLayer(matrixStack, partialTicks);
+		int yPos = 20;
+		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
+		yPos += 15;
 		
 		if(selectables.isEmpty())
 			return;
 		
+		// Draw species display name
 		Species currentSpecies = getCurrentSpecies();
-		
-		int yPos = 55;
-		drawCenteredString(matrixStack, this.font, currentSpecies.getDisplayName(), this.width / 2, 60, 16777215);
-		
-		yPos += this.font.FONT_HEIGHT + 5;
-		int power = currentSpecies.getPower();
-		int stars = Math.max(Math.abs(power), 1);
+		this.selectButton.setMessage(currentSpecies.getDisplayName());
+		yPos += this.font.FONT_HEIGHT + 12;
 		
 		// Render stars of appropriate colour for power
+		drawStars(matrixStack, yPos, currentSpecies.getPower());
+		yPos += this.font.FONT_HEIGHT + 3;
+		
+		// Display types
+		int health = 20;
+		if(currentSpecies.hasTypes())
+		{
+			ITextComponent typesHeader = currentSpecies.getTypes().toHeader();
+			drawCenteredString(matrixStack, this.font, typesHeader, this.width / 2, yPos, -1);
+			health = (int)currentSpecies.getTypes().getPlayerHealth();
+		}
+		
+		// Health and armour
+		yPos += this.font.FONT_HEIGHT + 2;
+		
+		double armour = 0;
+		List<Ability> abilities = currentSpecies.getAbilities();
+		if(!abilities.isEmpty())
+			for(Ability ability : abilities) 
+			{
+				if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+					armour += ((AbilityNaturalArmour)ability).amount(); 
+			};
+		
+		drawHealthAndArmour(matrixStack, yPos, health, (int)armour);
+		
+		// Display abilities
+		yPos += this.font.FONT_HEIGHT + 5;
+		
+		int maxWidth = 150;
+		int xPos = (this.width - (maxWidth + 2 + this.font.FONT_HEIGHT)) / 2;
+		if(!abilities.isEmpty())
+		{
+			abilities.sort(ABILITY_SORT);
+			for(Ability ability : abilities)
+			{
+				if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+					continue;
+				
+				drawAbilityIcon(matrixStack, xPos, yPos, ability.getType());
+				ITextComponent abilityName = ability.getDisplayName();
+				for(ITextProperties string : VOHelper.getWrappedText(abilityName, this.font, maxWidth))
+				{
+					this.font.drawString(matrixStack, string.getString(), (float)(xPos + this.font.FONT_HEIGHT + 2), (float)yPos, 0);
+					yPos += this.font.FONT_HEIGHT;
+				}
+				yPos += 2;
+			}
+		}
+		
+		super.render(matrixStack, mouseX, mouseY, partialTicks);
+	}
+	
+	@SuppressWarnings("deprecation")
+	public void renderBackgroundLayer(MatrixStack matrixStack, float partialTicks)
+	{
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURE);
+		
+		int sizeX = 175;
+		int sizeY = 180;
+		this.blit(matrixStack, (this.width - sizeX) / 2, 45, 0, 0, sizeX, sizeY);
+	}
+	
+	public void drawStars(MatrixStack matrixStack, int yPos, int power)
+	{
+		int stars = Math.max(Math.abs(power), 1);
+		
 		int midX = this.width / 2;
 		int startX = midX - (this.font.FONT_HEIGHT * stars) / 2;
 		int endX = startX + this.font.FONT_HEIGHT;
@@ -137,35 +207,6 @@ public class ScreenSpeciesSelect extends Screen
 			startX += this.font.FONT_HEIGHT;
 			endX += this.font.FONT_HEIGHT;
 		}
-		
-		yPos += this.font.FONT_HEIGHT + 5;
-		// Display types
-		if(currentSpecies.hasTypes())
-			drawCenteredString(matrixStack, this.font, new Types(currentSpecies.getTypes()).toHeader(), this.width / 2, yPos, 16777215);
-		
-		// Display abilities
-		yPos += this.font.FONT_HEIGHT + 2;
-		
-		int maxWidth = 150;
-		int xPos = (this.width - (maxWidth + 2 + this.font.FONT_HEIGHT)) / 2;
-		List<Ability> abilities = currentSpecies.getAbilities();
-		if(!abilities.isEmpty())
-		{
-			abilities.sort(ABILITY_SORT);
-			for(Ability ability : abilities)
-			{
-				drawAbilityIcon(matrixStack, xPos, yPos, ability.getType());
-				ITextComponent abilityName = ability.getDisplayName();
-				for(ITextProperties string : VOHelper.getWrappedText(abilityName, this.font, maxWidth))
-				{
-					drawString(matrixStack, this.font, string.getString(), xPos + this.font.FONT_HEIGHT + 2, yPos, 16777215);
-					yPos += this.font.FONT_HEIGHT;
-				}
-				yPos += 2;
-			}
-		}
-		
-		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
 	
     public void init(Minecraft minecraft, int width, int height)
@@ -176,33 +217,34 @@ public class ScreenSpeciesSelect extends Screen
         int midX = width / 2;
         int midY = height / 2;
         
-    	this.addButton(new Button(midX + 120, midY - 40, 20, 20, new StringTextComponent(">"), (button) -> 
+    	this.addButton(new Button(midX + 100, midY - 10, 20, 20, new StringTextComponent(">"), (button) -> 
     		{
     			index = ++index % selectables.size();
     		}));
-    	this.addButton(new Button(midX - 120, midY - 40, 20, 20, new StringTextComponent("<"), (button) -> 
+    	this.addButton(new Button(midX - 120, midY - 10, 20, 20, new StringTextComponent("<"), (button) -> 
     		{
     			index--;
     			if(index < 0)
     				index = selectables.size() - 1;
     		}));
-    	this.addButton(selectButton = new Button(midX - 20, midY + 90, 40, 20, new StringTextComponent("Select"), (button) -> 
+    	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new StringTextComponent("Select"), (button) -> 
     		{
     			// Select species
-    			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID(), getCurrentSpecies().getRegistryName()));
+    			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID(), getCurrentSpecies().getRegistryName(), this.keepTypes));
     			Minecraft.getInstance().displayGuiScreen(null);
     		}));
     	
-    	this.addButton(typesButton = new Button(midX - 10, midY + 110, 20, 20, new StringTextComponent(""), (button) ->
+    	this.addButton(typesButton = new Button(midX - 60, height - 25, 120, 20, new TranslationTextComponent("gui.varodd.species_select.lose_types"), (button) ->
     		{
     			keepTypes = !keepTypes;
-    		}));
+    			typesButton.setMessage(new TranslationTextComponent("gui.varodd.species_select."+(keepTypes ? "keep_types" : "lose_types")));
+    		}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui.varodd.species_select.keep_types.info"), x, y); }));
     	
-    	this.addButton(new Button(20, 20, 20, 20, new StringTextComponent("X"), (button) -> 
+    	this.addButton(new Button(midX - 120, 35, 20, 20, new StringTextComponent("X"), (button) -> 
     	{
-			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID(), null));
+			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID()));
 			Minecraft.getInstance().displayGuiScreen(null);
-    	}));
+    	}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui.varodd.species_select.exit"), x, y); }));
     }
     
     public Species getCurrentSpecies()
@@ -210,8 +252,58 @@ public class ScreenSpeciesSelect extends Screen
 		return selectables.get(index);
     }
     
+    public void drawHealthAndArmour(MatrixStack matrix, int yPos, int health, int armour)
+    {
+		int xPos = this.width / 2;
+		yPos -= 2;
+    	int healthX = xPos;
+    	int armourX = xPos;
+    	
+    	if(armour > 0 && health > 0)
+    	{
+    		healthX -= 20;
+    		armourX += 20;
+    	}
+    	
+		if(health > 0)
+		{
+	    	String healthStr = String.valueOf(health);
+			drawCenteredString(matrix, this.font, healthStr, healthX, yPos, -1);
+			
+			int heartX = healthX - (this.font.getStringWidth(healthStr) / 2) - 2 - this.font.FONT_HEIGHT;
+			drawHUDIcon(matrix, heartX, yPos, 16, 0);
+			drawHUDIcon(matrix, heartX, yPos, 52, 0);
+		}
+    	
+		if(armour > 0)
+		{
+	    	String armourStr = String.valueOf(armour);
+			drawCenteredString(matrix, this.font, armourStr, armourX, yPos, -1);
+			
+			int chestX = armourX + (this.font.getStringWidth(armourStr) / 2) + 2;
+			drawHUDIcon(matrix, chestX, yPos, 34, 9);
+		}
+    }
+    
+    public void drawHUDIcon(MatrixStack matrix, int xPos, int yPos, int texX, int texY)
+    {
+    	yPos -= 1;
+		matrix.push();
+			Minecraft.getInstance().getTextureManager().bindTexture(GUI_ICONS_LOCATION);
+			
+			float scale = 1F / 256F;
+			float xMin = texX * scale;
+			float xMax = (texX + 9) * scale;
+			float yMin = texY * scale;
+			float yMax = (texY + 9) * scale;
+			blit(matrix.getLast().getMatrix(), xPos, xPos + this.font.FONT_HEIGHT, yPos, yPos + this.font.FONT_HEIGHT, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
+		matrix.pop();
+    }
+    
     public void drawAbilityIcon(MatrixStack matrix, int xPos, int yPos, Ability.Type nature)
     {
+    	yPos -= 1;
+    	
 		float texXMin = ICON_TEX * (float)nature.texIndex;
 		float texXMax = ICON_TEX + texXMin;
 		
@@ -225,6 +317,7 @@ public class ScreenSpeciesSelect extends Screen
 		matrix.push();
 			Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
 			blit(matrix.getLast().getMatrix(), xPos, (int)endX, yPos, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, 1F, 1F, 1F, 1F);
+			blit(matrix.getLast().getMatrix(), xPos, (int)endX, yPos, (int)endY, 0, ICON_TEX * 2, ICON_TEX * 3, ICON_TEX * 1, ICON_TEX * 2, 1F, 1F, 1F, 1F);
 		matrix.pop();
     }
 	

@@ -2,6 +2,7 @@ package com.lying.variousoddities.species.types;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +18,9 @@ import net.minecraft.item.ItemTier;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -73,6 +76,23 @@ public class TypeHandler
 	}
 	
 	public List<Ability> getAbilities(){ return this.abilities; }
+	
+	public ITextComponent getDetails()
+	{
+		if(abilities.isEmpty())
+			return new StringTextComponent("");
+		
+		Collections.sort(abilities, Ability.SORT_ABILITY);
+		IFormattableTextComponent details = new StringTextComponent("\n");
+		for(int i=0; i<abilities.size(); i++)
+		{
+			Ability ability = abilities.get(i);
+			details.append(new StringTextComponent("  ").append(ability.getDisplayName()));
+			if(i < abilities.size() - 1)
+				details.append(new StringTextComponent("\n"));
+		}
+		return details;
+	}
 	
 	/** Controls how critical hits affect this type */
 	public  void onCriticalEvent(CriticalHitEvent event){ };
