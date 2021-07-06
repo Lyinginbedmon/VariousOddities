@@ -27,7 +27,7 @@ public class AbilityModifierCon extends AbilityModifier
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public Type getType(){ return Type.DEFENSE; }
+	public Type getType(){ return this.amount >= 0 ? Type.DEFENSE : Type.WEAKNESS; }
 	
 	public boolean displayInSpecies(){ return false; }
 	

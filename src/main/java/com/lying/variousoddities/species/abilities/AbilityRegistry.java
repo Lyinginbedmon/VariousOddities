@@ -74,6 +74,7 @@ public class AbilityRegistry
 		registry.register(new AbilityRend.Builder());
 		registry.register(new AbilityResistance.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());
+		registry.register(new AbilitySize.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
 		registry.register(new AbilitySwim.Builder());
 		registry.register(new AbilityTeleportToHome.Builder());

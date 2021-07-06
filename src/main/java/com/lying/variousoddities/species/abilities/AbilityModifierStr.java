@@ -27,7 +27,7 @@ public class AbilityModifierStr extends AbilityModifier
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public Type getType(){ return Type.ATTACK; }
+	public Type getType(){ return this.amount >= 0 ? Type.ATTACK : Type.WEAKNESS; }
 	
 	public ITextComponent translatedName()
 	{

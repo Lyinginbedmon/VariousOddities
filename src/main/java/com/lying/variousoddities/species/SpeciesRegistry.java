@@ -22,9 +22,11 @@ import com.lying.variousoddities.species.abilities.AbilityDamageCap;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityDarkvision;
+import com.lying.variousoddities.species.abilities.AbilityExplode;
 import com.lying.variousoddities.species.abilities.AbilityFastHealing;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
+import com.lying.variousoddities.species.abilities.AbilitySize.Size;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityLightSensitivity;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
@@ -32,6 +34,7 @@ import com.lying.variousoddities.species.abilities.AbilityModifierStr;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.species.abilities.AbilityNaturalRegen;
 import com.lying.variousoddities.species.abilities.AbilityResistance;
+import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToHome;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToPos;
 import com.lying.variousoddities.species.abilities.DamageType;
@@ -52,13 +55,13 @@ public class SpeciesRegistry extends JsonReloadListener
 	private static final List<Species> DEFAULT_SPECIES = Lists.newArrayList();
 	
 	/*
-	 * Creeper
 	 * Blue Dragon
 	 * Ender Dragon
 	 * Red Dragon
 	 */
 	public static final ResourceLocation SPECIES_AASIMAR		= new ResourceLocation(Reference.ModInfo.MOD_ID, "aasimar");
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
+	public static final ResourceLocation SPECIES_CREEPER		= new ResourceLocation(Reference.ModInfo.MOD_ID, "creeper");
 	public static final ResourceLocation SPECIES_DRAGON_GREEN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "green_dragon");
 	public static final ResourceLocation SPECIES_GOBLIN			= new ResourceLocation(Reference.ModInfo.MOD_ID, "goblin");
 	public static final ResourceLocation SPECIES_HALF_ORC		= new ResourceLocation(Reference.ModInfo.MOD_ID, "half_orc");
@@ -120,23 +123,27 @@ public class SpeciesRegistry extends JsonReloadListener
 		}
 	}
 	
+	private static void addSpecies(Species speciesIn)
+	{
+		DEFAULT_SPECIES.add(speciesIn);
+	}
+	
 	static
 	{
 		/*
-		 * Creeper
 		 * Blue Dragon
 		 * Ender Dragon
 		 * Red Dragon
 		 */
 		
-		DEFAULT_SPECIES.add(new Species(SPECIES_AASIMAR)
+		addSpecies(new Species(SPECIES_AASIMAR)
 				.setPower(1)
 				.addType(EnumCreatureType.OUTSIDER, EnumCreatureType.NATIVE)
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityResistance(2, DamageType.ACID))
 				.addAbility(new AbilityResistance(2, DamageType.COLD))
 				.addAbility(new AbilityResistance(2, DamageType.LIGHTNING)));
-		DEFAULT_SPECIES.add(new Species(SPECIES_ARCHFEY)
+		addSpecies(new Species(SPECIES_ARCHFEY)
 				.setPlayerSelect(false)
 				.setPower(10)
 				.addType(EnumCreatureType.FEY, EnumCreatureType.HOLY)
@@ -147,7 +154,12 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityDamageCap(20F, 10F))
 				.addAbility(new AbilityTeleportToPos(16D))
 				.addAbility(new AbilityTeleportToHome()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_DRAGON_GREEN)
+		addSpecies(new Species(SPECIES_CREEPER)
+				.addType(EnumCreatureType.PLANT)
+				.addAbility(new AbilityModifierStr(-4D))
+				.addAbility(new AbilityExplode()));
+		addSpecies(new Species(SPECIES_DRAGON_GREEN)
+				.setPlayerSelect(false)
 				.setPower(5)
 				.addType(EnumCreatureType.DRAGON, EnumCreatureType.AIR)
 				.addAbility(new AbilityModifierStr(3D))
@@ -157,48 +169,50 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityBreatheWater())
 				.addAbility(new AbilityFlight(Grade.POOR))
 				.addAbility(new AbilityBreathWeapon(DamageType.ACID, BreathType.CONE, 9D, 4F, 24F).setParticle(ParticleTypes.DRAGON_BREATH)));
-		DEFAULT_SPECIES.add(new Species(SPECIES_GOBLIN)
+		addSpecies(new Species(SPECIES_GOBLIN)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN)
+				.addAbility(new AbilitySize(Size.SMALL))
 				.addAbility(new AbilityModifierStr(-1D))
 				.addAbility(new AbilityDarkvision()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_HALF_ORC)
+		addSpecies(new Species(SPECIES_HALF_ORC)
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilityModifierStr(1D))
 				.addAbility(new AbilityDarkvision()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_KOBOLD)
+		addSpecies(new Species(SPECIES_KOBOLD)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
+				.addAbility(new AbilitySize(Size.SMALL))
 				.addAbility(new AbilityModifierStr(-2D))
 				.addAbility(new AbilityModifierCon(-2D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityNaturalArmour(1D))
 				.addAbility(new AbilityLightSensitivity()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_LIZARDFOLK)
+		addSpecies(new Species(SPECIES_LIZARDFOLK)
 				.setPower(1)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
 				.addAbility(new AbilityModifierStr(1D))
 				.addAbility(new AbilityModifierCon(2D))
 				.addAbility(new AbilityNaturalArmour(5D))
 				.addAbility(new AbilityHoldBreath()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_NECROPOLITAN)
+		addSpecies(new Species(SPECIES_NECROPOLITAN)
 				.setPower(1)
 				.addType(EnumCreatureType.UNDEAD)
 				.addAbility(new AbilityNaturalRegen()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_ORC)
+		addSpecies(new Species(SPECIES_ORC)
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilityModifierStr(2D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityLightSensitivity()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_TIEFLING)
+		addSpecies(new Species(SPECIES_TIEFLING)
 				.setPower(1)
 				.addType(EnumCreatureType.OUTSIDER, EnumCreatureType.NATIVE)
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityResistance(2, DamageType.COLD))
 				.addAbility(new AbilityResistance(2, DamageType.FIRE))
 				.addAbility(new AbilityResistance(2, DamageType.LIGHTNING)));
-		DEFAULT_SPECIES.add(new Species(SPECIES_TROGLODYTE)
+		addSpecies(new Species(SPECIES_TROGLODYTE)
 				.setPower(2)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
-				.addAbility(new AbilityModifierCon(2D))
+				.addAbility(new AbilityModifierCon(4D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityNaturalArmour(6D)));
 	}

@@ -21,6 +21,7 @@ import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -192,6 +193,19 @@ public class VOBusClient
 	            event.getMatrixStack().pop();
 	        }
 		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@SubscribeEvent(priority=EventPriority.HIGHEST, receiveCanceled=true)
+	public static <T extends LivingEntity, M extends EntityModel<T>> void resizeEntity(RenderLivingEvent.Pre event)
+	{
+		LivingEntity renderTarget = event.getEntity();
+		AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName(renderTarget, AbilitySize.REGISTRY_NAME);
+		if(size == null)
+			return;
+		
+		float scale = size.getScale();
+		event.getMatrixStack().scale(scale, scale, scale);
 	}
 	
 	@SubscribeEvent

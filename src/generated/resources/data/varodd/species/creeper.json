@@ -1,0 +1,11 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 0,
+  "Types": [
+    "plant"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:-4.0d},Name:\"varodd:strength_modifier\"}",
+    "{Tag:{Fuse:30,Radius:3,Active:0,Ignited:0b,Charged:0b,Cooldown:1200},Name:\"varodd:explode\"}"
+  ]
+}

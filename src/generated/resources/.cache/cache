@@ -1,9 +1,10 @@
 eabcf3454eafdfe0822583d2870a969f181e50b6 data/varodd/species/aasimar.json
 87f325bf688446aeaa82116808a9689d92970324 data/varodd/species/archfey.json
-ed69fe6d71977ad2e1ced1361de9bfa901358503 data/varodd/species/goblin.json
-c16f44b53712d598d84d0f179f1c92f80f4bd6d0 data/varodd/species/green_dragon.json
+0968e60b51e329b3a67677aba78213c2528b595b data/varodd/species/creeper.json
+449236fc21f7f459a137cd8a76e8abb38156f564 data/varodd/species/goblin.json
+1e1adab17c4e0daa952f3dd152d7c4adbdf292b7 data/varodd/species/green_dragon.json
 e90558bd2cb82df6a2e55e607c51316b9626b28d data/varodd/species/half_orc.json
-c83df5fd1b15fe2a1ea7e1b537ef7d564229f919 data/varodd/species/kobold.json
+52bf1e92b27bfb58219a2796e3ac4abd3b4cea43 data/varodd/species/kobold.json
 131cf1c9911f4058362a5aa36c0a4773e04d3cd7 data/varodd/species/lizardfolk.json
 3d8c9afa9f9c810ab1fbe302002415fbde016893 data/varodd/species/necropolitan.json
 28b1596236ad18949e1f06780a6fe9427c84a020 data/varodd/species/orc.json
@@ -15,5 +16,5 @@ ca069bbc2d6f8dbaa712e3dc66d963554f172225 data/varodd/tags/entity_types/rats.json
 a5c682eb0bdbb58d340a509b9ebea8c1fa59df73 data/varodd/tags/entity_types/scorpions.json
 cc84ee87bab8063b2e46b93f8352961fd0acc66b data/varodd/templates/celestial.json
 b6dd886ca960b83c00039ffda87d93b62501eee4 data/varodd/templates/fiendish.json
-d5823f87d46c5200a003184ade14d8603f3bafea data/varodd/templates/lich.json
-1677b939982a375382180075632fa3de234b4e1c data/varodd/templates/zombie.json
+dcfd03bd89df8d4e7e930ca7a76808e3a9125500 data/varodd/templates/lich.json
+b916ce2a3a40576a805a0f5ec5232fa3d1752223 data/varodd/templates/zombie.json

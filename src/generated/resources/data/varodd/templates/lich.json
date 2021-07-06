@@ -8,6 +8,11 @@
       "Tag": "{Types:[\"undead\"]}"
     },
     {
+      "Action": "remove",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b}"
+    },
+    {
       "Action": "add",
       "Name": "varodd:ability",
       "Tag": "{Ability:{Tag:{Amount:5.0d},Name:\"varodd:natural_armour\"},UnlessBetter:1b}"

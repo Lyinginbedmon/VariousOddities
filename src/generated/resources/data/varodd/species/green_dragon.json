@@ -1,5 +1,5 @@
 {
-  "CanPlayerSelect": true,
+  "CanPlayerSelect": false,
   "Power": 5,
   "Types": [
     "dragon",
