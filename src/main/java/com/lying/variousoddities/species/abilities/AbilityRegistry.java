@@ -66,6 +66,8 @@ public class AbilityRegistry
 		registry.register(new AbilityIncorporeality.Builder());
 		registry.register(new AbilityInvisibility.Builder());
 		registry.register(new AbilityLightSensitivity.Builder());
+		registry.register(new AbilityModifierCon.Builder());
+		registry.register(new AbilityModifierStr.Builder());
 		registry.register(new AbilityNaturalArmour.Builder());
 		registry.register(new AbilityNaturalRegen.Builder());
 		registry.register(new AbilityPoison.Builder());

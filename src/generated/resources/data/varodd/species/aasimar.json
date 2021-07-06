@@ -1,0 +1,14 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 1,
+  "Types": [
+    "outsider",
+    "native"
+  ],
+  "Abilities": [
+    "{Name:\"varodd:darkvision\"}",
+    "{Tag:{Type:\"acid\",Amount:2},Name:\"varodd:resistance\"}",
+    "{Tag:{Type:\"cold\",Amount:2},Name:\"varodd:resistance\"}",
+    "{Tag:{Type:\"lightning\",Amount:2},Name:\"varodd:resistance\"}"
+  ]
+}

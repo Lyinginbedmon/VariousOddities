@@ -147,7 +147,12 @@ public class Species
 		
 		ListNBT abilities = new ListNBT();
 			for(Ability ability : this.abilities)
-				abilities.add(ability.writeAtomically(new CompoundNBT()));
+			{
+				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				if(abilityData.contains("UUID"))
+					abilityData.remove("UUID");
+				abilities.add(abilityData);
+			}
 		nbt.put("Abilities", abilities);
 		return nbt;
 	}
@@ -210,7 +215,12 @@ public class Species
 		
 		JsonArray abilities = new JsonArray();
 			for(Ability ability : this.abilities)
-				abilities.add(ability.writeAtomically(new CompoundNBT()).toString());
+			{
+				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				if(abilityData.contains("UUID"))
+					abilityData.remove("UUID");
+				abilities.add(abilityData.toString());
+			}
 		json.add("Abilities", abilities);
 		
 		return json;

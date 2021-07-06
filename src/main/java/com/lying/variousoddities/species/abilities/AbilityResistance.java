@@ -24,6 +24,11 @@ public class AbilityResistance extends Ability
 		this.damage = typeIn;
 	}
 	
+	public ResourceLocation getMapName()
+	{
+		return new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_"+damage.getString());
+	}
+	
 	public ITextComponent translatedName()
 	{
 		return new TranslationTextComponent("ability.varodd.resistance", damage.getTranslated(), amount);

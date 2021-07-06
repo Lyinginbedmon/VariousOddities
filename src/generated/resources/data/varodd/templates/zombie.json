@@ -4,13 +4,7 @@
   "Power": 1,
   "Operations": [
     {
-      "Action": "remove_all",
-      "Name": "varodd:type",
-      "Tag": "{Supertypes:1b}"
-    },
-    {
-      "Action": "add",
-      "Name": "varodd:type",
+      "Name": "varodd:replace_supertypes",
       "Tag": "{Types:[\"undead\"]}"
     },
     {
@@ -21,12 +15,12 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:2.0d},Name:\"varodd:natural_armour\"}}"
+      "Tag": "{Ability:{Tag:{Amount:2.0d},Name:\"varodd:natural_armour\"},UnlessBetter:1b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:3},Name:\"varodd:damage_reduction\"}}"
+      "Tag": "{Ability:{Tag:{Amount:3},Name:\"varodd:damage_reduction\"},UnlessBetter:1b}"
     }
   ]
 }

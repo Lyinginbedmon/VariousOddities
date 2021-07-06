@@ -66,6 +66,9 @@ public abstract class Ability
 	/** Compares this ability to the given one and returns an assessment of relative strength */
 	public int compare(Ability abilityIn){ return 0; }
 	
+	/** Returns true if this ability should be displayed in the select-species screen */
+	public boolean displayInSpecies(){ return true; }
+	
 	/** Returns true if this ability is active without needing to be triggered. */
 	public final boolean passive(){ return !(this instanceof ActivatedAbility); }
 	

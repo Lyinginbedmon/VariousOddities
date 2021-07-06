@@ -39,6 +39,8 @@ public class AbilityNaturalArmour extends Ability
 	
 	public Type getType(){ return Type.DEFENSE; }
 	
+	public boolean displayInSpecies(){ return false; }
+	
 	public double amount(){ return this.amount; }
 	
 	public ITextComponent translatedName()

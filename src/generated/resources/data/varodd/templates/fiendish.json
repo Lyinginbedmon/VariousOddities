@@ -4,6 +4,17 @@
   "Power": 2,
   "Operations": [
     {
+      "Condition": {
+        "Style": "or",
+        "Types": [
+          "animal",
+          "vermin"
+        ]
+      },
+      "Name": "varodd:replace_supertypes",
+      "Tag": "{Types:[\"magical_beast\"]}"
+    },
+    {
       "Action": "add",
       "Name": "varodd:type",
       "Tag": "{Types:[\"extraplanar\"]}"
@@ -11,17 +22,17 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"}}"
+      "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:1b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Type:\"cold\",Amount:5},Name:\"varodd:resistance\"}}"
+      "Tag": "{Ability:{Tag:{Type:\"cold\",Amount:5},Name:\"varodd:resistance\"},UnlessBetter:1b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Type:\"fire\",Amount:5},Name:\"varodd:resistance\"}}"
+      "Tag": "{Ability:{Tag:{Type:\"fire\",Amount:5},Name:\"varodd:resistance\"},UnlessBetter:1b}"
     }
   ]
 }

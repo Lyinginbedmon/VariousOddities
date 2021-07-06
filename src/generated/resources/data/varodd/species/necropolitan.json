@@ -5,6 +5,6 @@
     "undead"
   ],
   "Abilities": [
-    "{UUID:\"d5da3b78-e6ca-4d2e-878b-0e7c3c57a668\",Name:\"varodd:natural_regen\"}"
+    "{Name:\"varodd:natural_regen\"}"
   ]
 }

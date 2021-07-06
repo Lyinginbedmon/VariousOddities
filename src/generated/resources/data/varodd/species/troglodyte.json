@@ -1,0 +1,13 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 2,
+  "Types": [
+    "humanoid",
+    "reptile"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:2.0d},Name:\"varodd:constitution_modifier\"}",
+    "{Name:\"varodd:darkvision\"}",
+    "{Tag:{Amount:6.0d},Name:\"varodd:natural_armour\"}"
+  ]
+}

@@ -22,6 +22,13 @@ public class AbilityDarkvision extends AbilityStatusEffect
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
 	
+	public CompoundNBT writeToNBT(CompoundNBT compound)
+	{
+		return compound;
+	}
+	
+	public void readFromNBT(CompoundNBT compound){ }
+	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }

@@ -6,6 +6,8 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class AbilityInvisibility extends AbilityStatusEffect
 {
@@ -17,6 +19,15 @@ public class AbilityInvisibility extends AbilityStatusEffect
 	}
 	
 	public ResourceLocation getMapName(){ return getRegistryName(); }
+	
+	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
+	
+	public CompoundNBT writeToNBT(CompoundNBT compound)
+	{
+		return compound;
+	}
+	
+	public void readFromNBT(CompoundNBT compound){ }
 	
 	public static class Builder extends Ability.Builder
 	{

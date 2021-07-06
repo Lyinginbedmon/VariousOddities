@@ -1,0 +1,12 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 0,
+  "Types": [
+    "humanoid"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:2.0d},Name:\"varodd:strength_modifier\"}",
+    "{Name:\"varodd:darkvision\"}",
+    "{Name:\"varodd:light_sensitivity\"}"
+  ]
+}

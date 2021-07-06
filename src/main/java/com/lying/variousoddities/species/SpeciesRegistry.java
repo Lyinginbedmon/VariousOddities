@@ -21,14 +21,17 @@ import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
 import com.lying.variousoddities.species.abilities.AbilityDamageCap;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
+import com.lying.variousoddities.species.abilities.AbilityDarkvision;
 import com.lying.variousoddities.species.abilities.AbilityFastHealing;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
+import com.lying.variousoddities.species.abilities.AbilityLightSensitivity;
+import com.lying.variousoddities.species.abilities.AbilityModifierCon;
+import com.lying.variousoddities.species.abilities.AbilityModifierStr;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.species.abilities.AbilityNaturalRegen;
 import com.lying.variousoddities.species.abilities.AbilityResistance;
-import com.lying.variousoddities.species.abilities.AbilityStatusEffect;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToHome;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToPos;
 import com.lying.variousoddities.species.abilities.DamageType;
@@ -38,8 +41,6 @@ import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import net.minecraft.client.resources.JsonReloadListener;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.particles.ParticleTypes;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -50,11 +51,23 @@ public class SpeciesRegistry extends JsonReloadListener
 	
 	private static final List<Species> DEFAULT_SPECIES = Lists.newArrayList();
 	
+	/*
+	 * Creeper
+	 * Blue Dragon
+	 * Ender Dragon
+	 * Red Dragon
+	 */
+	public static final ResourceLocation SPECIES_AASIMAR		= new ResourceLocation(Reference.ModInfo.MOD_ID, "aasimar");
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
 	public static final ResourceLocation SPECIES_DRAGON_GREEN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "green_dragon");
+	public static final ResourceLocation SPECIES_GOBLIN			= new ResourceLocation(Reference.ModInfo.MOD_ID, "goblin");
+	public static final ResourceLocation SPECIES_HALF_ORC		= new ResourceLocation(Reference.ModInfo.MOD_ID, "half_orc");
+	public static final ResourceLocation SPECIES_KOBOLD			= new ResourceLocation(Reference.ModInfo.MOD_ID, "kobold");
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
+	public static final ResourceLocation SPECIES_ORC			= new ResourceLocation(Reference.ModInfo.MOD_ID, "orc");
 	public static final ResourceLocation SPECIES_NECROPOLITAN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "necropolitan");
-	public static final ResourceLocation SPECIES_SKELETON		= new ResourceLocation(Reference.ModInfo.MOD_ID, "skeleton");
+	public static final ResourceLocation SPECIES_TIEFLING		= new ResourceLocation(Reference.ModInfo.MOD_ID, "tiefling");
+	public static final ResourceLocation SPECIES_TROGLODYTE		= new ResourceLocation(Reference.ModInfo.MOD_ID, "troglodyte");
 	
 	private static SpeciesRegistry instance;
 	
@@ -110,22 +123,19 @@ public class SpeciesRegistry extends JsonReloadListener
 	static
 	{
 		/*
-		 * Archfey
-		 * Aasimar
 		 * Creeper
 		 * Blue Dragon
 		 * Ender Dragon
-		 * Green Dragon
 		 * Red Dragon
-		 * Goblin
-		 * Half-Orc
-		 * Kobold
-		 * Lizardfolk
-		 * Orc
-		 * Tiefling
-		 * Troglodyte
 		 */
 		
+		DEFAULT_SPECIES.add(new Species(SPECIES_AASIMAR)
+				.setPower(1)
+				.addType(EnumCreatureType.OUTSIDER, EnumCreatureType.NATIVE)
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityResistance(2, DamageType.ACID))
+				.addAbility(new AbilityResistance(2, DamageType.COLD))
+				.addAbility(new AbilityResistance(2, DamageType.LIGHTNING)));
 		DEFAULT_SPECIES.add(new Species(SPECIES_ARCHFEY)
 				.setPlayerSelect(false)
 				.setPower(10)
@@ -140,27 +150,57 @@ public class SpeciesRegistry extends JsonReloadListener
 		DEFAULT_SPECIES.add(new Species(SPECIES_DRAGON_GREEN)
 				.setPower(5)
 				.addType(EnumCreatureType.DRAGON, EnumCreatureType.AIR)
+				.addAbility(new AbilityModifierStr(3D))
+				.addAbility(new AbilityModifierCon(10D))
 				.addAbility(new AbilityNaturalArmour(7D))
 				.addAbility(new AbilityDamageResistance(DamageType.ACID, DamageResist.IMMUNE))
 				.addAbility(new AbilityBreatheWater())
 				.addAbility(new AbilityFlight(Grade.POOR))
 				.addAbility(new AbilityBreathWeapon(DamageType.ACID, BreathType.CONE, 9D, 4F, 24F).setParticle(ParticleTypes.DRAGON_BREATH)));
+		DEFAULT_SPECIES.add(new Species(SPECIES_GOBLIN)
+				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN)
+				.addAbility(new AbilityModifierStr(-1D))
+				.addAbility(new AbilityDarkvision()));
+		DEFAULT_SPECIES.add(new Species(SPECIES_HALF_ORC)
+				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilityModifierStr(1D))
+				.addAbility(new AbilityDarkvision()));
+		DEFAULT_SPECIES.add(new Species(SPECIES_KOBOLD)
+				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
+				.addAbility(new AbilityModifierStr(-2D))
+				.addAbility(new AbilityModifierCon(-2D))
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityNaturalArmour(1D))
+				.addAbility(new AbilityLightSensitivity()));
 		DEFAULT_SPECIES.add(new Species(SPECIES_LIZARDFOLK)
 				.setPower(1)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
+				.addAbility(new AbilityModifierStr(1D))
+				.addAbility(new AbilityModifierCon(2D))
 				.addAbility(new AbilityNaturalArmour(5D))
 				.addAbility(new AbilityHoldBreath()));
 		DEFAULT_SPECIES.add(new Species(SPECIES_NECROPOLITAN)
 				.setPower(1)
 				.addType(EnumCreatureType.UNDEAD)
 				.addAbility(new AbilityNaturalRegen()));
-		DEFAULT_SPECIES.add(new Species(SPECIES_SKELETON)
-				.setPlayerSelect(false)
-				.addType(EnumCreatureType.UNDEAD)
-				.addAbility(new AbilityNaturalArmour(2D))
-				.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE))
-				.addAbility(new AbilityDamageReduction(3))
-				.addAbility(new AbilityStatusEffect(new EffectInstance(Effects.SPEED, 0, 0, true, false))));
+		DEFAULT_SPECIES.add(new Species(SPECIES_ORC)
+				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilityModifierStr(2D))
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityLightSensitivity()));
+		DEFAULT_SPECIES.add(new Species(SPECIES_TIEFLING)
+				.setPower(1)
+				.addType(EnumCreatureType.OUTSIDER, EnumCreatureType.NATIVE)
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityResistance(2, DamageType.COLD))
+				.addAbility(new AbilityResistance(2, DamageType.FIRE))
+				.addAbility(new AbilityResistance(2, DamageType.LIGHTNING)));
+		DEFAULT_SPECIES.add(new Species(SPECIES_TROGLODYTE)
+				.setPower(2)
+				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
+				.addAbility(new AbilityModifierCon(2D))
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityNaturalArmour(6D)));
 	}
 	
 	@Nullable
