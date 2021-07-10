@@ -14,6 +14,7 @@ import com.lying.variousoddities.api.event.AbilityEvent.AbilityRemoveEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
+import com.lying.variousoddities.network.PacketAbilityRemove;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAbilities;
 import com.lying.variousoddities.reference.Reference;
@@ -167,7 +168,7 @@ public class Abilities
 	
 	public int size(){ return this.customAbilities.size(); }
 	
-	private void cacheAbility(@Nonnull Ability ability)
+	public void cacheAbility(@Nonnull Ability ability)
 	{
 		try
 		{
@@ -177,7 +178,7 @@ public class Abilities
 		catch(Exception e){ }
 	}
 	
-	private void uncacheAbility(@Nonnull ResourceLocation mapName)
+	public void uncacheAbility(@Nonnull ResourceLocation mapName)
 	{
 		try
 		{
@@ -204,7 +205,12 @@ public class Abilities
 	{
 		Ability ability = this.customAbilities.get(mapName);
 		if(ability != null && this.entity != null)
+		{
 			ability.onAbilityRemoved(this.entity);
+			MinecraftForge.EVENT_BUS.post(new AbilityRemoveEvent(this.entity, ability, this));
+			if(this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
+				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketAbilityRemove(ability.getMapName()));
+		}
 		this.customAbilities.remove(mapName);
 		markForRecache();
 		markDirty();
@@ -382,7 +388,7 @@ public class Abilities
 		return abilityMap;
 	}
 	
-	private void updateAbilityCache()
+	public void updateAbilityCache()
 	{
 		if(this.entity == null)
 			return;
@@ -400,6 +406,8 @@ public class Abilities
 			Ability ability = cachedAbilities.get(mapname);
 			ability.onAbilityRemoved(this.entity);
 			MinecraftForge.EVENT_BUS.post(new AbilityRemoveEvent(this.entity, ability, this));
+			if(this.entity.getType() == EntityType.PLAYER)
+				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketAbilityRemove(mapname));
 			uncacheAbility(mapname);
 		});
 		

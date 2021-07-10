@@ -6,7 +6,5 @@ Warg
 	Saddles
 	Chests
 	Sit command
-Species
-	Refine species-select screen
 Potions
 	Fix sleep effect on players

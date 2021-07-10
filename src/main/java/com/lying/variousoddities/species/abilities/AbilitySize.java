@@ -4,6 +4,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.EntitySize;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
@@ -68,14 +69,19 @@ public class AbilitySize extends Ability
 		bus.addListener(this::handleSize);
 	}
 	
+	// FIXME Bounding box of resized creatures renders with twice the rescaling amount
+	
 	public float getScale()
 	{
-		return this.scale >= 0F ? this.sizeClass.scale(this.scale) : this.sizeClass.scale();
+		return this.scale >= 0F ? this.sizeClass.scale(this.scale) : this.sizeClass.baseScale();
 	}
 	
+	/** Ensures that size is recalculated after initial application as well as when NBT data is edited */
 	public void updateSize(LivingUpdateEvent event)
 	{
 		LivingEntity living = event.getEntityLiving();
+		if(living.getType() != EntityType.PLAYER)
+			return;
 		
 		LivingData data = LivingData.forEntity(living);
 		if(data == null || !AbilityRegistry.hasAbility(living, REGISTRY_NAME))
@@ -92,9 +98,10 @@ public class AbilitySize extends Ability
 		}
 	}
 	
+	/** Applies modifier to size when recalculated */
 	public void handleSize(EntityEvent.Size event)
 	{
-		if(event.getEntity() instanceof LivingEntity)
+		if(event.getEntity() instanceof LivingEntity && event.getEntity().getType() == EntityType.PLAYER)
 		{
 			LivingEntity living = (LivingEntity)event.getEntity();
 			
@@ -113,17 +120,22 @@ public class AbilitySize extends Ability
 		}
 	}
 	
+	public void onAbilityRemoved(LivingEntity entity)
+	{
+		entity.recalculateSize();
+	}
+	
 	public static enum Size implements IStringSerializable
 	{
-		FINE(0.05F, 0.017F, 0.083F),
-		DIMINUTIVE(0.125F, 0.083F, 0.167F),
-		TINY(0.25F, 0.167F, 0.333F),
-		SMALL(0.5F, 0.333F, 0.667F),
-		MEDIUM(1F, 0.667F, 1.333F),
-		LARGE(2F, 1.333F, 2.667F),
-		HUGE(4F, 2.667F, 5.333F),
-		GARGANTUAN(8F, 5.333F, 10.667F),
-		COLOSSAL(16F, 10.667F, 21.333F);
+		FINE(0.25F, 0.1F, 0.25F),
+		DIMINUTIVE(0.35F, 0.26F, 0.45F),
+		TINY(1F, 0.55F, 1.1F),
+		SMALL(1.6F, 1.15F, 1.6F),
+		MEDIUM(1.8F, 1.7F, 2F),
+		LARGE(2.5F, 2.1F, 3F),
+		HUGE(4F, 3.1F, 5F),
+		GARGANTUAN(7F, 5.1F, 9F),
+		COLOSSAL(12F, 9.1F, 16F);
 		
 		private final float scale;
 		private final float scaleMin, scaleMax;
@@ -145,14 +157,14 @@ public class AbilitySize extends Ability
 			return new TranslationTextComponent("enum.varodd.size." + getString());
 		}
 		
-		public float scale()
+		public float baseScale()
 		{
-			return this.scale;
+			return this.scale / 1.8F;
 		}
 		
 		public float scale(float scaleIn)
 		{
-			return this.scaleMin + (this.scaleMax - this.scaleMin) * scaleIn;
+			return (this.scaleMin + (this.scaleMax - this.scaleMin) * scaleIn) / 1.8F;
 		}
 		
 		public static Size fromString(String nameIn)

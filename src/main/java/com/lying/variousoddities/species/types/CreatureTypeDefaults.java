@@ -142,8 +142,8 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(VOEntities.SCORPION_GIANT,		EnumCreatureType.VERMIN);
 		
 		// Individual player settings (added on first login)
-		addPatron("_Booked",					EnumCreatureType.FEY, EnumCreatureType.AQUATIC);
 		addPatron("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);
+		addPatron("_Booked",					EnumCreatureType.FEY, EnumCreatureType.AQUATIC);
 		addPatron("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH, EnumCreatureType.FIRE);
 		addPatron("chmobian",					EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.EARTH, EnumCreatureType.EXTRAPLANAR);
 		addPatron("Dusty21134",					EnumCreatureType.DRAGON, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);

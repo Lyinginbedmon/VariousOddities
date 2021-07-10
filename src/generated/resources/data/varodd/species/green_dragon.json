@@ -6,6 +6,7 @@
     "air"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Scale:0.7f},Name:\"varodd:size\"}",
     "{Tag:{Amount:3.0d},Name:\"varodd:strength_modifier\"}",
     "{Tag:{Amount:10.0d},Name:\"varodd:constitution_modifier\"}",
     "{Tag:{Amount:7.0d},Name:\"varodd:natural_armour\"}",

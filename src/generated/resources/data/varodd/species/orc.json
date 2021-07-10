@@ -5,6 +5,7 @@
     "humanoid"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Scale:0.7f},Name:\"varodd:size\"}",
     "{Tag:{Amount:2.0d},Name:\"varodd:strength_modifier\"}",
     "{Name:\"varodd:darkvision\"}",
     "{Name:\"varodd:light_sensitivity\"}"

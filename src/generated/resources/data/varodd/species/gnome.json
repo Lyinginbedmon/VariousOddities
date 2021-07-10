@@ -1,0 +1,11 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 0,
+  "Types": [
+    "humanoid"
+  ],
+  "Abilities": [
+    "{Tag:{Amount:2.0d},Name:\"varodd:constitution_modifier\"}",
+    "{Tag:{Size:\"small\",Scale:0.4f},Name:\"varodd:size\"}"
+  ]
+}

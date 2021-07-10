@@ -455,6 +455,7 @@
 	"ability.varodd.strength_modifier": "Strength %s",
 	"ability.varodd.constitution_modifier": "Health %s",
 	"ability.varodd.size": "%s size",
+	"ability.varodd:stability": "Stability",
 		"_comment18": "Template operations",
 	"operation.varodd.type.remove_all.supertypes": "Lose all supertypes",
 	"operation.varodd.type.remove_all.subtypes": "Lose all subtypes",

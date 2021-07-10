@@ -272,7 +272,15 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean hasSpecies(){ return this.species != null; }
 	public SpeciesInstance getSpecies(){ return this.species; }
-	public void setSpecies(SpeciesInstance speciesIn){ this.species = speciesIn; this.abilities.markForRecache(); markDirty(); }
+	public void setSpecies(SpeciesInstance speciesIn)
+	{
+		this.species = null;
+		this.abilities.updateAbilityCache();
+		
+		this.species = speciesIn;
+		this.abilities.markForRecache();
+		markDirty();
+	}
 	public void setSpecies(Species speciesIn){ setSpecies(speciesIn.createInstance()); }
 	
 	public boolean hasSelectedSpecies(){ return this.selectedSpecies; }

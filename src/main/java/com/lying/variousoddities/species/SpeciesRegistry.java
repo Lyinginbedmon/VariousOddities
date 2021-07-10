@@ -26,7 +26,6 @@ import com.lying.variousoddities.species.abilities.AbilityExplode;
 import com.lying.variousoddities.species.abilities.AbilityFastHealing;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
-import com.lying.variousoddities.species.abilities.AbilitySize.Size;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityLightSensitivity;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
@@ -35,6 +34,8 @@ import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.species.abilities.AbilityNaturalRegen;
 import com.lying.variousoddities.species.abilities.AbilityResistance;
 import com.lying.variousoddities.species.abilities.AbilitySize;
+import com.lying.variousoddities.species.abilities.AbilitySize.Size;
+import com.lying.variousoddities.species.abilities.AbilityStability;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToHome;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToPos;
 import com.lying.variousoddities.species.abilities.DamageType;
@@ -62,8 +63,11 @@ public class SpeciesRegistry extends JsonReloadListener
 	public static final ResourceLocation SPECIES_AASIMAR		= new ResourceLocation(Reference.ModInfo.MOD_ID, "aasimar");
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
 	public static final ResourceLocation SPECIES_CREEPER		= new ResourceLocation(Reference.ModInfo.MOD_ID, "creeper");
+	public static final ResourceLocation SPECIES_DWARF			= new ResourceLocation(Reference.ModInfo.MOD_ID, "dwarf");
 	public static final ResourceLocation SPECIES_DRAGON_GREEN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "green_dragon");
+	public static final ResourceLocation SPECIES_GNOME			= new ResourceLocation(Reference.ModInfo.MOD_ID, "gnome");
 	public static final ResourceLocation SPECIES_GOBLIN			= new ResourceLocation(Reference.ModInfo.MOD_ID, "goblin");
+	public static final ResourceLocation SPECIES_HALFLING		= new ResourceLocation(Reference.ModInfo.MOD_ID, "halfling");
 	public static final ResourceLocation SPECIES_HALF_ORC		= new ResourceLocation(Reference.ModInfo.MOD_ID, "half_orc");
 	public static final ResourceLocation SPECIES_KOBOLD			= new ResourceLocation(Reference.ModInfo.MOD_ID, "kobold");
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
@@ -158,10 +162,17 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addType(EnumCreatureType.PLANT)
 				.addAbility(new AbilityModifierStr(-4D))
 				.addAbility(new AbilityExplode()));
+		addSpecies(new Species(SPECIES_DWARF)
+				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilitySize(Size.MEDIUM, 0.2F))
+				.addAbility(new AbilityModifierCon(2D))
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityStability()));
 		addSpecies(new Species(SPECIES_DRAGON_GREEN)
 				.setPlayerSelect(false)
 				.setPower(5)
 				.addType(EnumCreatureType.DRAGON, EnumCreatureType.AIR)
+				.addAbility(new AbilitySize(Size.MEDIUM, 0.7F))
 				.addAbility(new AbilityModifierStr(3D))
 				.addAbility(new AbilityModifierCon(10D))
 				.addAbility(new AbilityNaturalArmour(7D))
@@ -174,8 +185,16 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilitySize(Size.SMALL))
 				.addAbility(new AbilityModifierStr(-1D))
 				.addAbility(new AbilityDarkvision()));
+		addSpecies(new Species(SPECIES_GNOME)
+				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilityModifierCon(2D))
+				.addAbility(new AbilitySize(Size.SMALL, 0.4F)));
+		addSpecies(new Species(SPECIES_HALFLING)
+				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilitySize(Size.SMALL, 0.1F)));
 		addSpecies(new Species(SPECIES_HALF_ORC)
 				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilitySize(Size.MEDIUM, 0.6F))
 				.addAbility(new AbilityModifierStr(1D))
 				.addAbility(new AbilityDarkvision()));
 		addSpecies(new Species(SPECIES_KOBOLD)
@@ -199,6 +218,7 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityNaturalRegen()));
 		addSpecies(new Species(SPECIES_ORC)
 				.addType(EnumCreatureType.HUMANOID)
+				.addAbility(new AbilitySize(Size.MEDIUM, 0.7F))
 				.addAbility(new AbilityModifierStr(2D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityLightSensitivity()));

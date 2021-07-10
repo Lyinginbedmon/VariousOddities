@@ -1,0 +1,10 @@
+{
+  "CanPlayerSelect": true,
+  "Power": 0,
+  "Types": [
+    "humanoid"
+  ],
+  "Abilities": [
+    "{Tag:{Size:\"small\",Scale:0.1f},Name:\"varodd:size\"}"
+  ]
+}

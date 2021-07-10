@@ -196,7 +196,7 @@ public class VOBusClient
 	}
 	
 	@SuppressWarnings("rawtypes")
-	@SubscribeEvent(priority=EventPriority.HIGHEST, receiveCanceled=true)
+	@SubscribeEvent(priority=EventPriority.HIGHEST)
 	public static <T extends LivingEntity, M extends EntityModel<T>> void resizeEntity(RenderLivingEvent.Pre event)
 	{
 		LivingEntity renderTarget = event.getEntity();

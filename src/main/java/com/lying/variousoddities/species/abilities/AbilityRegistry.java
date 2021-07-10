@@ -27,6 +27,8 @@ import net.minecraftforge.registries.IForgeRegistry;
 public class AbilityRegistry
 {
 	/*
+	 * To do:
+	 * 
 	 * Enderman
 	 * 	Silk Touch
 	 * Blaze
@@ -36,7 +38,6 @@ public class AbilityRegistry
 	 * Rat
 	 * 	Disease (# when used on held item)
 	 * 
-	 * Darkvision
 	 * Low-light Vision
 	 * Blindsense
 	 */
@@ -75,6 +76,7 @@ public class AbilityRegistry
 		registry.register(new AbilityResistance.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());
 		registry.register(new AbilitySize.Builder());
+		registry.register(new AbilityStability.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
 		registry.register(new AbilitySwim.Builder());
 		registry.register(new AbilityTeleportToHome.Builder());
