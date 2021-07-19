@@ -14,17 +14,21 @@ import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
 import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerDazed;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerEntangled;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerPetrified;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.IllagerRenderer;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.entity.model.FoxModel;
+import net.minecraft.client.renderer.entity.model.VillagerModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.FoxEntity;
@@ -36,7 +40,6 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 @OnlyIn(Dist.CLIENT)
 public class EntityRenderRegistry
 {
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void registerEntityRenderers()
 	{
 		if(ConfigVO.GENERAL.verboseLogs())
@@ -59,8 +62,14 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.WARG, new EntityWargRenderer.RenderFactory());
 		registerRenderer(VOEntities.GHASTLING, new EntityGhastlingRenderer.RenderFactory());
 		
-		Minecraft mc = Minecraft.getInstance();
-		EntityRendererManager renderManager = mc.getRenderManager();
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void appendRenderers(EntityRendererManager renderManager)
+	{
+		if(ConfigVO.GENERAL.verboseLogs())
+			VariousOddities.log.info("Appending layer renderers");
+		
 		LivingRenderer foxRenderer = (LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)renderManager.renderers.get(EntityType.FOX);
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));
 		if(ConfigVO.GENERAL.verboseLogs())
@@ -74,12 +83,25 @@ public class EntityRenderRegistry
 			if(ConfigVO.GENERAL.verboseLogs())
 				VariousOddities.log.info("  -Registered ghastling shoulder layer for "+entry);
 			renderer.addLayer(new LayerDazed(renderer));
+			renderer.addLayer(new LayerEntangled(renderer));
+			renderer.addLayer(new LayerPetrified(renderer));
 		}
 		
 		renderManager.renderers.forEach((type, renderer) -> 
 		{
-			if(renderer instanceof LivingRenderer && ((LivingRenderer)renderer).getEntityModel() instanceof BipedModel)
-				((LivingRenderer)renderer).addLayer(new LayerDazed((LivingRenderer)renderer));
+			if(renderer instanceof LivingRenderer)
+			{
+				LivingRenderer livingRenderer = (LivingRenderer)renderer;
+				
+				livingRenderer.addLayer(new LayerEntangled(livingRenderer));
+				livingRenderer.addLayer(new LayerPetrified(livingRenderer));
+				
+				if(
+						livingRenderer.getEntityModel() instanceof BipedModel ||
+						livingRenderer.getEntityModel() instanceof VillagerModel ||
+						livingRenderer instanceof IllagerRenderer)
+					livingRenderer.addLayer(new LayerDazed(livingRenderer));
+			}
 		});
 	}
 	

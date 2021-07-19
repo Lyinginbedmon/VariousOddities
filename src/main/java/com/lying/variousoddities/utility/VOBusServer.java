@@ -276,6 +276,9 @@ public class VOBusServer
 		if(event.getAmount() > 0F && !event.isCanceled())
 		{
 			LivingEntity hurtEntity = event.getEntityLiving();
+			if(VOPotions.isSilenced(hurtEntity))
+				return;
+			
 			wakeupEntitiesAround(hurtEntity);
 			
 			EffectInstance sleepEffect = hurtEntity.getActivePotionEffect(VOPotions.SLEEP);

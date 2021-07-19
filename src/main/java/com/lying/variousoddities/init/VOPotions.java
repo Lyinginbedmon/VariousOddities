@@ -8,16 +8,15 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.potion.IVisualPotion;
-import com.lying.variousoddities.potion.PotionDazed;
-import com.lying.variousoddities.potion.PotionDazzled;
-import com.lying.variousoddities.potion.PotionParalysis;
-import com.lying.variousoddities.potion.PotionSleep;
+import com.lying.variousoddities.potion.*;
+import com.lying.variousoddities.potion.PotionVO;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.EffectType;
 import net.minecraft.potion.Effects;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -36,6 +35,12 @@ public class VOPotions
 	public static final Effect PARALYSIS			= addPotion(new PotionParalysis(-1));
 	public static final Effect DAZZLED				= addPotion(new PotionDazzled(-1));
 	public static final Effect DAZED				= addPotion(new PotionDazed(-1));
+	public static final Effect ARCANE_SIGHT			= addPotion(new PotionVO("arcane_sight", EffectType.BENEFICIAL, 10289404));
+	public static final Effect DEAFENED				= addPotion(new PotionVO("deafened", EffectType.HARMFUL, 7815));
+	public static final Effect SILENCED				= addPotion(new PotionVO("silenced", EffectType.HARMFUL, 7815));
+	public static final Effect PETRIFIED			= addPotion(new PotionPetrified(9408399));
+	public static final Effect PETRIFYING			= addPotion(new PotionPetrifying(9408399));
+	public static final Effect ENTANGLED			= addPotion(new PotionEntangled(9953313));
 	
 	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
 	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();
@@ -117,7 +122,7 @@ public class VOPotions
 //		PARALYSIS_EFFECTS.put(VOPotions.ENTANGLED, Predicates.alwaysTrue());
 		PARALYSIS_EFFECTS.put(VOPotions.PARALYSIS, Predicates.alwaysTrue());
 		
-//		SILENCE_EFFECTS.put(VOPotions.SILENCED, Predicates.alwaysTrue());
-//		SILENCE_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());
+		SILENCE_EFFECTS.put(VOPotions.SILENCED, Predicates.alwaysTrue());
+		SILENCE_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());
 	}
 }

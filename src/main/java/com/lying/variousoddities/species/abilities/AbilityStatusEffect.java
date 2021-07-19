@@ -18,7 +18,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public class AbilityStatusEffect extends Ability
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect");
-	public static int TIME = Reference.Values.TICKS_PER_SECOND * 5;
+	public static int TIME = Reference.Values.TICKS_PER_SECOND * 10;
 	
 	protected EffectInstance effect;
 	

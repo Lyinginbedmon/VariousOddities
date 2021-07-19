@@ -2,8 +2,6 @@ package com.lying.variousoddities.mixin;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,17 +16,12 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 
-import net.minecraft.entity.Pose;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin extends LivingEntityMixin
 {
-	@Shadow
-	@Nullable
-	private Pose forcedPose;
-	
 	@Shadow
 	public void startFallFlying(){ }
 	

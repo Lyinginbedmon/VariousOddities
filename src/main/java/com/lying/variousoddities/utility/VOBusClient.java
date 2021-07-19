@@ -56,10 +56,13 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ChatType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.event.ClientChatEvent;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -71,6 +74,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -389,7 +393,30 @@ public class VOBusClient
             if(blockState.getRenderType() != BlockRenderType.INVISIBLE)
                 return blockState;
         }
-        
         return null;
     }
+	
+	@SubscribeEvent
+	public static void onSilencedChatEvent(ClientChatEvent event)
+	{
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && player.isPotionActive(VOPotions.SILENCED) && !event.getOriginalMessage().startsWith("/"))
+			event.setCanceled(true);
+	}
+	
+	@SubscribeEvent
+	public static void onDeafenedChatEvent(ClientChatReceivedEvent event)
+	{
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && player.isPotionActive(VOPotions.DEAFENED) && event.getType() == ChatType.CHAT)
+			event.setCanceled(true);
+	}
+	
+	@SubscribeEvent
+	public static void onDeafenedPlaySound(PlaySoundAtEntityEvent event)
+	{
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && player.isPotionActive(VOPotions.DEAFENED))
+			event.setCanceled(true);
+	}
 }

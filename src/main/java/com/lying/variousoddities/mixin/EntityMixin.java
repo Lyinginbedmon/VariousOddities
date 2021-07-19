@@ -21,7 +21,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
 @Mixin(Entity.class)
-public class EntityMixin extends CapabilityProviderMixin
+public class EntityMixin
 {
 	@Shadow public World world;
 	

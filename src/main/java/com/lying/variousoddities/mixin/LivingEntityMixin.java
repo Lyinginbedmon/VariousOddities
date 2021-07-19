@@ -18,14 +18,17 @@ import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.LazyOptional;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin extends EntityMixin
@@ -63,15 +66,13 @@ public class LivingEntityMixin extends EntityMixin
 	@Inject(method = "baseTick", at = @At("TAIL"))
 	public void baseTick(CallbackInfo callbackInfo)
 	{
-		LazyOptional<LivingData> livingCap = this.getCapability(LivingData.CAPABILITY, null);
-		if(livingCap.isPresent())
-		{
-			LivingData livingData = livingCap.orElseThrow(() -> new RuntimeException("No living data found in mixin"));
-			
-			livingData.tick((LivingEntity)(Object)this);
-			if(livingData.overrideAir())
-				this.setAir(livingData.getAir());
-		}
+		LivingData livingData = LivingData.forEntity((LivingEntity)(Object)this);
+		if(livingData == null)
+			return;
+		
+		livingData.tick((LivingEntity)(Object)this);
+		if(livingData.overrideAir())
+			this.setAir(livingData.getAir());
 	}
 	
 	@Inject(method = "isPotionApplicable", at = @At("HEAD"), cancellable = true)
@@ -89,12 +90,29 @@ public class LivingEntityMixin extends EntityMixin
 		}
 	}
 	
-	@Inject(method = "updateAITasks", at = @At("HEAD"), cancellable = true)
-	public void isMobParalysed(final CallbackInfo ci)
+	@Inject(method = "attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
+	public void attackPetrifiedFrom(DamageSource source, float amount, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		if(!(entity.getType() == EntityType.PLAYER) && VOPotions.isParalysed(entity))
+		if(entity.isPotionActive(VOPotions.PETRIFIED))
+		{
+			if(
+					source == DamageSource.FALL || source == DamageSource.FALLING_BLOCK || 
+					source == DamageSource.LAVA || source == DamageSource.OUT_OF_WORLD)
+				return;
+			
+			Entity attacker = source.getTrueSource() == null ? source.getImmediateSource() : source.getTrueSource();
+			if(attacker != null && attacker.getType() == EntityType.PLAYER)
+			{
+				PlayerEntity player = (PlayerEntity)source.getTrueSource();
+				BlockState stone = Blocks.STONE.getDefaultState();
+				if(stone.canHarvestBlock(entity.getEntityWorld(), entity.getPosition(), player))
+					return;
+			}
+			
+			ci.setReturnValue(false);
 			ci.cancel();
+		}
 	}
 	
 	@Inject(method = "isEntityUndead()Z", at = @At("HEAD"), cancellable = true)

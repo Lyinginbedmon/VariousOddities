@@ -1,10 +1,10 @@
 Fix settlement room rendering
 AbstractGoblinWolf
-	Correct rendering of held item
 	Complete goblin->goblin tamer->worg->warg pipeline
 Warg
 	Saddles
 	Chests
 	Sit command
+	Held item rendering
 Potions
 	Fix sleep effect on players

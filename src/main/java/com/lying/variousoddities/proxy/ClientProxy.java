@@ -9,6 +9,7 @@ import com.lying.variousoddities.client.SpellManagerClient;
 import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.client.gui.ScreenSpeciesSelect;
 import com.lying.variousoddities.client.renderer.ColorHandler;
+import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -50,6 +51,7 @@ public class ClientProxy extends CommonProxy
 	public void onLoadComplete(FMLLoadCompleteEvent event)
 	{
 		event.enqueueWork(() -> { ColorHandler.registerColorHandlers(); });
+		EntityRenderRegistry.appendRenderers(mc.getRenderManager());
 	}
 	
 	public PlayerEntity getPlayerEntity(NetworkEvent.Context ctx){ return (ctx.getDirection().getReceptionSide().isClient() ? mc.player : super.getPlayerEntity(ctx)); }

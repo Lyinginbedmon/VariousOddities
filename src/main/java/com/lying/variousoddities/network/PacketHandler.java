@@ -48,6 +48,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketVisualPotion.class, PacketVisualPotion::encode, PacketVisualPotion::decode, PacketVisualPotion::handle);
 		HANDLER.registerMessage(id++, PacketSyncVisualPotions.class, PacketSyncVisualPotions::encode, PacketSyncVisualPotions::decode, PacketSyncVisualPotions::handle);
 		HANDLER.registerMessage(id++, PacketAbilityRemove.class, PacketAbilityRemove::encode, PacketAbilityRemove::decode, PacketAbilityRemove::handle);
+		HANDLER.registerMessage(id++, PacketPetrifying.class, PacketPetrifying::encode, PacketPetrifying::decode, PacketPetrifying::handle);
 	}
 	
 	/**

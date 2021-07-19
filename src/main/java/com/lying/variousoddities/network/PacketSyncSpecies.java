@@ -57,7 +57,6 @@ public class PacketSyncSpecies
 			if(species != null && species.getRegistryName() != null)
 				VORegistries.SPECIES.put(species.getRegistryName(), species);
 		}
-		VariousOddities.log.info("Synchronising species on client, "+VORegistries.SPECIES.size()+" species");
 		cxt.get().setPacketHandled(true);
 	}
 }

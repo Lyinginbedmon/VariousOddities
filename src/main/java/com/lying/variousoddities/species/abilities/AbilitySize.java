@@ -1,24 +1,31 @@
 package com.lying.variousoddities.species.abilities;
 
+import java.util.UUID;
+
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
-public class AbilitySize extends Ability
+public class AbilitySize extends AbilityModifier
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "size");
+	private static final UUID SIZE_MODIFIER = UUID.fromString("3e3cf3f2-7d4f-41ce-91de-8557f02b2b91");
 	
 	private Size sizeClass;
 	private boolean sizeNeedsRecalc = true;
@@ -27,7 +34,7 @@ public class AbilitySize extends Ability
 	
 	public AbilitySize(Size sizeIn)
 	{
-		super(REGISTRY_NAME);
+		super(REGISTRY_NAME, sizeIn.baseScale());
 		this.sizeClass = sizeIn;
 	}
 	
@@ -65,6 +72,7 @@ public class AbilitySize extends Ability
 	
 	public void addListeners(IEventBus bus)
 	{
+		super.addListeners(bus);
 		bus.addListener(this::updateSize);
 		bus.addListener(this::handleSize);
 	}
@@ -74,6 +82,38 @@ public class AbilitySize extends Ability
 	public float getScale()
 	{
 		return this.scale >= 0F ? this.sizeClass.scale(this.scale) : this.sizeClass.baseScale();
+	}
+	
+	public void applyModifier(LivingUpdateEvent event)
+	{
+		LivingEntity entity = event.getEntityLiving();
+		if(entity.getType() != EntityType.PLAYER)
+			return;
+		
+		ModifiableAttributeInstance attribute = entity.getAttribute(ForgeMod.REACH_DISTANCE.get());
+		if(attribute == null)
+			return;
+		
+		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		{
+			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName(entity, getMapName());
+			double amount = size.sizeClass.baseScale() - 1;
+			
+			AttributeModifier modifier = attribute.getModifier(SIZE_MODIFIER);
+			if(modifier != null && modifier.getAmount() != amount)
+			{
+				attribute.removeModifier(SIZE_MODIFIER);
+				modifier = null;
+			}
+			
+			if(modifier == null)
+			{
+				modifier = new AttributeModifier(SIZE_MODIFIER, "size_modifier", amount, Operation.MULTIPLY_BASE);
+				attribute.applyPersistentModifier(modifier);
+			}
+		}
+		else if(attribute.getModifier(SIZE_MODIFIER) != null)
+			attribute.removeModifier(SIZE_MODIFIER);
 	}
 	
 	/** Ensures that size is recalculated after initial application as well as when NBT data is edited */

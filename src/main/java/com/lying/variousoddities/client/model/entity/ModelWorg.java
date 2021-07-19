@@ -5,12 +5,15 @@ import java.util.Arrays;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.AbstractGoblinWolf.Genetics;
 import com.lying.variousoddities.entity.passive.EntityWorg;
+import com.mojang.blaze3d.matrix.MatrixStack;
 
+import net.minecraft.client.renderer.entity.model.IHasArm;
 import net.minecraft.client.renderer.entity.model.TintedAgeableModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 
-public class ModelWorg extends TintedAgeableModel<EntityWorg>
+public class ModelWorg extends TintedAgeableModel<EntityWorg> implements IHasArm
 {
     public ModelRenderer head;
     public ModelRenderer earLeft, earRight;
@@ -195,5 +198,11 @@ public class ModelWorg extends TintedAgeableModel<EntityWorg>
         jaw.rotationPointZ = -1F + jaw.rotateAngleX;
         
         tail.rotateAngleX = entityIn.getTailRotation();
+	}
+    
+	public void translateHand(HandSide sideIn, MatrixStack matrixStackIn)
+	{
+		this.head.translateRotate(matrixStackIn);
+		this.jaw.translateRotate(matrixStackIn);
 	}
 }

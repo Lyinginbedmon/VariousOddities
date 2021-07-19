@@ -5,7 +5,6 @@
 	[
 		"AbstractBlockStateMixin",
 		"BlockMixin",
-		"CapabilityProviderMixin",
 		"EffectMixin",
 		"EntityMixin",
 		"FireworkRocketEntityMixin",
@@ -17,7 +16,8 @@
 		"NearestAttackableTargetGoalMixin",
 		"PlayerEntityMixin",
 		"ServerWorldMixin",
-		"ServerPlayNetHandlerMixin"
+		"ServerPlayNetHandlerMixin",
+		"MobEntityMixin"
 	],
 	"client":
 	[

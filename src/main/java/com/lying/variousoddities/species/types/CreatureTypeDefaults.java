@@ -143,18 +143,20 @@ public class CreatureTypeDefaults
 		
 		// Individual player settings (added on first login)
 		addPatron("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);
-		addPatron("_Booked",					EnumCreatureType.FEY, EnumCreatureType.AQUATIC);
-		addPatron("Alantor6616",				EnumCreatureType.CONSTRUCT, EnumCreatureType.EARTH, EnumCreatureType.FIRE);
-		addPatron("chmobian",					EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.EARTH, EnumCreatureType.EXTRAPLANAR);
-		addPatron("Dusty21134",					EnumCreatureType.DRAGON, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
-		addPatron("Kurloz_M",					EnumCreatureType.PLANT, EnumCreatureType.EARTH);
-		addPatron("Kyofushin",					EnumCreatureType.UNDEAD, EnumCreatureType.FEY);
-		addPatron("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.SHAPECHANGER);
-		addPatron("Princessfirefly9",			EnumCreatureType.FEY, EnumCreatureType.AIR);
-		addPatron("Pyrodance",					EnumCreatureType.FEY, EnumCreatureType.SHAPECHANGER);
-		addPatron("SakuraWolfe",				EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR);
-		addPatron("sawtooth44",					EnumCreatureType.ELEMENTAL, EnumCreatureType.AIR, EnumCreatureType.FIRE, EnumCreatureType.EXTRAPLANAR);
-		addPatron("thefeywilds",				EnumCreatureType.OUTSIDER, EnumCreatureType.AIR, EnumCreatureType.EXTRAPLANAR, EnumCreatureType.WATER);
-		addPatron("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.AUGMENTED);
+		addPatron("nikmat97",					EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.FIRE, EnumCreatureType.SHAPECHANGER);
+		addPatron("_Booked",					EnumCreatureType.FEY,EnumCreatureType.AQUATIC);
+		addPatron("Thefeywilds",				EnumCreatureType.DRAGON,EnumCreatureType.FEY,EnumCreatureType.AIR,EnumCreatureType.EXTRAPLANAR,EnumCreatureType.WATER);
+		addPatron("Pyrodance",					EnumCreatureType.FEY,EnumCreatureType.SHAPECHANGER);
+		addPatron("Dusty21134",					EnumCreatureType.DRAGON,EnumCreatureType.AIR,EnumCreatureType.EXTRAPLANAR);
+		addPatron("Shadowthian",				EnumCreatureType.MAGICAL_BEAST,EnumCreatureType.AIR,EnumCreatureType.SHAPECHANGER);
+		addPatron("SakuraWolfe",				EnumCreatureType.MAGICAL_BEAST,EnumCreatureType.OUTSIDER,EnumCreatureType.AIR,EnumCreatureType.EXTRAPLANAR,EnumCreatureType.SHAPECHANGER);
+		addPatron("noodlebowl_",				EnumCreatureType.DRAGON,EnumCreatureType.OUTSIDER,EnumCreatureType.EXTRAPLANAR,EnumCreatureType.FIRE,EnumCreatureType.SHAPECHANGER);
+		addPatron("alantor6616",				EnumCreatureType.DRAGON,EnumCreatureType.OOZE,EnumCreatureType.AMPHIBIOUS,EnumCreatureType.AQUATIC,EnumCreatureType.INCORPOREAL);
+		addPatron("Wolframstein",				EnumCreatureType.MONSTROUS_HUMANOID,EnumCreatureType.AUGMENTED,EnumCreatureType.SHAPECHANGER);
+		addPatron("xxenobiology",				EnumCreatureType.FEY,EnumCreatureType.EXTRAPLANAR,EnumCreatureType.INCORPOREAL,EnumCreatureType.SHAPECHANGER);
+		addPatron("sawtooth44",					EnumCreatureType.ELEMENTAL,EnumCreatureType.AIR,EnumCreatureType.FIRE);
+		addPatron("KirinDave",					EnumCreatureType.UNDEAD,EnumCreatureType.AUGMENTED,EnumCreatureType.EXTRAPLANAR);
+		addPatron("Kyofushin",					EnumCreatureType.ABERRATION,EnumCreatureType.CONSTRUCT,EnumCreatureType.FEY,EnumCreatureType.UNDEAD,EnumCreatureType.EXTRAPLANAR);
+		addPatron("Princessfirefly9",			EnumCreatureType.FEY,EnumCreatureType.OUTSIDER,EnumCreatureType.AIR,EnumCreatureType.HOLY);
 	}
 }
