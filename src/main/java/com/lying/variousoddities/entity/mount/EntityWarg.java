@@ -3,6 +3,8 @@ package com.lying.variousoddities.entity.mount;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
+import com.lying.variousoddities.entity.IMountInventory;
+import com.lying.variousoddities.inventory.ContainerWarg;
 
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.Entity;
@@ -19,6 +21,9 @@ import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.passive.horse.LlamaEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.container.SimpleNamedContainerProvider;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -29,8 +34,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount
+public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount, IMountInventory
 {
 	private static final DataParameter<Boolean> REARING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
 	
@@ -43,10 +50,13 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	@SuppressWarnings("unused")
 	private float prevRearingAmount;
 	
+	public Inventory wargChest;
+	
 	public EntityWarg(EntityType<? extends EntityWarg> type, World worldIn)
 	{
 		super(type, worldIn);
 	    this.stepHeight = 1.0F;
+	    this.initWargChest();
 	}
 	
 	protected void registerData()
@@ -75,6 +85,26 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	public AgeableEntity func_241840_a(ServerWorld arg0, AgeableEntity arg1)
 	{
 		return null;
+	}
+	
+	public void initWargChest()
+	{
+		Inventory inventory = this.wargChest;
+		this.wargChest = new Inventory(4);
+		if(inventory != null)
+		{
+//			inventory.removeListener(this);
+			int i = Math.min(inventory.getSizeInventory(), this.wargChest.getSizeInventory());
+			
+			for(int j=0; j<i; ++j)
+			{
+				ItemStack stack = inventory.getStackInSlot(j);
+				if(!stack.isEmpty())
+					this.wargChest.setInventorySlotContents(j, stack.copy());
+			}
+		}
+		
+//		this.wargChest.addListener(this);
 	}
 	
 	public boolean isJumping()
@@ -208,7 +238,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	{
 		if(!isBeingRidden() && !player.isSecondaryUseActive())
 		{
-			if(!this.getEntityWorld().isRemote)
+			if(!this.getEntityWorld().isRemote && (isTamed() || player.isCreative()))
 				player.startRiding(this);
 			return ActionResultType.func_233537_a_(this.getEntityWorld().isRemote);
 		}
@@ -286,5 +316,11 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	public void handleStopJump()
 	{
 		
+	}
+	
+	@OnlyIn(Dist.CLIENT)
+	public void openGui(PlayerEntity playerIn)
+	{
+		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerWarg(window, player, this), this.getDisplayName()));
 	}
 }

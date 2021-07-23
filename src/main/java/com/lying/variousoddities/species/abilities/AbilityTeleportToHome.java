@@ -23,6 +23,8 @@ import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 
 public class AbilityTeleportToHome extends ActivatedAbility
 {
@@ -78,17 +80,13 @@ public class AbilityTeleportToHome extends ActivatedAbility
 				if(destWorld.getDimensionKey() != spawnDim)
 					destWorld = destWorld.getServer().getWorld(spawnDim);
 				
-				player.stopRiding();
-				if(player.isSleeping())
-				    player.wakeUp();
-				
 				if(destWorld != null)
 				{
 					BlockPos spawnPoint = player.func_241140_K_();
 					if(spawnPoint != null)
 					{
 						Optional<Vector3d> optional = PlayerEntity.func_242374_a(destWorld, spawnPoint, player.func_242109_L(), false, true);
-						if (optional.isPresent())
+						if(optional.isPresent())
 						{
 							Vector3d pos = optional.get();
 				            doTeleport(player, world, destWorld, pos.getX(), pos.getY(), pos.getZ());
@@ -107,6 +105,18 @@ public class AbilityTeleportToHome extends ActivatedAbility
 	private void doTeleport(LivingEntity entity, World world, World destWorld, double x, double y, double z)
 	{
 		destWorld.playSound(null, entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
+		
+		EnderTeleportEvent event = new EnderTeleportEvent(entity, x, y, z, 0F);
+		if(MinecraftForge.EVENT_BUS.post(event))
+		{
+			putOnCooldown(entity);
+			return;
+		}
+		
+		entity.stopRiding();
+		if(entity.isSleeping())
+			entity.wakeUp();
+		
 		if(world != destWorld)
 		{
 			((ServerChunkProvider)destWorld.getChunkProvider()).registerTicket(TicketType.POST_TELEPORT, new ChunkPos(new BlockPos(x, y, z)), 1, entity.getEntityId());

@@ -10,9 +10,11 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
+import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketBonusJump;
 import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketMountGui;
 import com.lying.variousoddities.network.PacketSyncVisualPotions;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.reference.Reference;
@@ -32,6 +34,7 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -65,6 +68,7 @@ import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
 import net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -321,6 +325,17 @@ public class VOBusClient
 		}
 		else
 			dazzledTime = 0;
+	}
+	
+	@SubscribeEvent
+	public static void onMountUIOpen(GuiOpenEvent event)
+	{
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && player.getRidingEntity() != null && player.getRidingEntity() instanceof IMountInventory && event.getGui() instanceof InventoryScreen)
+		{
+			event.setGui(null);
+			PacketHandler.sendToServer(new PacketMountGui());
+		}
 	}
 	
 	private static void renderBlock(BlockState state, BlockPos pos, World world, MatrixStack stack, float partialTicks)

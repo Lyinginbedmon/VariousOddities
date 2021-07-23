@@ -34,10 +34,7 @@ public class AbilityTremorsense extends AbilityVision
 		if(entity.isOnGround())
 			return true;
 		else if(EnumCreatureType.getTypes(player).includesType(EnumCreatureType.AQUATIC))
-		{
-			if(entity.areEyesInFluid(FluidTags.WATER) || entity.getEntityWorld().getBlockState(entity.getPosition()).getFluidState().isTagged(FluidTags.WATER))
-				return true;
-		}
+			return entity.areEyesInFluid(FluidTags.WATER) || entity.getEntityWorld().getBlockState(entity.getPosition()).getFluidState().isTagged(FluidTags.WATER);
 		return false;
 	}
 	

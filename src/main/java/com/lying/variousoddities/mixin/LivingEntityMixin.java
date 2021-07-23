@@ -14,9 +14,9 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
-import com.lying.variousoddities.species.types.TypeHandler;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -26,7 +26,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 
@@ -79,15 +78,12 @@ public class LivingEntityMixin extends EntityMixin
 	public void isPotionApplicable(EffectInstance effectInstanceIn, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		boolean isParalysis = VOPotions.isParalysisEffect(effectInstanceIn);
-		for(EnumCreatureType mobType : EnumCreatureType.getCreatureTypes(entity))
-		{
-			TypeHandler handler = mobType.getHandler();
-			if(effectInstanceIn.getPotion() == Effects.POISON && !handler.canBePoisoned())
+		for(AbilityStatusImmunity statusImmunity : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusImmunity.class))
+			if(statusImmunity.appliesToStatus(effectInstanceIn))
+			{
 				ci.setReturnValue(false);
-			else if(isParalysis && !handler.canBeParalysed())
-				ci.setReturnValue(false);
-		}
+				break;
+			}
 	}
 	
 	@Inject(method = "attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)

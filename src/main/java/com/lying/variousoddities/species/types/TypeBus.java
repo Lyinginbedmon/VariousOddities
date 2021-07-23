@@ -10,6 +10,8 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncTypesCustom;
+import com.lying.variousoddities.species.abilities.AbilityImmunityCrits;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -98,16 +100,10 @@ public class TypeBus
 		if(!shouldFire()) return;
 		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
 		{
-			for(EnumCreatureType mobType : EnumCreatureType.getCreatureTypes(event.getEntityLiving()))
+			if(AbilityRegistry.hasAbility(event.getEntityLiving(), AbilityImmunityCrits.REGISTRY_NAME))
 			{
-				if(!mobType.getHandler().canCriticalHit())
-				{
-					event.setDamageModifier(1.0F);
-					event.setResult(Result.DENY);
-				}
-				mobType.getHandler().onCriticalEvent(event);
-				if(event.getResult() == Result.DENY)
-					return;
+				event.setDamageModifier(1.0F);
+				event.setResult(Result.DENY);
 			}
 		}
 	}

@@ -47,6 +47,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
+import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -294,6 +295,22 @@ public class VOBusServer
 					hurtEntity.removePotionEffect(VOPotions.SLEEP);
 				}
 		}
+	}
+	
+	@SubscribeEvent
+	public static void onAnchoredTeleport(EnderTeleportEvent event)
+	{
+		LivingEntity entity = event.getEntityLiving();
+		if(entity.isPotionActive(VOPotions.ANCHORED))
+			event.setCanceled(true);
+	}
+	
+	@SubscribeEvent
+	public static void onAnchoredPortal(EntityTravelToDimensionEvent event)
+	{
+		Entity entity = event.getEntity();
+		if(entity instanceof LivingEntity && ((LivingEntity)entity).isPotionActive(VOPotions.ANCHORED))
+			event.setCanceled(true);
 	}
 	
 	public static void wakeupEntitiesAround(Entity source, double rangeXZ, double rangeY)

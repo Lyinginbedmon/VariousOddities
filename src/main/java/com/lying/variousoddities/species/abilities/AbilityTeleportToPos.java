@@ -15,6 +15,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 
 public class AbilityTeleportToPos extends ActivatedAbility
 {
@@ -64,9 +66,6 @@ public class AbilityTeleportToPos extends ActivatedAbility
 		{
 			World world = entity.getEntityWorld();
 			
-			// True if no area at or in the vicinity of the target point was found to be safe to teleport to
-			boolean failed = false;
-			
 			Vector3d hitVec = trace.getHitVec();
 			Vector3d destination = hitVec;
 			if(!isValidTeleportTarget(destination, world, entity))
@@ -83,18 +82,20 @@ public class AbilityTeleportToPos extends ActivatedAbility
 					destination = hitVec.add(modX, modY, modZ);
 					range = 1 + (int)((1D - ((double)attempts / 20D)) * 5);
 				}
-				
-				if(!isValidTeleportTarget(destination, world, entity))
-					failed = true;
 			}
 			
 			world.playSound(null, entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
-			if(!failed)
+			
+			EnderTeleportEvent event = new EnderTeleportEvent(entity, destination.getX(), destination.getY(), destination.getZ(), 0F);
+			if(MinecraftForge.EVENT_BUS.post(event))
 			{
-				entity.setPositionAndUpdate(destination.getX(), destination.getY(), destination.getZ());
-				entity.fallDistance = 0F;
-				world.playSound(null, destination.getX(), destination.getY(), destination.getZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
+				putOnCooldown(entity);
+				return;
 			}
+			
+			entity.setPositionAndUpdate(destination.getX(), destination.getY(), destination.getZ());
+			entity.fallDistance = 0F;
+			world.playSound(null, destination.getX(), destination.getY(), destination.getZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
 		}
 		
 		if(side != Dist.CLIENT)

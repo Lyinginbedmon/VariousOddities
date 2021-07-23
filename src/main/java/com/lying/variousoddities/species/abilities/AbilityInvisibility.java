@@ -15,19 +15,14 @@ public class AbilityInvisibility extends AbilityStatusEffect
 	
 	public AbilityInvisibility()
 	{
-		super(REGISTRY_NAME, new EffectInstance(Effects.INVISIBILITY, Reference.Values.TICKS_PER_SECOND * 10, 0, false, true));
+		super(REGISTRY_NAME, null);
 	}
 	
 	public ResourceLocation getMapName(){ return getRegistryName(); }
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
-	{
-		return compound;
-	}
-	
-	public void readFromNBT(CompoundNBT compound){ }
+	public EffectInstance getEffect(){ return new EffectInstance(Effects.INVISIBILITY, Reference.Values.TICKS_PER_SECOND * 10, 0, false, true); }
 	
 	public static class Builder extends Ability.Builder
 	{

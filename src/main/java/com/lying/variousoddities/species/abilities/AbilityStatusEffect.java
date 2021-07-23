@@ -1,6 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.lying.variousoddities.reference.Reference;
 
@@ -18,17 +18,17 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public class AbilityStatusEffect extends Ability
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect");
-	public static int TIME = Reference.Values.TICKS_PER_SECOND * 10;
+	public static int TIME = Reference.Values.TICKS_PER_SECOND * 15;
 	
-	protected EffectInstance effect;
+	protected EffectInstance effect = null;
 	
-	public AbilityStatusEffect(ResourceLocation registryName, @Nonnull EffectInstance effectIn)
+	public AbilityStatusEffect(ResourceLocation registryName, @Nullable EffectInstance effectIn)
 	{
 		super(registryName);
 		this.effect = effectIn;
 	}
 	
-	public AbilityStatusEffect(@Nonnull EffectInstance effectIn)
+	public AbilityStatusEffect(@Nullable EffectInstance effectIn)
 	{
 		this(REGISTRY_NAME, effectIn);
 	}
@@ -36,35 +36,40 @@ public class AbilityStatusEffect extends Ability
 	public int compare(Ability abilityIn)
 	{
 		AbilityStatusEffect statusEffect = (AbilityStatusEffect)abilityIn;
-		if(statusEffect.effect.getPotion() == effect.getPotion())
-			return statusEffect.effect.getAmplifier() < effect.getAmplifier() ? 1 : statusEffect.effect.getAmplifier() > effect.getAmplifier() ? -1 : 0;
+		EffectInstance effectA = getEffect();
+		EffectInstance effectB = statusEffect.getEffect();
+		
+		if(effectB.getPotion() == effectA.getPotion())
+			return effectB.getAmplifier() < effectA.getAmplifier() ? 1 : effectB.getAmplifier() > effectA.getAmplifier() ? -1 : 0;
 		return 0;
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
-	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+effect.getEffectName().toLowerCase()); }
+	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+getEffect().getEffectName().toLowerCase()); }
 	
 	public ITextComponent translatedName()
 	{
-		String name = I18n.format(this.effect.getPotion().getName());
-		int amp = this.effect.getAmplifier();
+		String name = I18n.format(getEffect().getPotion().getName());
+		int amp = getEffect().getAmplifier();
 		if(amp >= 1 && amp <= 9)
 			name += ' ' + I18n.format("enchantment.level." + (amp + 1));
 		return new StringTextComponent(name);
 	}
 	
-	public Type getType(){ return effect.getPotion().isBeneficial() ? Ability.Type.DEFENSE : Ability.Type.WEAKNESS; }
+	public Type getType(){ return getEffect().getPotion().isBeneficial() ? Ability.Type.DEFENSE : Ability.Type.WEAKNESS; }
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
-		this.effect.write(compound);
+		if(this.effect != null)
+			this.effect.write(compound);
 		return compound;
 	}
 	
 	public void readFromNBT(CompoundNBT compound)
 	{
-		this.effect = EffectInstance.read(compound);
+		if(!compound.isEmpty())
+			this.effect = EffectInstance.read(compound);
 	}
 	
 	public void addListeners(IEventBus bus)
@@ -72,13 +77,18 @@ public class AbilityStatusEffect extends Ability
 		bus.addListener(this::manageStatusEffect);
 	}
 	
+	public EffectInstance getEffect(){ return this.effect; }
+	
 	public void manageStatusEffect(LivingUpdateEvent event)
 	{
 		LivingEntity entity = event.getEntityLiving();
 		for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, getRegistryName()))
 		{
 			AbilityStatusEffect status = (AbilityStatusEffect)ability;
-			EffectInstance effect = status.effect;
+			EffectInstance effect = status.getEffect();
+			if(effect == null)
+				continue;
+			
 			Effect potion = effect.getPotion();
 			boolean shouldApply = !entity.isPotionActive(potion);
 			if(entity.isPotionActive(potion))
@@ -94,9 +104,12 @@ public class AbilityStatusEffect extends Ability
 	
 	public void onAbilityRemoved(LivingEntity entity)
 	{
-		Effect potion = effect.getPotion();
-		if(entity.isPotionActive(potion) && entity.getActivePotionEffect(potion).getAmplifier() == effect.getAmplifier())
-			entity.removeActivePotionEffect(potion);
+		if(getEffect() == null)
+			return;
+		
+		Effect potion = getEffect().getPotion();
+		if(entity.isPotionActive(potion) && entity.getActivePotionEffect(potion).getAmplifier() == getEffect().getAmplifier())
+			entity.removePotionEffect(potion);
 	}
 	
 	public static class Builder extends Ability.Builder

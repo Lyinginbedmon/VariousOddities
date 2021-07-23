@@ -117,6 +117,7 @@ public class Abilities
 		this.customAbilities.clear();
 		this.cachedAbilities.clear();
 		this.cooldowns.clear();
+		
 		if(nbt.contains("Abilities", 9))
 		{
 			ListNBT abilityList = nbt.getList("Abilities", 10);

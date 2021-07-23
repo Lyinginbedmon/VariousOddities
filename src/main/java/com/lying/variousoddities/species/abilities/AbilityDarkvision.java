@@ -15,19 +15,14 @@ public class AbilityDarkvision extends AbilityStatusEffect
 	
 	public AbilityDarkvision()
 	{
-		super(REGISTRY_NAME, new EffectInstance(Effects.NIGHT_VISION, Reference.Values.TICKS_PER_SECOND * 10, 0, false, false));
+		super(REGISTRY_NAME, null);
 	}
 	
 	public ResourceLocation getMapName(){ return getRegistryName(); }
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
-	{
-		return compound;
-	}
-	
-	public void readFromNBT(CompoundNBT compound){ }
+	public EffectInstance getEffect(){ return new EffectInstance(Effects.NIGHT_VISION, Reference.Values.TICKS_PER_SECOND * 10, 0, false, false); }
 	
 	public static class Builder extends Ability.Builder
 	{

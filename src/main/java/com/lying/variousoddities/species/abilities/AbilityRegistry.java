@@ -10,9 +10,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.species.abilities.Ability.Nature;
 
@@ -64,6 +62,7 @@ public class AbilityRegistry
 		registry.register(new AbilityGhostForm.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());
+		registry.register(new AbilityImmunityCrits.Builder());
 		registry.register(new AbilityIncorporeality.Builder());
 		registry.register(new AbilityInvisibility.Builder());
 		registry.register(new AbilityLightSensitivity.Builder());
@@ -71,11 +70,14 @@ public class AbilityRegistry
 		registry.register(new AbilityModifierStr.Builder());
 		registry.register(new AbilityNaturalArmour.Builder());
 		registry.register(new AbilityNaturalRegen.Builder());
+		registry.register(new AbilityStatusImmunity.AbilityParalysisImmunity.Builder());
 		registry.register(new AbilityPoison.Builder());
+		registry.register(new AbilityStatusImmunity.AbilityPoisonImmunity.Builder());
 		registry.register(new AbilityRend.Builder());
 		registry.register(new AbilityResistance.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());
 		registry.register(new AbilitySize.Builder());
+		registry.register(new AbilitySmite.Builder());
 		registry.register(new AbilityStability.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
 		registry.register(new AbilitySwim.Builder());
@@ -83,11 +85,6 @@ public class AbilityRegistry
 		registry.register(new AbilityTeleportToPos.Builder());
 		registry.register(new AbilityTremorsense.Builder());
 		registry.register(new AbilityWaterWalking.Builder());
-		
-		VariousOddities.log.info("Initialised "+registry.getEntries().size()+" abilities");
-		if(ConfigVO.GENERAL.verboseLogs())
-			for(ResourceLocation name : registry.getKeys())
-				VariousOddities.log.info("#   "+name.toString());
 		
 		registerAbilityListeners();
 	}

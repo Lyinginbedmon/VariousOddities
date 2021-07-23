@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
@@ -24,6 +25,7 @@ import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.species.abilities.AbilityPoison;
 import com.lying.variousoddities.species.abilities.AbilityResistance;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
+import com.lying.variousoddities.species.abilities.AbilitySmite;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.templates.AbilityOperation;
 import com.lying.variousoddities.species.templates.OperationReplaceSupertypes;
@@ -85,8 +87,9 @@ public class TemplateRegistry extends JsonReloadListener
                 if(template != null)
                 {
                 	VariousOddities.log.info(" -Loaded: "+name.toString()+", with "+template.getOperations().size()+" operations");
-                	for(TemplateOperation operation : template.getOperations())
-                    	VariousOddities.log.info("   -"+operation.translate().getString());
+                	if(ConfigVO.GENERAL.verboseLogs())
+	                	for(TemplateOperation operation : template.getOperations())
+	                    	VariousOddities.log.info("   -"+operation.translate().getString());
                 	
                 	template.setRegistryName(name);
                     loaded.put(name, template);
@@ -130,6 +133,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.setPlayerSelect(true)
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
 				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.EXTRAPLANAR))
+				.addOperation(new AbilityOperation(Operation.ADD, new AbilitySmite(EnumCreatureType.HOLY)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageReduction(5, DamageType.MAGIC)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityResistance(5, DamageType.COLD)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityResistance(5, DamageType.FIRE))));
@@ -138,6 +142,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.setPlayerSelect(true)
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
 				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.EXTRAPLANAR))
+				.addOperation(new AbilityOperation(Operation.ADD, new AbilitySmite(EnumCreatureType.EVIL)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityDamageReduction(5, DamageType.MAGIC)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityResistance(5, DamageType.COLD)))
 				.addOperation(new AbilityOperation(Operation.ADD, new AbilityResistance(5, DamageType.ACID)))

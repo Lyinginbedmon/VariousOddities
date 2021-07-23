@@ -389,6 +389,12 @@ public class AbilityBreathWeapon extends ActivatedAbility
 			
 			AbilityBreathWeapon weapon = new AbilityBreathWeapon(damage, type, distance, dmgAmount);
 			
+			if(compound.contains("Cooldown", 3))
+				weapon.cooldown = compound.getInt("Cooldown");
+			
+			if(compound.contains("Active", 3))
+				weapon.activeTicks = compound.getInt("Active");
+			
 			if(damageData.contains("BlockToPlace", 10))
 				weapon.setBlock(NBTUtil.readBlockState(damageData.getCompound("BlockToPlace")));
 			

@@ -11,7 +11,7 @@ public abstract class ActivatedAbility extends Ability
 {
 	private final int default_cooldown;
 	protected int activeTicks = 0;
-	private int cooldown;
+	protected int cooldown;
 	
 	protected ActivatedAbility(ResourceLocation registryName, int cooldownIn)
 	{
@@ -45,9 +45,14 @@ public abstract class ActivatedAbility extends Ability
 	
 	public int getCooldown(){ return this.cooldown; }
 	
+	public void putOnCooldown(LivingEntity entity, int cooldown)
+	{
+		LivingData.forEntity(entity).getAbilities().putOnCooldown(getMapName(), cooldown);
+	}
+	
 	public void putOnCooldown(LivingEntity entity)
 	{
-		LivingData.forEntity(entity).getAbilities().putOnCooldown(getMapName(), getCooldown());
+		putOnCooldown(entity, getCooldown());
 	}
 	
 	public void markForUpdate(LivingEntity entity)

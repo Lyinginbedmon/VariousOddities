@@ -434,9 +434,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		handleTypes(entity, world);
 		
-		for(EnumCreatureType type : this.prevTypes)
-			type.getHandler().onLivingTick(entity);
-		
 		boolean isPlayer = false;
 		PlayerEntity player = null;
 		if(entity.getType() == EntityType.PLAYER)

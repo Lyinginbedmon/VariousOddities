@@ -49,6 +49,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketSyncVisualPotions.class, PacketSyncVisualPotions::encode, PacketSyncVisualPotions::decode, PacketSyncVisualPotions::handle);
 		HANDLER.registerMessage(id++, PacketAbilityRemove.class, PacketAbilityRemove::encode, PacketAbilityRemove::decode, PacketAbilityRemove::handle);
 		HANDLER.registerMessage(id++, PacketPetrifying.class, PacketPetrifying::encode, PacketPetrifying::decode, PacketPetrifying::handle);
+		HANDLER.registerMessage(id++, PacketMountGui.class, PacketMountGui::encode, PacketMountGui::decode, PacketMountGui::handle);
 	}
 	
 	/**

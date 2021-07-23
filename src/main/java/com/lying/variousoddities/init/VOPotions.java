@@ -41,6 +41,7 @@ public class VOPotions
 	public static final Effect PETRIFIED			= addPotion(new PotionPetrified(9408399));
 	public static final Effect PETRIFYING			= addPotion(new PotionPetrifying(9408399));
 	public static final Effect ENTANGLED			= addPotion(new PotionEntangled(9953313));
+	public static final Effect ANCHORED				= addPotion(new PotionVO("anchored", EffectType.HARMFUL, 1400709));
 	
 	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
 	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();
