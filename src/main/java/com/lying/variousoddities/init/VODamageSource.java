@@ -34,6 +34,7 @@ public class VODamageSource extends DamageSource
 	public static final DamageSource POISON = new VODamageSource("poison").setDamageBypassesArmor();
 	public static final DamageSource PSYCHIC = new VODamageSource("psychic").setDamageBypassesArmor().setDamageIsAbsolute();
 	public static final DamageSource SONIC = new VODamageSource("sonic");
+	public static final DamageSource BLUDGEON = new VODamageSource("bludgeoning");
 	
 	/** Damage caused by the owner exploding */
 	public static final DamageSource EXPLOSION = new VODamageSource("explosion").setDamageBypassesArmor().setExplosion();

@@ -197,7 +197,7 @@ public class ModelWorg extends TintedAgeableModel<EntityWorg> implements IHasArm
         jaw.rotateAngleX = (tongue ? TONGUE_GAP : 0F) + entityIn.getJawState(scaleFactor) * (JAW_RANGE - (tongue ? TONGUE_GAP : 0F));
         jaw.rotationPointZ = -1F + jaw.rotateAngleX;
         
-        tail.rotateAngleX = entityIn.getTailRotation();
+        tail.rotateAngleX = entityIn.getTailRotation() + (entityIn.isEntitySleeping() ? (float)Math.toRadians(45D) : 0F);
 	}
     
 	public void translateHand(HandSide sideIn, MatrixStack matrixStackIn)

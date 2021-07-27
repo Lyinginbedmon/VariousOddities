@@ -38,8 +38,7 @@ public class PacketMountGui
 				return;
 			
 			IMountInventory inv = (IMountInventory)mount;
-			inv.openGui(player);
-//			player.openContainer = inv.getContainer(player);
+			inv.openContainer(player);
 			
 //			PacketHandler.sendTo(player, msg);
 		}
@@ -51,7 +50,7 @@ public class PacketMountGui
 				return;
 			
 			IMountInventory inv = (IMountInventory)mount;
-			inv.openGui(player);
+			inv.openContainer(player);
 		}
 	}
 }

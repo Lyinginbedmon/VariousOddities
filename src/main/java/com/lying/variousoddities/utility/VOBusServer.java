@@ -16,11 +16,13 @@ import com.lying.variousoddities.entity.hostile.EntityRatGiant;
 import com.lying.variousoddities.entity.passive.EntityGhastling;
 import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.entity.passive.EntityWorg;
+import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
+import com.lying.variousoddities.network.PacketSyncBludgeoning;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.network.PacketSyncSpecies;
 import com.lying.variousoddities.potion.PotionSleep;
@@ -294,6 +296,29 @@ public class VOBusServer
 						PotionSleep.setSleeping((LivingEntity)hurtEntity, false);
 					hurtEntity.removePotionEffect(VOPotions.SLEEP);
 				}
+		}
+	}
+	
+	/**
+	 * Prevents bludgeoning damage from affecting the entity's health instead of their bludgeoning value.
+	 * @param event
+	 */
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public static void onBludgeonedEvent(LivingHurtEvent event)
+	{
+		if(!event.isCanceled() && event.getSource() == VODamageSource.BLUDGEON)
+		{
+			LivingEntity hurtEntity = event.getEntityLiving();
+			LivingData data = LivingData.forEntity(hurtEntity);
+			
+			if(data != null)
+			{
+				data.setBludgeoning(data.getBludgeoning() + event.getAmount());
+				if(hurtEntity.getType() == EntityType.PLAYER && !hurtEntity.getEntityWorld().isRemote)
+					PacketHandler.sendTo((ServerPlayerEntity)hurtEntity, new PacketSyncBludgeoning(data.getBludgeoning()));
+			}
+			
+			event.setCanceled(true);
 		}
 	}
 	

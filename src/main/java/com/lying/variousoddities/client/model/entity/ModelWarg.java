@@ -39,16 +39,21 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
     
     public ModelWarg()
     {
+    	this(0F);
+    }
+    
+    public ModelWarg(float scaleIn)
+    {
     	this.textureWidth = 64;
     	this.textureHeight = 128;
     	
         this.head = ModelUtils.freshRenderer(this);
         this.head.setRotationPoint(0.0F, 14.0F, -7.5F);
-        this.head.setTextureOffset(0, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, 0.0F);
+        this.head.setTextureOffset(0, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, scaleIn);
         	// Headwear
-        this.head.setTextureOffset(20, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, 0.25F);
+        this.head.setTextureOffset(20, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, scaleIn + 0.25F);
         	// Fangs
-        this.head.setTextureOffset(14, 10).addBox(-1.5F, 2.0F, -6.0F, 3, 1, 4, 0.01F);
+        this.head.setTextureOffset(14, 10).addBox(-1.5F, 2.0F, -6.0F, 3, 1, 4, scaleIn + 0.01F);
         float earSpace = 2.75F;
         	// Right ear
 	        earRight = ModelUtils.freshRenderer(this);
@@ -56,7 +61,7 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
 	        earRight.rotateAngleX = -ModelUtils.toRadians(20D);
 	        earRight.rotateAngleY = ModelUtils.toRadians(20D);
 	        earRight.rotateAngleZ = -ModelUtils.toRadians(30D);
-	        earRight.setTextureOffset(28, 10).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, 0.0F);
+	        earRight.setTextureOffset(28, 10).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, scaleIn);
         this.head.addChild(earRight);
         	// Left ear
 	        earLeft = ModelUtils.freshRenderer(this);
@@ -65,57 +70,56 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
 	        earLeft.rotateAngleX = -ModelUtils.toRadians(20D);
 	        earLeft.rotateAngleY = -ModelUtils.toRadians(20D);
 	        earLeft.rotateAngleZ = ModelUtils.toRadians(30D);
-	        earLeft.setTextureOffset(28, 14).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, 0.0F);
+	        earLeft.setTextureOffset(28, 14).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, scaleIn);
         this.head.addChild(earLeft);
         
         this.muzzle = ModelUtils.freshRenderer(this);
-        this.muzzle.setTextureOffset(0, 10).addBox(-1.5F, 0.0F, -6.0F, 3, 2, 4, 0.0F);
+        this.muzzle.setTextureOffset(0, 10).addBox(-1.5F, 0.0F, -6.0F, 3, 2, 4, scaleIn);
         	this.head.addChild(this.muzzle);
         
         this.jaw = ModelUtils.freshRenderer(this);
         this.jaw.setRotationPoint(0F, 2.5F, -2F);
-        this.jaw.setTextureOffset(0, 16).addBox(-1.5F, -0.5F, -4, 3, 1, 3);
+        this.jaw.setTextureOffset(0, 16).addBox(-1.5F, -0.5F, -4, 3, 1, 3, scaleIn);
 		this.muzzle.addChild(jaw);
 		
 		this.tongue = ModelUtils.freshRenderer(this);
 		this.tongue.rotateAngleZ = ModelUtils.toRadians(10D);
-		this.tongue.setTextureOffset(16, 0).addBox(-2F, -0.7F, -3.75F, 1, 2, 2, -0.25F);
+		this.tongue.setTextureOffset(16, 0).addBox(-2F, -0.7F, -3.75F, 1, 2, 2, scaleIn - 0.25F);
 		this.jaw.addChild(this.tongue);
         
         this.body = ModelUtils.freshRenderer(this);
         this.body.setRotationPoint(0.0F, 14.0F, 2.0F);
-        this.body.setTextureOffset(0, 20).addBox(-3.0F, 2.5F, -2F, 6, 4, 5, 0.0F);
-        this.body.setTextureOffset(0, 29).addBox(-2.5F, -1F, -1.5F, 5, 4, 4, 0.0F);
+        this.body.setTextureOffset(0, 20).addBox(-3.0F, 2.5F, -2F, 6, 4, 5, scaleIn);
+        this.body.setTextureOffset(0, 29).addBox(-2.5F, -1F, -1.5F, 5, 4, 4, scaleIn);
         
         this.mane = ModelUtils.freshRenderer(this);
         this.mane.setRotationPoint(-1.0F, 14.0F, 2F);
-        this.mane.setTextureOffset(22, 20).addBox(-3.0F, -3.0F, -3F, 8, 5, 8, 0.0F);
+        this.mane.setTextureOffset(22, 20).addBox(-3.0F, -3.0F, -3F, 8, 5, 8, scaleIn);
         	this.mane2 = ModelUtils.freshRenderer(this);
         	this.mane2.setRotationPoint(0F, 3F, 4F);
-        	this.mane2.setTextureOffset(22, 33).addBox(-2.0F, -1.0F, -7F, 6, 2, 7, 0.0F);
+        	this.mane2.setTextureOffset(22, 33).addBox(-2.0F, -1.0F, -7F, 6, 2, 7, scaleIn);
     	this.mane.addChild(mane2);
-//        this.mane.setTextureOffset(22, 33).addBox(-2.0F, 2.0F, -2.5F, 6, 2, 7, 0.0F);
         
         this.legFrontRight = ModelUtils.freshRenderer(this);
         this.legFrontRight.setRotationPoint(-3F, 16F, -4F);
-        this.legFrontRight.setTextureOffset(20, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, 0.0F);
-        this.legFrontRight.setTextureOffset(20, 42 + 10).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, 0.25F);
+        this.legFrontRight.setTextureOffset(20, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, scaleIn);
+        this.legFrontRight.setTextureOffset(20, 42 + 10).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, scaleIn + 0.25F);
         
         this.legFrontLeft = ModelUtils.freshRenderer(this);
         this.legFrontLeft.setRotationPoint(1F, 16F, -4F);
-        this.legFrontLeft.setTextureOffset(0, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, 0.0F);
-        this.legFrontLeft.setTextureOffset(0, 42 + 10).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, 0.25F);
+        this.legFrontLeft.setTextureOffset(0, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, scaleIn);
+        this.legFrontLeft.setTextureOffset(0, 42 + 10).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, scaleIn + 0.25F);
         
-        this.legRearRight = new ModelRearLeg(this, 20, 58);
+        this.legRearRight = new ModelRearLeg(this, scaleIn, 20, 58);
         this.legRearRight.setRotationPoint(-2.5F, 16.0F, 7.0F);
         
-        this.legRearLeft = new ModelRearLeg(this, 0, 58);
+        this.legRearLeft = new ModelRearLeg(this, scaleIn, 0, 58);
         this.legRearLeft.setRotationPoint(0.5F, 16.0F, 7.0F);
         
         this.tail = ModelUtils.freshRenderer(this);
         this.tail.setRotationPoint(0.0F, 12.5F, 8.0F);
-        this.tail.setTextureOffset(12, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 6, 2, 0.0F);
-        this.tail.setTextureOffset(12, 50).addBox(-1.0F, 3.0F, -1.0F, 2, 4, 2, 0.2F);
+        this.tail.setTextureOffset(12, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 6, 2, scaleIn);
+        this.tail.setTextureOffset(12, 50).addBox(-1.0F, 3.0F, -1.0F, 2, 4, 2, scaleIn + 0.2F);
     }
     
 	protected Iterable<ModelRenderer> getBodyParts()
@@ -207,14 +211,14 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
         jaw.rotateAngleX = (tongue ? TONGUE_GAP : 0F) + entityIn.getJawState(scaleFactor) * (JAW_RANGE - (tongue ? TONGUE_GAP : 0F));
         jaw.rotationPointZ = -2F + jaw.rotateAngleX;
         
-        tail.rotateAngleX = entityIn.getTailRotation();
+        tail.rotateAngleX = entityIn.getTailRotation() + (entityIn.isEntitySleeping() ? (float)Math.toRadians(45D) : 0F);
 	}
     
     public class ModelRearLeg extends ModelRenderer
     {
     	ModelRenderer upperLeg, lowerLeg;
     	
-    	public ModelRearLeg(Model base, int textureX, int textureY)
+    	public ModelRearLeg(Model base, float scaleIn, int textureX, int textureY)
     	{
     		super(base);
 			this.upperLeg = ModelUtils.freshRenderer(base);
@@ -224,7 +228,7 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
 		        thigh.rotateAngleX = (float)(Math.toRadians(35D));
 			        ModelRenderer boxRotThigh = ModelUtils.freshRenderer(base);
 			        boxRotThigh.rotationPointY = -1F;
-			        boxRotThigh.setTextureOffset(textureX, textureY).addBox(-1.5F, -6F, -2F, 3, 7, 3, -0.1F);
+			        boxRotThigh.setTextureOffset(textureX, textureY).addBox(-1.5F, -6F, -2F, 3, 7, 3, scaleIn - 0.1F);
 			        boxRotThigh.rotateAngleX = ModelUtils.degree90;
 		        thigh.addChild(boxRotThigh);
 	        this.upperLeg.addChild(thigh);
@@ -234,12 +238,12 @@ public class ModelWarg extends TintedAgeableModel<EntityWarg>
 		        // Foot
 		        ModelRenderer foot = ModelUtils.freshRenderer(base);
 		        foot.rotationPointZ = -1.5F;
-		        foot.setTextureOffset(textureX, textureY + 17).addBox(-1F, 3F, -1.5F, 2, 2, 4);
+		        foot.setTextureOffset(textureX, textureY + 17).addBox(-1F, 3F, -1.5F, 2, 2, 4, scaleIn);
 		        ModelRenderer bridge = ModelUtils.freshRenderer(base);
 		        bridge.rotateAngleX = (float)(Math.toRadians(70D));
 			        ModelRenderer boxRotBridge = ModelUtils.freshRenderer(base);
 			        boxRotBridge.rotationPointY = 5F;
-			        boxRotBridge.setTextureOffset(textureX, textureY + 10).addBox(-1F, -3.75F, 1.5F, 2, 5, 2, -0.1F);
+			        boxRotBridge.setTextureOffset(textureX, textureY + 10).addBox(-1F, -3.75F, 1.5F, 2, 5, 2, scaleIn - 0.1F);
 			        boxRotBridge.rotateAngleX = ModelUtils.degree90;
 		        bridge.addChild(boxRotBridge);
 		        foot.addChild(bridge);

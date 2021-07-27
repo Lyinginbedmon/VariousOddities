@@ -82,6 +82,7 @@
 	"gui.varodd.species_select.keep_types": "Custom types: KEEP",
 	"gui.varodd.species_select.keep_types.info": "Custom creature types may cause unintended effects if retained after choosing a species.",
 	"gui.varodd.species_select.exit": "Exit without a species",
+	"gui.varodd.warg.sit": "Sit",
 		"_comment6": "Mod information",
 	"mod.varodd": "Various Oddities",
 		"_comment7": "Creative Tabs",
@@ -468,6 +469,7 @@
 	"ability.varodd:poison_immunity": "Immune to Poison",
 	"ability.varodd:paralysis_immunity": "Immune to Paralysis",
 	"ability.varodd:critical_hit_immunity": "Immune to critical hits",
+	"ability.varodd.status_immunity": "Immune to %s",
 		"_comment18": "Template operations",
 	"operation.varodd.type.remove_all.supertypes": "Lose all supertypes",
 	"operation.varodd.type.remove_all.subtypes": "Lose all subtypes",
@@ -514,5 +516,6 @@
 	"death.varodd.attack.sonic": "%s was shaken apart",
 	"death.varodd.attack.sonic.player": "%s was shaken apart by the sound of %s",
 	"death.varodd.attack.explosion": "%s exploded",
-	"death.varodd.attack.paralysis": "%s resigned themselves to their fate"
+	"death.varodd.attack.paralysis": "%s resigned themselves to their fate",
+	"death.varodd.attack.bludgeoning": "%s was bludgeoned to death"
 }

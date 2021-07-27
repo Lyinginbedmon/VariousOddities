@@ -6,6 +6,10 @@ import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.inventory.ContainerWarg;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.CarpetBlock;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -21,25 +25,36 @@ import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.passive.horse.LlamaEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.IInventoryChangedListener;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
+import net.minecraft.item.DyeColor;
+import net.minecraft.item.HorseArmorItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.Effects;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount, IMountInventory
+public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount, IMountInventory, IInventoryChangedListener
 {
 	private static final DataParameter<Boolean> REARING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
+	private static final DataParameter<Boolean> SITTING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
+	private static final DataParameter<Boolean> CHEST	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
+	private static final DataParameter<Integer> CARPET	= EntityDataManager.<Integer>createKey(EntityWarg.class, DataSerializers.VARINT);
 	
 	private float jumpPower = 0F;
 	private boolean allowStandSliding;
@@ -63,6 +78,9 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	{
 		super.registerData();
 		getDataManager().register(REARING, false);
+		getDataManager().register(SITTING, false);
+		getDataManager().register(CHEST, false);
+		getDataManager().register(CARPET, -1);
 	}
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
@@ -90,10 +108,10 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	public void initWargChest()
 	{
 		Inventory inventory = this.wargChest;
-		this.wargChest = new Inventory(4);
+		this.wargChest = new Inventory(getSizeInventory());
 		if(inventory != null)
 		{
-//			inventory.removeListener(this);
+			inventory.removeListener(this);
 			int i = Math.min(inventory.getSizeInventory(), this.wargChest.getSizeInventory());
 			
 			for(int j=0; j<i; ++j)
@@ -104,7 +122,51 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 			}
 		}
 		
-//		this.wargChest.addListener(this);
+		this.wargChest.addListener(this);
+	}
+    
+    public void writeAdditional(CompoundNBT compound)
+    {
+    	super.writeAdditional(compound);
+    	
+    	compound.putBoolean("Sitting", isSitting());
+    	compound.putBoolean("Chest", hasChest());
+    	
+    	compound.put("Inventory", this.wargChest == null ? new ListNBT() : this.wargChest.write());
+    }
+    
+    public void readAdditional(CompoundNBT compound)
+    {
+    	super.readAdditional(compound);
+    	
+    	func_233687_w_(compound.getBoolean("Sitting"));
+    	setSleeping(isSitting());
+    	
+    	setChested(compound.getBoolean("Chest"));
+    	
+    	if(this.wargChest == null)
+    		initWargChest();
+    	this.wargChest.read(compound.getList("Inventory", 10));
+    }
+    
+    public boolean isTamed(){ return true; }
+	
+	public boolean hasChest(){ return getDataManager().get(CHEST).booleanValue(); }
+	
+	public int getSizeInventory(){ return 3 + (hasChest() ? inventoryColumns() * 3 : 0); }
+	
+	public int inventoryColumns(){ return 5; }
+	
+	protected void dropInventory()
+	{
+		super.dropInventory();
+		if(this.wargChest != null)
+			for(int i=0; i<this.wargChest.getSizeInventory(); ++i)
+			{
+				ItemStack itemStack = this.wargChest.getStackInSlot(i);
+				if(!itemStack.isEmpty() && !EnchantmentHelper.hasVanishingCurse(itemStack))
+					this.entityDropItem(itemStack);
+			};
 	}
 	
 	public boolean isJumping()
@@ -146,8 +208,26 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		super.travel(travelVec);
 	}
 	
+	public DyeColor getCarpetColor()
+	{
+		int id = getDataManager().get(CARPET).intValue();
+		return id < 0 ? null : DyeColor.byId(id);
+	}
+	
+	public void setCarpetColor(DyeColor colorIn){ getDataManager().set(CARPET, colorIn == null ? -1 : colorIn.getId()); }
+	
+	@Override
+	public boolean isSitting(){ return getDataManager().get(SITTING).booleanValue(); }
+	
+	@Override
+	public void func_233687_w_(boolean sitting){ getDataManager().set(SITTING, sitting); }
+	
+	@Override
+	public boolean isEntitySleeping() { return isSitting(); }
+	
 	public boolean isRiderControlling()
 	{
+		if(isSitting()) return false;
 		if(getControllingPassenger() != null)
 		{
 			LivingEntity rider = (LivingEntity)getControllingPassenger();
@@ -236,15 +316,64 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public ActionResultType func_230254_b_(PlayerEntity player, Hand hand)
 	{
-		if(!isBeingRidden() && !player.isSecondaryUseActive())
+		ItemStack heldStack = player.getHeldItem(hand);
+		
+		if(ItemTags.CARPETS.contains(heldStack.getItem()))
+			if(this.wargChest != null && this.wargChest.getStackInSlot(1).isEmpty())
+			{
+				this.wargChest.setInventorySlotContents(1, heldStack.split(1));
+				return ActionResultType.func_233537_a_(this.world.isRemote);
+			}
+		
+		if(!isChild())
 		{
-			if(!this.getEntityWorld().isRemote && (isTamed() || player.isCreative()))
-				player.startRiding(this);
-			return ActionResultType.func_233537_a_(this.getEntityWorld().isRemote);
+			if(!isSaddled() && heldStack.getItem() == Items.SADDLE)
+			{
+				this.wargChest.setInventorySlotContents(0, heldStack.split(1));
+				return ActionResultType.func_233537_a_(this.world.isRemote);
+			}
+			
+			if(heldStack.getItem() instanceof HorseArmorItem)
+				if(this.wargChest != null && this.wargChest.getStackInSlot(2).isEmpty())
+				{
+					this.wargChest.setInventorySlotContents(2, heldStack.split(1));
+					return ActionResultType.func_233537_a_(this.world.isRemote);
+				}
+			
+			if(!hasChest() && Block.getBlockFromItem(heldStack.getItem()) == Blocks.CHEST)
+			{
+				setChested(true);
+				playChestEquipSound();
+				if(!player.abilities.isCreativeMode)
+					heldStack.shrink(1);
+				
+				initWargChest();
+				return ActionResultType.func_233537_a_(this.world.isRemote);
+			}
+			
+			if(!isBeingRidden() && !player.isSecondaryUseActive())
+			{
+				if(!this.getEntityWorld().isRemote && (isTamed() || player.isCreative()))
+					player.startRiding(this);
+				return ActionResultType.func_233537_a_(this.getEntityWorld().isRemote);
+			}
 		}
 		
 		return super.func_230254_b_(player, hand);
 	}
+	
+	public void setChested(boolean bool)
+	{
+		getDataManager().set(CHEST, bool);
+		initWargChest();
+	}
+	
+	protected void playChestEquipSound()
+	{
+		playSound(SoundEvents.ENTITY_DONKEY_CHEST, 1F, (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1F);
+	}
+	
+	public boolean isSaddled(){ return this.wargChest != null && !this.wargChest.getStackInSlot(0).isEmpty(); }
 	
 	@Nullable
 	public Entity getControllingPassenger()
@@ -318,9 +447,48 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		
 	}
 	
-	@OnlyIn(Dist.CLIENT)
-	public void openGui(PlayerEntity playerIn)
+	public void openContainer(PlayerEntity playerIn)
 	{
 		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerWarg(window, player, this), this.getDisplayName()));
+	}
+	
+	public void onInventoryChanged(IInventory invBasic)
+	{
+		ItemStack armour = this.getItemStackFromSlot(EquipmentSlotType.CHEST);
+		updateArmour();
+		if(this.ticksExisted > 20 && !getItemStackFromSlot(EquipmentSlotType.CHEST).isEmpty() && armour.getItem() != getItemStackFromSlot(EquipmentSlotType.CHEST).getItem())
+			playSound(SoundEvents.ENTITY_HORSE_ARMOR, 0.5F, 1.0F);
+		
+		boolean saddled = isSaddled();
+		updateSaddle();
+		if(this.ticksExisted > 20 && !saddled && this.isSaddled())
+			playSound(SoundEvents.ENTITY_HORSE_SADDLE, 0.5F, 1F);
+		
+		DyeColor carpet = getCarpetColor();
+		updateCarpet();
+		if(this.ticksExisted > 20 && getCarpetColor() != null && carpet != getCarpetColor())
+			playSound(SoundEvents.ENTITY_LLAMA_SWAG, 0.5F, 1.0F);
+	}
+	
+	private void updateArmour()
+	{
+		if(!this.world.isRemote)
+			this.setItemStackToSlot(EquipmentSlotType.CHEST, this.wargChest.getStackInSlot(2).copy());
+	}
+	
+	private void updateSaddle()
+	{
+		if(!this.world.isRemote)
+			;
+	}
+	
+	private void updateCarpet()
+	{
+		if(!this.world.isRemote)
+		{
+			ItemStack carpet = this.wargChest.getStackInSlot(1);
+			int color = carpet.isEmpty() ? -1 : ((CarpetBlock)Block.getBlockFromItem(carpet.getItem())).getColor().getId(); 
+			getDataManager().set(CARPET, color);
+		}
 	}
 }

@@ -2,9 +2,9 @@ Fix settlement room rendering
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg pipeline
 Warg
-	Saddles
-	Chests
-	Sit command
+	Saddle texture
+	Carpet textures
+	Armour textures
 	Held item rendering
 Potions
 	Fix sleep effect on players

@@ -4,8 +4,10 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.api.event.DamageTypesEvent;
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
@@ -17,7 +19,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
-public class AbilityDamageReduction extends Ability
+public class AbilityDamageReduction extends AbilityMeleeDamage
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "damage_reduction");
 	
@@ -95,6 +97,7 @@ public class AbilityDamageReduction extends Ability
 	public void addListeners(IEventBus bus)
 	{
 		bus.addListener(this::applyDamageReduction);
+		bus.addListener(this::addDamageTypes);
 	}
 	
 	public void applyDamageReduction(LivingHurtEvent event)
@@ -109,6 +112,23 @@ public class AbilityDamageReduction extends Ability
 		
 		if(event.getAmount() == 0F)
 			event.setCanceled(true);
+	}
+	
+	
+	public void addDamageTypes(DamageTypesEvent event)
+	{
+		DamageSource source = event.getSource();
+		if(isValidDamageSource(event.getSource()))
+		{
+			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
+			if(attacker != null && AbilityRegistry.hasAbility(attacker, getMapName()))
+			{
+				AbilityDamageReduction reduction = (AbilityDamageReduction)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME);
+				if(reduction != null && reduction.exceptions.length > 0)
+					for(DamageType type : reduction.exceptions)
+						event.addType(type);
+			}
+		}
 	}
 	
 	public boolean applysTo(DamageSource source)

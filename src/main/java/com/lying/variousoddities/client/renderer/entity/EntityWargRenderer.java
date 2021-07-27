@@ -1,6 +1,10 @@
 package com.lying.variousoddities.client.renderer.entity;
 
 import com.lying.variousoddities.client.model.entity.ModelWarg;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerWargArmour;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerWargChest;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerWargDecor;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerWargSaddle;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -17,14 +21,19 @@ import net.minecraftforge.fml.client.registry.IRenderFactory;
 @OnlyIn(Dist.CLIENT)
 public class EntityWargRenderer extends MobRenderer<EntityWarg, ModelWarg>
 {
-	public static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/warg/warg_";
-	private static final ResourceLocation TEXTURE_BROWN = new ResourceLocation(resourceBase+"brown.png");
-	private static final ResourceLocation TEXTURE_BLACK = new ResourceLocation(resourceBase+"black.png");
-	private static final ResourceLocation TEXTURE_WHITE = new ResourceLocation(resourceBase+"white.png");
+	public static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/warg/";
+	private static final ResourceLocation TEXTURE_BROWN = new ResourceLocation(resourceBase+"warg_brown.png");
+	private static final ResourceLocation TEXTURE_BLACK = new ResourceLocation(resourceBase+"warg_black.png");
+	private static final ResourceLocation TEXTURE_WHITE = new ResourceLocation(resourceBase+"warg_white.png");
 	
 	public EntityWargRenderer(EntityRendererManager manager)
 	{
 		super(manager, new ModelWarg(), 1F);
+		
+		addLayer(new LayerWargChest(this));
+		addLayer(new LayerWargDecor(this));
+		addLayer(new LayerWargArmour(this));
+		addLayer(new LayerWargSaddle(this));
 	}
 	
 	public ResourceLocation getEntityTexture(EntityWarg entity)

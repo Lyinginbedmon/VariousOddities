@@ -70,9 +70,10 @@ public class AbilityRegistry
 		registry.register(new AbilityModifierStr.Builder());
 		registry.register(new AbilityNaturalArmour.Builder());
 		registry.register(new AbilityNaturalRegen.Builder());
-		registry.register(new AbilityStatusImmunity.AbilityParalysisImmunity.Builder());
 		registry.register(new AbilityPoison.Builder());
-		registry.register(new AbilityStatusImmunity.AbilityPoisonImmunity.Builder());
+		registry.register(new AbilityStatusImmunity.Configurable.Builder());
+		registry.register(new AbilityStatusImmunity.Paralysis.Builder());
+		registry.register(new AbilityStatusImmunity.Poison.Builder());
 		registry.register(new AbilityRend.Builder());
 		registry.register(new AbilityResistance.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());

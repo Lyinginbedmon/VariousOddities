@@ -45,7 +45,8 @@ public class ClientProxy extends CommonProxy
 		busMod.addListener(RendererHandler::registerTileRenderers);
         
 		IEventBus busForge = MinecraftForge.EVENT_BUS;
-		busForge.addListener(GuiHandler::onGameOverlayPost);
+		busForge.addListener(GuiHandler::renderAbilityOverlay);
+		busForge.addListener(GuiHandler::renderBludgeoning);
 	}
 	
 	public void onLoadComplete(FMLLoadCompleteEvent event)

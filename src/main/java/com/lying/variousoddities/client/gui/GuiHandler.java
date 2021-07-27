@@ -3,6 +3,8 @@ package com.lying.variousoddities.client.gui;
 import java.util.List;
 import java.util.Map;
 
+import org.lwjgl.opengl.GL11;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.Abilities;
@@ -21,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -35,11 +38,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.client.gui.ForgeIngameGui;
 
 @OnlyIn(Dist.CLIENT)
 public class GuiHandler
 {
 	public static final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
+	public static final ResourceLocation HUD_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/hud.png");
 	
 	public static Minecraft mc;
 	public static IProfiler profiler;
@@ -49,7 +54,7 @@ public class GuiHandler
 	private static final float TEX_SIZE = 128F;
 	private static final float ICON_TEX = 16F / TEX_SIZE;
 	
-	public static void onGameOverlayPost(RenderGameOverlayEvent.Pre event)
+	public static void renderAbilityOverlay(RenderGameOverlayEvent.Pre event)
 	{
 		mc = Minecraft.getInstance();
 		profiler = mc.getProfiler();
@@ -59,7 +64,7 @@ public class GuiHandler
 			MatrixStack matrix = event.getMatrixStack();
 			float partialTicks = event.getPartialTicks();
 			
-			profiler.startSection("varodd-hud");
+			profiler.startSection("varodd-hud-abilities");
 				player = Minecraft.getInstance().player;
 				if(player != null)
 				{
@@ -74,6 +79,45 @@ public class GuiHandler
 				}
 			profiler.endSection();
 		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static void renderBludgeoning(RenderGameOverlayEvent.Pre event)
+	{
+		if(event.getType() != RenderGameOverlayEvent.ElementType.HEALTH || event.isCanceled())
+			return;
+		
+		mc = Minecraft.getInstance();
+		profiler = mc.getProfiler();
+		profiler.startSection("varodd-hud-bludgeoning");
+			player = Minecraft.getInstance().player;
+			if(player != null)
+			{
+				LivingData data = LivingData.forEntity(player);
+				if(data != null)
+				{
+					mc.getTextureManager().bindTexture(HUD_ICONS);
+					
+					float bludgeoning = data.getBludgeoning();
+					float val = MathHelper.clamp(bludgeoning / player.getHealth(), 0F, 1F);
+					
+					int width = (int)(val * 81);
+					int height = 9;
+					
+					int right = mc.getMainWindow().getScaledWidth() / 2 - 91;
+					int top = mc.getMainWindow().getScaledHeight() - ForgeIngameGui.right_height;
+					
+					RenderSystem.enableBlend();
+					RenderSystem.color4f(1F, 1F, 1F, 0.75F);
+					RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+					mc.ingameGUI.blit(event.getMatrixStack(), right, top, 0, 0, width, height);
+					RenderSystem.disableBlend();
+					RenderSystem.color4f(1F, 1F, 1F, 1F);
+					
+					mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+				}
+			}
+		profiler.endSection();
 	}
 	
 	private static void drawFavouritedAbilities(MatrixStack matrix, MainWindow window, float partialTicks, EnumCorner corner)

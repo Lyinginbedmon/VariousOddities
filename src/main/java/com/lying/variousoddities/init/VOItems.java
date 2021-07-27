@@ -3,6 +3,7 @@ package com.lying.variousoddities.init;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.client.gui.GuiWarg;
 import com.lying.variousoddities.inventory.ContainerWarg;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemMossBottle;
@@ -11,14 +12,17 @@ import com.lying.variousoddities.item.VOItemGroup;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.network.IContainerFactory;
@@ -93,5 +97,9 @@ public class VOItems
     {
     	IForgeRegistry<ContainerType<?>> registry = containerRegistryEvent.getRegistry();
     	registry.registerAll(CONTAINERS.toArray(new ContainerType<?>[0]));
+    	
+    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+			ScreenManager.registerFactory(CONTAINER_WARG, GuiWarg::new);
+		});
     }
 }

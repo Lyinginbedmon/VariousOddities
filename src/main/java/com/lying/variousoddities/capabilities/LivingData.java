@@ -19,6 +19,7 @@ import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
+import com.lying.variousoddities.network.PacketSyncBludgeoning;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.network.PacketVisualPotion;
 import com.lying.variousoddities.reference.Reference;
@@ -98,6 +99,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private int air = Reference.Values.TICKS_PER_DAY;
 	private boolean overridingAir = false;
 	
+	private float bludgeoning = 0F;
+	private int recoveryTimer = bludgeoningRecoveryRate();
+	
 	public boolean checkingFoodRegen = false;
 	
 	private boolean dirty = false;
@@ -154,6 +158,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				compound.putString("HomeDim", this.originDimension.toString());
 			
 			compound.putInt("Air", this.air);
+			compound.putFloat("Bludgeoning", getBludgeoning());
 			
 			if(this.species != null)
 				compound.put("Species", this.species.writeToNBT(new CompoundNBT()));
@@ -194,7 +199,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
 		
 		this.air = nbt.getInt("Air");
-
+		this.bludgeoning = nbt.getFloat("Bludgeoning");
+		
 		this.species = null;
 		if(nbt.contains("Species", 10))
 		{
@@ -358,6 +364,17 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		return Math.min(currentAir + 4, entityIn.getMaxAir());
 	}
 	
+	public float getBludgeoning(){ return this.bludgeoning; }
+	public void setBludgeoning(float bludgeonIn)
+	{
+		float oldDamage = this.bludgeoning;
+		this.bludgeoning = Math.max(0F, bludgeonIn);
+		
+		if(oldDamage != this.bludgeoning && this.entity != null && this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
+			PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketSyncBludgeoning(this.bludgeoning));
+	}
+	public int bludgeoningRecoveryRate(){ return Reference.Values.TICKS_PER_MINUTE; }
+	
 	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
 	public List<EnumCreatureType> getCustomTypes(){ return this.customTypes; }
 	public void clearCustomTypes()
@@ -459,6 +476,17 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
+		
+		if(this.bludgeoning > 0F)
+		{
+			if(--this.recoveryTimer <= 0)
+			{
+				setBludgeoning(this.bludgeoning - 1F);
+				this.recoveryTimer = bludgeoningRecoveryRate();
+			}
+		}
+		else
+			this.recoveryTimer = bludgeoningRecoveryRate();
 		
 		abilities.tick();
 		

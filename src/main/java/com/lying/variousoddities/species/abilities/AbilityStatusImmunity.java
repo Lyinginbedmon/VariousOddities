@@ -4,9 +4,12 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public abstract class AbilityStatusImmunity extends Ability
 {
@@ -21,11 +24,11 @@ public abstract class AbilityStatusImmunity extends Ability
 	
 	public abstract boolean appliesToStatus(EffectInstance effectIn);
 	
-	public static class AbilityPoisonImmunity extends AbilityStatusImmunity
+	public static class Poison extends AbilityStatusImmunity
 	{
 		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "poison_immunity");
 		
-		public AbilityPoisonImmunity()
+		public Poison()
 		{
 			super(REGISTRY_NAME);
 		}
@@ -35,15 +38,15 @@ public abstract class AbilityStatusImmunity extends Ability
 		public static class Builder extends Ability.Builder
 		{
 			public Builder(){ super(REGISTRY_NAME); }
-			public Ability create(CompoundNBT compound){ return new AbilityPoisonImmunity(); }
+			public Ability create(CompoundNBT compound){ return new Poison(); }
 		}
 	}
 	
-	public static class AbilityParalysisImmunity extends AbilityStatusImmunity
+	public static class Paralysis extends AbilityStatusImmunity
 	{
 		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "paralysis_immunity");
 		
-		public AbilityParalysisImmunity()
+		public Paralysis()
 		{
 			super(REGISTRY_NAME);
 		}
@@ -53,7 +56,60 @@ public abstract class AbilityStatusImmunity extends Ability
 		public static class Builder extends Ability.Builder
 		{
 			public Builder(){ super(REGISTRY_NAME); }
-			public Ability create(CompoundNBT compound){ return new AbilityParalysisImmunity(); }
+			public Ability create(CompoundNBT compound){ return new Paralysis(); }
+		}
+	}
+	
+	public static class Configurable extends AbilityStatusImmunity
+	{
+		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_immunity");
+		
+		private int potionID = 0;
+		
+		public Configurable(int effectIn)
+		{
+			super(REGISTRY_NAME);
+			this.potionID = effectIn;
+		}
+		
+		public ResourceLocation getMapName()
+		{
+			Effect potion = Effect.get(potionID);
+			if(potion == null)
+				return super.getMapName();
+			else
+				return new ResourceLocation(Reference.ModInfo.MOD_ID, potion.getName().toLowerCase()+"_immunity");
+		}
+		
+		public ITextComponent translatedName()
+		{
+			Effect potion = Effect.get(potionID);
+			if(potion == null)
+				return super.translatedName();
+			else
+				return new TranslationTextComponent("ability.varodd.status_immunity", potion.getDisplayName());
+		}
+		
+		public boolean appliesToStatus(EffectInstance effectIn)
+		{
+			return effectIn.getPotion() == Effect.get(potionID);
+		}
+		
+		public CompoundNBT writeToNBT(CompoundNBT compound)
+		{
+			compound.putInt("Id", potionID);
+			return compound;
+		}
+		
+		public void readFromNBT(CompoundNBT compound)
+		{
+			this.potionID = compound.getInt("Id");
+		}
+		
+		public static class Builder extends Ability.Builder
+		{
+			public Builder(){ super(REGISTRY_NAME); }
+			public Ability create(CompoundNBT compound){ return new Configurable(compound.getInt("Id")); }
 		}
 	}
 }
