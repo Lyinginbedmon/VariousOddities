@@ -5,15 +5,11 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityStatusEffect extends Ability
 {
@@ -72,45 +68,7 @@ public class AbilityStatusEffect extends Ability
 			this.effect = EffectInstance.read(compound);
 	}
 	
-	public void addListeners(IEventBus bus)
-	{
-		bus.addListener(this::manageStatusEffect);
-	}
-	
 	public EffectInstance getEffect(){ return this.effect; }
-	
-	public void manageStatusEffect(LivingUpdateEvent event)
-	{
-		LivingEntity entity = event.getEntityLiving();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, getRegistryName()))
-		{
-			AbilityStatusEffect status = (AbilityStatusEffect)ability;
-			EffectInstance effect = status.getEffect();
-			if(effect == null)
-				continue;
-			
-			Effect potion = effect.getPotion();
-			boolean shouldApply = !entity.isPotionActive(potion);
-			if(entity.isPotionActive(potion))
-			{
-				EffectInstance active = entity.getActivePotionEffect(potion);
-				shouldApply = active.getAmplifier() < effect.getAmplifier() || (active.getAmplifier() == effect.getAmplifier() && active.getDuration() < TIME);
-			}
-			
-			if(shouldApply)
-				entity.addPotionEffect(new EffectInstance(effect.getPotion(), TIME, effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles()));
-		}
-	}
-	
-	public void onAbilityRemoved(LivingEntity entity)
-	{
-		if(getEffect() == null)
-			return;
-		
-		Effect potion = getEffect().getPotion();
-		if(entity.isPotionActive(potion) && entity.getActivePotionEffect(potion).getAmplifier() == getEffect().getAmplifier())
-			entity.removePotionEffect(potion);
-	}
 	
 	public static class Builder extends Ability.Builder
 	{

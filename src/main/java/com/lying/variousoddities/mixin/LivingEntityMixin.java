@@ -9,11 +9,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.google.common.collect.Maps;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityStatusEffect;
 import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
@@ -32,6 +34,9 @@ import net.minecraft.util.ResourceLocation;
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin extends EntityMixin
 {
+	@Shadow
+	public Map<Effect, EffectInstance> activePotionsMap = Maps.newHashMap();
+	
 	@Shadow
 	public float getHealth(){ return 0F; }
 	
@@ -83,6 +88,29 @@ public class LivingEntityMixin extends EntityMixin
 			{
 				ci.setReturnValue(false);
 				break;
+			}
+	}
+	
+	@Inject(method = "isPotionActive", at = @At("HEAD"), cancellable = true)
+	public void isPotionActive(Effect potionIn, final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		if(!activePotionsMap.containsKey(potionIn))
+			for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
+				if(statusEffect.getEffect().getPotion() == potionIn)
+					ci.setReturnValue(true);
+	}
+	
+	@Inject(method = "getActivePotionEffect", at = @At("HEAD"), cancellable = true)
+	public void getActivePotion(Effect potionIn, final CallbackInfoReturnable<EffectInstance> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
+			if(statusEffect.getEffect().getPotion() == potionIn)
+			{
+				EffectInstance effect = statusEffect.getEffect();
+				if(!activePotionsMap.containsKey(potionIn) || effect.getAmplifier() > activePotionsMap.get(potionIn).getAmplifier())
+					ci.setReturnValue(new EffectInstance(potionIn, Integer.MAX_VALUE, effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles()));
 			}
 	}
 	

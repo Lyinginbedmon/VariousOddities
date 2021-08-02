@@ -23,7 +23,7 @@ public class LayerWargArmour extends LayerRenderer<EntityWarg, ModelWarg>
 	private final ModelWarg MODEL = new ModelWarg(0.2F);
 	private final ModelWarg MODEL2 = new ModelWarg(0.225F);
 	private static final ResourceLocation IRON = new ResourceLocation(EntityWargRenderer.resourceBase+"armor/iron.png");
-	private static final ResourceLocation GOLD = new ResourceLocation(EntityWargRenderer.resourceBase+"armor/gold.png");
+	private static final ResourceLocation GOLD = new ResourceLocation(EntityWargRenderer.resourceBase+"armor/golden.png");
 	private static final ResourceLocation DIAMOND = new ResourceLocation(EntityWargRenderer.resourceBase+"armor/diamond.png");
 	private static final ResourceLocation LEATHER = new ResourceLocation(EntityWargRenderer.resourceBase+"armor/leather.png");
 	private static final ResourceLocation LEATHER_OVERLAY = new ResourceLocation(EntityWargRenderer.resourceBase+"armor/leather_overlay.png");

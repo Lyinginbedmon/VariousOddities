@@ -80,7 +80,7 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
 	
     public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
     {
-    	return world.getLight(pos) <= 8 && world.getHeight(Heightmap.Type.WORLD_SURFACE, pos).getY() <= pos.getY();
+    	return world.getLight(pos) < 8 && world.getHeight(Heightmap.Type.WORLD_SURFACE, pos).getY() <= pos.getY();
     }
 	
     public EnumScorpionType getScorpionType(){ return EnumScorpionType.values()[getBreed()]; }

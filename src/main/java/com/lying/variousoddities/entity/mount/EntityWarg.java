@@ -113,8 +113,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		{
 			inventory.removeListener(this);
 			int i = Math.min(inventory.getSizeInventory(), this.wargChest.getSizeInventory());
-			
-			for(int j=0; j<i; ++j)
+			for(int j = 0; j < i; ++j)
 			{
 				ItemStack stack = inventory.getStackInSlot(j);
 				if(!stack.isEmpty())
@@ -132,7 +131,21 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
     	compound.putBoolean("Sitting", isSitting());
     	compound.putBoolean("Chest", hasChest());
     	
-    	compound.put("Inventory", this.wargChest == null ? new ListNBT() : this.wargChest.write());
+		ListNBT inventory = new ListNBT();
+		for(int i=0; i<this.wargChest.getSizeInventory(); ++i)
+		{
+			ItemStack stack = this.wargChest.getStackInSlot(i);
+			if(!stack.isEmpty())
+			{
+				CompoundNBT stackData = new CompoundNBT();
+				stackData.putByte("Slot", (byte)i);
+				stack.write(stackData);
+				inventory.add(stackData);
+				
+				System.out.println("Saved "+stack.getDisplayName().getString()+" in slot "+i);
+			}
+		}
+		compound.put("Inventory", inventory);
     }
     
     public void readAdditional(CompoundNBT compound)
@@ -143,15 +156,31 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
     	setSleeping(isSitting());
     	
     	setChested(compound.getBoolean("Chest"));
-    	
-    	if(this.wargChest == null)
-    		initWargChest();
-    	this.wargChest.read(compound.getList("Inventory", 10));
+		initWargChest();
+		ListNBT inventory = compound.getList("Inventory", 10);
+		for(int i=0; i<inventory.size(); ++i)
+		{
+			CompoundNBT stackData = inventory.getCompound(i);
+			int slot = stackData.getByte("Slot") & 255;
+			if(slot >= 0 && slot < this.wargChest.getSizeInventory())
+			{
+				this.wargChest.setInventorySlotContents(slot, ItemStack.read(stackData));
+				System.out.println("Loaded "+ItemStack.read(stackData).getDisplayName().getString()+" in slot "+slot);
+			}
+		}
     }
     
     public boolean isTamed(){ return true; }
 	
 	public boolean hasChest(){ return getDataManager().get(CHEST).booleanValue(); }
+	
+	public void setChested(boolean bool)
+	{
+		boolean chested = hasChest();
+		getDataManager().set(CHEST, bool);
+		if(bool != chested)
+			initWargChest();
+	}
 	
 	public int getSizeInventory(){ return 3 + (hasChest() ? inventoryColumns() * 3 : 0); }
 	
@@ -362,12 +391,6 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return super.func_230254_b_(player, hand);
 	}
 	
-	public void setChested(boolean bool)
-	{
-		getDataManager().set(CHEST, bool);
-		initWargChest();
-	}
-	
 	protected void playChestEquipSound()
 	{
 		playSound(SoundEvents.ENTITY_DONKEY_CHEST, 1F, (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1F);
@@ -449,7 +472,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public void openContainer(PlayerEntity playerIn)
 	{
-		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerWarg(window, player, this), this.getDisplayName()));
+		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerWarg(window, player, this.wargChest, this), this.getDisplayName()));
 	}
 	
 	public void onInventoryChanged(IInventory invBasic)

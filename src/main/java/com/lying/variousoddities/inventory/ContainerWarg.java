@@ -6,7 +6,7 @@ import com.lying.variousoddities.init.VOItems;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.HorseArmorItem;
@@ -24,19 +24,19 @@ public class ContainerWarg extends Container
 	{
 		Entity mount = inv.player.getRidingEntity();
 		if(mount instanceof EntityWarg)
-			return new ContainerWarg(windowId, inv, ((EntityWarg)mount));
+			return new ContainerWarg(windowId, inv, ((EntityWarg)mount).wargChest, ((EntityWarg)mount));
 		return null;
 	}
 	
 	public final EntityWarg theWarg;
+	private final IInventory wargInventory;
 	
-	public ContainerWarg(int windowId, PlayerInventory playerInventory, EntityWarg wargIn)
+	public ContainerWarg(int windowId, PlayerInventory playerInventory, IInventory wargInventory, final EntityWarg wargIn)
 	{
 		super(VOItems.CONTAINER_WARG, windowId);
-		theWarg = wargIn;
-		
-		Inventory wargInventory = wargIn.wargChest;
-		
+		this.theWarg = wargIn;
+		this.wargInventory = wargInventory;
+		wargInventory.openInventory(playerInventory.player);
 		// Warg saddle
 		this.addSlot(new Slot(wargInventory, 0, 8, 18)
 		{
@@ -73,7 +73,7 @@ public class ContainerWarg extends Container
 		if(theWarg.hasChest())
 			for(int k = 0; k < 3; ++k)
 	            for(int l = 0; l < wargIn.inventoryColumns(); ++l)
-	               this.addSlot(new Slot(wargInventory, 3 + l + k * wargIn.inventoryColumns(), 80 + l * 18, 18 + k * 18));
+	               this.addSlot(new Slot(wargInventory, 3 + l + (k * wargIn.inventoryColumns()), 80 + l * 18, 18 + k * 18));
 		
 		// Player inventory
 		for(int i1 = 0; i1 < 3; ++i1)
@@ -87,12 +87,11 @@ public class ContainerWarg extends Container
 	
 	public boolean canInteractWith(PlayerEntity playerIn)
 	{
-		return theWarg.isAlive() && playerIn.isAlive() && (playerIn.getRidingEntity() == theWarg || playerIn.getDistance(theWarg) < playerIn.getAttributeValue(ForgeMod.REACH_DISTANCE.get()));
+		return theWarg.isAlive() && playerIn.isAlive() && (playerIn.getRidingEntity() == theWarg || playerIn.getDistance(theWarg) <= playerIn.getAttributeValue(ForgeMod.REACH_DISTANCE.get()));
 	}
 	
 	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index)
 	{
-		System.out.println("Transferring from slot "+index);
 		ItemStack itemStack = ItemStack.EMPTY;
 		Slot slot = this.inventorySlots.get(index);
 		if(slot != null && slot.getHasStack())
@@ -158,5 +157,11 @@ public class ContainerWarg extends Container
 				slot.onSlotChanged();
 		}
 		return itemStack;
+	}
+	
+	public void onContainerClosed(PlayerEntity playerIn)
+	{
+		super.onContainerClosed(playerIn);
+		this.wargInventory.closeInventory(playerIn);
 	}
 }

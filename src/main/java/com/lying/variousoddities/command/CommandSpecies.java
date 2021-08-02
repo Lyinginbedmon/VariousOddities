@@ -73,10 +73,12 @@ public class CommandSpecies extends CommandBase
 					.then(newArgument(ENTITY, EntityArgument.entity())
 						.executes((source) -> { return getSpecies(EntityArgument.getEntity(source, ENTITY), source.getSource()); })))
 				.then(newLiteral("set")
-					.then(newArgument(ENTITY, EntityArgument.entity()).then(newLiteral("to")).then(newArgument(NAME, ResourceLocationArgument.resourceLocation()).suggests(SPECIES_SUGGESTIONS)
-						.executes((source) -> { return setSpecies(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, NAME), source.getSource()); }))))
-				.then(newLiteral("select").then(newArgument(PLAYER, EntityArgument.player())
-					.executes((source) -> { return selectSpecies(EntityArgument.getEntity(source, PLAYER), source.getSource()); })))
+					.then(newArgument(ENTITY, EntityArgument.entity()).then(newLiteral("to").then(newArgument(NAME, ResourceLocationArgument.resourceLocation()).suggests(SPECIES_SUGGESTIONS)
+						.executes((source) -> { return setSpecies(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, NAME), source.getSource()); })))))
+				.then(newLiteral("select")
+					.executes((source) -> { return selectSpecies(source.getSource().asPlayer(), source.getSource()); })
+					.then(newArgument(PLAYER, EntityArgument.player())
+							.executes((source) -> { return selectSpecies(EntityArgument.getEntity(source, PLAYER), source.getSource()); })))
 				.then(Templates.build());
 		
 		dispatcher.register(literal);

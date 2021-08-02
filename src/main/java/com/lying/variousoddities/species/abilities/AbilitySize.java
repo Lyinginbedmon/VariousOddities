@@ -28,7 +28,6 @@ public class AbilitySize extends AbilityModifier
 	private static final UUID SIZE_MODIFIER = UUID.fromString("3e3cf3f2-7d4f-41ce-91de-8557f02b2b91");
 	
 	private Size sizeClass;
-	private boolean sizeNeedsRecalc = true;
 	
 	private float scale = -1F;
 	
@@ -42,6 +41,12 @@ public class AbilitySize extends AbilityModifier
 	{
 		this(sizeIn);
 		this.scale = MathHelper.clamp(scaleIn, 0F, 1F);
+	}
+	
+	public int compare(Ability abilityIn)
+	{
+		AbilitySize size = (AbilitySize)abilityIn;
+		return size.getScale() < getScale() ? 1 : size.getScale() > getScale() ? -1 : 0;
 	}
 	
 	public ITextComponent translatedName()
@@ -67,17 +72,13 @@ public class AbilitySize extends AbilityModifier
 		this.sizeClass = Size.fromString(compound.getString("Size"));
 		if(compound.contains("Scale", 5))
 			this.scale = MathHelper.clamp(compound.getFloat("Scale"), 0F, 1F);
-		this.sizeNeedsRecalc = true;
 	}
 	
 	public void addListeners(IEventBus bus)
 	{
 		super.addListeners(bus);
-		bus.addListener(this::updateSize);
 		bus.addListener(this::handleSize);
 	}
-	
-	// FIXME Bounding box of resized creatures renders with twice the rescaling amount
 	
 	public float getScale()
 	{
@@ -116,29 +117,6 @@ public class AbilitySize extends AbilityModifier
 			attribute.removeModifier(SIZE_MODIFIER);
 	}
 	
-	/** Ensures that size is recalculated after initial application as well as when NBT data is edited */
-	public void updateSize(LivingUpdateEvent event)
-	{
-		LivingEntity living = event.getEntityLiving();
-		if(living.getType() != EntityType.PLAYER)
-			return;
-		
-		LivingData data = LivingData.forEntity(living);
-		if(data == null || !AbilityRegistry.hasAbility(living, REGISTRY_NAME))
-			return;
-		
-		AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName(living, REGISTRY_NAME);
-		if(size == null)
-			return;
-		
-		if(size.sizeNeedsRecalc)
-		{
-			living.recalculateSize();
-			size.sizeNeedsRecalc = false;
-		}
-	}
-	
-	/** Applies modifier to size when recalculated */
 	public void handleSize(EntityEvent.Size event)
 	{
 		if(event.getEntity() instanceof LivingEntity && event.getEntity().getType() == EntityType.PLAYER)
@@ -153,11 +131,19 @@ public class AbilitySize extends AbilityModifier
 			if(size == null)
 				return;
 			
-			EntitySize oldSize = event.getOldSize();
+			if(!event.getEntity().isAddedToWorld())
+				return;
+			
 			float scale = size.getScale();
-			event.setNewSize(EntitySize.fixed(oldSize.width * scale, oldSize.height * scale));
-			event.setNewEyeHeight(event.getOldEyeHeight() * scale);
+			EntitySize baseSize = event.getNewSize();
+			event.setNewSize(EntitySize.fixed(baseSize.width * scale, baseSize.height * scale));
+			event.setNewEyeHeight(event.getNewEyeHeight() * scale);
 		}
+	}
+	
+	public void onAbilityAdded(LivingEntity entity)
+	{
+		entity.recalculateSize();
 	}
 	
 	public void onAbilityRemoved(LivingEntity entity)
@@ -215,7 +201,7 @@ public class AbilitySize extends AbilityModifier
 			return MEDIUM;
 		}
 	}
-
+	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }

@@ -51,7 +51,7 @@ public class EntityRatGiant extends AbstractRat
 	
     public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
     {
-        return world.getDifficulty() != Difficulty.PEACEFUL && world.getLight(pos) <= 8 && AbstractRat.canSpawnAt(animal, world, reason, pos, random);
+        return world.getDifficulty() != Difficulty.PEACEFUL && world.getLight(pos) < 8 && AbstractRat.canSpawnAt(animal, world, reason, pos, random);
     }
     
     public void registerGoals()

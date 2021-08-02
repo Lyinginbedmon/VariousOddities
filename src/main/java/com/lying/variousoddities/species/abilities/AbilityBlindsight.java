@@ -26,6 +26,12 @@ public class AbilityBlindsight extends AbilityVision
 		this(rangeIn);
 	}
 	
+	public int compare(Ability abilityIn)
+	{
+		AbilityBlindsight sight = (AbilityBlindsight)abilityIn;
+		return sight.range < this.range ? 1 : sight.range > this.range ? -1 : 0;
+	}
+	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".blindsight", (int)range); }
