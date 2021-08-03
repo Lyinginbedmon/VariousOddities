@@ -284,6 +284,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.abilities.updateAbilityCache();
 		
 		this.species = speciesIn;
+		this.abilities.updateAbilityCache();
 		this.abilities.markForRecache();
 		markDirty();
 	}

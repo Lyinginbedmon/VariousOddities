@@ -10,13 +10,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.Pose;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
@@ -130,6 +134,35 @@ public class EntityMixin
 			LivingEntity living = (LivingEntity)ent;
 			if(IPhasingAbility.isPhasing(living))
 				ci.cancel();
+		}
+	}
+	
+	@Inject(method = "getBoundingBox(Lnet/minecraft/entity/Pose;)Lnet/minecraft/util/math/AxisAlignedBB;", at = @At("TAIL"), cancellable = true)
+	public void getSize(Pose poseIn, final CallbackInfoReturnable<AxisAlignedBB> ci)
+	{
+		Entity ent = (Entity)(Object)this;
+		if(ent.getType() == EntityType.PLAYER && AbilityRegistry.hasAbility((PlayerEntity)ent, AbilitySize.REGISTRY_NAME))
+		{
+			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName((PlayerEntity)ent, AbilitySize.REGISTRY_NAME);
+			if(size == null) return;
+			
+			AxisAlignedBB baseSize = ci.getReturnValue();
+			float scale = size.getScale();
+			
+			double posX = ent.getPosX();
+			double posY = ent.getPosY();
+			double posZ = ent.getPosZ();
+			
+			double lenX = baseSize.getXSize() * scale * 0.5D;
+			double lenY = baseSize.getYSize() * scale;
+			double lenZ = baseSize.getZSize() * scale * 0.5D;
+			
+			AxisAlignedBB trueSize = new AxisAlignedBB(
+					posX - lenX, posY, posZ - lenZ,
+					posX + lenX, posY + lenY, posZ + lenZ
+					);
+			
+			ci.setReturnValue(trueSize);
 		}
 	}
 }

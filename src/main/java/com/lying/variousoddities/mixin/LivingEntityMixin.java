@@ -106,12 +106,12 @@ public class LivingEntityMixin extends EntityMixin
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
-			if(statusEffect.getEffect().getPotion() == potionIn)
-			{
-				EffectInstance effect = statusEffect.getEffect();
+		{
+			EffectInstance effect = statusEffect.getEffect();
+			if(effect != null && effect.getPotion() == potionIn)
 				if(!activePotionsMap.containsKey(potionIn) || effect.getAmplifier() > activePotionsMap.get(potionIn).getAmplifier())
 					ci.setReturnValue(new EffectInstance(potionIn, Integer.MAX_VALUE, effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles()));
-			}
+		}
 	}
 	
 	@Inject(method = "attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
