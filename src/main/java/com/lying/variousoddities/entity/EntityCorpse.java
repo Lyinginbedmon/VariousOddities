@@ -9,19 +9,23 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Pose;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.SpawnEggItem;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.network.play.server.SSpawnObjectPacket;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -31,6 +35,7 @@ import net.minecraft.world.World;
 public class EntityCorpse extends LivingEntity
 {
     private static final DataParameter<CompoundNBT> ENTITY	= EntityDataManager.<CompoundNBT>createKey(EntityCorpse.class, DataSerializers.COMPOUND_NBT);
+    private static final EntitySize BODY_SIZE = EntitySize.fixed(0.75F, 0.5F);
     private final NonNullList<ItemStack> inventoryArmor = NonNullList.withSize(4, ItemStack.EMPTY);
 	
 	public EntityCorpse(EntityType<? extends EntityCorpse> type, World worldIn)
@@ -42,11 +47,6 @@ public class EntityCorpse extends LivingEntity
     {
 	    return true;
     }
-	
-	public IPacket<?> createSpawnPacket()
-	{
-		return new SSpawnObjectPacket(this);
-	}
 	
 	@Nullable
 	public static EntityCorpse createCorpseFrom(@Nonnull LivingEntity living)
@@ -77,6 +77,7 @@ public class EntityCorpse extends LivingEntity
 	{
 		super.readAdditional(compound);
 		getDataManager().set(ENTITY, compound.getCompound("Entity"));
+		updateSize();
 	}
 	
 	public void writeAdditional(CompoundNBT compound)
@@ -99,6 +100,7 @@ public class EntityCorpse extends LivingEntity
 				data.remove("Passengers");
 		}
 		getDataManager().set(ENTITY, data);
+		updateSize();
 	}
 	
 	@Nullable
@@ -110,9 +112,15 @@ public class EntityCorpse extends LivingEntity
 		Optional<EntityType<?>> type = EntityType.byKey(data.getString("id"));
 		if(!type.isPresent()) return null;
 		
-		Entity living = type.get().create(getEntityWorld());
-		living.read(data);
-		return (LivingEntity)living;
+		Entity entity = type.get().create(getEntityWorld());
+		entity.read(data);
+		return (LivingEntity)entity;
+	}
+	
+	private void updateSize()
+	{
+		recalculateSize();
+		recenterBoundingBox();
 	}
 	
 	public Iterable<ItemStack> getArmorInventoryList()
@@ -141,15 +149,43 @@ public class EntityCorpse extends LivingEntity
 	{
 		super.tick();
 		
-		if(getEntityWorld().isRemote) return;
+		if(getEntityWorld().isRemote)
+			return;
 		
 		if(getBody() != null)
 		{
 			LivingEntity body = getBody();
 			if(body.getType() == EntityType.PLAYER && getEntityWorld().getPlayerByUuid(body.getUniqueID()) != null)
 				setDead();
+			
+			EntitySize bodySize = getSize(Pose.STANDING);
+			if(getHeight() != bodySize.height || getWidth() != bodySize.width)
+				updateSize();
 		}
-		else
-			setDead();
+	}
+	
+	public EntitySize getSize(Pose poseIn)
+	{
+		return hasBody() ? BODY_SIZE : super.getSize(poseIn);
+	}
+	
+	public final ActionResultType processInitialInteract(PlayerEntity player, Hand hand)
+	{
+		ItemStack heldStack = player.getHeldItem(hand);
+		if(!heldStack.isEmpty() && heldStack.getItem() instanceof SpawnEggItem)
+		{
+			SpawnEggItem egg = (SpawnEggItem)heldStack.getItem();
+			EntityType<?> entityType = egg.getType(heldStack.getTag());
+			Entity entity = entityType.create(player.getEntityWorld());
+			if(entity instanceof LivingEntity && !player.getEntityWorld().isRemote)
+			{
+				this.setBody((LivingEntity)entity);
+				
+				if(!player.abilities.isCreativeMode)
+					heldStack.shrink(1);
+				return ActionResultType.SUCCESS;
+			}
+		}
+		return ActionResultType.PASS;
 	}
 }

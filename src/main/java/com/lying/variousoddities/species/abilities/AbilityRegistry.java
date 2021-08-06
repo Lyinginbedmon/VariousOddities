@@ -162,8 +162,12 @@ public class AbilityRegistry
 	public static Collection<Ability> getAbilitiesOfType(LivingEntity entity, ResourceLocation registryName)
 	{
 		List<Ability> list = Lists.newArrayList();
+		if(entity == null)
+			return list;
+		
 		Map<ResourceLocation, Ability> abilities = getCreatureAbilities(entity);
-		abilities.values().forEach((ability) -> { if(ability.getRegistryName().equals(registryName)) list.add(ability); });
+		if(abilities != null && !abilities.isEmpty())
+			abilities.values().forEach((ability) -> { if(ability.getRegistryName().equals(registryName)) list.add(ability); });
 		return list;
 	}
 	
@@ -171,8 +175,12 @@ public class AbilityRegistry
 	public static <T> Collection<T> getAbilitiesOfType(LivingEntity entity, Class<T> classIn)
 	{
 		List<T> list = Lists.newArrayList();
+		if(entity == null)
+			return list;
+		
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(entity);
-		abilities.values().forEach((ability) -> { if(classIn.isInstance(ability)) list.add((T)ability); });
+		if(abilities != null && !abilities.isEmpty())
+			abilities.values().forEach((ability) -> { if(classIn.isInstance(ability)) list.add((T)ability); });
 		return list;
 	}
 }
