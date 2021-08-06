@@ -6,6 +6,6 @@
   ],
   "Abilities": [
     "{Tag:{Amount:2.0d},Name:\"varodd:constitution_modifier\"}",
-    "{Tag:{Size:\"small\",Scale:0.4f},Name:\"varodd:size\"}"
+    "{Tag:{Size:\"small\",Amount:0.888888955116272d,Scale:0.4f},Name:\"varodd:size\"}"
   ]
 }

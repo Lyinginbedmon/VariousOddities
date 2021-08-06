@@ -243,6 +243,7 @@
 	"effect.varodd.entangled": "Entangled",
 	"effect.varodd.petrifying": "Petrifying",
 	"effect.varodd.anchored": "Anchored",
+	"effect.varodd.needled": "Needled",
 		"_comment13": "Enums",
 	"enum.varodd.creature_type.supertype": "Supertype",
 	"enum.varodd.creature_type.subtype": "Subtype",

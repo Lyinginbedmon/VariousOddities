@@ -10,6 +10,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
+import com.lying.variousoddities.entity.EntityCorpse;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
@@ -207,6 +208,19 @@ public class VOBusServer
 		DamageSource cause = event.getSource();
 		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof AbstractGoblinWolf)
 			((AbstractGoblinWolf)cause.getTrueSource()).heal(2F + victim.getRNG().nextFloat() * 3F);
+	}
+	
+	@SubscribeEvent
+	public static void onNeedledDeathEvent(LivingDeathEvent event)
+	{
+		LivingEntity entity = event.getEntityLiving();
+		if(event.getSource() != DamageSource.OUT_OF_WORLD && entity.isPotionActive(VOPotions.NEEDLED))
+		{
+			entity.removeActivePotionEffect(VOPotions.NEEDLED);
+			EntityCorpse corpse = EntityCorpse.createCorpseFrom(entity);
+			if(corpse != null && !entity.getEntityWorld().isRemote)
+				entity.getEntityWorld().addEntity(corpse);
+		}
 	}
 	
 	private static void reduceRefractory(LivingEntity goblinIn, int amount)

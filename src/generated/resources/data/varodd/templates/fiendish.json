@@ -22,6 +22,11 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Active:0,Type:\"holy\",Cooldown:24000,IsActive:0b},Name:\"varodd:smite\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
       "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:1b}"
     },
     {

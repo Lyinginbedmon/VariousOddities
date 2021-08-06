@@ -8,6 +8,7 @@ import java.util.Random;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.entity.EntityCorpse;
 import com.lying.variousoddities.entity.EntitySpell;
 import com.lying.variousoddities.entity.hostile.EntityCrabGiant;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
@@ -60,6 +61,7 @@ public class VOEntities
     public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"scorpions");
 	
     public static final EntityType<EntitySpell> SPELL	= register("spell", EntitySpell::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntitySpell::canSpawnAt);
+    public static final EntityType<EntityCorpse> CORPSE	= register("corpse", EntityCorpse::new, EntityClassification.MISC, 0.9F, 0.9F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityCorpse::canSpawnAt);
     
     // First release
 	public static final EntityType<EntityKobold> KOBOLD						= register("kobold",			EntityKobold::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityKobold::canSpawnAt, 16167425, 15826224);
@@ -163,6 +165,7 @@ public class VOEntities
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event)
     {
+    	event.put(CORPSE, EntityCorpse.getAttributes().create());
     	event.put(KOBOLD, EntityKobold.getAttributes().create());
     	event.put(GOBLIN, EntityGoblin.getAttributes().create());
     	event.put(MARIMO, EntityMarimo.getAttributes().create());

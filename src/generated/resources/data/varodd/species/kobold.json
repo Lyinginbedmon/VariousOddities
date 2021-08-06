@@ -6,7 +6,7 @@
     "reptile"
   ],
   "Abilities": [
-    "{Tag:{Size:\"small\"},Name:\"varodd:size\"}",
+    "{Tag:{Size:\"small\",Amount:0.888888955116272d},Name:\"varodd:size\"}",
     "{Tag:{Amount:-2.0d},Name:\"varodd:strength_modifier\"}",
     "{Tag:{Amount:-2.0d},Name:\"varodd:constitution_modifier\"}",
     "{Name:\"varodd:darkvision\"}",

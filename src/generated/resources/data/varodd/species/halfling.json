@@ -5,6 +5,6 @@
     "humanoid"
   ],
   "Abilities": [
-    "{Tag:{Size:\"small\",Scale:0.1f},Name:\"varodd:size\"}"
+    "{Tag:{Size:\"small\",Amount:0.888888955116272d,Scale:0.1f},Name:\"varodd:size\"}"
   ]
 }
