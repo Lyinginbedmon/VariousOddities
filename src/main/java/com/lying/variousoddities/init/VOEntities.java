@@ -23,6 +23,9 @@ import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.entity.passive.EntityScorpion;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.entity.projectile.EntityFireballGhastling;
+import com.lying.variousoddities.entity.wip.EntityChangeling;
+import com.lying.variousoddities.entity.wip.EntityPatronKirin;
+import com.lying.variousoddities.entity.wip.EntityPatronWitch;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
@@ -77,6 +80,11 @@ public class VOEntities
 	public static final EntityType<EntityWorg> WORG							= register("worg",				EntityWorg::new, EntityClassification.CREATURE, 0.7F, 1.0F, EntityWorg::canSpawnAt, 14670297, 3749941);
 	public static final EntityType<EntityWarg> WARG							= register("warg",				EntityWarg::new, EntityClassification.CREATURE, 0.85F, 1.35F, EntityWarg::canSpawnAt, 6898719, 1248261);
 	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityGhastling::new, EntityClassification.CREATURE, 0.95F, 0.95F, EntityGhastling::canSpawnAt, 16382457, 12369084);
+	
+	// WIP mobs to be fleshed out at a later date
+	public static final EntityType<EntityPatronKirin> PATRON_KIRIN			= register("patron_kirin",		EntityPatronKirin::new, EntityClassification.CREATURE, 0.6F, 1.999F, EntityPatronKirin::canSpawnAt, -1, 1);
+	public static final EntityType<EntityPatronWitch> PATRON_WITCH			= register("patron_witch",		EntityPatronWitch::new, EntityClassification.CREATURE, 0.6F, 1.8F, EntityPatronWitch::canSpawnAt, -1, 1);
+	public static final EntityType<EntityChangeling> CHANGELING				= register("changeling",		EntityChangeling::new, EntityClassification.CREATURE, 0.6F, 1.8F, EntityChangeling::canSpawnAt, -1, 1);
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
 	
@@ -178,6 +186,10 @@ public class VOEntities
     	event.put(WORG, EntityWorg.getAttributes().create());
     	event.put(WARG, EntityWarg.getAttributes().create());
     	event.put(GHASTLING, EntityGhastling.getAttributes().create());
+    	
+    	event.put(PATRON_KIRIN, EntityPatronKirin.getAttributes().create());
+    	event.put(PATRON_WITCH, EntityPatronWitch.getAttributes().create());
+    	event.put(CHANGELING, EntityChangeling.getAttributes().create());
     }
     
     @SubscribeEvent

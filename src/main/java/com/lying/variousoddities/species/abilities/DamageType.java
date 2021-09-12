@@ -45,7 +45,8 @@ public enum DamageType implements IStringSerializable
 	MAGIC(false, (source) -> { return source == DamageSource.MAGIC || source.isMagicDamage() || VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return itemstack.isEnchanted(); } ); } ),
 	SONIC(true, (source) -> { return source == VODamageSource.SONIC; }),
 	FORCE(false, (source) -> { return source == VODamageSource.FORCE; }),
-	PSYCHIC(false, (source) -> { return source == VODamageSource.PSYCHIC; });
+	PSYCHIC(false, (source) -> { return source == VODamageSource.PSYCHIC; }),
+	NONLETHAL(false, (source) -> { return source == VODamageSource.BLUDGEON; });
 	
 	private final boolean isEnergy;
 	private final Predicate<DamageSource> identifier;

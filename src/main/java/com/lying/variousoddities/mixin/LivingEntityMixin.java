@@ -64,6 +64,9 @@ public class LivingEntityMixin extends EntityMixin
 				if(livingData.getVisualPotion(index) != active)
 					livingData.setVisualPotion(index, active);
 			}
+			
+			for(AbilityStatusEffect effectAbility : AbilityRegistry.getAbilitiesOfType(living, AbilityStatusEffect.class))
+				effectAbility.tick(living);
 		}
 	}
 	
@@ -173,5 +176,16 @@ public class LivingEntityMixin extends EntityMixin
 		if(abilityMap.containsKey(AbilityClimb.REGISTRY_NAME) && abilityMap.get(AbilityClimb.REGISTRY_NAME).isActive())
 			if(entity.collidedHorizontally)
 				ci.setReturnValue(true);
+	}
+	
+	@Inject(method = "heal(F)V", at = @At("TAIL"))
+	public void healBludgeoning(float healAmount, final CallbackInfo ci)
+	{
+		if(healAmount > 0)
+		{
+			LivingData data = LivingData.forEntity((LivingEntity)(Object)this);
+			if(data != null && data.getBludgeoning() > 0)
+				data.setBludgeoning(Math.max(0F, data.getBludgeoning() - healAmount));
+		}
 	}
 }

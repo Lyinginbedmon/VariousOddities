@@ -11,6 +11,6 @@
     "{Tag:{Amount:-2.0d},Name:\"varodd:constitution_modifier\"}",
     "{Name:\"varodd:darkvision\"}",
     "{Tag:{Amount:1.0d},Name:\"varodd:natural_armour\"}",
-    "{Name:\"varodd:light_sensitivity\"}"
+    "{Tag:{Light:8},Name:\"varodd:light_sensitivity\"}"
   ]
 }

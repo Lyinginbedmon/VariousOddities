@@ -3,17 +3,7 @@ package com.lying.variousoddities.client.renderer;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.client.renderer.entity.EntityCorpseRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityCrabRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityGhastlingRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityGoblinRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityKoboldRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityMarimoRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityRatRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
+import com.lying.variousoddities.client.renderer.entity.*;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerDazed;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerEntangled;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
@@ -64,6 +54,10 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.WARG, new EntityWargRenderer.RenderFactory());
 		registerRenderer(VOEntities.GHASTLING, new EntityGhastlingRenderer.RenderFactory());
 		
+		// WIP mobs to be fleshed out at a later date
+		registerRenderer(VOEntities.PATRON_KIRIN, new EntityPatronKirinRenderer.RenderFactory());
+		registerRenderer(VOEntities.PATRON_WITCH, new EntityPatronWitchRenderer.RenderFactory());
+		registerRenderer(VOEntities.CHANGELING, new EntityChangelingRenderer.RenderFactory());
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

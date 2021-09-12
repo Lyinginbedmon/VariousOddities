@@ -85,6 +85,7 @@ public class AbilityRegistry
 		registry.register(new AbilityTeleportToHome.Builder());
 		registry.register(new AbilityTeleportToPos.Builder());
 		registry.register(new AbilityTremorsense.Builder());
+		registry.register(new AbilityUnarmedStrike.Builder());
 		registry.register(new AbilityWaterWalking.Builder());
 		
 		registerAbilityListeners();
@@ -175,12 +176,14 @@ public class AbilityRegistry
 	public static <T> Collection<T> getAbilitiesOfType(LivingEntity entity, Class<T> classIn)
 	{
 		List<T> list = Lists.newArrayList();
-		if(entity == null)
+		if(entity == null || classIn == null)
 			return list;
 		
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(entity);
 		if(abilities != null && !abilities.isEmpty())
-			abilities.values().forEach((ability) -> { if(classIn.isInstance(ability)) list.add((T)ability); });
+			abilities.values().forEach((ability) -> {
+				if(ability != null && classIn.isInstance(ability))
+					list.add((T)ability); });
 		return list;
 	}
 }

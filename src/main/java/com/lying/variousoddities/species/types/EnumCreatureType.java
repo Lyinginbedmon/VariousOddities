@@ -28,8 +28,8 @@ import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
 import com.lying.variousoddities.species.abilities.AbilityImmunityCrits;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
+import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
 import com.lying.variousoddities.species.abilities.AbilityStatusImmunity.Paralysis;
-import com.lying.variousoddities.species.abilities.AbilityStatusImmunity.Poison;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -62,11 +62,12 @@ public enum EnumCreatureType implements IStringSerializable
 	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("423958a4-5b86-4389-990c-f1899925f47a"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))
+		.addAbility(new AbilityDamageResistance(DamageType.NONLETHAL, DamageResist.IMMUNE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.NECROMANCY))
 		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH))
-		.addAbility(new Poison())
-		.addAbility(new Paralysis())
+		.addAbility(new AbilityStatusImmunity.Poison())
+		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 10),
 	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e"))
 		.addAbility(new AbilityDarkvision())
@@ -75,8 +76,8 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityBurrow(true, false))),
 	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b0047670-88a2-41a0-aaae-7c9da5a79a4b"))
 		.addAbility(new AbilityDarkvision())
-		.addAbility(new Poison())
-		.addAbility(new Paralysis())
+		.addAbility(new AbilityStatusImmunity.Poison())
+		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.REGEN_ONLY, 8),
 	EXTRAPLANAR(UUID.fromString("27f5fb29-f904-4af6-8fcd-1ab39b385813")),
 	EVIL(null, new TypeHandler(UUID.fromString("c03386d7-96e2-487c-905d-974777a889ea"))
@@ -111,8 +112,8 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
-		.addAbility(new Poison())
-		.addAbility(new Paralysis())
+		.addAbility(new AbilityStatusImmunity.Poison())
+		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
 	REPTILE(UUID.fromString("b7b6e1bc-d1c5-4c6c-af9d-994b73bf73d8")),
 	SHAPECHANGER(UUID.fromString("b9956455-2bd2-456d-8e3e-976864fb23e6")),
@@ -120,16 +121,17 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
 		.addAbility(new AbilityBlind())
 		.addAbility(new AbilityBlindsight(16D))
-		.addAbility(new Poison())
-		.addAbility(new Paralysis())
+		.addAbility(new AbilityStatusImmunity.Poison())
+		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
 	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler(UUID.fromString("1e5ae3b8-b509-447f-b790-51ed71d090b7"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))
+		.addAbility(new AbilityDamageResistance(DamageType.NONLETHAL, DamageResist.IMMUNE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH))
-		.addAbility(new Poison())
-		.addAbility(new Paralysis())
+		.addAbility(new AbilityStatusImmunity.Poison())
+		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 12),
 	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),

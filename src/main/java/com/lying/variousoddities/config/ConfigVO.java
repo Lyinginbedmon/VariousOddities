@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.lying.variousoddities.entity.NaturalSpawns;
 import com.lying.variousoddities.init.VOEntities;
+import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.FactionManager;
@@ -42,6 +43,9 @@ public class ConfigVO
 				abilityCorner = builder.defineEnum("HUD_corner", EnumCorner.TOP_LEFT);
 				nameDisplay = builder.defineEnum("name_display_style", EnumNameDisplay.CROPPED);
 				holdKeyForMenu = builder.define("hold_key_for_ability_menu", false);
+			builder.pop();
+			
+			builder.push("misc");
 				eternalPride = builder.define("year-round Pride visuals", false);
 			builder.pop();
 		}
@@ -94,13 +98,24 @@ public class ConfigVO
 	public static class General
 	{
 		private final ForgeConfigSpec.BooleanValue verboseLog;
+		private final ForgeConfigSpec.BooleanValue playersSpawnCorpses;
+//		private final ForgeConfigSpec.BooleanValue zombiesZombifyPlayers;
+		
+		private final ForgeConfigSpec.IntValue bludgeoningTime;
 		
 		private boolean verbose = false;
+		private boolean playerCorpses = false;
+		private boolean zombifyPlayers = false;
+		
+		private int bludgeoningRecoveryRate = Reference.Values.TICKS_PER_MINUTE;
 		
 		public General(ForgeConfigSpec.Builder builder)
 		{
 			builder.push("general");
 				verboseLog = builder.define("verboseLog", false);
+				playersSpawnCorpses = builder.define("players_spawn_corpses", false);
+//				zombiesZombifyPlayers = builder.define("zombies_zombify_players", false);
+				bludgeoningTime = builder.defineInRange("bludgeoning_recovery_rate_seconds", 60, 0, Integer.MAX_VALUE);
 			builder.pop();
 		}
 		
@@ -108,9 +123,24 @@ public class ConfigVO
 		{
 			if(verboseLog != null)
 				verbose = verboseLog.get();
+			
+			if(playersSpawnCorpses != null)
+				playerCorpses = playersSpawnCorpses.get();
+			
+//			if(zombiesZombifyPlayers != null)
+//				zombifyPlayers = zombiesZombifyPlayers.get();
+			
+			if(bludgeoningTime != null)
+				bludgeoningRecoveryRate = Reference.Values.TICKS_PER_SECOND * bludgeoningTime.get();
 		}
 		
 		public boolean verboseLogs(){ return verbose; }
+		
+		public boolean playersSpawnCorpses(){ return playerCorpses; }
+		
+		public boolean zombifyPlayers(){ return zombifyPlayers; }
+		
+		public int bludgeoningRecoveryRate(){ return bludgeoningRecoveryRate; }
 	}
 	
 	
@@ -133,8 +163,6 @@ public class ConfigVO
 		public final AISettings aiSettings;
 		/** Natural spawning toggles and other values */
 		public final SpawnSettings spawnSettings;
-		/** Natural spawning controls (biomes, weights, etc.) */
-		public final SpawnConfig spawnConfig;
 		
 		public final TypeSettings typeSettings;
 		public final FactionSettings factionSettings;
@@ -147,12 +175,11 @@ public class ConfigVO
 	        
 			aiSettings = new AISettings(builder);
 			spawnSettings = new SpawnSettings(builder);
-			spawnConfig = new SpawnConfig(builder);
 			
 			typeSettings = new TypeSettings(builder);
 			factionSettings = new FactionSettings(builder);
 			
-			selectSpeciesOnLogin = builder.comment("Open species select screen when players first log-in").define("selectSpeciesOnLogin", true);
+			selectSpeciesOnLogin = builder.comment("Open species select screen when players log-in").define("selectSpeciesOnLogin", true);
 			
 			builder.pop();
 		}
@@ -163,7 +190,6 @@ public class ConfigVO
 			{
 				aiSettings.updateCache();
 				spawnSettings.updateCache();
-				spawnConfig.updateCache();
 				
 				typeSettings.updateCache();
 				factionSettings.updateCache();
@@ -211,61 +237,6 @@ public class ConfigVO
 			public boolean isOddityAIEnabled(String mobName)
 			{
 				return (optionalAICache ? oddityAICache.containsKey(mobName) && oddityAICache.get(mobName) : false);
-			}
-		}
-		
-		public static class SpawnConfig
-		{
-			public Map<String, ForgeConfigSpec.ConfigValue<String>> entries = new HashMap<>();
-			
-			public Map<String, String> entryCache = new HashMap<>();
-			
-			public SpawnConfig(ForgeConfigSpec.Builder builder)
-			{
-				builder.push("spawn_config");
-		        for(ResourceLocation entry : VOEntities.getEntityNameList())
-		        {
-		        	String entryName = entry.getPath();
-		        	if(NaturalSpawns.NATURAL_SPAWNS.containsKey(entryName))
-		        	{
-		        		String compound = "";
-		        		for(String str : NaturalSpawns.NATURAL_SPAWNS.get(entryName))
-		        		{
-		        			if(compound.length() > 0)
-		        				compound += ",";
-		        			compound += str;
-		        		}
-		        		entries.put(entryName, builder.worldRestart().define(entryName, compound));
-		        	}
-		        }
-		        builder.pop();
-			}
-			
-			public void updateCache()
-			{
-				if(!entries.isEmpty())
-					for(String entry : entries.keySet())
-						entryCache.put(entry, entries.get(entry).get());
-			}
-			
-			public String[] getSpawnsFor(String name)
-			{
-				String entry;
-				if(entryCache.containsKey(name))
-					entry = entryCache.get(name);
-				else
-				{
-					entry = entries.get(name).get();
-					entryCache.put(name, entry);
-				}
-				
-				String[] split = entry.split("},");
-				for(int i=0; i<split.length; i++)
-				{
-					if(!split[i].endsWith("}"))
-						split[i] = split[i] + "}";
-				}
-				return split;
 			}
 		}
 		

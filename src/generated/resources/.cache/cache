@@ -1,3 +1,14 @@
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/crab.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/ghastling.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/giant_crab.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/giant_rat.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/giant_scorpion.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/goblin.json
+a4ca9f0fee9f8d3e2f284c4b5aa5046a96dab0e7 data/varodd/loot_tables/entities/kobold.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/rat.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/scorpion.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/warg.json
+b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/worg.json
 eabcf3454eafdfe0822583d2870a969f181e50b6 data/varodd/species/aasimar.json
 87f325bf688446aeaa82116808a9689d92970324 data/varodd/species/archfey.json
 0968e60b51e329b3a67677aba78213c2528b595b data/varodd/species/creeper.json
@@ -7,10 +18,10 @@ a43ac61c5d8d73b3fbe3e0411bf53121b8886f67 data/varodd/species/gnome.json
 f341f10115f86dd2281bb92ade8cb244b96599f0 data/varodd/species/green_dragon.json
 958f3056a35f85ea68d3c2e4016b1632b77f40a4 data/varodd/species/half_orc.json
 42f842a7756816b87ec2e51f69cda98943334630 data/varodd/species/halfling.json
-6065d0c1d6999cbae220bab7c23e0f742b9a273a data/varodd/species/kobold.json
+979ace17a69f0aecc624104cf987c31692b944fc data/varodd/species/kobold.json
 131cf1c9911f4058362a5aa36c0a4773e04d3cd7 data/varodd/species/lizardfolk.json
 3d8c9afa9f9c810ab1fbe302002415fbde016893 data/varodd/species/necropolitan.json
-fd1c8119c8392ff942367753c5e6bc8979e7f7d6 data/varodd/species/orc.json
+d8e795a594abd1649fb56b5ebf7fe62619672834 data/varodd/species/orc.json
 4013518e93c821b4ee0bafa0980042e93f6e7fd7 data/varodd/species/tiefling.json
 d0b92bee71a75dafea0d1bd0ecf5afa01a6f207c data/varodd/species/troglodyte.json
 27b3fd46b4e4ccfa4bacc8c2f7334d8e7e2dd65c data/varodd/tags/blocks/unphaseable.json

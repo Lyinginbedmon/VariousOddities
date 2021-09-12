@@ -16,6 +16,7 @@ public class VODataGenerators
     		generator.addProvider(new VOEntityTags(generator, existingFileHelper));
 			generator.addProvider(new VOSpeciesProvider(generator));
 			generator.addProvider(new VOTemplatesProvider(generator));
+			generator.addProvider(new VOLootProvider(generator, existingFileHelper));
 		}
 		if(event.includeClient())
 		{

@@ -37,7 +37,7 @@ public class PacketSpeciesSelected
 		UUID player = par1Buffer.readUniqueId();
 		boolean types = par1Buffer.readBoolean();
 		int len = par1Buffer.readInt();
-		if(len >= 0)
+		if(len > 0)
 		{
 			String name = par1Buffer.readString(len);
 			return new PacketSpeciesSelected(player, new ResourceLocation(name), types);
@@ -51,7 +51,7 @@ public class PacketSpeciesSelected
 		par1Buffer.writeUniqueId(msg.playerID);
 		par1Buffer.writeBoolean(msg.keepTypes);
 		if(msg.selectedSpecies == null)
-			par1Buffer.writeInt(-1);
+			par1Buffer.writeInt(0);
 		else
 		{
 			String name = msg.selectedSpecies.toString();

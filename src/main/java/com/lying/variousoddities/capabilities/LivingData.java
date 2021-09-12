@@ -17,7 +17,6 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
-import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncBludgeoning;
 import com.lying.variousoddities.network.PacketSyncLivingData;
@@ -47,7 +46,6 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
 import net.minecraft.stats.ServerStatisticsManager;
@@ -100,7 +98,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private boolean overridingAir = false;
 	
 	private float bludgeoning = 0F;
-	private int recoveryTimer = bludgeoningRecoveryRate();
+	private boolean isUnconscious = false;
+	private int recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
 	
 	public boolean checkingFoodRegen = false;
 	
@@ -159,6 +158,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			compound.putInt("Air", this.air);
 			compound.putFloat("Bludgeoning", getBludgeoning());
+			compound.putBoolean("Unconscious", isActuallyUnconscious());
 			
 			if(this.species != null)
 				compound.put("Species", this.species.writeToNBT(new CompoundNBT()));
@@ -200,6 +200,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.air = nbt.getInt("Air");
 		this.bludgeoning = nbt.getFloat("Bludgeoning");
+		this.isUnconscious = nbt.getBoolean("Unconscious");
 		
 		this.species = null;
 		if(nbt.contains("Species", 10))
@@ -371,10 +372,26 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		float oldDamage = this.bludgeoning;
 		this.bludgeoning = Math.max(0F, bludgeonIn);
 		
-		if(oldDamage != this.bludgeoning && this.entity != null && this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
-			PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketSyncBludgeoning(this.bludgeoning));
+		if(oldDamage != this.bludgeoning)
+		{
+			if(this.entity != null && this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
+				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketSyncBludgeoning(this.bludgeoning));
+			markDirty();
+		}
 	}
-	public int bludgeoningRecoveryRate(){ return Reference.Values.TICKS_PER_MINUTE; }
+	
+	/**
+	 * Returns true IF:<br>
+	 * * The entity is alive<br>
+	 * * The entity's health and bludgeoning damage are both greater than 0<br>
+	 * * The bludgeoning damage is greater than health
+	 */
+	public boolean isUnconscious()
+	{
+		return this.entity != null && this.entity.getHealth() > 0 && this.entity.isAlive() && getBludgeoning() > 0 && this.entity.getHealth() <= getBludgeoning();
+	}
+	
+	public boolean isActuallyUnconscious(){ return this.isUnconscious; }
 	
 	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
 	public List<EnumCreatureType> getCustomTypes(){ return this.customTypes; }
@@ -429,7 +446,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				}
 			}
 			else
-				this.selectedSpecies = true;
+				setSelectedSpecies(true);
 			
 			this.initialised = true;
 			markDirty();
@@ -437,18 +454,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		if(ConfigVO.MOBS.selectSpeciesOnLogin.get())
 		{
-			if(!this.selectedSpecies)
-			{
-				if(!world.isRemote && entity.getType() == EntityType.PLAYER)
-					PacketHandler.sendTo((ServerPlayerEntity)entity, new PacketSpeciesOpenScreen());
-				
-				entity.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_MINUTE, 15, true, false));
-			}
-			else if(entity.isPotionActive(Effects.RESISTANCE) && entity.getActivePotionEffect(Effects.RESISTANCE).getAmplifier() == 15)
-				entity.removeActivePotionEffect(Effects.RESISTANCE);
+			if(hasSelectedSpecies())
+				if(entity.isPotionActive(Effects.RESISTANCE) && entity.getActivePotionEffect(Effects.RESISTANCE).getAmplifier() == 15)
+					entity.removeActivePotionEffect(Effects.RESISTANCE);
 		}
 		else
-			this.selectedSpecies = true;
+			setSelectedSpecies(true);
 		
 		handleTypes(entity, world);
 		
@@ -483,11 +494,30 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			if(--this.recoveryTimer <= 0)
 			{
 				setBludgeoning(this.bludgeoning - 1F);
-				this.recoveryTimer = bludgeoningRecoveryRate();
+				this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
 			}
 		}
 		else
-			this.recoveryTimer = bludgeoningRecoveryRate();
+			this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
+		
+		if(isUnconscious() != isActuallyUnconscious())
+		{
+			if(isUnconscious())
+			{
+				// Spawn body
+				LivingEntity body = EntityType.CHICKEN.create(entity.getEntityWorld());
+				body.copyLocationAndAnglesFrom(entity);
+				if(!entity.getEntityWorld().isRemote)
+					entity.getEntityWorld().addEntity(body);
+			}
+			else
+			{
+				// Despawn body
+			}
+			
+			this.isUnconscious = isUnconscious();
+			markDirty();
+		}
 		
 		abilities.tick();
 		
@@ -506,7 +536,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 	}
 	
-	public void setSpeciesSelected(){ this.selectedSpecies = true; }
+	public void setSpeciesSelected(){ setSelectedSpecies(true); }
 	
 	/** Manages the application and removal of creature types */
 	public void handleTypes(LivingEntity entity, World world)

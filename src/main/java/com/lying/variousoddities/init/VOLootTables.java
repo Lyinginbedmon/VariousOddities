@@ -1,0 +1,65 @@
+package com.lying.variousoddities.init;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.reference.Reference;
+
+import net.minecraft.loot.LootEntry;
+import net.minecraft.loot.LootPool;
+import net.minecraft.loot.TableLootEntry;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.LootTableLoadEvent;
+
+public class VOLootTables
+{
+	public static final List<String> INJECTED_LOOT_TABLES = Lists.newArrayList();
+	
+	public static final ResourceLocation KOBOLD			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/kobold");
+	public static final ResourceLocation GOBLIN			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/goblin");
+	public static final ResourceLocation RAT			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/rat");
+	public static final ResourceLocation GIANT_RAT		= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/giant_rat");
+	public static final ResourceLocation GHASTLING		= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/ghastling");
+	public static final ResourceLocation CRAB			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/crab");
+	public static final ResourceLocation GIANT_CRAB		= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/giant_crab");
+	public static final ResourceLocation SCORPION			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/scorpion");
+	public static final ResourceLocation GIANT_SCORPION		= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/giant_scorpion");
+	public static final ResourceLocation WORG			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/worg");
+	public static final ResourceLocation WARG			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/warg");
+	
+	public static void onLootLoadEvent(LootTableLoadEvent event)
+	{
+		if(event.getName().getNamespace().equals("minecraft"))
+		{
+			String name = event.getName().toString();
+			String file = event.getName().getPath();
+			if(INJECTED_LOOT_TABLES.contains(file))
+			{
+				VariousOddities.log.info("Injecting loot pool to loot table "+name);
+				event.getTable().addPool(getInjectPool(file));
+			}
+		}
+	}
+	
+	private static LootPool getInjectPool(String entryName)
+	{
+		return LootPool.builder()
+				.addEntry(getInjectEntry(entryName, 100))
+				.bonusRolls(0, 1)
+				.name(Reference.ModInfo.MOD_ID + "_inject")
+				.build();
+	}
+	
+	private static LootEntry.Builder<?> getInjectEntry(String name, int weight)
+	{
+		ResourceLocation table = new ResourceLocation(Reference.ModInfo.MOD_ID, "inject/" + name);
+		return TableLootEntry.builder(table)
+				.weight(weight);
+	}
+	
+	static
+	{
+//		INJECTED_LOOT_TABLES.add("village/village_weaponsmith");
+	}
+}

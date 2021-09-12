@@ -350,7 +350,15 @@ public class Abilities
 	
 	public Map<ResourceLocation, Ability> getCachedAbilities()
 	{
-		return this.cachedAbilities;
+		Map<ResourceLocation, Ability> cache = new HashMap<>();
+		if(this.cachedAbilities != null && !this.cachedAbilities.isEmpty())
+			try
+			{
+				this.cachedAbilities.values().forEach((ability) -> { cache.put(ability.getMapName(), ability); });
+			}
+			catch(Exception e){ }	// Try/catch used to avoid obnoxious and inexplicable ConcurrentModificationException bugs
+		
+		return cache;
 	}
 	
 	private Map<ResourceLocation, Ability> getCurrentAbilities()

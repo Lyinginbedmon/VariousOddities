@@ -41,7 +41,7 @@ public class NaturalSpawns
 	
 	static
 	{
-		addSpawns(VOEntities.CRAB, 
+		addSpawns(VOEntities.CRAB, true,
 				"{ocean,10,4}",
 				"{minecraft:beaches,10,4}",
 				"{minecraft:deep_ocean,10,4}",
@@ -51,7 +51,7 @@ public class NaturalSpawns
 				"{biomesoplenty:mangrove,10,4}",
 				"{biomesoplenty:coral_reef,10,4}",
 				"{biomesoplenty:kelp_forest,10,4}");
-		addSpawns(VOEntities.CRAB_GIANT, 
+		addSpawns(VOEntities.CRAB_GIANT, true,
 				"{ocean,10,1}",
 				"{minecraft:beaches,10,1}",
 				"{minecraft:deep_ocean,10,1}",
@@ -61,21 +61,21 @@ public class NaturalSpawns
 				"{biomesoplenty:mangrove,1,1}",
 				"{biomesoplenty:coral_reef,1,1}",
 				"{biomesoplenty:kelp_forest,4,1}");
-		addSpawns(VOEntities.GOBLIN, 
+		addSpawns(VOEntities.GOBLIN, true,
 				"{spooky:forest:overworld,80,6}",
 				"{minecraft:dark_forest,80,6}", 
 				"{biomesoplenty:bamboo_forest,60,6}", 
 				"{biomesoplenty:bayou,60,6}", 
 				"{biomesoplenty:land_of_lakes,60,6}", 
 				"{biomesoplenty:redwood_forest,60,6}");
-		addSpawns(VOEntities.KOBOLD,
+		addSpawns(VOEntities.KOBOLD, true,
 				"{hot:dry:sandy:overworld,10,6}",
 				"{minecraft:desert,10,6}",
 				"{minecraft:desert_hills,10,6}",
 				"{biomesoplenty:brushland,8,6}",
 				"{biomesoplenty:lush_desert,15,6}",
 				"{biomesoplenty:outback,20,6}");
-		addSpawns(VOEntities.RAT,
+		addSpawns(VOEntities.RAT, true,
 				"{forest:overworld,10,6}",
 				"{minecraft:swampland,20,6}",
 				"{minecraft:swampland_mutated,20,6}",
@@ -87,7 +87,7 @@ public class NaturalSpawns
 				"{biomesoplenty:lavender_fields,20,6}",
 				"{biomesoplenty:temperate_rainforest,40,6}",
 				"{biomesoplenty:pasture,10,6}");
-		addSpawns(VOEntities.RAT_GIANT,
+		addSpawns(VOEntities.RAT_GIANT, true,
 				"{forest:overworld,80,1}",
 				"{minecraft:swampland,100,1}",
 				"{minecraft:swampland_mutated,80,1}",
@@ -95,7 +95,7 @@ public class NaturalSpawns
 				"{biomesoplenty:coniferous_forest,60,1}",
 				"{biomesoplenty:dead_forest,60,1}",
 				"{biomesoplenty:dead_swamp,80,1}");
-		addSpawns(VOEntities.SCORPION,
+		addSpawns(VOEntities.SCORPION, true,
 				"{hot:dry:sandy:overworld,10,3}",
 				"{dry:mesa:overworld,10,3}",
 				"{hot:wasteland:overworld,10,3}",
@@ -105,7 +105,7 @@ public class NaturalSpawns
 				"{biomesoplenty:outback,80,3}",
 				"{biomesoplenty:wasteland,80,3}",
 				"{biomesoplenty:xeric_shrubland,80,3}");
-		addSpawns(VOEntities.SCORPION_GIANT,
+		addSpawns(VOEntities.SCORPION_GIANT, true,
 				"{hot:dry:sandy,60,2}",
 				"{dry:mesa,60,2}",
 				"{hot:wasteland,60,2}",
@@ -133,7 +133,7 @@ public class NaturalSpawns
             	{
             		if(ConfigVO.MOBS.spawnSettings.isOdditySpawnEnabled(type))
             		{
-                		String[] spawnData = ConfigVO.MOBS.spawnConfig.getSpawnsFor(type.getRegistryName().getPath());
+                		String[] spawnData = NATURAL_SPAWNS.get(type.getRegistryName().getPath());
                 		ConfiguredSpawns settings = new ConfiguredSpawns(spawnData);
                 		if(settings.containsBiome(event.getName()))
                 		{
@@ -190,7 +190,6 @@ public class NaturalSpawns
         return types;
     }
 	
-	@SuppressWarnings("unused")
 	private static void addSpawns(EntityType<?> entityClass, boolean shouldSpawn, String... spawns)
 	{
 		DEFAULT_NATURAL.put(entityClass.getRegistryName().getPath(), shouldSpawn);

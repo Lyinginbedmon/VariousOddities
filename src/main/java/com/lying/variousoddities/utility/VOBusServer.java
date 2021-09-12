@@ -22,11 +22,15 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncBludgeoning;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.network.PacketSyncSpecies;
 import com.lying.variousoddities.potion.PotionSleep;
+import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.Entity;
@@ -39,6 +43,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -83,9 +88,10 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onChangeDimensionEvent(EntityTravelToDimensionEvent event)
 	{
-		if(!event.getEntity().getEntityWorld().isRemote && event.getEntity().getType() == EntityType.PLAYER)
+		Entity entity = event.getEntity();
+		if(!entity.getEntityWorld().isRemote && entity.getType() == EntityType.PLAYER)
 		{
-			PlayerEntity player = (PlayerEntity)event.getEntity();
+			PlayerEntity player = (PlayerEntity)entity;
 			LivingData data = LivingData.forEntity(player);
 			if(data != null)
 			{
@@ -93,6 +99,9 @@ public class VOBusServer
 				data.getAbilities().markDirty();
 			}
 		}
+		
+		if(entity instanceof LivingEntity && ((LivingEntity)entity).isPotionActive(VOPotions.ANCHORED))
+			event.setCanceled(true);
 	}
 	
 	@SubscribeEvent
@@ -106,6 +115,13 @@ public class VOBusServer
 		{
 			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), data));
 			data.getAbilities().markDirty();
+			
+			if(!data.hasSelectedSpecies())
+			{
+				if(!player.getEntityWorld().isRemote)
+					PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen());
+				player.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
+			}
 		}
 	}
 	
@@ -131,6 +147,9 @@ public class VOBusServer
 		LivingData data = LivingData.forEntity(event.getPlayer());
 		if(data != null)
 			data.getAbilities().markDirty();
+		
+		if(AbilityRegistry.hasAbility(event.getPlayer(), AbilitySize.REGISTRY_NAME))
+			event.getPlayer().recalculateSize();
 	}
 	
 	@SubscribeEvent
@@ -151,95 +170,61 @@ public class VOBusServer
 				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRatGiant>(feline, EntityRatGiant.class, true));
 		}
 		
+		// Add sleep AI to mobs
 		if(theEntity instanceof MobEntity)
 		{
 			MobEntity living = (MobEntity)theEntity;
 			living.goalSelector.addGoal(1, new EntityAISleep(living));
 		}
-	}
-	
-	/**
-	 * Occasionally spawns ghastlings when a ghast is killed by a fireball.
-	 * @param event
-	 */
-	@SubscribeEvent
-	public static void onGhastSenderEvent(LivingDeathEvent event)
-	{
-		LivingEntity ghast = event.getEntityLiving();
-		if(ghast.getType() == EntityType.GHAST)
-		{
-			DamageSource source = event.getSource();
-			if(source.getImmediateSource() instanceof FireballEntity && source.getTrueSource() instanceof PlayerEntity)
-			{
-				Random rand = ghast.getRNG();
-				World world = ghast.getEntityWorld();
-				if(rand.nextInt(15) == 0)
-					for(int i=0; i<rand.nextInt(3); i++)
-					{
-						EntityGhastling ghastling = VOEntities.GHASTLING.create(world);
-						ghastling.setLocationAndAngles(ghast.getPosX(), ghast.getPosY(), ghast.getPosZ(), rand.nextFloat() * 360F, 0F);
-						world.addEntity(ghastling);
-					}
-			}
-		}
-	}
-	
-	/**
-	 * Reduces the refractory period of nearby goblins when<br>
-	 * a. any goblin is slain or <br>
-	 * b. a goblin slays any mob (with big bonus for slaying a player)
-	 * @param event
-	 */
-	@SubscribeEvent
-	public static void onDeathNearGoblinEvent(LivingDeathEvent event)
-	{
-		LivingEntity victim = event.getEntityLiving();
-		DamageSource cause = event.getSource();
-		if(victim instanceof EntityGoblin)
-			reduceRefractory(victim, 1000);
-		else if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof EntityGoblin)
-			reduceRefractory(victim, victim instanceof PlayerEntity ? 4000 : 500);
-	}
-	
-	@SubscribeEvent
-	public static void onGoblinWolfKillEvent(LivingDeathEvent event)
-	{
-		LivingEntity victim = event.getEntityLiving();
-		DamageSource cause = event.getSource();
-		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof AbstractGoblinWolf)
-			((AbstractGoblinWolf)cause.getTrueSource()).heal(2F + victim.getRNG().nextFloat() * 3F);
-	}
-	
-	@SubscribeEvent
-	public static void onNeedledDeathEvent(LivingDeathEvent event)
-	{
-		LivingEntity entity = event.getEntityLiving();
-		if(event.getSource() != DamageSource.OUT_OF_WORLD && entity.isPotionActive(VOPotions.NEEDLED))
-		{
-			entity.removeActivePotionEffect(VOPotions.NEEDLED);
-			EntityCorpse corpse = EntityCorpse.createCorpseFrom(entity);
-			if(corpse != null && !entity.getEntityWorld().isRemote)
-				entity.getEntityWorld().addEntity(corpse);
-		}
-	}
-	
-	private static void reduceRefractory(LivingEntity goblinIn, int amount)
-	{
-		List<EntityGoblin> nearbyGoblins = goblinIn.getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, goblinIn.getBoundingBox().grow(10));
-		for(EntityGoblin goblin : nearbyGoblins)
-			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
-				goblin.setGrowingAge(Math.max(0, goblin.getGrowingAge() - amount));
-	}
-	
-	@SubscribeEvent
-	public static void onLightingSpawnEvent(EntityJoinWorldEvent event)
-	{
+		
+		// Spook worgs
 		if(event.getEntity().getType() == EntityType.LIGHTNING_BOLT)
 		{
 			BlockPos pos = event.getEntity().getPosition();
 			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 256, 1).offset(pos.getX(), 0, pos.getZ()).grow(128, 0, 128);
 			for(EntityWorg worg : event.getEntity().getEntityWorld().getEntitiesWithinAABB(EntityWorg.class, bounds))
 				worg.spook();
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onDeathNearGoblinEvent(LivingDeathEvent event)
+	{
+		LivingEntity victim = event.getEntityLiving();
+		DamageSource cause = event.getSource();
+		World world = victim.getEntityWorld();
+		
+		// Reduce refractory period of nearby goblins when a. goblin is slain or b. goblin slays any mob (esp. players)
+		if(victim instanceof EntityGoblin)
+			reduceRefractory(victim, 1000);
+		else if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof EntityGoblin)
+			reduceRefractory(victim, victim instanceof PlayerEntity ? 4000 : 500);
+		
+		// Occasionally spawn ghastlings when a ghast dies to a reflected fireball
+		if(victim.getType() == EntityType.GHAST)
+			if(cause.getImmediateSource() instanceof FireballEntity && cause.getTrueSource() instanceof PlayerEntity)
+			{
+				Random rand = victim.getRNG();
+				if(rand.nextInt(15) == 0)
+					for(int i=0; i<rand.nextInt(3); i++)
+					{
+						EntityGhastling ghastling = VOEntities.GHASTLING.create(world);
+						ghastling.setLocationAndAngles(victim.getPosX(), victim.getPosY(), victim.getPosZ(), rand.nextFloat() * 360F, 0F);
+						world.addEntity(ghastling);
+					}
+			}
+		
+		// Heal worgs and wargs when they kill something
+		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof AbstractGoblinWolf)
+			((AbstractGoblinWolf)cause.getTrueSource()).heal(2F + victim.getRNG().nextFloat() * 3F);
+		
+		// Spawn a corpse when a Needled mob dies
+		if(event.getSource() != DamageSource.OUT_OF_WORLD && (victim.isPotionActive(VOPotions.NEEDLED) || victim.getType() == EntityType.PLAYER && ConfigVO.GENERAL.playersSpawnCorpses()))
+		{
+			victim.removeActivePotionEffect(VOPotions.NEEDLED);
+			EntityCorpse corpse = EntityCorpse.createCorpseFrom(victim);
+			if(corpse != null && !world.isRemote)
+				world.addEntity(corpse);
 		}
 	}
 	
@@ -344,14 +329,6 @@ public class VOBusServer
 			event.setCanceled(true);
 	}
 	
-	@SubscribeEvent
-	public static void onAnchoredPortal(EntityTravelToDimensionEvent event)
-	{
-		Entity entity = event.getEntity();
-		if(entity instanceof LivingEntity && ((LivingEntity)entity).isPotionActive(VOPotions.ANCHORED))
-			event.setCanceled(true);
-	}
-	
 	public static void wakeupEntitiesAround(Entity source, double rangeXZ, double rangeY)
 	{
 		for(LivingEntity entity : source.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, source.getBoundingBox().grow(rangeXZ, rangeY, rangeXZ)))
@@ -377,5 +354,13 @@ public class VOBusServer
 	public static void wakeupEntitiesAround(Entity source)
 	{
 		wakeupEntitiesAround(source, 6D, 2D);
+	}
+	
+	private static void reduceRefractory(LivingEntity goblinIn, int amount)
+	{
+		List<EntityGoblin> nearbyGoblins = goblinIn.getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, goblinIn.getBoundingBox().grow(10));
+		for(EntityGoblin goblin : nearbyGoblins)
+			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
+				goblin.setGrowingAge(Math.max(0, goblin.getGrowingAge() - amount));
 	}
 }

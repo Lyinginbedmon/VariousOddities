@@ -130,7 +130,10 @@ public class EntityAIKoboldMate extends Goal
 						}
 					}
 					if(targetMate == null)
+					{
 						setState(null);
+						theKobold.setInLove(false);
+					}
 				}
 				else if(targetMate.getDistance(theKobold) > 1F)
 				{
