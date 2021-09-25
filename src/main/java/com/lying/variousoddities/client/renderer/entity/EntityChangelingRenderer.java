@@ -2,7 +2,6 @@ package com.lying.variousoddities.client.renderer.entity;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.client.model.entity.ModelChangeling;
-import com.lying.variousoddities.entity.AbstractScorpion;
 import com.lying.variousoddities.entity.passive.IChangeling;
 import com.lying.variousoddities.entity.wip.EntityChangeling;
 import com.lying.variousoddities.reference.Reference;
@@ -15,10 +14,10 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
-public class EntityChangelingRenderer extends LivingRenderer<EntityChangeling, ModelChangeling>
+public class EntityChangelingRenderer extends LivingRenderer<EntityChangeling, ModelChangeling<EntityChangeling>>
 {
 //	private static final ModelChangelingElf changelingElfModel = new ModelChangelingElf();
-	private static final ModelChangeling changelingModel = new ModelChangeling();
+	private static final ModelChangeling<EntityChangeling> changelingModel = new ModelChangeling<EntityChangeling>();
 	
 	public static final ResourceLocation changelingTexture = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/changeling/changeling.png");
 	public static final ResourceLocation changelingTextureGlow = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/changeling/changeling_glow.png");
@@ -35,7 +34,7 @@ public class EntityChangelingRenderer extends LivingRenderer<EntityChangeling, M
 
 	public EntityChangelingRenderer(EntityRendererManager rendererManager)
 	{
-		super(rendererManager, new ModelChangeling(), 0.5F);
+		super(rendererManager, new ModelChangeling<EntityChangeling>(), 0.5F);
 	}
 	
 	public ResourceLocation getEntityTexture(EntityChangeling entity){ return changelingTexture; }

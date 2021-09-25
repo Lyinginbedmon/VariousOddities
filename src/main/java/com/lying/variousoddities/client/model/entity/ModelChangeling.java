@@ -3,12 +3,12 @@ package com.lying.variousoddities.client.model.entity;
 import com.google.common.collect.ImmutableList;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.passive.IChangeling;
-import com.lying.variousoddities.entity.wip.EntityChangeling;
 
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.entity.LivingEntity;
 
-public class ModelChangeling extends BipedModel<EntityChangeling>
+public class ModelChangeling<T extends LivingEntity> extends BipedModel<T>
 {
 	ModelRenderer wingRight, wingLeft;
 	
@@ -129,7 +129,7 @@ public class ModelChangeling extends BipedModel<EntityChangeling>
 		return ImmutableList.of(this.bipedBody, this.bipedRightArm, this.bipedLeftArm, this.bipedRightLeg, this.bipedLeftLeg);
 	}
 	
-    public void setRotationAngles(EntityChangeling entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
     {
     	super.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     	

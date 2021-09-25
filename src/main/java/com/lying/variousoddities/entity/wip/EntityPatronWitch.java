@@ -5,6 +5,7 @@ import java.util.Random;
 import com.lying.variousoddities.entity.EntityOddityAgeable;
 import com.lying.variousoddities.entity.passive.IChangeling;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.CreatureEntity;
@@ -67,19 +68,19 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
     public void livingTick()
     {
     	super.livingTick();
-//        if(this.openJawCounter > 0 && ++this.openJawCounter > 20)
-//        {
-//            this.openJawCounter = 0;
-//            setJawOpen(false);
-//        }
-//        
-//        this.prevJawOpenness = this.jawOpenness;
-//        if(isJawOpen())
-//        	this.jawOpenness += (1.0F - this.jawOpenness) * 0.1F + 0.05F;
-//        else
-//        	this.jawOpenness += (-this.jawOpenness) * 0.1F - 0.05F;
-//        
-//        this.jawOpenness = Math.max(0F, Math.min(1F, this.jawOpenness));
+        if(this.openJawCounter > 0 && ++this.openJawCounter > 20)
+        {
+            this.openJawCounter = 0;
+            setJawOpen(false);
+        }
+        
+        this.prevJawOpenness = this.jawOpenness;
+        if(isJawOpen())
+        	this.jawOpenness += (1.0F - this.jawOpenness) * 0.1F + 0.05F;
+        else
+        	this.jawOpenness += (-this.jawOpenness) * 0.1F - 0.05F;
+        
+        this.jawOpenness = Math.max(0F, Math.min(1F, this.jawOpenness));
         
     	updatePonytail();
 		
@@ -147,4 +148,31 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
 	public BlockPos getParentHivePos(){ return BlockPos.ZERO; }
 	
 	public void setParentHive(BlockPos hivePos){ }
+    
+	public float getJawState(float partialTicks)
+	{
+        return this.prevJawOpenness + (this.jawOpenness - this.prevJawOpenness) * partialTicks;
+	}
+    
+    public void openJaw()
+    {
+        if(!this.world.isRemote)
+        {
+            this.openJawCounter = 1;
+            setJawOpen(true);
+		    DataHelper.Booleans.setBooleanByte(getDataManager(), getRNG().nextInt(30) == 0, JAW_STYLE);
+        }
+    }
+    
+    public void setJawOpen(boolean par1Bool)
+    {
+    	super.setJawOpen(par1Bool);
+    	if(!par1Bool)
+		    DataHelper.Booleans.setBooleanByte(getDataManager(), false, JAW_STYLE);
+    }
+    
+    public boolean isJawSplit()
+    {
+    	return DataHelper.Booleans.getBooleanByte(getDataManager(), JAW_STYLE);
+    }
 }

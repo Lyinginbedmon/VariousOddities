@@ -28,6 +28,8 @@ public class EntityPatronKirin extends EntityOddityAgeable implements IChargeabl
     }
     
 	public boolean isCharged(){ return true; }
+    
+    public boolean isNoDespawnRequired(){ return true; }
 	
 	public AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_)
 	{

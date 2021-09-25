@@ -3,11 +3,13 @@ package com.lying.variousoddities.client.model.entity;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.passive.IChangeling;
 import com.lying.variousoddities.entity.wip.EntityPatronWitch;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 
-public class ModelPatronWitchElf extends BipedModel<EntityPatronWitch>
+public class ModelPatronWitchElf extends BipedModel<EntityPatronWitch> implements IPonytailModel
 {
 	ModelRenderer wingRight, wingLeft;
 	
@@ -135,14 +137,18 @@ public class ModelPatronWitchElf extends BipedModel<EntityPatronWitch>
     	this.wingRight.rotateAngleX = bustleX;
     }
     
-//    public void setPonytailHeight(float par1Float)
-//    {
-//    	this.ponytailAnchor2.rotationPointY = par1Float;
-//    }
-//    
-//    public void renderPonytail(float par1Float, float par2Float, boolean par3Bool)
-//    {
-//    	this.ponytail.rotationPointY = Math.min(5.6F, par2Float / 15F) + (par3Bool ? 3.5F : 0F);
-//    	this.ponytailAnchor.render(par1Float);
-//    }
+    public void setPonytailHeight(float par1Float)
+    {
+    	this.ponytailAnchor2.rotationPointY = par1Float;
+    }
+    
+    public void setPonytailRotation(float par1Float, float par2Float, boolean par3Bool)
+    {
+    	this.ponytail.rotationPointY = Math.min(5.6F, par2Float / 15F) + (par3Bool ? 3.5F : 0F);
+    }
+    
+    public void renderPonytail(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn)
+    {
+    	this.ponytailAnchor.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
+    }
 }

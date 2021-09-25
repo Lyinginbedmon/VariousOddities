@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lying.variousoddities.entity.ai.controller.EntityController;
+import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.EntityType;
@@ -18,6 +19,7 @@ public abstract class EntityOddityAgeable extends AgeableEntity
 {
     protected static final DataParameter<Integer> AGE		= EntityDataManager.<Integer>createKey(EntityOddityAgeable.class, DataSerializers.VARINT);
     protected static final DataParameter<Boolean> IN_LOVE	= EntityDataManager.<Boolean>createKey(EntityOddityAgeable.class, DataSerializers.BOOLEAN);
+    protected static final DataParameter<Byte> JAW_OPEN		= EntityDataManager.<Byte>createKey(EntityOddityAgeable.class, DataSerializers.BYTE);
     
     /** A list of EntityControllers able to influence this entity */
 	@SuppressWarnings("rawtypes")
@@ -40,6 +42,7 @@ public abstract class EntityOddityAgeable extends AgeableEntity
 		super.registerData();
 		getDataManager().register(AGE, 0);
 		getDataManager().register(IN_LOVE, false);
+		DataHelper.Booleans.registerBooleanByte(getDataManager(), JAW_OPEN);
 	}
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
@@ -123,4 +126,7 @@ public abstract class EntityOddityAgeable extends AgeableEntity
     	else
     		return super.getGrowingAge();
     }
+
+    public boolean isJawOpen(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), JAW_OPEN); }
+    public void setJawOpen(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, JAW_OPEN); }
 }
