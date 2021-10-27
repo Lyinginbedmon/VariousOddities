@@ -43,6 +43,9 @@ public class AbilityOperation extends TemplateOperation
 		this.unlessBetter = unlessBetterIn;
 	}
 	
+	public static AbilityOperation add(Ability abilityIn){ return add(false, abilityIn); }
+	public static AbilityOperation add(boolean unlessBetter, Ability abilityIn){ return new AbilityOperation(Operation.ADD, unlessBetter, abilityIn); }
+	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
 	
 	public ITextComponent translate()

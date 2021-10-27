@@ -12,7 +12,6 @@ import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
-import com.lying.variousoddities.species.templates.TemplateOperation;
 import com.lying.variousoddities.species.types.Types;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -264,9 +263,10 @@ public class CommandSpecies extends CommandBase
 			
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", template.getRegistryName().toString()), true);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_uuid", template.uuid().toString()), false);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_preconditions", template.getPreconditions().size()), false);
+			template.getPreconditions().forEach((precondition) -> { source.sendFeedback(new StringTextComponent(" -").append(precondition.translate()), false); });
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_operations", template.getOperations().size()), false);
-			for(TemplateOperation operation : template.getOperations())
-				source.sendFeedback(new StringTextComponent(" -").append(operation.translate()), false);
+			template.getOperations().forEach((operation) -> { source.sendFeedback(new StringTextComponent(" -").append(operation.translate()), false); });
 			return 15;
 		}
 		

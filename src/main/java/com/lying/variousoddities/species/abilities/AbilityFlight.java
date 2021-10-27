@@ -130,15 +130,13 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 		return new AttributeModifier(GRAVITY_UUID, "gravity_modifier", -gravity, AttributeModifier.Operation.MULTIPLY_TOTAL);
 	}
 	
-	public static class Builder extends Ability.Builder
+	public static class Builder extends ToggledAbility.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundNBT compound)
 		{
-			AbilityFlight flight = new AbilityFlight(Grade.fromString(compound.getString("Quality")), (compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.5D));
-			flight.isActive = compound.getBoolean("IsActive");
-			return flight;
+			return new AbilityFlight(Grade.fromString(compound.getString("Quality")), (compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.5D));
 		}
 	}
 	

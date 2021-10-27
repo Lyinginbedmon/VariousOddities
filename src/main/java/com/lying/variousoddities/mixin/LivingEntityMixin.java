@@ -14,6 +14,8 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
+import com.lying.variousoddities.species.abilities.AbilityHurtByEnv;
+import com.lying.variousoddities.species.abilities.AbilityHurtByEnv.EnvType;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityStatusEffect;
 import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
@@ -187,5 +189,14 @@ public class LivingEntityMixin extends EntityMixin
 			if(data != null && data.getBludgeoning() > 0)
 				data.setBludgeoning(Math.max(0F, data.getBludgeoning() - healAmount));
 		}
+	}
+	
+	@Inject(method = "isWaterSensitive()Z", at = @At("TAIL"), cancellable = true)
+	public void isWaterSensitive(final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
+		if(abilityMap.containsKey(AbilityHurtByEnv.REGISTRY_NAME) && ((AbilityHurtByEnv)abilityMap.get(AbilityHurtByEnv.REGISTRY_NAME)).getEnvType() == EnvType.WATER)
+			ci.setReturnValue(true);
 	}
 }

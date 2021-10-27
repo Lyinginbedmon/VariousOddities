@@ -128,15 +128,13 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 		return false;
 	}
 	
-	public static class Builder extends Ability.Builder
+	public static class Builder extends ToggledAbility.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundNBT compound)
 		{
-			AbilityBurrow burrow = new AbilityBurrow(compound.getBoolean("AllowStone"), compound.getBoolean("MineBlocks"));
-			burrow.isActive = compound.getBoolean("IsActive");
-			return burrow;
+			return new AbilityBurrow(compound.getBoolean("AllowStone"), compound.getBoolean("MineBlocks"));
 		}
 	}
 }

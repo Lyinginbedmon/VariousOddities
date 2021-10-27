@@ -14,7 +14,6 @@ public class PotionEntangled extends PotionImmobility implements IVisualPotion
 	{
 		super("entangled", EffectType.HARMFUL, colorIn);
 		
-		System.out.println("Entangled ID: "+UUID.randomUUID().toString());
 		addAttributesModifier(Attributes.MOVEMENT_SPEED, ENTANGLED_UUID.toString(), -0.99D, Operation.MULTIPLY_TOTAL);
 		addAttributesModifier(Attributes.FLYING_SPEED, ENTANGLED_UUID.toString(), -0.99D, Operation.MULTIPLY_TOTAL);
 	}

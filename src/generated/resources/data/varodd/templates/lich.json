@@ -15,32 +15,42 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:5.0d},Name:\"varodd:natural_armour\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Amount:5.0d},Name:\"varodd:natural_armour\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:15,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Amount:15,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Type:\"immune\",Damage:\"cold\"},Name:\"varodd:damage_resistance\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Type:\"immune\",Damage:\"cold\"},Name:\"varodd:damage_resistance\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Type:\"immune\",Damage:\"lightning\"},Name:\"varodd:damage_resistance\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Type:\"immune\",Damage:\"lightning\"},Name:\"varodd:damage_resistance\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Descriptor:\"mind_affecting\"},Name:\"varodd:resistance_spell\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Descriptor:\"mind_affecting\"},Name:\"varodd:resistance_spell\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{CustomName:'{\"translate\":\"ability.varodd:lich_touch\"}',Tag:{Effects:[{Ambient:0b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:1b,ShowParticles:1b,Duration:300,Id:33b,Amplifier:0b}],Chance:0.65f},Name:\"varodd:poison\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{CustomName:'{\"translate\":\"ability.varodd:lich_touch\"}',Tag:{Effects:[{Ambient:0b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:1b,ShowParticles:1b,Duration:300,Id:33b,Amplifier:0b}],Chance:0.65f},Name:\"varodd:poison\"},UnlessBetter:0b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"undead\"],CustomName:'{\"translate\":\"precondition.varodd.type.living\"}',Style:\"nor\"}"
+    },
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"humanoid\"],Style:\"or\"}"
     }
   ]
 }

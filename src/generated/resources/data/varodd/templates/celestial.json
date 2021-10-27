@@ -22,12 +22,12 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0,Type:\"evil\",Cooldown:24000,IsActive:0b},Name:\"varodd:smite\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Active:0,Type:\"evil\",Cooldown:24000,IsActive:0b},Name:\"varodd:smite\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Amount:5,Exceptions:[\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
@@ -43,6 +43,16 @@
       "Action": "add",
       "Name": "varodd:ability",
       "Tag": "{Ability:{Tag:{Type:\"lightning\",Amount:5},Name:\"varodd:resistance\"},UnlessBetter:1b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"incorporeal\"],CustomName:'{\"translate\":\"precondition.varodd.type.corporeal\"}',Style:\"nor\"}"
+    },
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"aberration\",\"animal\",\"dragon\",\"fey\",\"giant\",\"humanoid\",\"magical_beast\",\"monstrous_humanoid\",\"plant\",\"ooze\",\"vermin\"],Style:\"or\"}"
     }
   ]
 }

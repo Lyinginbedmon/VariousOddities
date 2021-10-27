@@ -505,10 +505,10 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			if(isUnconscious())
 			{
 				// Spawn body
-				LivingEntity body = EntityType.CHICKEN.create(entity.getEntityWorld());
-				body.copyLocationAndAnglesFrom(entity);
-				if(!entity.getEntityWorld().isRemote)
-					entity.getEntityWorld().addEntity(body);
+//				LivingEntity body = EntityType.CHICKEN.create(entity.getEntityWorld());
+//				body.copyLocationAndAnglesFrom(entity);
+//				if(!entity.getEntityWorld().isRemote)
+//					entity.getEntityWorld().addEntity(body);
 			}
 			else
 			{

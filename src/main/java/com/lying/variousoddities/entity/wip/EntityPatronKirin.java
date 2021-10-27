@@ -14,7 +14,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(
+   value = Dist.CLIENT,
+   _interface = IChargeableMob.class
+)
 public class EntityPatronKirin extends EntityOddityAgeable implements IChargeableMob
 {
 	public EntityPatronKirin(EntityType<? extends EntityOddityAgeable> type, World worldIn)

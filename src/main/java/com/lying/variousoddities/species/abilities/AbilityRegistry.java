@@ -62,6 +62,7 @@ public class AbilityRegistry
 		registry.register(new AbilityGhostForm.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());
+		registry.register(new AbilityHurtByEnv.Builder());
 		registry.register(new AbilityImmunityCrits.Builder());
 		registry.register(new AbilityIncorporeality.Builder());
 		registry.register(new AbilityInvisibility.Builder());
@@ -77,10 +78,12 @@ public class AbilityRegistry
 		registry.register(new AbilityRend.Builder());
 		registry.register(new AbilityResistance.Builder());
 		registry.register(new AbilityResistanceSpell.Builder());
+		registry.register(new AbilityScent.Builder());
 		registry.register(new AbilitySize.Builder());
 		registry.register(new AbilitySmite.Builder());
 		registry.register(new AbilityStability.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
+		registry.register(new AbilitySunBurn.Builder());
 		registry.register(new AbilitySwim.Builder());
 		registry.register(new AbilityTeleportToHome.Builder());
 		registry.register(new AbilityTeleportToPos.Builder());

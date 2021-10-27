@@ -52,6 +52,8 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketMountGui.class, PacketMountGui::encode, PacketMountGui::decode, PacketMountGui::handle);
 		HANDLER.registerMessage(id++, PacketSyncBludgeoning.class, PacketSyncBludgeoning::encode, PacketSyncBludgeoning::decode, PacketSyncBludgeoning::handle);
 		HANDLER.registerMessage(id++, PacketSit.class, PacketSit::encode, PacketSit::decode, PacketSit::handle);
+		HANDLER.registerMessage(id++, PacketSyncScents.class, PacketSyncScents::encode, PacketSyncScents::decode, PacketSyncScents::handle);
+		HANDLER.registerMessage(id++, PacketAddScent.class, PacketAddScent::encode, PacketAddScent::decode, PacketAddScent::handle);
 	}
 	
 	/**

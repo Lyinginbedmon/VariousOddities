@@ -49,4 +49,18 @@ public abstract class ToggledAbility extends ActivatedAbility
 	}
 	
 	public boolean isActive(){ return this.isActive; }
+	
+	public static abstract class Builder extends Ability.Builder
+	{
+		public Builder(ResourceLocation registryName){ super(registryName); }
+		
+		public Ability create(CompoundNBT compound)
+		{
+			ToggledAbility ability = createAbility(compound);
+			ability.isActive = compound.getBoolean("IsActive");
+			return ability;
+		}
+		
+		public abstract ToggledAbility createAbility(CompoundNBT compound);
+	}
 }

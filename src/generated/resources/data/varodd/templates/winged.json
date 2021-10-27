@@ -1,0 +1,43 @@
+{
+  "UUID": "97b43a6a-8626-4a6d-8a8c-b0caca354bc6",
+  "CanPlayerSelect": false,
+  "Power": 2,
+  "Operations": [
+    {
+      "Condition": {
+        "Style": "or",
+        "Types": [
+          "animal",
+          "vermin"
+        ]
+      },
+      "Name": "varodd:replace_supertypes",
+      "Tag": "{Types:[\"magical_beast\"]}"
+    },
+    {
+      "Condition": {
+        "Style": "and",
+        "Types": [
+          "humanoid"
+        ]
+      },
+      "Name": "varodd:replace_supertypes",
+      "Tag": "{Types:[\"monstrous_humanoid\"]}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Speed:0.7d,Active:0,Cooldown:20,IsActive:0b,Quality:\"average\"},Name:\"varodd:flight\"},UnlessBetter:1b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"animal\",\"giant\",\"humanoid\",\"monstrous_humanoid\",\"vermin\"],Style:\"or\"}"
+    },
+    {
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Speed:0.7d,Active:0,Cooldown:20,IsActive:0b,Quality:\"average\"},Name:\"varodd:flight\"},Style:\"nor\"}"
+    }
+  ]
+}

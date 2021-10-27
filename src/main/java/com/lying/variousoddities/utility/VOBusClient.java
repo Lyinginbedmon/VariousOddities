@@ -23,9 +23,12 @@ import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityPhasing;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilityScent;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
+import com.lying.variousoddities.world.savedata.ScentsManager;
+import com.lying.variousoddities.world.savedata.ScentsManager.ScentMarker;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -58,6 +61,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.world.World;
@@ -433,5 +437,68 @@ public class VOBusClient
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null && player.isPotionActive(VOPotions.DEAFENED))
 			event.setCanceled(true);
+	}
+	
+	@SubscribeEvent
+	public static void onRenderScents(RenderWorldLastEvent event)
+	{
+		World world = Minecraft.getInstance().world;
+		if(world == null) return;
+		
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player == null) return;
+		
+		AbilityScent scent = (AbilityScent)AbilityRegistry.getAbilityByName(player, AbilityScent.REGISTRY_NAME);
+		if(scent == null || !scent.isActive()) return;
+		
+		// Render marker network
+		ScentsManager manager = ScentsManager.get(world);
+		List<ScentMarker> scents = Lists.newArrayList();
+		manager.getScents().forEach((marker) -> { if(scent.isInRange(marker.position(), player)) scents.add(marker); });
+		
+		Vector3d playerPos = player.getPositionVec();
+        MatrixStack matrixStack = event.getMatrixStack();
+		scents.forEach((marker) -> 
+		{
+			if(marker.isDead()) return;
+			Vector3d markerPos = marker.position();
+			
+			float startAlpha = marker.alpha() * (1F - (float)(markerPos.distanceTo(playerPos) / scent.range())) * 0.75F;
+			
+			List<ScentMarker> neighbours = manager.getNeighboursWithin(marker, 7D);
+			if(neighbours.isEmpty()) return;
+			
+			// Render line from marker to neighbour
+			for(ScentMarker neighbour : neighbours)
+			{
+				Vector3d end = neighbour.position();
+				if(end.distanceTo(playerPos) > scent.range())
+				{
+					Vector3d offs = end.subtract(markerPos).normalize();
+					double dist = scent.range() - markerPos.distanceTo(playerPos);
+					end = markerPos.add(offs.mul(dist, dist, dist));
+				}
+				
+				float endAlpha = neighbour.alpha() * (1F - (float)(neighbour.position().distanceTo(playerPos) / scent.range())) * 0.75F;
+				drawScent(matrixStack, markerPos, end, player.getEyePosition(event.getPartialTicks()), startAlpha, endAlpha);
+			}
+		});
+	}
+	
+	private static void drawScent(MatrixStack matrixStack, Vector3d start, Vector3d end, Vector3d eyePos, float startAlpha, float endAlpha)
+	{
+		Minecraft mc = Minecraft.getInstance();
+        IRenderTypeBuffer.Impl buffers = mc.getRenderTypeBuffers().getBufferSource();
+        IVertexBuilder buffer = buffers.getBuffer(RenderType.LINES);
+        
+        matrixStack.push();
+	    	Vector3d sta = start.subtract(eyePos);
+	    	end = end.subtract(eyePos);
+	    	RenderSystem.lineWidth(2F);
+	    		Matrix4f matrix = matrixStack.getLast().getMatrix();
+	    		buffer.pos(matrix, (float)sta.x,	(float)(sta.y + 0.0D),	(float)sta.z).color(1F, 1F, 1F, startAlpha).endVertex();
+	    		buffer.pos(matrix, (float)end.x,	(float)(end.y + 0.0D),	(float)end.z).color(1F, 1F, 1F, endAlpha).endVertex();
+	    	RenderSystem.lineWidth(1F);
+    	matrixStack.pop();
 	}
 }

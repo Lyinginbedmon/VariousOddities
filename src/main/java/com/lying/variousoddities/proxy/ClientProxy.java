@@ -10,12 +10,14 @@ import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.client.gui.ScreenSpeciesSelect;
 import com.lying.variousoddities.client.renderer.ColorHandler;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
+import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -31,6 +33,7 @@ public class ClientProxy extends CommonProxy
 	private static final Minecraft mc = Minecraft.getInstance();
 	private SettlementManager settlements = new SettlementManagerClient();
 	private SpellManager spells = new SpellManagerClient();
+	private Map<RegistryKey<World>, ScentsManager> scentManagers = new HashMap<>();
 	
 	public static TypesManager localTypesData = new TypesManager();
 	public static Map<String, Integer> localReputation = new HashMap<>();
@@ -68,6 +71,14 @@ public class ClientProxy extends CommonProxy
 	}
 	
 	public void clearSettlements(){ settlements = null; }
+	
+	public ScentsManager getScentsManager(World worldIn)
+	{
+		RegistryKey<World> dim = worldIn.getDimensionKey();
+		if(!scentManagers.containsKey(dim))
+			scentManagers.put(dim, new ScentsManager(worldIn));
+		return scentManagers.get(worldIn.getDimensionKey());
+	}
 	
 	public SpellManager getSpells()
 	{

@@ -2,6 +2,7 @@ package com.lying.variousoddities.species.templates;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -185,12 +186,16 @@ public class TypeOperation extends TemplateOperation
 	public static class Condition
 	{
 		private Style style;
-		private EnumCreatureType[] types;
+		private EnumSet<EnumCreatureType> types;
 		
 		public Condition(Style styleIn, EnumCreatureType... typesIn)
 		{
 			this.style = styleIn;
-			this.types = typesIn;
+			
+			this.types = EnumSet.noneOf(EnumCreatureType.class);
+			for(EnumCreatureType type : typesIn)
+				if(!types.contains(type))
+					types.add(type);
 		}
 		
 		public JsonObject writeToJson(JsonObject json)
@@ -218,7 +223,7 @@ public class TypeOperation extends TemplateOperation
 		
 		public boolean isValid(Collection<EnumCreatureType> typesIn)
 		{
-			if(types == null || types.length == 0)
+			if(types == null || types.isEmpty())
 				return true;
 			
 			switch(this.style)
@@ -244,20 +249,26 @@ public class TypeOperation extends TemplateOperation
 								found = true;
 						}
 					return found;
+				case NOR:
+					for(EnumCreatureType type : this.types)
+						if(typesIn.contains(type))
+							return false;
+					return true;
 			}
 			return false;
 		}
 		
 		public IFormattableTextComponent translate()
 		{
-			return new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+".type.condition."+this.style.getString(), typesToString(this.types));
+			return new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+".type.condition."+this.style.getString(), typesToString(this.types.toArray(new EnumCreatureType[0])));
 		}
 		
 		public static enum Style implements IStringSerializable
 		{
-			AND,
-			OR,
-			XOR;
+			AND,	// All of
+			OR,		// Any of
+			XOR,	// Only one of
+			NOR;	// None of
 			
 			public String getString(){ return name().toLowerCase(); }
 			

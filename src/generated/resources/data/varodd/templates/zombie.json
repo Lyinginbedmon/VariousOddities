@@ -31,6 +31,25 @@
       "Action": "add",
       "Name": "varodd:ability",
       "Tag": "{Ability:{Tag:{Amount:3},Name:\"varodd:damage_reduction\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{HelmetProtects:1b},Name:\"varodd:sunburn\"},UnlessBetter:0b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"incorporeal\"],CustomName:'{\"translate\":\"precondition.varodd.type.corporeal\"}',Style:\"nor\"}"
+    },
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"undead\"],CustomName:'{\"translate\":\"precondition.varodd.type.living\"}',Style:\"nor\"}"
+    },
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"plant\",\"ooze\"],Style:\"nor\"}"
     }
   ]
 }

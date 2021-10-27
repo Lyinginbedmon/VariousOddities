@@ -54,15 +54,13 @@ public class AbilityUnarmedStrike extends ToggledAbility
 		return false;
 	}
 	
-	public static class Builder extends Ability.Builder
+	public static class Builder extends ToggledAbility.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundNBT compound)
 		{
-			AbilityUnarmedStrike strike = new AbilityUnarmedStrike();
-			strike.isActive = compound.getBoolean("IsActive");
-			return strike;
+			return new AbilityUnarmedStrike();
 		}
 	}
 }

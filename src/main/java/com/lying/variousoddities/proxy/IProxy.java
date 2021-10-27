@@ -3,6 +3,7 @@ package com.lying.variousoddities.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -32,5 +33,6 @@ public interface IProxy
 	}
 	
 	public default SettlementManager getSettlementManager(World worldIn){ return null; }
+	public default ScentsManager getScentsManager(World worldIn){ return null; }
 	public default SpellManager getSpells(){ return null; }
 }

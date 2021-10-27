@@ -80,15 +80,13 @@ public class AbilitySmite extends ToggledAbility
 		return targetType == null || EnumCreatureType.getTypes(entity).includesType(targetType);
 	}
 	
-	public static class Builder extends Ability.Builder
+	public static class Builder extends ToggledAbility.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundNBT compound)
 		{
-			AbilitySmite smite = new AbilitySmite(EnumCreatureType.fromName(compound.getString("Type")));
-			smite.isActive = compound.getBoolean("IsActive");
-			return smite;
+			return new AbilitySmite(EnumCreatureType.fromName(compound.getString("Type")));
 		}
 	}
 }

@@ -26,6 +26,7 @@ import com.lying.variousoddities.species.TemplateRegistry;
 import com.lying.variousoddities.species.types.TypeBus;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.lying.variousoddities.utility.VOBusServer;
+import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
 import net.minecraft.client.renderer.RenderType;
@@ -86,6 +87,7 @@ public class VariousOddities
     	event.enqueueWork(VOCommands::registerArguments);
     	MinecraftForge.EVENT_BUS.register(VOBusServer.class);
     	MinecraftForge.EVENT_BUS.register(SettlementManagerServer.class);
+    	MinecraftForge.EVENT_BUS.register(ScentsManager.class);
     	MinecraftForge.EVENT_BUS.register(GroupHandler.class);
     	MinecraftForge.EVENT_BUS.register(TypeBus.class);
     	MinecraftForge.EVENT_BUS.register(FactionBus.class);

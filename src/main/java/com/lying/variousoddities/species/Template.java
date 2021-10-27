@@ -1,6 +1,7 @@
 package com.lying.variousoddities.species;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,8 +16,10 @@ import com.google.gson.JsonObject;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.templates.TemplateOperation;
+import com.lying.variousoddities.species.templates.TemplatePrecondition;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
@@ -26,6 +29,7 @@ public class Template
 	private boolean chooseAtStart = false;
 	private int power = 0;
 	
+	private final List<TemplatePrecondition> preconditions = Lists.newArrayList();
 	private final List<TemplateOperation> operations = Lists.newArrayList();
 	
 	private ResourceLocation registryName;
@@ -50,6 +54,22 @@ public class Template
 	{
 		this.chooseAtStart = bool;
 		return this;
+	}
+	
+	public Template addPrecondition(TemplatePrecondition preconditionIn)
+	{
+		this.preconditions.add(preconditionIn);
+		return this;
+	}
+	
+	public List<TemplatePrecondition> getPreconditions(){ return this.preconditions; }
+	
+	public boolean isApplicableTo(LivingEntity entity, EnumSet<EnumCreatureType> types, Map<ResourceLocation, Ability> abilities)
+	{
+		for(TemplatePrecondition precondition : preconditions)
+			if(!precondition.isValidFor(entity, types, abilities))
+				return false;
+		return true;
 	}
 	
 	/**
@@ -87,6 +107,11 @@ public class Template
 			for(TemplateOperation operation : this.operations)
 				operations.add(operation.writeToJson(new JsonObject()));
 		json.add("Operations", operations);
+		
+		JsonArray preconditions = new JsonArray();
+			for(TemplatePrecondition precondition : this.preconditions)
+				preconditions.add(precondition.writeToJson(new JsonObject()));
+		json.add("Preconditions", preconditions);
 		
 		return json;
 	}
@@ -132,6 +157,19 @@ public class Template
 		}
 		if(template.getOperations().isEmpty())
 			VariousOddities.log.warn("Template has no operations, was this intentional?");
+		
+		if(object.has("Preconditions"))
+		{
+			JsonArray preconditionList = object.get("Preconditions").getAsJsonArray();
+			for(int i=0; i<preconditionList.size(); i++)
+			{
+				TemplatePrecondition precondition = TemplatePrecondition.getFromJson(preconditionList.get(i).getAsJsonObject());
+				if(precondition != null)
+					template.addPrecondition(precondition);
+				else
+					VariousOddities.log.error("!! Error loading template precondition");
+			}
+		}
 		
 		return template;
 	}

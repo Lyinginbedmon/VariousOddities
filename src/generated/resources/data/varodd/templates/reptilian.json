@@ -1,0 +1,52 @@
+{
+  "UUID": "1e887c65-f18e-4418-9a0e-48ebc9baaa78",
+  "CanPlayerSelect": false,
+  "Power": 2,
+  "Operations": [
+    {
+      "Action": "add",
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"reptile\"]}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:2.0d},Name:\"varodd:natural_armour\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:2.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:2.0d},Name:\"varodd:strength_modifier\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Name:\"varodd:darkvision\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:scent\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Name:\"varodd:hold_breath\"},UnlessBetter:0b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"giant\",\"humanoid\"],Style:\"or\"}"
+    },
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"aquatic\",\"reptile\"],Style:\"nor\"}"
+    }
+  ]
+}

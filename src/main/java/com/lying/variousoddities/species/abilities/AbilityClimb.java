@@ -20,18 +20,16 @@ public class AbilityClimb extends AbilityMoveMode
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.climb."+(isActive() ? "active" : "inactive")); }
 	
-	public static class Builder extends Ability.Builder
+	public static class Builder extends ToggledAbility.Builder
 	{
 		public Builder()
 		{
 			super(REGISTRY_NAME);
 		}
 		
-		public Ability create(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundNBT compound)
 		{
-			AbilityClimb climb = new AbilityClimb();
-			climb.isActive = compound.getBoolean("IsActive");
-			return climb;
+			return new AbilityClimb();
 		}
 	}
 }
