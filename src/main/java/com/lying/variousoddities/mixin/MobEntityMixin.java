@@ -15,6 +15,7 @@ import com.lying.variousoddities.world.savedata.ScentsManager;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
 @Mixin(MobEntity.class)
@@ -45,6 +46,7 @@ public class MobEntityMixin extends LivingEntityMixin
 	}
 	
 	private int scentTimer = -1;
+	private Vector3d prevScentPos = null;
 	
 	@Inject(method = "updateAITasks()V", at = @At("HEAD"), cancellable = true)
 	public void updateAITasks(final CallbackInfo ci)
@@ -60,14 +62,22 @@ public class MobEntityMixin extends LivingEntityMixin
 				resetScentTimer(rand);
 			else if(--scentTimer == 0)
 			{
-				ScentsManager manager = ScentsManager.get(world);
-				
-				List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(entity);
-				types.removeIf(EnumCreatureType.IS_SUBTYPE);
-				if(types.isEmpty()) return;
-				
-				manager.addScentMarker(entity.getPositionVec(), types.get(0));
-				resetScentTimer(rand);
+				Vector3d pos = entity.getPositionVec();
+				if(prevScentPos == null)
+					prevScentPos = pos;
+				else
+				{
+					ScentsManager manager = ScentsManager.get(world);
+					
+					List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(entity);
+					types.removeIf(EnumCreatureType.IS_SUBTYPE);
+					if(types.isEmpty()) return;
+					
+					manager.addScentMarker(pos, prevScentPos, types.get(0));
+					resetScentTimer(rand);
+					
+					prevScentPos = pos;
+				}
 			}
 		}
 	}

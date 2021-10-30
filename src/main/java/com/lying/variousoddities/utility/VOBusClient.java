@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
@@ -29,6 +30,7 @@ import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.savedata.ScentsManager.ScentMarker;
+import com.lying.variousoddities.world.savedata.ScentsManager.ScentMarker.Connection;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -59,6 +61,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Matrix4f;
@@ -447,6 +450,7 @@ public class VOBusClient
 		
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player == null) return;
+		Vector3d eyePos = player.getEyePosition(event.getPartialTicks());
 		
 		AbilityScent scent = (AbilityScent)AbilityRegistry.getAbilityByName(player, AbilityScent.REGISTRY_NAME);
 		if(scent == null || !scent.isActive()) return;
@@ -456,48 +460,85 @@ public class VOBusClient
 		List<ScentMarker> scents = Lists.newArrayList();
 		manager.getScents().forEach((marker) -> { if(scent.isInRange(marker.position(), player)) scents.add(marker); });
 		
-		Vector3d playerPos = player.getPositionVec();
         MatrixStack matrixStack = event.getMatrixStack();
 		scents.forEach((marker) -> 
 		{
 			if(marker.isDead()) return;
 			Vector3d markerPos = marker.position();
 			
-			float startAlpha = marker.alpha() * (1F - (float)(markerPos.distanceTo(playerPos) / scent.range())) * 0.75F;
+			float alphaByDist = (1F - (float)(markerPos.distanceTo(eyePos) / scent.range())) * 0.75F;
+			float startAlpha = marker.alpha() * alphaByDist;
 			
-			List<ScentMarker> neighbours = manager.getNeighboursWithin(marker, 7D);
-			if(neighbours.isEmpty()) return;
-			
-			// Render line from marker to neighbour
-			for(ScentMarker neighbour : neighbours)
+			for(Connection ping : marker.getConnections())
 			{
-				Vector3d end = neighbour.position();
-				if(end.distanceTo(playerPos) > scent.range())
-				{
-					Vector3d offs = end.subtract(markerPos).normalize();
-					double dist = scent.range() - markerPos.distanceTo(playerPos);
-					end = markerPos.add(offs.mul(dist, dist, dist));
-				}
+				Vector3d end = ping.position();
 				
-				float endAlpha = neighbour.alpha() * (1F - (float)(neighbour.position().distanceTo(playerPos) / scent.range())) * 0.75F;
-				drawScent(matrixStack, markerPos, end, player.getEyePosition(event.getPartialTicks()), startAlpha, endAlpha);
+				double dist = MathHelper.clamp(end.distanceTo(markerPos), 0.5D, 2.5D);
+				end = markerPos.add(end.subtract(markerPos).normalize().mul(dist, dist, dist));
+				
+				drawScent(matrixStack, markerPos, end, eyePos, startAlpha, ping.alpha() * alphaByDist);
 			}
 		});
 	}
 	
 	private static void drawScent(MatrixStack matrixStack, Vector3d start, Vector3d end, Vector3d eyePos, float startAlpha, float endAlpha)
 	{
+        double stepDist = 0.3D;
+        Vector3d offset = end.subtract(start).normalize();
+        
+        double dist = end.distanceTo(start);
+        float alphaDelta = endAlpha - startAlpha;
+        
+        double wiggleVol = 0.3D;
+        Random rand = new Random((long)(start.x * start.x + end.z * end.z));
+        
+        Vector3d posA = start;
+        Vector3d posB = posA.add(offset.mul(stepDist, stepDist, stepDist));//.add(makeWiggleVec(offset, rand, wiggleVol));
+        double time = (rand.nextDouble() * 1000D) + System.currentTimeMillis() * 0.005D;
+        while(posB.distanceTo(end) > 0)
+        {
+        	double heightA = 0.25D * (posA.distanceTo(end) / start.distanceTo(end));
+        	double heightB = 0.25D * (posB.distanceTo(end) / start.distanceTo(end));
+        	drawLine(matrixStack, posA, posB, eyePos, startAlpha + (alphaDelta * (float)(posA.distanceTo(start) / dist)), startAlpha + (alphaDelta * (float)(posB.distanceTo(start) / dist)), heightA, heightB);
+        	
+        	posA = posB;
+        	
+        	double maxDist = Math.min(stepDist, posB.distanceTo(end));
+        	offset = end.subtract(posB).normalize();
+        	posB = posB.add(offset.mul(maxDist, maxDist, maxDist));
+        	
+        	if(posB.distanceTo(end) > 0)
+        		posB = posB.add(makeWiggleVec(end.subtract(posB).normalize(), rand, wiggleVol)).add(0D, Math.sin(time + posB.distanceTo(end)) * 0.01D, 0D);
+        }
+	}
+	
+	private static Vector3d makeWiggleVec(Vector3d direction, Random rand, double wiggleVol)
+	{
+		return new Vector3d((rand.nextDouble() - 0.5D) * wiggleVol, (rand.nextDouble() - 0.5D) * wiggleVol, (rand.nextDouble() - 0.5D) * wiggleVol);
+	}
+	
+	private static void drawLine(MatrixStack matrixStack, Vector3d posA, Vector3d posB, Vector3d eyePos, float startAlpha, float endAlpha, double heightA, double heightB)
+	{
 		Minecraft mc = Minecraft.getInstance();
         IRenderTypeBuffer.Impl buffers = mc.getRenderTypeBuffers().getBufferSource();
-        IVertexBuilder buffer = buffers.getBuffer(RenderType.LINES);
+        IVertexBuilder buffer = buffers.getBuffer(RenderType.getLightning());
         
+        // TODO Rotate vertical vector to improve visual clarity at most pitch angles
+//		Vector3d heightA = eyePos.subtract(posA).normalize().rotatePitch((float)Math.toRadians(90D)).mul(height, height, height);
+//		Vector3d heightB = eyePos.subtract(posB).normalize().rotatePitch((float)Math.toRadians(90D)).mul(height, height, height);
+		
+		Vector3d heightVecA = new Vector3d(0, heightA, 0);
+		Vector3d heightVecB = new Vector3d(0, heightB, 0);
         matrixStack.push();
-	    	Vector3d sta = start.subtract(eyePos);
-	    	end = end.subtract(eyePos);
+        	posA = posA.subtract(eyePos);
+	    	posB = posB.subtract(eyePos);
+	    	
 	    	RenderSystem.lineWidth(2F);
 	    		Matrix4f matrix = matrixStack.getLast().getMatrix();
-	    		buffer.pos(matrix, (float)sta.x,	(float)(sta.y + 0.0D),	(float)sta.z).color(1F, 1F, 1F, startAlpha).endVertex();
-	    		buffer.pos(matrix, (float)end.x,	(float)(end.y + 0.0D),	(float)end.z).color(1F, 1F, 1F, endAlpha).endVertex();
+	    		buffer.pos(matrix, (float)(posA.x - heightVecA.x),	(float)(posA.y - heightVecA.y),	(float)(posA.z - heightVecA.z)).color(1F, 1F, 1F, startAlpha).endVertex();
+	    		buffer.pos(matrix, (float)(posA.x + heightVecA.x),	(float)(posA.y + heightVecA.y),	(float)(posA.z + heightVecA.z)).color(1F, 1F, 1F, startAlpha).endVertex();
+	    		buffer.pos(matrix, (float)(posB.x + heightVecB.x),	(float)(posB.y + heightVecB.y),	(float)(posB.z + heightVecB.z)).color(1F, 1F, 1F, endAlpha).endVertex();
+	    		buffer.pos(matrix, (float)(posB.x - heightVecB.x),	(float)(posB.y - heightVecB.y),	(float)(posB.z - heightVecB.z)).color(1F, 1F, 1F, endAlpha).endVertex();
 	    	RenderSystem.lineWidth(1F);
     	matrixStack.pop();
 	}

@@ -62,7 +62,9 @@ public class PlayerEntityMixin extends LivingEntityMixin
 			}
 		}
 	}
+	
 	private int scentTimer = -1;
+	private Vector3d prevScentPos = null;
 	
 	@Inject(method = "livingTick()V", at = @At("HEAD"), cancellable = true)
 	public void livingTick(final CallbackInfo ci)
@@ -76,16 +78,23 @@ public class PlayerEntityMixin extends LivingEntityMixin
 			resetScentTimer(rand);
 		else if(--scentTimer == 0)
 		{
-			ScentsManager manager = ScentsManager.get(world);
-			
-			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(player);
-			types.removeIf(EnumCreatureType.IS_SUBTYPE);
-			if(types.isEmpty()) return;
-			
-			EnumCreatureType supertype = types.get(0);
 			Vector3d pos = player.getPositionVec();
-			manager.addScentMarker(pos, supertype);
-			resetScentTimer(rand);
+			if(prevScentPos == null)
+				prevScentPos = pos;
+			else
+			{
+				ScentsManager manager = ScentsManager.get(world);
+				
+				List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(player);
+				types.removeIf(EnumCreatureType.IS_SUBTYPE);
+				if(types.isEmpty()) return;
+				
+				EnumCreatureType supertype = types.get(0);
+				manager.addScentMarker(pos, prevScentPos, supertype);
+				resetScentTimer(rand);
+				
+				prevScentPos = pos;
+			}
 		}
 	}
 	

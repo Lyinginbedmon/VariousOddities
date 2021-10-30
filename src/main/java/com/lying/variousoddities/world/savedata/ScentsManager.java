@@ -5,18 +5,14 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.mixin.ServerWorldMixin;
 import com.lying.variousoddities.network.PacketAddScent;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncScents;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -25,7 +21,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -50,8 +45,8 @@ public class ScentsManager extends WorldSavedData
 			{
 				public int compare(ScentMarker o1, ScentMarker o2)
 				{
-					int dur1 = o1.duration;
-					int dur2 = o2.duration;
+					int dur1 = o1.duration();
+					int dur2 = o2.duration();
 					return dur1 > dur2 ? 1 : dur1 < dur2 ? -1 : 0;
 				}
 			};
@@ -65,13 +60,6 @@ public class ScentsManager extends WorldSavedData
 					double dist1 = o1.world.getClosestPlayer(pos1.x, pos1.y, pos1.z, -1D, EntityPredicates.NOT_SPECTATING).getDistanceSq(pos1);
 					double dist2 = o1.world.getClosestPlayer(pos2.x, pos2.y, pos2.z, -1D, EntityPredicates.NOT_SPECTATING).getDistanceSq(pos2);
 					return dist1 < dist2 ? 1 : dist1 > dist2 ? -1 : MARKER_SORT_DURA.compare(o1, o2);
-				}
-			};
-	private static final Predicate<LivingEntity> IS_PERSISTENT_MOB = new Predicate<LivingEntity>()
-			{
-				public boolean apply(LivingEntity input)
-				{
-					return input instanceof MobEntity && ((MobEntity)input).isNoDespawnRequired();
 				}
 			};
 	
@@ -122,9 +110,9 @@ public class ScentsManager extends WorldSavedData
 	
 	public List<ScentMarker> getScents(){ return this.scents; }
 	
-	public void addScentMarker(Vector3d position, EnumCreatureType type)
+	public void addScentMarker(Vector3d position, Vector3d connection, EnumCreatureType type)
 	{
-		addScentMarker(new ScentMarker(this.world, position, type));
+		addScentMarker(new ScentMarker(this.world, position, type).addConnection(connection));
 	}
 	
 	public void addScentMarker(ScentMarker newMarker)
@@ -140,32 +128,6 @@ public class ScentsManager extends WorldSavedData
 		
 		if(!world.isRemote)
 			PacketHandler.sendToAll((ServerWorld)world, new PacketAddScent(newMarker));
-	}
-	
-	/**
-	 * Returns a list of all entities that should leave a scent<br>
-	 * 	* All players<br>
-	 *  * All persistent mobs<br>
-	 *  * All non-persistent mobs within 64 blocks of a player<br>
-	 */
-	public List<LivingEntity> getTrackedEntities()
-	{
-		List<LivingEntity> trackedMobs = Lists.newArrayList();
-		
-		trackedMobs.addAll(world.getPlayers());
-		
-		world.getPlayers().forEach((player) -> 
-			{
-				List<MobEntity> mobs = world.getEntitiesWithinAABB(MobEntity.class, player.getBoundingBox().grow(64D), EntityPredicates.IS_ALIVE);
-				mobs.removeAll(trackedMobs);
-				trackedMobs.addAll(mobs);
-			});
-		
-		List<LivingEntity> persistentMobs = ((ServerWorldMixin)world).getLoadedCreatures(IS_PERSISTENT_MOB);
-		persistentMobs.removeAll(trackedMobs);
-		trackedMobs.addAll(persistentMobs);
-		
-		return trackedMobs;
 	}
 	
 	public CompoundNBT write(CompoundNBT compound)
@@ -210,17 +172,6 @@ public class ScentsManager extends WorldSavedData
 		};
 		
 		return nearest;
-	}
-	
-	public List<ScentMarker> getNeighboursWithin(ScentMarker marker, double maxDist)
-	{
-		List<ScentMarker> neighbours = Lists.newArrayList();
-		for(ScentMarker scent : scents)
-			if(!scent.isDead())
-				if(scent.type == marker.type && scent.position != marker.position && scent.position.isWithinDistanceOf(marker.position, maxDist))
-					neighbours.add(scent);
-		
-		return neighbours;
 	}
 	
 	/** Returns a list of all scents of the given type in this world */
@@ -298,11 +249,12 @@ public class ScentsManager extends WorldSavedData
 	
 	public static class ScentMarker
 	{
-		public static final int DEFAULT_DURATION = Reference.Values.TICKS_PER_MINUTE * 10;
+		public static final int DEFAULT_DURATION = Reference.Values.TICKS_PER_MINUTE;
 		
-		private int duration = DEFAULT_DURATION;
 		private final Vector3d position;
 		private final EnumCreatureType type;
+		
+		private List<Connection> connections = Lists.newArrayList();
 		
 		private final World world;
 		
@@ -315,25 +267,41 @@ public class ScentsManager extends WorldSavedData
 		public ScentMarker(World worldIn, Vector3d positionIn, EnumCreatureType typeIn, int bonusTime)
 		{
 			this(worldIn, positionIn, typeIn);
-			this.duration += bonusTime;
 		}
 		public ScentMarker(World worldIn, CompoundNBT compound)
 		{
 			this(worldIn, new Vector3d(compound.getDouble("X"), compound.getDouble("Y"), compound.getDouble("Z")), EnumCreatureType.fromName(compound.getString("Type")));
-			this.duration = compound.getInt("Duration");
+			
+			if(compound.contains("Pings", 9))
+			{
+				ListNBT pingList = compound.getList("Pings", 10);
+				for(int i=0; i<pingList.size(); i++)
+					addConnection(new Connection(pingList.getCompound(i)));
+			}
 		}
 		
 		public CompoundNBT writeToNBT(CompoundNBT compound)
 		{
-			compound.putInt("Duration", duration);
 			compound.putDouble("X", position.x);
 			compound.putDouble("Y", position.y);
 			compound.putDouble("Z", position.z);
 			compound.putString("Type", type.getString());
+			
+			if(!isDead())
+			{
+				ListNBT pingList = new ListNBT();
+				for(Connection connection : getConnections())
+					pingList.add(connection.writeToNBT(new CompoundNBT()));
+				compound.put("Pings", pingList);
+			}
+			
 			return compound;
 		}
 		
-		public float alpha(){ return (float)(Math.min(duration, DEFAULT_DURATION)) / (float)DEFAULT_DURATION; }
+		public float alpha()
+		{
+			return Math.min(1F, (float)duration() / (float)DEFAULT_DURATION);
+		}
 		
 		public void decay(World worldIn)
 		{
@@ -344,30 +312,98 @@ public class ScentsManager extends WorldSavedData
 			else if(worldIn.getFluidState(pos).isTagged(FluidTags.WATER))
 				decay = 4;
 			
-			decay = MathHelper.clamp(decay, 0, this.duration);
-			this.duration -= decay;
+			for(Connection connection : getConnections())
+				connection.decay(decay);
+			this.connections.removeIf((connection) -> { return connection.isDead(); });
 		}
 		
-		public void kill(){ this.duration = 0; }
+		public void kill(){ this.connections.clear(); }
 		
-		public boolean isDead(){ return this.duration <= 0; }
+		public boolean isDead(){ return this.connections.isEmpty(); }
 		
 		public Vector3d position(){ return this.position; }
-		public int duration(){ return this.duration; }
+		
+		public List<Connection> getConnections(){ return this.connections; }
+		public ScentMarker addConnection(Vector3d connection)
+		{
+			addConnection(connection, DEFAULT_DURATION);
+			return this;
+		}
+		public void addConnection(Vector3d connection, int duration)
+		{
+			addConnection(new Connection(connection, duration));
+		}
+		private void addConnection(Connection connectionIn)
+		{
+			this.connections.add(connectionIn);
+		}
+		
+		public int duration()
+		{
+			if(isDead()) return 0;
+			
+			int duration = 0;
+			for(Connection connection : getConnections())
+				duration += connection.duration;
+			return duration;
+		}
+		
 		public EnumCreatureType type(){ return this.type; }
 		
 		/** Combines two given scent markers into one stronger marker of the same scent */
 		public static ScentMarker merge(ScentMarker markerA, ScentMarker markerB)
 		{
 			if(markerB.type != markerA.type) return null;
-			double posX = (markerA.position.x + markerB.position.x) * 0.5D;
-			double posY = (markerA.position.y + markerB.position.y) * 0.5D;
-			double posZ = (markerA.position.z + markerB.position.z) * 0.5D;
+			
+			double sumDuration = markerA.duration() + markerB.duration();
+			double strengthA = markerA.duration() / sumDuration;
+			double strengthB = markerB.duration() / sumDuration;
+			double posX = (markerA.position.x * strengthA) + (markerB.position.x * strengthB);
+			double posY = (markerA.position.y * strengthA) + (markerB.position.y * strengthB);
+			double posZ = (markerA.position.z * strengthA) + (markerB.position.z * strengthB);
+			
+			ScentMarker markerC = new ScentMarker(markerA.world, new Vector3d(posX, posY, posZ), markerA.type);
+			for(Connection connection : markerA.getConnections())
+				markerC.addConnection(connection);
+			for(Connection connection : markerB.getConnections())
+				markerC.addConnection(connection);
 			
 			markerA.kill();
 			markerB.kill();
 			
-			return new ScentMarker(markerA.world, new Vector3d(posX, posY, posZ), markerA.type, DEFAULT_DURATION);
+			return markerC;
+		}
+		
+		public static class Connection
+		{
+			private final Vector3d position;
+			private int duration;
+			
+			public Connection(Vector3d posIn, int durIn)
+			{
+				this.position = posIn;
+				this.duration = durIn;
+			}
+			public Connection(CompoundNBT compound)
+			{
+				this.position = new Vector3d(compound.getDouble("X"), compound.getDouble("Y"), compound.getDouble("Z"));
+				this.duration = compound.getInt("Duration");
+			}
+			
+			public void decay(int i){ this.duration -= i; }
+			public boolean isDead(){ return this.duration <= 0; }
+			
+			public Vector3d position(){ return this.position; }
+			public float alpha(){ return (float)this.duration / (float)ScentMarker.DEFAULT_DURATION; }
+			
+			public CompoundNBT writeToNBT(CompoundNBT compound)
+			{
+				compound.putInt("Duration", duration);
+				compound.putDouble("X", position.x);
+				compound.putDouble("Y", position.y);
+				compound.putDouble("Z", position.z);
+				return compound;
+			}
 		}
 	}
 }
