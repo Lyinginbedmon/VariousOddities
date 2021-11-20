@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.api.entity.IDefaultSpecies;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.config.ConfigVO;
@@ -26,6 +27,7 @@ import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.Template;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
@@ -429,11 +431,19 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void tick(LivingEntity entity)
 	{
+		IDefaultSpecies mobDefaults = entity instanceof IDefaultSpecies ? (IDefaultSpecies)entity : null;
+		
 		World world = entity.getEntityWorld();
 		if(!this.initialised && (!(entity.getType() == EntityType.PLAYER) || entity.getType() == EntityType.PLAYER && ((PlayerEntity)entity).getGameProfile() != null))
 		{
 			// TODO Check default home dimension registry for creature before setting to current dim
-			setHomeDimension(world.getDimensionKey().getLocation());
+			if(mobDefaults != null)
+			{
+				if(((IDefaultSpecies)entity).defaultHomeDimension() != null)
+					setHomeDimension(((IDefaultSpecies)entity).defaultHomeDimension());
+			}
+			else
+				setHomeDimension(world.getDimensionKey().getLocation());
 			
 			if(entity.getType() == EntityType.PLAYER)
 			{
@@ -446,7 +456,32 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				}
 			}
 			else
+			{
+				if(mobDefaults != null)
+				{
+					if(mobDefaults.defaultSpecies() != null)
+					{
+						Species defaultSpecies = SpeciesRegistry.getSpecies(mobDefaults.defaultSpecies());
+						if(defaultSpecies != null)
+							setSpecies(defaultSpecies);
+					}
+					
+					if(!mobDefaults.defaultTemplates().isEmpty())
+						mobDefaults.defaultTemplates().forEach((temp) -> 
+						{
+							Template template = VORegistries.TEMPLATES.getOrDefault(temp, null);
+							if(template != null)
+								addTemplate(template);
+						});
+					
+					if(!mobDefaults.defaultCreatureTypes().isEmpty())
+						mobDefaults.defaultCreatureTypes().forEach((type) -> { addCustomType(type); } );
+					
+					if(!mobDefaults.defaultAbilities().isEmpty())
+						mobDefaults.defaultAbilities().forEach((ability) -> { this.abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundNBT()))); });
+				}
 				setSelectedSpecies(true);
+			}
 			
 			this.initialised = true;
 			markDirty();

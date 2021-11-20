@@ -1,6 +1,7 @@
 package com.lying.variousoddities.command;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Set;
 
 import com.lying.variousoddities.capabilities.LivingData;
@@ -12,6 +13,8 @@ import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -111,13 +114,13 @@ public class CommandSpecies extends CommandBase
 		if(species == null)
 			throw SPECIES_INVALID_EXCEPTION.create(speciesName);
 		
-		source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", species.getRegistryName().toString()), true);
+		source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", species.getDisplayName()), true);
 		if(species.hasTypes())
 			source.sendFeedback(new Types(species.getCreatureTypes()).toHeader(), false);
-		if(!species.getAbilities().isEmpty())
+		if(!species.getFullAbilities().isEmpty())
 		{
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_abilities"), false);
-			for(Ability ability : species.getAbilities())
+			for(Ability ability : species.getFullAbilities())
 				source.sendFeedback(new StringTextComponent(" -").append(ability.getDisplayName()), false);
 		}
 		return 15;
@@ -208,7 +211,9 @@ public class CommandSpecies extends CommandBase
 					.then(newLiteral("clear").then(newArgument(ENTITY, EntityArgument.entity())
 						.executes((source) -> { return clearTemplates(EntityArgument.getEntity(source, ENTITY), source.getSource()); })))
 					.then(newLiteral("get").then(newArgument(ENTITY, EntityArgument.entity()).then(newLiteral("has").then(newArgument(NAME, ResourceLocationArgument.resourceLocation()).suggests(TEMPLATE_SUGGESTIONS)
-							.executes((source) -> { return getTemplate(ResourceLocationArgument.getResourceLocation(source, NAME), EntityArgument.getEntity(source, ENTITY), source.getSource()); })))));
+							.executes((source) -> { return getTemplate(ResourceLocationArgument.getResourceLocation(source, NAME), EntityArgument.getEntity(source, ENTITY), source.getSource()); })))))
+					.then(newLiteral("test").then(newArgument(ENTITY, EntityArgument.entity()).then(newArgument(NAME, ResourceLocationArgument.resourceLocation())
+							.executes((source) -> { return testTemplate(EntityArgument.getEntity(source, ENTITY), ResourceLocationArgument.getResourceLocation(source, NAME)); }))));
 		}
 		
 		public static ITextComponent getTemplateWithInfo(ResourceLocation template)
@@ -255,13 +260,31 @@ public class CommandSpecies extends CommandBase
 				throw INVALID_ENTITY_EXCEPTION.create();
 		}
 		
+		private static int testTemplate(Entity entity, ResourceLocation templateName) throws CommandSyntaxException
+		{
+			if(entity instanceof LivingEntity)
+			{
+				LivingEntity living = (LivingEntity)entity;
+				
+				Template template = VORegistries.TEMPLATES.get(templateName);
+				if(template == null)
+					throw TEMPLATE_INVALID_EXCEPTION.create(templateName);
+				else if(template.isApplicableTo(living, EnumSet.copyOf(EnumCreatureType.getCreatureTypes(living)), AbilityRegistry.getCreatureAbilities(living)))
+					return 15;
+				else
+					throw INVALID_ENTITY_EXCEPTION.create();
+			}
+			else
+				throw INVALID_ENTITY_EXCEPTION.create();
+		}
+		
 		private static int detailTemplate(ResourceLocation templateName, CommandSource source) throws CommandSyntaxException
 		{
 			Template template = VORegistries.TEMPLATES.get(templateName);
 			if(template == null)
 				throw TEMPLATE_INVALID_EXCEPTION.create(templateName);
 			
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", template.getRegistryName().toString()), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_name", template.getDisplayName()), true);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_uuid", template.uuid().toString()), false);
 			source.sendFeedback(new TranslationTextComponent(translationSlug+"info_preconditions", template.getPreconditions().size()), false);
 			template.getPreconditions().forEach((precondition) -> { source.sendFeedback(new StringTextComponent(" -").append(precondition.translate()), false); });

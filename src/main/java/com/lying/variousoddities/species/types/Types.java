@@ -36,6 +36,8 @@ public class Types
 		return attributes;
 	}
 	
+	public EnumSet<EnumCreatureType> asSet(){ return EnumSet.copyOf(types); }
+	
 	public EnumSet<EnumCreatureType> supertypes()
 	{
 		EnumSet<EnumCreatureType> supertypes = EnumSet.noneOf(EnumCreatureType.class);

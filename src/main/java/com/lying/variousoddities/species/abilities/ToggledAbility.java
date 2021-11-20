@@ -17,6 +17,11 @@ public abstract class ToggledAbility extends ActivatedAbility
 		super(registryName, cooldownIn);
 	}
 	
+	protected ToggledAbility(ResourceLocation registryName)
+	{
+		this(registryName, Reference.Values.TICKS_PER_SECOND);
+	}
+	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
 		super.writeToNBT(compound);

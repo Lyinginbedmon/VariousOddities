@@ -1,6 +1,6 @@
 {
-  "CanPlayerSelect": true,
   "Power": 1,
+  "CustomName": "{\"translate\":\"species.varodd.lizardfolk\"}",
   "Types": [
     "humanoid",
     "reptile"

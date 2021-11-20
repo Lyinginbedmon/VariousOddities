@@ -1,12 +1,12 @@
 {
-  "CanPlayerSelect": true,
   "Power": 1,
+  "CustomName": "{\"translate\":\"species.varodd.tiefling\"}",
   "Types": [
     "outsider",
     "native"
   ],
   "Abilities": [
-    "{Name:\"varodd:darkvision\"}",
+    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"}",
     "{Tag:{Type:\"cold\",Amount:2},Name:\"varodd:resistance\"}",
     "{Tag:{Type:\"fire\",Amount:2},Name:\"varodd:resistance\"}",
     "{Tag:{Type:\"lightning\",Amount:2},Name:\"varodd:resistance\"}"

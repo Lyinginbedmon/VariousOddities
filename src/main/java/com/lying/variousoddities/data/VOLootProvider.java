@@ -62,34 +62,34 @@ public class VOLootProvider extends LootTableProvider
     
     private void addEntityLootTables()
     {
-    	addEntityLootTable("entities/"+VOLootTables.KOBOLD.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.KOBOLD.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()
     					.name("main")
     					.rolls(ConstantRange.of(1))
     					.addEntry(itemEntry(VOItems.SCALE_KOBOLD, 1).acceptFunction(SetCount.builder(RandomValueRange.of(0.0F, 3.0F))))));
-    	addEntityLootTable("entities/"+VOLootTables.GOBLIN.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.GOBLIN.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.RAT.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.RAT.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.GIANT_RAT.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.GIANT_RAT.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.CRAB.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.CRAB.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.GIANT_CRAB.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.GIANT_CRAB.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.SCORPION.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.SCORPION.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.GIANT_SCORPION.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.GIANT_SCORPION.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.GHASTLING.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.GHASTLING.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()
     					.name("main")
     					.rolls(ConstantRange.of(3))
     					.addEntry(itemEntry(Items.GUNPOWDER, 5))
     					.addEntry(itemEntry(Items.GHAST_TEAR, 1))));
-    	addEntityLootTable("entities/"+VOLootTables.WORG.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.WORG.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
-    	addEntityLootTable("entities/"+VOLootTables.WARG.getPath(), LootTable.builder().addLootPool(
+    	addEntityLootTable(VOLootTables.WARG.getPath(), LootTable.builder().addLootPool(
     			LootPool.builder()));
     }
     

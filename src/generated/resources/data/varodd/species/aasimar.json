@@ -1,12 +1,12 @@
 {
-  "CanPlayerSelect": true,
   "Power": 1,
+  "CustomName": "{\"translate\":\"species.varodd.aasimar\"}",
   "Types": [
     "outsider",
     "native"
   ],
   "Abilities": [
-    "{Name:\"varodd:darkvision\"}",
+    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"}",
     "{Tag:{Type:\"acid\",Amount:2},Name:\"varodd:resistance\"}",
     "{Tag:{Type:\"cold\",Amount:2},Name:\"varodd:resistance\"}",
     "{Tag:{Type:\"lightning\",Amount:2},Name:\"varodd:resistance\"}"

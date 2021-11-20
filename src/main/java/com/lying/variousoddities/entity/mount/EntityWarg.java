@@ -141,8 +141,6 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 				stackData.putByte("Slot", (byte)i);
 				stack.write(stackData);
 				inventory.add(stackData);
-				
-				System.out.println("Saved "+stack.getDisplayName().getString()+" in slot "+i);
 			}
 		}
 		compound.put("Inventory", inventory);
@@ -163,10 +161,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 			CompoundNBT stackData = inventory.getCompound(i);
 			int slot = stackData.getByte("Slot") & 255;
 			if(slot >= 0 && slot < this.wargChest.getSizeInventory())
-			{
 				this.wargChest.setInventorySlotContents(slot, ItemStack.read(stackData));
-				System.out.println("Loaded "+ItemStack.read(stackData).getDisplayName().getString()+" in slot "+slot);
-			}
 		}
     }
     
@@ -174,15 +169,9 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public boolean hasChest(){ return getDataManager().get(CHEST).booleanValue(); }
 	
-	public void setChested(boolean bool)
-	{
-		boolean chested = hasChest();
-		getDataManager().set(CHEST, bool);
-		if(bool != chested)
-			initWargChest();
-	}
+	public void setChested(boolean bool){ getDataManager().set(CHEST, bool); }
 	
-	public int getSizeInventory(){ return 3 + (hasChest() ? inventoryColumns() * 3 : 0); }
+	public int getSizeInventory(){ return 3 + inventoryColumns() * 3; }
 	
 	public int inventoryColumns(){ return 5; }
 	

@@ -12,6 +12,7 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesSelected;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
+import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.Ability.Type;
 import com.lying.variousoddities.species.abilities.AbilityModifier;
@@ -37,7 +38,7 @@ import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class ScreenSpeciesSelect extends Screen
+public class ScreenSelectSpecies extends Screen
 {
 	public static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/species_select.png");
 	public static final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
@@ -58,22 +59,59 @@ public class ScreenSpeciesSelect extends Screen
 	
 	private final PlayerEntity player;
 	
-	private List<Species> selectables = Lists.newArrayList();
+	private List<Species> selectableSpecies = Lists.newArrayList();
+	private List<Template> selectableTemplates = Lists.newArrayList();
 	private int index = 0;
 	
 	private Button typesButton;
 	private Button selectButton;
 	private boolean keepTypes = false;
 	
-	public ScreenSpeciesSelect(PlayerEntity playerIn)
+	// TODO Replace arbitrary power value with server variable
+	private int targetPower = 6;
+	
+	public ScreenSelectSpecies(PlayerEntity playerIn)
 	{
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
+		initSpecies();
+		initTemplates();
+	}
+	
+	private void initSpecies()
+	{
+		if(player.isCreative())
+			selectableSpecies.addAll(VORegistries.SPECIES.values());
+		else
+			VORegistries.SPECIES.values().forEach((species) -> { if(species.getPower() <= targetPower) selectableSpecies.add(species); });
 		
-		VORegistries.SPECIES.values().forEach((species) -> { if(species.isPlayerSelectable() || player.isCreative()) selectables.add(species); });
-		selectables.sort(new Comparator<Species>()
+		selectableSpecies.sort(new Comparator<Species>()
 			{
 				public int compare(Species o1, Species o2)
+				{
+					String name1 = o1.getDisplayName().getString();
+					String name2 = o2.getDisplayName().getString();
+					
+					List<String> names = Arrays.asList(name1, name2);
+					Collections.sort(names);
+					
+					int index1 = names.indexOf(name1);
+					int index2 = names.indexOf(name2);
+					return (index1 > index2 ? 1 : index1 < index2 ? -1 : 0);
+				}
+			});
+	}
+	
+	private void initTemplates()
+	{
+		if(player.isCreative())
+			selectableTemplates.addAll(VORegistries.TEMPLATES.values());
+		else
+			VORegistries.TEMPLATES.values().forEach((species) -> { if(species.getPower() <= targetPower) selectableTemplates.add(species); });
+		
+		selectableTemplates.sort(new Comparator<Template>()
+			{
+				public int compare(Template o1, Template o2)
 				{
 					String name1 = o1.getDisplayName().getString();
 					String name2 = o2.getDisplayName().getString();
@@ -98,8 +136,8 @@ public class ScreenSpeciesSelect extends Screen
 		LivingData data = LivingData.forEntity(player);
 		typesButton.visible = typesButton.active = data.hasCustomTypes();
 		
-		selectButton.visible = selectButton.active = !selectables.isEmpty();
-		if(selectables.isEmpty())
+		selectButton.visible = selectButton.active = !selectableSpecies.isEmpty();
+		if(selectableSpecies.isEmpty())
 		{
 			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID()));
 			Minecraft.getInstance().displayGuiScreen(null);
@@ -114,7 +152,7 @@ public class ScreenSpeciesSelect extends Screen
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
 		yPos += 15;
 		
-		if(selectables.isEmpty())
+		if(selectableSpecies.isEmpty())
 			return;
 		
 		// Draw species display name
@@ -139,7 +177,7 @@ public class ScreenSpeciesSelect extends Screen
 		yPos += this.font.FONT_HEIGHT + 3;
 		
 		double armour = 0;
-		List<Ability> abilities = currentSpecies.getAbilities();
+		List<Ability> abilities = currentSpecies.getFullAbilities();
 		if(!abilities.isEmpty())
 			for(Ability ability : abilities) 
 			{
@@ -203,14 +241,14 @@ public class ScreenSpeciesSelect extends Screen
         
     	this.addButton(new Button(midX + 100, 120, 20, 20, new StringTextComponent(">"), (button) -> 
     		{
-    			index = ++index % selectables.size();
+    			index = ++index % selectableSpecies.size();
     		}));
     	
     	this.addButton(new Button(midX - 120, 120, 20, 20, new StringTextComponent("<"), (button) -> 
     		{
     			index--;
     			if(index < 0)
-    				index = selectables.size() - 1;
+    				index = selectableSpecies.size() - 1;
     		}));
     	
     	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new StringTextComponent("Select"), (button) -> 
@@ -235,7 +273,7 @@ public class ScreenSpeciesSelect extends Screen
     
     public Species getCurrentSpecies()
     {
-		return selectables.get(index);
+		return selectableSpecies.get(index);
     }
     
     public void drawHealthAndArmour(MatrixStack matrix, int yPos, int health, int armour)

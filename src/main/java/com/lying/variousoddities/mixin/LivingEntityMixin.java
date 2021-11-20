@@ -14,6 +14,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
+import com.lying.variousoddities.species.abilities.AbilityDarkvision;
 import com.lying.variousoddities.species.abilities.AbilityHurtByEnv;
 import com.lying.variousoddities.species.abilities.AbilityHurtByEnv.EnvType;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
@@ -30,6 +31,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 
@@ -101,15 +103,27 @@ public class LivingEntityMixin extends EntityMixin
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		if(!activePotionsMap.containsKey(potionIn))
+		{
+			if(potionIn == Effects.NIGHT_VISION && AbilityDarkvision.isDarkvisionActive(entity))
+					ci.setReturnValue(true);
+			
 			for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
 				if(statusEffect.getEffect().getPotion() == potionIn)
 					ci.setReturnValue(true);
+		}
 	}
 	
 	@Inject(method = "getActivePotionEffect", at = @At("HEAD"), cancellable = true)
 	public void getActivePotion(Effect potionIn, final CallbackInfoReturnable<EffectInstance> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
+		if(potionIn == Effects.NIGHT_VISION && AbilityDarkvision.isDarkvisionActive(entity))
+		{
+			EffectInstance effect = AbilityDarkvision.getEffect();
+			if(!activePotionsMap.containsKey(potionIn) || effect.getAmplifier() > activePotionsMap.get(potionIn).getAmplifier())
+				ci.setReturnValue(effect);
+		}
+		
 		for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
 		{
 			EffectInstance effect = statusEffect.getEffect();

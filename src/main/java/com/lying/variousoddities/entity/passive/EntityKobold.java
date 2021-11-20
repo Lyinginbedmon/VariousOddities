@@ -4,6 +4,7 @@ import java.util.Random;
 
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.api.entity.IDefaultSpecies;
 import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.entity.EntityOddityAgeable;
@@ -14,6 +15,7 @@ import com.lying.variousoddities.entity.ai.group.EntityGroup;
 import com.lying.variousoddities.entity.ai.group.EntityGroupKobold;
 import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.init.VOSoundEvents;
+import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.entity.AgeableEntity;
@@ -21,7 +23,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
@@ -36,13 +37,14 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
-public class EntityKobold extends EntityOddityAgeable implements IFactionMob, ISettlementEntity
+public class EntityKobold extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
     public static final DataParameter<Byte>		HORNS		= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
     public static final DataParameter<Byte>		SNOUT		= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
@@ -97,10 +99,10 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
     {
-        return EntityOddity.getAttributes()
-        		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 3)
-        		.createMutableAttribute(Attributes.ARMOR, 3.0D);
+        return EntityOddity.getAttributes();
     }
+    
+    public ResourceLocation defaultSpecies(){ return SpeciesRegistry.SPECIES_KOBOLD; }
     
     public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
     {

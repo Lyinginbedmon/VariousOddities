@@ -100,6 +100,7 @@ public abstract class Ability
 		return new TranslationTextComponent("ability."+getMapName());
 	}
 	
+	/** Writes all data needed to reinstantiate this ability to NBT */
 	public final CompoundNBT writeAtomically(CompoundNBT compound)
 	{
 		compound.putString("Name", getRegistryName().toString());
@@ -118,6 +119,7 @@ public abstract class Ability
 		return compound;
 	}
 	
+	/** Writes instance-specific data for this ability to NBT */
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
 		return compound;

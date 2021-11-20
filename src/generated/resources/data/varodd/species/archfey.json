@@ -1,6 +1,6 @@
 {
-  "CanPlayerSelect": false,
   "Power": 10,
+  "CustomName": "{\"translate\":\"species.varodd.archfey\"}",
   "Types": [
     "fey",
     "holy"

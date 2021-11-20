@@ -11,6 +11,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
+import com.lying.variousoddities.client.renderer.RenderUtils;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.network.PacketBonusJump;
@@ -64,7 +65,6 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.world.World;
@@ -445,44 +445,80 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onRenderScents(RenderWorldLastEvent event)
 	{
-		World world = Minecraft.getInstance().world;
+		Minecraft mc = Minecraft.getInstance();
+		World world = mc.world;
 		if(world == null) return;
 		
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player == null) return;
-		Vector3d eyePos = player.getEyePosition(event.getPartialTicks());
 		
 		AbilityScent scent = (AbilityScent)AbilityRegistry.getAbilityByName(player, AbilityScent.REGISTRY_NAME);
 		if(scent == null || !scent.isActive()) return;
 		
 		// Render marker network
+		float partialTicks = event.getPartialTicks();
 		ScentsManager manager = ScentsManager.get(world);
 		List<ScentMarker> scents = Lists.newArrayList();
-		manager.getScents().forEach((marker) -> { if(scent.isInRange(marker.position(), player)) scents.add(marker); });
+		manager.getAllScents().forEach((marker) -> { if(scent.isInRange(marker.getPosition(partialTicks), player)) scents.add(marker); });
 		
+		Vector3d camPos = mc.getRenderManager().info.getProjectedView();
         MatrixStack matrixStack = event.getMatrixStack();
 		scents.forEach((marker) -> 
 		{
 			if(marker.isDead()) return;
-			Vector3d markerPos = marker.position();
 			
-			float alphaByDist = (1F - (float)(markerPos.distanceTo(eyePos) / scent.range())) * 0.75F;
+			Vector3d origin = marker.origin();
+			Random rand = new Random((long)(origin.x * origin.x + origin.z * origin.z));
+			
+			int color = marker.color();
+			Vector3d markerPos = marker.getPosition(partialTicks);
+			float duration = marker.duration() - partialTicks;
+			
+			float red = (float)((color & 16711680) >> 16) / 255F;
+			float green = (float)((color & '\uff00') >> 8) / 255F;
+			float blue = (float)((color & 255) >> 0) / 255F;
+			
+			float alphaByDist = MathHelper.clamp((1F - (float)(markerPos.distanceTo(camPos) / scent.range())) * 0.75F, 0F, 1F);
 			float startAlpha = marker.alpha() * alphaByDist;
+			drawMarker(matrixStack, markerPos, camPos, duration, red, green, blue, startAlpha, rand);
 			
 			for(Connection ping : marker.getConnections())
 			{
 				Vector3d end = ping.position();
+				double dist = end.distanceTo(markerPos);
+				if(dist < 0.5D)
+					continue;
 				
-				double dist = MathHelper.clamp(end.distanceTo(markerPos), 0.5D, 2.5D);
+				dist = MathHelper.clamp(end.distanceTo(markerPos), 0.5D, 2.5D);
+				Vector3d start = markerPos.add(end.subtract(markerPos).normalize().mul(0.45D, 0.45D, 0.45D));
 				end = markerPos.add(end.subtract(markerPos).normalize().mul(dist, dist, dist));
 				
-				drawScent(matrixStack, markerPos, end, eyePos, startAlpha, ping.alpha() * alphaByDist);
+				drawScent(matrixStack, start, end, camPos, red, green, blue, startAlpha * 0.8F, ping.alpha() * alphaByDist, rand);
 			}
 		});
 	}
 	
-	private static void drawScent(MatrixStack matrixStack, Vector3d start, Vector3d end, Vector3d eyePos, float startAlpha, float endAlpha)
+	private static void drawMarker(MatrixStack matrixStack, Vector3d pos, Vector3d eyePos, float duration, float red, float green, float blue, float alpha, Random rand)
 	{
+		duration = Math.min(duration, ScentMarker.DEFAULT_DURATION * 10);
+		double height = Math.max(0.15D, (duration / ScentMarker.DEFAULT_DURATION) * 0.15D);
+		
+		int points = (int)Math.ceil(duration / (float)(Reference.Values.TICKS_PER_SECOND * 10));
+		for(int i=0; i<points; i++)
+		{
+			double y = ((double)i / (double)points) + (rand.nextDouble() * 0.01D);
+			double x = -Math.sqrt((y*y*y) * (1 - y));
+			
+			Vector3d position = pos.add(new Vector3d(x, y, 0D).rotateYaw((float)(Math.toRadians(rand.nextInt(360)))).mul(height, height, height));
+			matrixStack.push();
+				RenderUtils.drawCube(matrixStack, position, eyePos, red, green, blue, 1F, 0.1D);
+			matrixStack.pop();
+		}
+	}
+	
+	private static void drawScent(MatrixStack matrixStack, Vector3d start, Vector3d end, Vector3d eyePos, float red, float green, float blue, float startAlpha, float endAlpha, Random rand)
+	{
+		eyePos = eyePos.subtract(0, 0.25D, 0D);
         double stepDist = 0.3D;
         Vector3d offset = end.subtract(start).normalize();
         
@@ -490,16 +526,23 @@ public class VOBusClient
         float alphaDelta = endAlpha - startAlpha;
         
         double wiggleVol = 0.3D;
-        Random rand = new Random((long)(start.x * start.x + end.z * end.z));
         
         Vector3d posA = start;
-        Vector3d posB = posA.add(offset.mul(stepDist, stepDist, stepDist));//.add(makeWiggleVec(offset, rand, wiggleVol));
+        Vector3d posB = posA.add(offset.mul(stepDist, stepDist, stepDist)).add(makeWiggleVec(offset, rand, wiggleVol));
         double time = (rand.nextDouble() * 1000D) + System.currentTimeMillis() * 0.005D;
         while(posB.distanceTo(end) > 0)
         {
         	double heightA = 0.25D * (posA.distanceTo(end) / start.distanceTo(end));
         	double heightB = 0.25D * (posB.distanceTo(end) / start.distanceTo(end));
-        	drawLine(matrixStack, posA, posB, eyePos, startAlpha + (alphaDelta * (float)(posA.distanceTo(start) / dist)), startAlpha + (alphaDelta * (float)(posB.distanceTo(start) / dist)), heightA, heightB);
+        	
+        	float alphaA = startAlpha + (alphaDelta * (float)(posA.distanceTo(start) / dist));
+        	float alphaB = startAlpha + (alphaDelta * (float)(posB.distanceTo(start) / dist));
+        	
+        	double size = Math.min(0.1D, (heightA + heightB) * 0.5D);
+        	RenderUtils.drawCube(matrixStack, posA, eyePos, red, green, blue, (alphaA + alphaB) / 2, size);
+        	
+//        	drawLine(matrixStack, posA, posB, eyePos, red, green, blue, alphaA, alphaB, heightA, heightB);
+//        	drawLine(matrixStack, posB, posA, eyePos, red, green, blue, alphaB, alphaA, heightB, heightA);
         	
         	posA = posB;
         	
@@ -515,31 +558,5 @@ public class VOBusClient
 	private static Vector3d makeWiggleVec(Vector3d direction, Random rand, double wiggleVol)
 	{
 		return new Vector3d((rand.nextDouble() - 0.5D) * wiggleVol, (rand.nextDouble() - 0.5D) * wiggleVol, (rand.nextDouble() - 0.5D) * wiggleVol);
-	}
-	
-	private static void drawLine(MatrixStack matrixStack, Vector3d posA, Vector3d posB, Vector3d eyePos, float startAlpha, float endAlpha, double heightA, double heightB)
-	{
-		Minecraft mc = Minecraft.getInstance();
-        IRenderTypeBuffer.Impl buffers = mc.getRenderTypeBuffers().getBufferSource();
-        IVertexBuilder buffer = buffers.getBuffer(RenderType.getLightning());
-        
-        // TODO Rotate vertical vector to improve visual clarity at most pitch angles
-//		Vector3d heightA = eyePos.subtract(posA).normalize().rotatePitch((float)Math.toRadians(90D)).mul(height, height, height);
-//		Vector3d heightB = eyePos.subtract(posB).normalize().rotatePitch((float)Math.toRadians(90D)).mul(height, height, height);
-		
-		Vector3d heightVecA = new Vector3d(0, heightA, 0);
-		Vector3d heightVecB = new Vector3d(0, heightB, 0);
-        matrixStack.push();
-        	posA = posA.subtract(eyePos);
-	    	posB = posB.subtract(eyePos);
-	    	
-	    	RenderSystem.lineWidth(2F);
-	    		Matrix4f matrix = matrixStack.getLast().getMatrix();
-	    		buffer.pos(matrix, (float)(posA.x - heightVecA.x),	(float)(posA.y - heightVecA.y),	(float)(posA.z - heightVecA.z)).color(1F, 1F, 1F, startAlpha).endVertex();
-	    		buffer.pos(matrix, (float)(posA.x + heightVecA.x),	(float)(posA.y + heightVecA.y),	(float)(posA.z + heightVecA.z)).color(1F, 1F, 1F, startAlpha).endVertex();
-	    		buffer.pos(matrix, (float)(posB.x + heightVecB.x),	(float)(posB.y + heightVecB.y),	(float)(posB.z + heightVecB.z)).color(1F, 1F, 1F, endAlpha).endVertex();
-	    		buffer.pos(matrix, (float)(posB.x - heightVecB.x),	(float)(posB.y - heightVecB.y),	(float)(posB.z - heightVecB.z)).color(1F, 1F, 1F, endAlpha).endVertex();
-	    	RenderSystem.lineWidth(1F);
-    	matrixStack.pop();
 	}
 }

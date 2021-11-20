@@ -1,6 +1,6 @@
 {
-  "CanPlayerSelect": false,
   "Power": 5,
+  "CustomName": "{\"translate\":\"species.varodd.dragon_green\"}",
   "Types": [
     "dragon",
     "air"

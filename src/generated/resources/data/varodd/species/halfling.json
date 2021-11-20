@@ -1,6 +1,6 @@
 {
-  "CanPlayerSelect": true,
   "Power": 0,
+  "CustomName": "{\"translate\":\"species.varodd.halfling\"}",
   "Types": [
     "humanoid"
   ],

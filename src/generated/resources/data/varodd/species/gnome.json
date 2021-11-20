@@ -1,6 +1,6 @@
 {
-  "CanPlayerSelect": true,
   "Power": 0,
+  "CustomName": "{\"translate\":\"species.varodd.gnome\"}",
   "Types": [
     "humanoid"
   ],

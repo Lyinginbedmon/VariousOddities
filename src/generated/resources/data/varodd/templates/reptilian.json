@@ -1,6 +1,5 @@
 {
   "UUID": "1e887c65-f18e-4418-9a0e-48ebc9baaa78",
-  "CanPlayerSelect": false,
   "Power": 2,
   "Operations": [
     {
@@ -26,7 +25,7 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Name:\"varodd:darkvision\"},UnlessBetter:0b}"
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",

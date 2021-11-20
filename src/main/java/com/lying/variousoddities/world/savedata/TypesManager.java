@@ -5,11 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.api.entity.IDefaultSpecies;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketTypesData;
@@ -147,7 +149,9 @@ public class TypesManager extends WorldSavedData
 	
 	public List<EnumCreatureType> getMobTypes(Entity entity)
 	{
-		return entity != null && entity instanceof LivingEntity ? EnumCreatureType.getCreatureTypes((LivingEntity)entity) : Collections.emptyList();
+		if(entity == null || !(entity instanceof LivingEntity))
+			return Collections.emptyList();
+		return EnumCreatureType.getCreatureTypes((LivingEntity)entity);
 	}
 	
 	public List<EnumCreatureType> getMobTypes(EntityType<?> typeIn)
@@ -158,17 +162,25 @@ public class TypesManager extends WorldSavedData
 	{
 		if(mobTypeCache.containsKey(registryName))
 			return mobTypeCache.get(registryName);
-		
+
 		List<EnumCreatureType> types = new ArrayList<>();
-		for(EnumCreatureType type : typeToMob.keySet())
-			for(ResourceLocation entry : typeToMob.getOrDefault(type, Collections.emptyList()))
-				if(entry.equals(registryName))
-				{
-					types.add(type);
-					break;
-				}
 		
+		Optional<EntityType<?>> entityType = EntityType.byKey(registryName.toString());
+		if(entityType.isPresent() && world != null)
+		{
+			Entity object = entityType.get().create(world);
+			if(object != null && object instanceof IDefaultSpecies)
+				types.addAll(((IDefaultSpecies)object).defaultCreatureTypes());
+		}
 		
+		if(types.isEmpty())
+			for(EnumCreatureType type : typeToMob.keySet())
+				for(ResourceLocation entry : typeToMob.getOrDefault(type, Collections.emptyList()))
+					if(entry.equals(registryName))
+					{
+						types.add(type);
+						break;
+					}
 		
 		mobTypeCache.put(registryName, types);
 		return types;

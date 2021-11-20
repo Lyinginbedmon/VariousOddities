@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
@@ -32,7 +33,6 @@ public class Species
 	private static final UUID UUID_SPECIES = UUID.fromString("d5da3b78-e6ca-4d2e-878b-0e7c3c57a668");
 	private ResourceLocation registryName;
 	
-	private boolean canPlayerSelect = true;
 	private int power = 0;
 	
 	private ResourceLocation origin = null;
@@ -60,14 +60,9 @@ public class Species
 		return new StringTextComponent(path);
 	}
 	
-	/**
-	 * Whether this species should be selectable from the species select screen.
-	 */
-	public boolean isPlayerSelectable(){ return this.canPlayerSelect; }
-	
-	public Species setPlayerSelect(boolean bool)
+	public Species setDisplayName(ITextComponent nameIn)
 	{
-		this.canPlayerSelect = bool;
+		this.customName = nameIn;
 		return this;
 	}
 	
@@ -97,7 +92,7 @@ public class Species
 	}
 	
 	/** Returns a list of all abilities in this species, including from creature types */
-	public List<Ability> getAbilities()
+	public List<Ability> getFullAbilities()
 	{
 		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
 		
@@ -110,6 +105,8 @@ public class Species
 		abilities.addAll(abilityMap.values());
 		return abilities;
 	}
+	
+	public List<Ability> getAbilities(){ return this.abilities; }
 	
 	public Species addType(@Nonnull EnumCreatureType typeIn)
 	{
@@ -134,8 +131,10 @@ public class Species
 	public CompoundNBT storeInNBT(CompoundNBT nbt)
 	{
 		nbt.putString("Name", this.getRegistryName().toString());
-		nbt.putBoolean("CanPlayerSelect", this.isPlayerSelectable());
 		nbt.putInt("Power", getPower());
+		
+		if(customName != null)
+			nbt.putString("CustomName", ITextComponent.Serializer.toJson(this.customName));
 		
 		if(origin != null)
 			nbt.putString("Dimension", origin.toString());
@@ -162,8 +161,20 @@ public class Species
 		ResourceLocation registryName = new ResourceLocation(nbt.getString("Name"));
 		Species species = new Species(registryName);
 		
-		species.setPlayerSelect(nbt.getBoolean("CanPlayerSelect"));
 		species.setPower(nbt.getInt("Power"));
+		
+		if(nbt.contains("CustomName", 8))
+		{
+			String s = nbt.getString("CustomName");
+			try
+			{
+				species.setDisplayName(ITextComponent.Serializer.getComponentFromJson(s));
+			}
+			catch (Exception exception)
+			{
+				VariousOddities.log.warn("Failed to parse species display name {}", s, exception);
+			}
+		}
 		
 		if(nbt.contains("Dimension", 8))
 			species.setOriginDimension(new ResourceLocation(nbt.getString("Dimension")));
@@ -202,8 +213,10 @@ public class Species
 	{
 		JsonObject json = new JsonObject();
 		
-		json.addProperty("CanPlayerSelect", this.isPlayerSelectable());
 		json.addProperty("Power", getPower());
+		
+		if(this.customName != null)
+			json.addProperty("CustomName", ITextComponent.Serializer.toJson(this.customName));
 		
 		if(origin != null)
 			json.addProperty("Dimension", origin.toString());
@@ -234,11 +247,21 @@ public class Species
 		
 		Species species = new Species();
 		
-		if(object.has("CanPlayerSelect"))
-			species.setPlayerSelect(object.get("CanPlayerSelect").getAsBoolean());
-		
 		if(object.has("Power"))
 			species.setPower(object.get("Power").getAsInt());
+		
+		if(object.has("CustomName"))
+		{
+			String s = object.get("CustomName").getAsString();
+			try
+			{
+				species.setDisplayName(ITextComponent.Serializer.getComponentFromJson(s));
+			}
+			catch (Exception exception)
+			{
+				VariousOddities.log.warn("Failed to parse species display name {}", s, exception);
+			}
+		}
 		
 		if(object.has("Dimension"))
 			species.setOriginDimension(new ResourceLocation(object.get("Dimension").getAsString()));

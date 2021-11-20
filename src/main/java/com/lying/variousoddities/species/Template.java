@@ -22,11 +22,11 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class Template
 {
-	/** True if players can select this template after choosing their species */
-	private boolean chooseAtStart = false;
 	private int power = 0;
 	
 	private final List<TemplatePrecondition> preconditions = Lists.newArrayList();
@@ -34,6 +34,8 @@ public class Template
 	
 	private ResourceLocation registryName;
 	private UUID templateID;
+	
+	private ITextComponent customName = null;
 	
 	public Template(){ }
 	public Template(ResourceLocation name, UUID uuid)
@@ -47,12 +49,18 @@ public class Template
 	
 	public UUID uuid(){ return this.templateID; }
 	
-	/** True if players can select this template after choosing their species */
-	public boolean isPlayerSelectable(){ return this.chooseAtStart; }
-	
-	public Template setPlayerSelect(boolean bool)
+	public ITextComponent getDisplayName()
 	{
-		this.chooseAtStart = bool;
+		if(this.customName != null)
+			return this.customName;
+		String path = this.registryName.getPath();
+		path = (path.substring(0, 1).toUpperCase() + path.substring(1)).replace('_', ' ');
+		return new StringTextComponent(path);
+	}
+	
+	public Template setDisplayName(ITextComponent nameIn)
+	{
+		this.customName = nameIn;
 		return this;
 	}
 	
@@ -100,8 +108,10 @@ public class Template
 		
 		json.addProperty("UUID", this.templateID.toString());
 		
-		json.addProperty("CanPlayerSelect", this.isPlayerSelectable());
 		json.addProperty("Power", getPower());
+		
+		if(this.customName != null)
+			json.addProperty("CustomName", ITextComponent.Serializer.toJson(this.customName));
 		
 		JsonArray operations = new JsonArray();
 			for(TemplateOperation operation : this.operations)
@@ -137,11 +147,21 @@ public class Template
 		if(object.has("UUID"))
 			template.templateID = UUID.fromString(object.get("UUID").getAsString());
 		
-		if(object.has("CanPlayerSelect"))
-			template.setPlayerSelect(object.get("CanPlayerSelect").getAsBoolean());
-		
 		if(object.has("Power"))
 			template.setPower(object.get("Power").getAsInt());
+		
+		if(object.has("CustomName"))
+		{
+			String s = object.get("CustomName").getAsString();
+			try
+			{
+				template.setDisplayName(ITextComponent.Serializer.getComponentFromJson(s));
+			}
+			catch (Exception exception)
+			{
+				VariousOddities.log.warn("Failed to parse template display name {}", s, exception);
+			}
+		}
 		
 		if(object.has("Operations"))
 		{

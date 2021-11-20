@@ -27,6 +27,7 @@ import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityModifierStr;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
+import com.lying.variousoddities.species.abilities.AbilityNaturalRegen;
 import com.lying.variousoddities.species.abilities.AbilityPoison;
 import com.lying.variousoddities.species.abilities.AbilityResistance;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
@@ -41,9 +42,9 @@ import com.lying.variousoddities.species.templates.OperationReplaceSupertypes;
 import com.lying.variousoddities.species.templates.TemplateOperation;
 import com.lying.variousoddities.species.templates.TemplateOperation.Operation;
 import com.lying.variousoddities.species.templates.TypeOperation;
-import com.lying.variousoddities.species.templates.TypePrecondition;
 import com.lying.variousoddities.species.templates.TypeOperation.Condition;
 import com.lying.variousoddities.species.templates.TypeOperation.Condition.Style;
+import com.lying.variousoddities.species.templates.TypePrecondition;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
@@ -64,6 +65,7 @@ public class TemplateRegistry extends JsonReloadListener
 	public static final ResourceLocation TEMPLATE_FIENDISH		= new ResourceLocation(Reference.ModInfo.MOD_ID, "fiendish");
 	public static final ResourceLocation TEMPLATE_INSECTILE		= new ResourceLocation(Reference.ModInfo.MOD_ID, "insectile");
 	public static final ResourceLocation TEMPLATE_LICH			= new ResourceLocation(Reference.ModInfo.MOD_ID, "lich");
+	public static final ResourceLocation TEMPLATE_NECROPOLITAN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "necropolitan");
 	public static final ResourceLocation TEMPLATE_REPTILIAN		= new ResourceLocation(Reference.ModInfo.MOD_ID, "reptilian");
 	public static final ResourceLocation TEMPLATE_WINGED		= new ResourceLocation(Reference.ModInfo.MOD_ID, "winged");
 	public static final ResourceLocation TEMPLATE_ZOMBIE		= new ResourceLocation(Reference.ModInfo.MOD_ID, "zombie");
@@ -72,6 +74,7 @@ public class TemplateRegistry extends JsonReloadListener
 	private static final UUID UUID_FIENDISH = UUID.fromString("ff6ac129-6eaf-4015-bbc3-75ec226e5bf6");
 	private static final UUID UUID_INSECTILE = UUID.fromString("d606248a-4cdc-47c4-b96e-33ad1bd16186");
 	private static final UUID UUID_LICH = UUID.fromString("0f52db4b-4388-4fde-8e55-34ff8a68ca85");
+	private static final UUID UUID_NECROPOLITAN = UUID.fromString("4ca65fb7-fe3d-4e2c-a86f-469b8cfc13c7");
 	private static final UUID UUID_REPTILIAN = UUID.fromString("1e887c65-f18e-4418-9a0e-48ebc9baaa78");
 	private static final UUID UUID_WINGED = UUID.fromString("97b43a6a-8626-4a6d-8a8c-b0caca354bc6");
 	private static final UUID UUID_ZOMBIE = UUID.fromString("eec62733-5e7b-4c47-a939-9590b9a6f492");
@@ -140,15 +143,62 @@ public class TemplateRegistry extends JsonReloadListener
 	{
 		/*
 		 * Half-Fiend
+		 *   Power 4
+		 *   Flight (Good)
+		 *   Spells
+		 *   Smite Good
 		 * Half-Celestial
+		 *   Power 4
+		 *   Flight (Good)
+		 *   Spells
+		 *   Daylight spell
+		 *   Smite Evil
 		 * Half-Dragon
+		 *   Power 3
+		 *   Flight (Average)
+		 *   Breath weapon (type-based)
+		 *   Damage immunity (type-based)
+		 * Lich
+		 *   Phylactery
 		 * Vampire
+		 *   Power 8
+		 *   Drain blood
+		 *   Summon mobs
+		 *   Domination
+		 *   Create vampire spawn
+		 *   Energy drain
+		 *   Alternate forms
+		 *   Turn resistance
+		 *   Vampire weaknesses (?)
 		 * Vampire Spawn
+		 *   Drain blood
+		 *   Domination
+		 *   Energy drain
+		 *   Vampire weaknesses
+		 * Acidborn
+		 *   Power 1
+		 *   Breathe acid
+		 *   Acid immunity
+		 * Shadow creature
+		 *   Power 2
+		 *   Invisible in low light
+		 *   Random additional ability (see LoM pg 168)
+		 * Half-Vampire
+		 *   Power 2
+		 *   Summon mobs
+		 *   Charm (randomly)
+		 *   Drain blood (randomly, +blood dependency)
+		 * Mummy
+		 *   Power 4
+		 *   Despair (temp paralysis on sight)
+		 *   Mummy rot (disease)
+		 * Revived Fossil
+		 * 	 Mostly just a buff skeleton
 		 */
 		
 		addTemplate(new Template(TEMPLATE_FIENDISH, UUID_FIENDISH)
 				.setPower(2)
-				.setPlayerSelect(true)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".fiendish"))
 				.addPrecondition(TypePrecondition.isCorporeal())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.ABERRATION, EnumCreatureType.ANIMAL, EnumCreatureType.DRAGON, EnumCreatureType.FEY, EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.OOZE, EnumCreatureType.PLANT, EnumCreatureType.VERMIN))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
@@ -159,7 +209,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityResistance(5, DamageType.FIRE))));
 		addTemplate(new Template(TEMPLATE_CELESTIAL, UUID_CELESTIAL)
 				.setPower(2)
-				.setPlayerSelect(true)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".celestial"))
 				.addPrecondition(TypePrecondition.isCorporeal())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.ABERRATION, EnumCreatureType.ANIMAL, EnumCreatureType.DRAGON, EnumCreatureType.FEY, EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.OOZE, EnumCreatureType.PLANT, EnumCreatureType.VERMIN))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
@@ -171,7 +221,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityResistance(5, DamageType.LIGHTNING))));
 		addTemplate(new Template(TEMPLATE_ZOMBIE, UUID_ZOMBIE)
 				.setPower(1)
-				.setPlayerSelect(false)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".zombie"))
 				.addPrecondition(TypePrecondition.isCorporeal())
 				.addPrecondition(TypePrecondition.isLiving())
 				.addPrecondition(TypePrecondition.isNoneOf(EnumCreatureType.OOZE, EnumCreatureType.PLANT))
@@ -184,7 +234,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilitySunBurn())));
 		addTemplate(new Template(TEMPLATE_LICH, UUID_LICH)
 				.setPower(4)
-				.setPlayerSelect(false)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".lich"))
 				.addPrecondition(TypePrecondition.isLiving())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.HUMANOID))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
@@ -197,7 +247,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new EffectInstance(VOPotions.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(new TranslationTextComponent("ability.varodd:lich_touch")))));
 		addTemplate(new Template(TEMPLATE_WINGED, UUID_WINGED)
 				.setPower(2)
-				.setPlayerSelect(false)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".winged"))
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.ANIMAL, EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.VERMIN))
 				.addPrecondition(AbilityPrecondition.hasNo(new AbilityFlight(Grade.AVERAGE)))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
@@ -205,7 +255,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityFlight(Grade.AVERAGE))));
 		addTemplate(new Template(TEMPLATE_REPTILIAN, UUID_REPTILIAN)
 				.setPower(2)
-				.setPlayerSelect(false)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".reptilian"))
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.GIANT, EnumCreatureType.HUMANOID))
 				.addPrecondition(TypePrecondition.isNoneOf(EnumCreatureType.AQUATIC, EnumCreatureType.REPTILE))
 				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.REPTILE))
@@ -217,12 +267,19 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityHoldBreath())));
 		addTemplate(new Template(TEMPLATE_INSECTILE, UUID_INSECTILE)
 				.setPower(2)
-				.setPlayerSelect(false)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".insectile"))
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.ABERRATION))
 				.addOperation(AbilityOperation.add(true, new AbilityNaturalArmour(2D)))
 				.addOperation(AbilityOperation.add(true, new AbilityClimb()))
 				.addOperation(AbilityOperation.add(new AbilityDarkvision()))
 				.addOperation(AbilityOperation.add(true, new AbilityTremorsense(16D))));
+		addTemplate(new Template(TEMPLATE_NECROPOLITAN, UUID_NECROPOLITAN)
+				.setPower(0)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".necropolitan"))
+				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID))
+				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
+				.addOperation(new AbilityOperation(Operation.REMOVE, new AbilityModifierCon(1D)))
+				.addOperation(AbilityOperation.add(new AbilityNaturalRegen())));
 	}
 }

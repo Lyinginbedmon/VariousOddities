@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.play.server.STitlePacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -93,7 +94,7 @@ public class SettlementRender
 			// If player is creative or spectator, display room boundaries
 			if(clientPlayer.canUseCommandBlock())
 				for(Settlement settlement : localManager.getSettlements())
-					renderSettlementRooms(settlement, event.getMatrixStack(), event.getPartialTicks());
+					renderSettlementRooms(settlement, mc.getRenderManager().info.getProjectedView(), event.getMatrixStack());
 		}
 	}
 	
@@ -105,14 +106,14 @@ public class SettlementRender
 		latestRoom = null;
 	}
 	
-	private static void renderSettlementRooms(Settlement settlement, MatrixStack matrixIn, float partialTicks)
+	private static void renderSettlementRooms(Settlement settlement, Vector3d eyePos, MatrixStack matrixIn)
 	{
 		for(BoxRoom room : settlement.getRooms())
-			renderRoom(room, matrixIn, partialTicks);
+			renderRoom(room, eyePos, matrixIn);
 	}
 	
 	// FIXME Correct third-person view and stabilise colour
-	private static void renderRoom(BoxRoom room, MatrixStack matrixStackIn, float partialTicks)
+	private static void renderRoom(BoxRoom room, Vector3d eyePos, MatrixStack matrixStackIn)
 	{
         float alpha = 255F / 255F;
         float red = 223F / 255F;
@@ -124,21 +125,12 @@ public class SettlementRender
         IRenderTypeBuffer.Impl buffers = mc.getRenderTypeBuffers().getBufferSource();
         IVertexBuilder ivertexbuilder = buffers.getBuffer(RenderType.getLines());
         
-        double playerX = clientPlayer.getPosX();
-        playerX = (clientPlayer.prevPosX) + (playerX - clientPlayer.prevPosX) * partialTicks;
-        
-        double playerY = clientPlayer.getPosYEye();
-        playerY = (clientPlayer.prevPosY + clientPlayer.getEyeHeight()) + (playerY - (clientPlayer.prevPosY + clientPlayer.getEyeHeight())) * partialTicks;
-        
-        double playerZ = clientPlayer.getPosZ();
-        playerZ = (clientPlayer.prevPosZ) + (playerZ - clientPlayer.prevPosZ) * partialTicks;
-        
         matrixStackIn.push();
 	        BlockPos min = room.min();
 	        
-	        double minX = (double)min.getX() - playerX;
-	        double minY = (double)min.getY() - playerY;
-	        double minZ = (double)min.getZ() - playerZ;
+	        double minX = (double)min.getX() - eyePos.x;
+	        double minY = (double)min.getY() - eyePos.y;
+	        double minZ = (double)min.getZ() - eyePos.z;
 	        
 	        int sizeX = room.sizeX();
 	        int sizeY = room.sizeY();

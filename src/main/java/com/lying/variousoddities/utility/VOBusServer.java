@@ -10,7 +10,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
-import com.lying.variousoddities.entity.EntityCorpse;
+import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
@@ -222,7 +222,7 @@ public class VOBusServer
 		if(event.getSource() != DamageSource.OUT_OF_WORLD && (victim.isPotionActive(VOPotions.NEEDLED) || victim.getType() == EntityType.PLAYER && ConfigVO.GENERAL.playersSpawnCorpses()))
 		{
 			victim.removeActivePotionEffect(VOPotions.NEEDLED);
-			EntityCorpse corpse = EntityCorpse.createCorpseFrom(victim);
+			EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(victim);
 			if(corpse != null && !world.isRemote)
 				world.addEntity(corpse);
 		}

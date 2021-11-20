@@ -1,4 +1,4 @@
-Fix settlement room rendering
+Fix settlement room rendering in third-person
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg pipeline
 Warg

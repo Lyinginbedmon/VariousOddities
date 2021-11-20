@@ -1,0 +1,26 @@
+{
+  "UUID": "4ca65fb7-fe3d-4e2c-a86f-469b8cfc13c7",
+  "Power": 0,
+  "Operations": [
+    {
+      "Name": "varodd:replace_supertypes",
+      "Tag": "{Types:[\"undead\"]}"
+    },
+    {
+      "Action": "remove",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Name:\"varodd:natural_regen\"},UnlessBetter:0b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"humanoid\",\"monstrous_humanoid\"],Style:\"or\"}"
+    }
+  ]
+}

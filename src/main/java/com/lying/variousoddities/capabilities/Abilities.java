@@ -191,6 +191,8 @@ public class Abilities
 	
 	public void addCustomAbility(@Nonnull Ability ability)
 	{
+		if(ability == null)
+			return;
 		try
 		{
 			this.customAbilities.put(ability.getMapName(), ability.setSourceId(UUID_ABILITIES));

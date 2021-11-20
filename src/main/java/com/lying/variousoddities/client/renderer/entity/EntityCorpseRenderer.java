@@ -2,7 +2,7 @@ package com.lying.variousoddities.client.renderer.entity;
 
 import java.util.Random;
 
-import com.lying.variousoddities.entity.EntityCorpse;
+import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
@@ -15,23 +15,23 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
-public class EntityCorpseRenderer extends LivingRenderer<EntityCorpse, BipedModel<EntityCorpse>>
+public class EntityCorpseRenderer extends LivingRenderer<EntityBodyCorpse, BipedModel<EntityBodyCorpse>>
 {
 	private final EntityRendererManager manager;
 	
 	public EntityCorpseRenderer(EntityRendererManager rendererManager)
 	{
-		super(rendererManager, new BipedModel<EntityCorpse>(0F), 0.5F);
+		super(rendererManager, new BipedModel<EntityBodyCorpse>(0F), 0.5F);
 		this.manager = rendererManager;
 	}
 	
-	public ResourceLocation getEntityTexture(EntityCorpse entity)
+	public ResourceLocation getEntityTexture(EntityBodyCorpse entity)
 	{
 		return new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/corpse.png");
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void render(EntityCorpse entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn)
+	public void render(EntityBodyCorpse entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn)
 	{
 		if(!entityIn.hasBody())
 		{
@@ -60,9 +60,9 @@ public class EntityCorpseRenderer extends LivingRenderer<EntityCorpse, BipedMode
 		renderer.render(body, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 	}
 	
-	public static class RenderFactory implements IRenderFactory<EntityCorpse>
+	public static class RenderFactory implements IRenderFactory<EntityBodyCorpse>
 	{
-		public EntityRenderer<? super EntityCorpse> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntityBodyCorpse> createRenderFor(EntityRendererManager manager) 
 		{
 			return new EntityCorpseRenderer(manager);
 		}

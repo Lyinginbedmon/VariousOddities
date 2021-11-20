@@ -5,6 +5,7 @@ import java.util.Random;
 
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.api.entity.IDefaultSpecies;
 import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.entity.EntityOddityAgeable;
@@ -17,6 +18,7 @@ import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOSoundEvents;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.SpeciesRegistry;
 
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.CreatureEntity;
@@ -25,7 +27,6 @@ import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
@@ -38,6 +39,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
@@ -46,7 +48,7 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
-public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, ISettlementEntity
+public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
     public static final DataParameter<Boolean> 	NOSE = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
     public static final DataParameter<Boolean> 	EARS = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
@@ -95,11 +97,10 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
     {
-        return EntityOddity.getAttributes()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)
-        		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D)
-        		.createMutableAttribute(Attributes.ARMOR, 2.0D);
+        return EntityOddity.getAttributes();
     }
+    
+    public ResourceLocation defaultSpecies(){ return SpeciesRegistry.SPECIES_GOBLIN; }
     
     public static boolean canSpawnAt(EntityType<? extends CreatureEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
     {
