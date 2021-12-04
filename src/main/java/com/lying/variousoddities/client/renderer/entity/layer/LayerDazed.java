@@ -1,6 +1,5 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
-import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.model.entity.ModelDazed;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
@@ -30,8 +29,7 @@ public class LayerDazed<T extends LivingEntity, M extends BipedModel<T>> extends
 	@SuppressWarnings("deprecation")
 	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T entityIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		LivingData data = LivingData.forEntity(entityIn);
-		if(data != null && data.getVisualPotion(VOPotions.DAZED))
+		if(VOPotions.isPotionVisible(entityIn, VOPotions.DAZED))
 		{
 			matrixStackIn.push();
 				float scale = 1.2F;

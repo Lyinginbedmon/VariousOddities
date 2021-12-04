@@ -8,6 +8,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.potion.IVisualPotion;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.potion.*;
 import com.lying.variousoddities.potion.PotionVO;
 import com.lying.variousoddities.reference.Reference;
@@ -79,6 +80,12 @@ public class VOPotions
 	public static boolean isPotionActive(LivingEntity entity, Effect potion)
 	{
 		return entity.isPotionActive(potion) || entity.getActivePotionEffect(potion) != null && entity.getActivePotionEffect(potion).getDuration() > 0;
+	}
+	
+	public static boolean isPotionVisible(LivingEntity entity, Effect potion)
+	{
+		LivingData data = LivingData.forEntity(entity);
+		return data != null && potion instanceof IVisualPotion && data.getVisualPotion(potion);
 	}
 	
 	public static boolean isParalysed(LivingEntity entity)

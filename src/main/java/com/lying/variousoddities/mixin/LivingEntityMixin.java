@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.Maps;
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
@@ -28,6 +30,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Pose;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
@@ -40,6 +43,9 @@ public class LivingEntityMixin extends EntityMixin
 {
 	@Shadow
 	public Map<Effect, EffectInstance> activePotionsMap = Maps.newHashMap();
+	
+	@Shadow
+	public int idleTime = 0;
 	
 	@Shadow
 	public float getHealth(){ return 0F; }
@@ -75,7 +81,7 @@ public class LivingEntityMixin extends EntityMixin
 	}
 	
 	@Inject(method = "baseTick", at = @At("TAIL"))
-	public void baseTick(CallbackInfo callbackInfo)
+	public void baseTick(final CallbackInfo ci)
 	{
 		LivingData livingData = LivingData.forEntity((LivingEntity)(Object)this);
 		if(livingData == null)
@@ -84,6 +90,30 @@ public class LivingEntityMixin extends EntityMixin
 		livingData.tick((LivingEntity)(Object)this);
 		if(livingData.overrideAir())
 			this.setAir(livingData.getAir());
+	}
+	
+	@Inject(method = "livingTick()V", at = @At("HEAD"), cancellable = true)
+	public void livingTick(final CallbackInfo ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		LivingData livingData = LivingData.forEntity(entity);
+		if(livingData != null && livingData.isBeingPossessed())
+		{
+			if(!entity.isElytraFlying() && !entity.isSwimming() && isPoseClear(Pose.CROUCHING) && (entity.isSneaking() || !entity.isSleeping() && !isPoseClear(Pose.STANDING)))
+				setPose(Pose.CROUCHING);
+		}
+	}
+	
+	@Inject(method = "isSleeping()V", at = @At("HEAD"), cancellable = true)
+	public void isSleeping(final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		if(entity.getType() == EntityType.PLAYER)
+		{
+			PlayerEntity player = (PlayerEntity)entity;
+			if(PlayerData.forPlayer(player).getBodyCondition() == BodyCondition.UNCONSCIOUS)
+				ci.setReturnValue(true);
+		}
 	}
 	
 	@Inject(method = "isPotionApplicable", at = @At("HEAD"), cancellable = true)
@@ -136,12 +166,21 @@ public class LivingEntityMixin extends EntityMixin
 	@Inject(method = "attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
 	public void attackPetrifiedFrom(DamageSource source, float amount, final CallbackInfoReturnable<Boolean> ci)
 	{
+		// NEVER prevent out-of-world damage, as it's used for cleanup and the /kill command
+		if(source == DamageSource.OUT_OF_WORLD)
+			return;
+		
 		LivingEntity entity = (LivingEntity)(Object)this;
-		if(entity.isPotionActive(VOPotions.PETRIFIED))
+		if(entity.getType() == EntityType.PLAYER && PlayerData.isPlayerSoulDetached((PlayerEntity)entity))
+		{
+			ci.setReturnValue(false);
+			ci.cancel();
+		}
+		else if(entity.isPotionActive(VOPotions.PETRIFIED))
 		{
 			if(
 					source == DamageSource.FALL || source == DamageSource.FALLING_BLOCK || 
-					source == DamageSource.LAVA || source == DamageSource.OUT_OF_WORLD)
+					source == DamageSource.LAVA)
 				return;
 			
 			Entity attacker = source.getTrueSource() == null ? source.getImmediateSource() : source.getTrueSource();
@@ -156,6 +195,14 @@ public class LivingEntityMixin extends EntityMixin
 			ci.setReturnValue(false);
 			ci.cancel();
 		}
+	}
+	
+	@Inject(method = "isHandActive()Z", at = @At("HEAD"), cancellable = true)
+	public void isHandActive(final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		if(entity.getType() == EntityType.PLAYER && PlayerData.isPlayerSoulDetached((PlayerEntity)entity))
+			ci.setReturnValue(false);
 	}
 	
 	@Inject(method = "isEntityUndead()Z", at = @At("HEAD"), cancellable = true)
@@ -177,10 +224,11 @@ public class LivingEntityMixin extends EntityMixin
 	@Inject(method = "applyEntityCollision(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
 	public void applyEntityCollision(Entity entityIn, final CallbackInfo ci)
 	{
-		if(IPhasingAbility.isPhasing((LivingEntity)(Object)this))
+		LivingEntity thisEnt = (LivingEntity)(Object)this;
+		if(IPhasingAbility.isPhasing(thisEnt) || PlayerData.isPlayerSoulDetached(thisEnt))
 			ci.cancel();
 		else if(entityIn instanceof LivingEntity)
-			if(IPhasingAbility.isPhasing((LivingEntity)entityIn))
+			if(IPhasingAbility.isPhasing((LivingEntity)entityIn) || PlayerData.isPlayerSoulDetached((LivingEntity)entityIn))
 				ci.cancel();
 	}
 	
@@ -213,4 +261,6 @@ public class LivingEntityMixin extends EntityMixin
 		if(abilityMap.containsKey(AbilityHurtByEnv.REGISTRY_NAME) && ((AbilityHurtByEnv)abilityMap.get(AbilityHurtByEnv.REGISTRY_NAME)).getEnvType() == EnvType.WATER)
 			ci.setReturnValue(true);
 	}
+	
+	
 }

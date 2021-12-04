@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
@@ -15,6 +17,8 @@ import com.lying.variousoddities.world.savedata.ScentsManager;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.controller.JumpController;
+import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
@@ -79,6 +83,38 @@ public class MobEntityMixin extends LivingEntityMixin
 					prevScentPos = pos;
 				}
 			}
+		}
+	}
+	
+	@Shadow
+	public void sendDebugPackets(){ }
+	
+	@Inject(method = "updateEntityActionState()V", at = @At("HEAD"), cancellable = true)
+	public void updateEntityActionState(final CallbackInfo ci)
+	{
+		MobEntity entity = (MobEntity)(Object)this;
+		LivingData data = LivingData.forEntity(entity);
+		if(data != null && data.isBeingPossessed())
+		{
+			ci.cancel();
+			
+			++this.idleTime;
+			this.world.getProfiler().startSection("mob tick");
+			this.world.getProfiler().endSection();
+			this.world.getProfiler().startSection("controls");
+			this.world.getProfiler().startSection("move");
+			MovementController moveController = entity.getMoveHelper();
+			if(moveController != null)
+				moveController.tick();
+			//this.world.getProfiler().endStartSection("look");
+			//this.lookController.tick();
+			this.world.getProfiler().endStartSection("jump");
+			JumpController jumpController = entity.getJumpController();
+			if(jumpController != null)
+				jumpController.tick();
+			this.world.getProfiler().endSection();
+			this.world.getProfiler().endSection();
+			this.sendDebugPackets();
 		}
 	}
 	

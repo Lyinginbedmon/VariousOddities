@@ -3,11 +3,13 @@ package com.lying.variousoddities.init;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.client.gui.GuiBody;
 import com.lying.variousoddities.client.gui.GuiWarg;
 import com.lying.variousoddities.inventory.ContainerBody;
 import com.lying.variousoddities.inventory.ContainerWarg;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemMossBottle;
+import com.lying.variousoddities.item.ItemSap;
 import com.lying.variousoddities.item.ItemSpellContainer;
 import com.lying.variousoddities.item.VOItemGroup;
 import com.lying.variousoddities.reference.Reference;
@@ -35,6 +37,9 @@ public class VOItems
 	private static final List<Item> ITEMS = Lists.newArrayList();
 	private static final List<BlockItem> BLOCK_ITEMS = Lists.newArrayList();
 	private static final List<ContainerType<?>> CONTAINERS = Lists.newArrayList();
+	
+	// Debug
+	public static final Item SAP	= register("sap", new ItemSap(new Item.Properties().group(VOItemGroup.LOOT)));
 	
 	// Mob module
 	public static final Item SCALE_KOBOLD	= register("kobold_scale", new Item(new Item.Properties().group(VOItemGroup.LOOT)));
@@ -102,6 +107,9 @@ public class VOItems
     	
     	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
 			ScreenManager.registerFactory(CONTAINER_WARG, GuiWarg::new);
+		});
+    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+			ScreenManager.registerFactory(CONTAINER_BODY, GuiBody::new);
 		});
     }
 }

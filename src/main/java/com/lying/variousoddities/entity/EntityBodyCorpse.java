@@ -5,12 +5,14 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -22,8 +24,6 @@ import net.minecraft.world.World;
 public class EntityBodyCorpse extends AbstractBody
 {
 	private static final DataParameter<Integer> TIMER = EntityDataManager.<Integer>createKey(EntityBodyCorpse.class, DataSerializers.VARINT);
-	
-	private boolean persistent = false;
 	
 	public EntityBodyCorpse(EntityType<? extends EntityBodyCorpse> type, World worldIn)
 	{
@@ -53,26 +53,42 @@ public class EntityBodyCorpse extends AbstractBody
 	public void readAdditional(CompoundNBT compound)
 	{
 		super.readAdditional(compound);
-		this.persistent = compound.getBoolean("PersistenceRequired");
 		getDataManager().set(TIMER, compound.getInt("TicksRemaining"));
 	}
 	
 	public void writeAdditional(CompoundNBT compound)
 	{
 		super.writeAdditional(compound);
-		compound.putBoolean("PersistenceRequired", this.persistent);
 		compound.putInt("TicksRemaining", getTicksRemaining());
 	}
+	
+	public boolean shouldBindIfPersistent(){ return false; }
 	
 	public void tick()
 	{
 		super.tick();
 		
-		if(!persistent)
+		if(!isPersistenceRequired())
 		{
-			getDataManager().set(TIMER, Math.max(0, getTicksRemaining() - 1));
-			if(getTicksRemaining() == 0 && getEntityWorld().isRemote)
-				onKillCommand();
+			if(isPlayer())
+			{
+				LivingEntity soul = getSoul();
+				if(soul == null || !soul.isAlive())
+					return;
+				
+				if(PlayerData.isPlayerSoulBound(soul))
+					moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
+				
+				if(!PlayerData.isPlayerBodyDead((PlayerEntity)soul) && !getEntityWorld().isRemote)
+					this.onKillCommand();
+			}
+			
+			if(getInventory().isEmpty() && !getEntityWorld().isRemote)
+			{
+				getDataManager().set(TIMER, Math.max(0, getTicksRemaining() - 1));
+				if(getTicksRemaining() == 0)
+					this.onKillCommand();
+			}
 		}
 	}
 	

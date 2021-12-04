@@ -98,49 +98,74 @@ public class ConfigVO
 	public static class General
 	{
 		private final ForgeConfigSpec.BooleanValue verboseLog;
-		private final ForgeConfigSpec.BooleanValue playersSpawnCorpses;
+		private final ForgeConfigSpec.EnumValue<EnumCorpseRule> spawnCorpses;
 //		private final ForgeConfigSpec.BooleanValue zombiesZombifyPlayers;
 		
+		private final ForgeConfigSpec.DoubleValue bludgeoningCap;
 		private final ForgeConfigSpec.IntValue bludgeoningTime;
 		
-		private boolean verbose = false;
-		private boolean playerCorpses = false;
-		private boolean zombifyPlayers = false;
+		private boolean loaded = false;
 		
-		private int bludgeoningRecoveryRate = Reference.Values.TICKS_PER_MINUTE;
+		private boolean zombifyPlayers;
 		
 		public General(ForgeConfigSpec.Builder builder)
 		{
 			builder.push("general");
 				verboseLog = builder.define("verboseLog", false);
-				playersSpawnCorpses = builder.define("players_spawn_corpses", false);
+				spawnCorpses = builder.defineEnum("spawn_corpses", EnumCorpseRule.NEEDLED_ONLY);
 //				zombiesZombifyPlayers = builder.define("zombies_zombify_players", false);
 				bludgeoningTime = builder.defineInRange("bludgeoning_recovery_rate_seconds", 60, 0, Integer.MAX_VALUE);
+				bludgeoningCap = builder.defineInRange("bludgeoning_cap_above_max_health", 10, 0, Double.MAX_VALUE);
 			builder.pop();
 		}
 		
 		public void updateCache()
 		{
-			if(verboseLog != null)
-				verbose = verboseLog.get();
-			
-			if(playersSpawnCorpses != null)
-				playerCorpses = playersSpawnCorpses.get();
+			loaded = true;
 			
 //			if(zombiesZombifyPlayers != null)
 //				zombifyPlayers = zombiesZombifyPlayers.get();
-			
-			if(bludgeoningTime != null)
-				bludgeoningRecoveryRate = Reference.Values.TICKS_PER_SECOND * bludgeoningTime.get();
 		}
 		
-		public boolean verboseLogs(){ return verbose; }
+		public boolean verboseLogs()
+		{
+			return verboseLog.get();
+		}
 		
-		public boolean playersSpawnCorpses(){ return playerCorpses; }
+		public EnumCorpseRule corpseSpawnRule()
+		{
+			return spawnCorpses.get();
+		}
 		
-		public boolean zombifyPlayers(){ return zombifyPlayers; }
+		public static enum EnumCorpseRule
+		{
+			ALWAYS,
+			PLAYERS_ONLY,
+			PLAYERS_AND_NEEDLED,
+			NEEDLED_ONLY,
+			NEVER;
+		}
 		
-		public int bludgeoningRecoveryRate(){ return bludgeoningRecoveryRate; }
+		public boolean zombifyPlayers()
+		{
+			if(!loaded)
+				updateCache();
+			return zombifyPlayers;
+		}
+		
+		public int bludgeoningRecoveryRate()
+		{
+			if(!loaded)
+				updateCache();
+			return bludgeoningTime.get() * Reference.Values.TICKS_PER_SECOND;
+		}
+		
+		public float bludgeoningCap()
+		{
+			if(!loaded)
+				updateCache();
+			return bludgeoningCap.get().floatValue();
+		}
 	}
 	
 	

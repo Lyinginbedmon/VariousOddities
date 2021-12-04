@@ -3,7 +3,21 @@ package com.lying.variousoddities.client.renderer;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.client.renderer.entity.*;
+import com.lying.variousoddities.client.renderer.entity.EntityBodyRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityChangelingRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityCorpseRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityCrabRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityGhastlingRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityGoblinRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityKoboldRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityMarimoRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityPatronKirinRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityPatronWitchRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityRatRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerDazed;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerEntangled;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
@@ -48,6 +62,7 @@ public class EntityRenderRegistry
 		
 		// Second release
 		registerRenderer(VOEntities.CORPSE, new EntityCorpseRenderer.RenderFactory());
+		registerRenderer(VOEntities.BODY, new EntityBodyRenderer.RenderFactory());
 		registerRenderer(VOEntities.CRAB, new EntityCrabRenderer.RenderFactorySmall());
 		registerRenderer(VOEntities.CRAB_GIANT, new EntityCrabRenderer.RenderFactoryLarge());
 		registerRenderer(VOEntities.WORG, new EntityWorgRenderer.RenderFactory());

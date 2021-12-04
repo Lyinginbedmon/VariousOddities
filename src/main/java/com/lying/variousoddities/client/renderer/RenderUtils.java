@@ -5,17 +5,48 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 
 public class RenderUtils
 {
+	private static RenderType MATTE_COLOUR;
+	
+	public static RenderType getMatteColour()
+	{
+		if(MATTE_COLOUR == null)
+		{
+			RenderState.WriteMaskState mask = new RenderState.WriteMaskState(true, true);
+			RenderState.TargetState target = new RenderState.TargetState("weather_target", () -> {
+			      if (Minecraft.isFabulousGraphicsEnabled()) {
+			          Minecraft.getInstance().worldRenderer.func_239231_t_().bindFramebuffer(false);
+			       }
+
+			    }, () -> {
+			       if (Minecraft.isFabulousGraphicsEnabled()) {
+			          Minecraft.getInstance().getFramebuffer().bindFramebuffer(false);
+			       }
+
+			    });
+			
+			MATTE_COLOUR = RenderType.makeType("matte_colour", DefaultVertexFormats.POSITION_COLOR, 7, 256, false, true, 
+					RenderType.State.getBuilder().
+						writeMask(mask).
+						target(target).
+						shadeModel(new RenderState.ShadeModelState(true)).build(false));
+		}
+		
+		return MATTE_COLOUR;
+	}
+	
 	public static void drawLine(MatrixStack matrixStack, Vector3d posA, Vector3d posB, Vector3d eyePos, float red, float green, float blue, float startAlpha, float endAlpha, double heightA, double heightB)
 	{
 		Minecraft mc = Minecraft.getInstance();
         IRenderTypeBuffer.Impl buffers = mc.getRenderTypeBuffers().getBufferSource();
-        IVertexBuilder buffer = buffers.getBuffer(RenderType.getLightning());
+        IVertexBuilder buffer = buffers.getBuffer(getMatteColour());
 		
 		Vector3d heightVecA = new Vector3d(0, heightA, 0);
 		Vector3d heightVecB = new Vector3d(0, heightB, 0);
@@ -76,7 +107,7 @@ public class RenderUtils
 	{
 		Minecraft mc = Minecraft.getInstance();
         IRenderTypeBuffer.Impl buffers = mc.getRenderTypeBuffers().getBufferSource();
-        IVertexBuilder buffer = buffers.getBuffer(RenderType.getLightning());
+        IVertexBuilder buffer = buffers.getBuffer(getMatteColour());
         matrixStack.push();
         	posA = posA.subtract(eyePos);
 	    	posB = posB.subtract(eyePos);

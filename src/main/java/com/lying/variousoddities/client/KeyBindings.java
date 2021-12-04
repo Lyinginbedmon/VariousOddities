@@ -6,6 +6,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.client.gui.ScreenAbilityMenu;
 import com.lying.variousoddities.network.PacketAbilityActivate;
 import com.lying.variousoddities.network.PacketHandler;
@@ -14,6 +15,7 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.util.ResourceLocation;
@@ -62,7 +64,8 @@ public class KeyBindings
 	public void handleInputEvent(InputEvent event)
 	{
 		KeyBinding pressedKey = getPressedKey();
-		if(pressedKey == null || Minecraft.getInstance().player == null || !Minecraft.getInstance().player.isAlive() || Minecraft.getInstance().player.isSleeping() || Minecraft.getInstance().currentScreen != null)
+		ClientPlayerEntity player = Minecraft.getInstance().player;
+		if(pressedKey == null || player == null || !player.isAlive() || player.isSleeping() || PlayerData.isPlayerSoulDetached(player) || Minecraft.getInstance().currentScreen != null)
 			return;
 		
 		if(pressedKey == ABILITY_MENU)

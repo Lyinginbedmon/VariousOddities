@@ -3,11 +3,15 @@ package com.lying.variousoddities.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityTremorsense;
+import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -27,8 +31,10 @@ public class EntityMixinClient
 		PlayerEntity player = Minecraft.getInstance().player;
 		if(player != null && ent != player)
 		{
-			double dist = Math.sqrt(player.getDistanceSq(ent));
+			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent))
+				ci.setReturnValue(true);
 			
+			double dist = Math.sqrt(player.getDistanceSq(ent));
 			if(AbilityRegistry.hasAbility(player, AbilityTremorsense.REGISTRY_NAME))
 			{
 				AbilityTremorsense tremorsense = (AbilityTremorsense)AbilityRegistry.getAbilityByName(player, AbilityTremorsense.REGISTRY_NAME);
@@ -43,5 +49,15 @@ public class EntityMixinClient
 					ci.setReturnValue(true);
 			}
 		}
+	}
+	
+	@Inject(method = "tick()V", at = @At("TAIL"))
+	public void tick(final CallbackInfo ci)
+	{
+		Entity ent = (Entity)(Object)this;
+		PlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && ent != player && !VOHelper.isCreativeOrSpectator(player))
+			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent))
+				AbstractBody.moveWithinRangeOf(ent, player, PlayerData.forPlayer(player).getSoulCondition().getWanderRange());
 	}
 }

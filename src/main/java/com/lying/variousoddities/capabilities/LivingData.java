@@ -9,12 +9,16 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.entity.IDefaultSpecies;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
+import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.entity.AbstractBody;
+import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
@@ -105,6 +109,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean checkingFoodRegen = false;
 	
+	protected UUID possessorUUID = null;
+	
 	private boolean dirty = false;
 	
 	public LivingData()
@@ -155,6 +161,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		CompoundNBT compound = new CompoundNBT();
 			compound.putBoolean("Initialised", this.initialised);
 			
+			if(isBeingPossessed())
+				compound.putUniqueId("Possessor", this.possessorUUID);
+			
 			if(this.originDimension != null)
 				compound.putString("HomeDim", this.originDimension.toString());
 			
@@ -196,6 +205,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void deserializeNBT(CompoundNBT nbt)
 	{
 		this.initialised = nbt.getBoolean("Initialised");
+		
+		if(nbt.contains("Possessor", 11))
+			this.possessorUUID = nbt.getUniqueId("Possessor");
 		
 		if(nbt.contains("HomeDim", 8))
 			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
@@ -240,6 +252,25 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
 		
 		this.visualPotions = nbt.getByte("Potions");
+	}
+	
+	public boolean isBeingPossessed(){ return this.possessorUUID != null; }
+	public void setPossessedBy(UUID idIn)
+	{
+		if(this.entity.getType() == EntityType.PLAYER)
+			return;
+		
+		this.possessorUUID = idIn;
+		markDirty();
+	}
+	public UUID getPossessorUUID(){ return this.possessorUUID; }
+	public LivingEntity getPossessor()
+	{
+		List<LivingEntity> candidates = entity.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(128D), new Predicate<LivingEntity>()
+		{
+			public boolean apply(LivingEntity input){ return input.getUniqueID().equals(getPossessorUUID()); }
+		});
+		return candidates.isEmpty() ? null : candidates.get(0);
 	}
 	
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
@@ -372,10 +403,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void setBludgeoning(float bludgeonIn)
 	{
 		float oldDamage = this.bludgeoning;
-		this.bludgeoning = Math.max(0F, bludgeonIn);
+		this.bludgeoning = Math.max(0F, Math.min(bludgeonIn, this.entity.getMaxHealth() + ConfigVO.GENERAL.bludgeoningCap()));
 		
 		if(oldDamage != this.bludgeoning)
 		{
+			this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
+			
 			if(this.entity != null && this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
 				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketSyncBludgeoning(this.bludgeoning));
 			markDirty();
@@ -386,14 +419,16 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	 * Returns true IF:<br>
 	 * * The entity is alive<br>
 	 * * The entity's health and bludgeoning damage are both greater than 0<br>
-	 * * The bludgeoning damage is greater than health
+	 * * The bludgeoning damage is greater than health<br>
+	 * Does NOT represent the actual consciousness state of the entity
 	 */
 	public boolean isUnconscious()
 	{
 		return this.entity != null && this.entity.getHealth() > 0 && this.entity.isAlive() && getBludgeoning() > 0 && this.entity.getHealth() <= getBludgeoning();
 	}
 	
-	public boolean isActuallyUnconscious(){ return this.isUnconscious; }
+	/** Returns true if the entity is currently actually unconscious */
+	public boolean isActuallyUnconscious(){ return this.entity != null && this.entity.getType() == EntityType.PLAYER ? PlayerData.isPlayerBodyAsleep(entity) : this.isUnconscious; }
 	
 	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
 	public List<EnumCreatureType> getCustomTypes(){ return this.customTypes; }
@@ -525,29 +560,23 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
 		
 		if(this.bludgeoning > 0F)
-		{
 			if(--this.recoveryTimer <= 0)
-			{
 				setBludgeoning(this.bludgeoning - 1F);
-				this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
-			}
-		}
-		else
-			this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
 		
 		if(isUnconscious() != isActuallyUnconscious())
 		{
-			if(isUnconscious())
+			if(entity.getType() == EntityType.PLAYER)
 			{
-				// Spawn body
-//				LivingEntity body = EntityType.CHICKEN.create(entity.getEntityWorld());
-//				body.copyLocationAndAnglesFrom(entity);
-//				if(!entity.getEntityWorld().isRemote)
-//					entity.getEntityWorld().addEntity(body);
+				if(isUnconscious)
+					PlayerData.forPlayer((PlayerEntity)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
 			}
-			else
+			else if(isUnconscious())
 			{
-				// Despawn body
+				AbstractBody.clearNearbyAttackTargetsOf(entity);
+				// Spawn body
+				LivingEntity body = EntityBodyUnconscious.createBodyFrom(entity);
+				if(!entity.getEntityWorld().isRemote)
+					entity.getEntityWorld().addEntity(body);
 			}
 			
 			this.isUnconscious = isUnconscious();
@@ -555,6 +584,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		abilities.tick();
+		
+		handlePossession();
 		
 		if(this.dirty)
 		{
@@ -569,6 +600,18 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			// Ping server for visualPotion value
 			
 		}
+	}
+	
+	public void handlePossession()
+	{
+		if(!isBeingPossessed()) return;
+		LivingEntity possessor = this.getPossessor();
+		if(possessor == null)
+			return;
+		
+		this.entity.rotationYaw = possessor.rotationYaw;
+		this.entity.rotationYawHead = possessor.rotationYawHead;
+		this.entity.rotationPitch = possessor.rotationPitch;
 	}
 	
 	public void setSpeciesSelected(){ setSelectedSpecies(true); }

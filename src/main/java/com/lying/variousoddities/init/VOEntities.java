@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
+import com.lying.variousoddities.entity.EntityDummyBiped;
 import com.lying.variousoddities.entity.EntitySpell;
 import com.lying.variousoddities.entity.hostile.EntityCrabGiant;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
@@ -64,8 +65,8 @@ public class VOEntities
     public static final ITag.INamedTag<EntityType<?>> RATS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"rats");
     public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"scorpions");
 	
-    public static final EntityType<EntitySpell> SPELL	= register("spell", EntitySpell::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntitySpell::canSpawnAt);
-    public static final EntityType<EntityBodyCorpse> CORPSE	= register("corpse", EntityBodyCorpse::new, EntityClassification.MISC, 0.75F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityBodyCorpse::canSpawnAt);
+    public static final EntityType<EntitySpell> SPELL			= register("spell", EntitySpell::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntitySpell::canSpawnAt);
+    public static final EntityType<EntityBodyCorpse> CORPSE		= register("corpse", EntityBodyCorpse::new, EntityClassification.MISC, 0.75F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityBodyCorpse::canSpawnAt);
     public static final EntityType<EntityBodyUnconscious> BODY	= register("body", EntityBodyUnconscious::new, EntityClassification.MISC, 0.75F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityBodyUnconscious::canSpawnAt);
     
     // First release
@@ -90,7 +91,9 @@ public class VOEntities
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
 	
+	// Utility entities
 	public static final EntityType<EntityFireballGhastling> GHASTLING_FIREBALL	= register("ghastling_fireball", EntityFireballGhastling::new, EntityClassification.MISC, 0.3125F, 0.3125F, 4);
+	public static final EntityType<EntityDummyBiped> DUMMY_BIPED				= register("dummy_biped", EntityDummyBiped::new, EntityClassification.MISC, 0.6F, 1.8F, 4);
     
 	private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, int trackingRange)
 	{
@@ -175,7 +178,9 @@ public class VOEntities
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event)
     {
+    	event.put(DUMMY_BIPED, EntityDummyBiped.getAttributes().create());
     	event.put(CORPSE, EntityBodyCorpse.getAttributes().create());
+    	event.put(BODY, EntityBodyCorpse.getAttributes().create());
     	event.put(KOBOLD, EntityKobold.getAttributes().create());
     	event.put(GOBLIN, EntityGoblin.getAttributes().create());
     	event.put(MARIMO, EntityMarimo.getAttributes().create());

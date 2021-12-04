@@ -6,8 +6,10 @@ import org.apache.logging.log4j.Logger;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.client.KeyBindings;
-import com.lying.variousoddities.client.SettlementRender;
 import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
+import com.lying.variousoddities.client.special.BlindRender;
+import com.lying.variousoddities.client.special.ScentRender;
+import com.lying.variousoddities.client.special.SettlementRender;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.data.VODataGenerators;
 import com.lying.variousoddities.entity.ai.group.GroupHandler;
@@ -102,6 +104,8 @@ public class VariousOddities
         RenderTypeLookup.setRenderLayer(VOBlocks.TABLE_DRAFTING, RenderType.getCutout());
         MinecraftForge.EVENT_BUS.register(VOBusClient.class);
         MinecraftForge.EVENT_BUS.register(SettlementRender.class);
+        MinecraftForge.EVENT_BUS.register(BlindRender.class);
+        MinecraftForge.EVENT_BUS.register(ScentRender.class);
     }
 	
     private void doLoadComplete(final FMLLoadCompleteEvent event)

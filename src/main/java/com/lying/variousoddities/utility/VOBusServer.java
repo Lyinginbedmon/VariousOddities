@@ -6,11 +6,16 @@ import java.util.Random;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
+import com.lying.variousoddities.api.event.PlayerChangeConditionEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
+import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.EntityBodyCorpse;
+import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
@@ -41,6 +46,7 @@ import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.FireballEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
@@ -128,28 +134,44 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onPlayerCloneEvent(PlayerEvent.Clone event)
 	{
-		LivingData oldData = LivingData.forEntity(event.getOriginal());
-		LivingData newData = LivingData.forEntity(event.getPlayer());
-		if(oldData != null && newData != null)
+		LivingData oldLiving = LivingData.forEntity(event.getOriginal());
+		LivingData newLiving = LivingData.forEntity(event.getPlayer());
+		if(oldLiving != null && newLiving != null)
 		{
-			newData.setCustomTypes(oldData.getCustomTypes());
-			newData.setSpecies(oldData.getSpecies());
-			newData.setSelectedSpecies(oldData.hasSelectedSpecies());
-			newData.setTemplates(oldData.getTemplates());
-			newData.getAbilities().copy(oldData.getAbilities());
-			newData.getAbilities().markDirty();
+			newLiving.setCustomTypes(oldLiving.getCustomTypes());
+			newLiving.setSpecies(oldLiving.getSpecies());
+			newLiving.setSelectedSpecies(oldLiving.hasSelectedSpecies());
+			newLiving.setTemplates(oldLiving.getTemplates());
+			newLiving.getAbilities().copy(oldLiving.getAbilities());
+			newLiving.getAbilities().markDirty();
+		}
+		
+		PlayerData oldPlayer = PlayerData.forPlayer(event.getOriginal());
+		PlayerData newPlayer = PlayerData.forPlayer(event.getPlayer());
+		if(oldPlayer != null && newPlayer != null)
+		{
+			newPlayer.setBodyCondition(oldPlayer.getBodyCondition());
+			newPlayer.setBodyUUID(oldPlayer.getBodyUUID());
+			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundNBT()));
 		}
 	}
 	
 	@SubscribeEvent
 	public static void onPlayerRespawnEvent(PlayerRespawnEvent event)
 	{
-		LivingData data = LivingData.forEntity(event.getPlayer());
-		if(data != null)
-			data.getAbilities().markDirty();
+		LivingData livingData = LivingData.forEntity(event.getPlayer());
+		if(livingData != null)
+			livingData.getAbilities().markDirty();
 		
 		if(AbilityRegistry.hasAbility(event.getPlayer(), AbilitySize.REGISTRY_NAME))
 			event.getPlayer().recalculateSize();
+		
+		if(PlayerData.isPlayerBodyDead(event.getPlayer()))
+		{
+			PlayerData playerData = PlayerData.forPlayer(event.getPlayer());
+			playerData.setBodyCondition(BodyCondition.ALIVE);
+			playerData.setSoulCondition(SoulCondition.ALIVE);
+		}
 	}
 	
 	@SubscribeEvent
@@ -157,7 +179,11 @@ public class VOBusServer
 	{
 		Entity theEntity = event.getEntity();
 		if(theEntity instanceof LivingEntity && !theEntity.getEntityWorld().isRemote)
-			PacketHandler.sendToAll((ServerWorld)theEntity.getEntityWorld(), new PacketSyncLivingData(theEntity.getUniqueID(), LivingData.forEntity((LivingEntity)theEntity)));
+		{
+			LivingData data = LivingData.forEntity((LivingEntity)theEntity);
+			if(data != null && !theEntity.getEntityWorld().isRemote)
+				PacketHandler.sendToAll((ServerWorld)theEntity.getEntityWorld(), new PacketSyncLivingData(theEntity.getUniqueID(), data));
+		}
 		
 		if(theEntity.getType() == EntityType.CAT || theEntity.getType() == EntityType.OCELOT)
 		{
@@ -218,13 +244,111 @@ public class VOBusServer
 		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof AbstractGoblinWolf)
 			((AbstractGoblinWolf)cause.getTrueSource()).heal(2F + victim.getRNG().nextFloat() * 3F);
 		
-		// Spawn a corpse when a Needled mob dies
-		if(event.getSource() != DamageSource.OUT_OF_WORLD && (victim.isPotionActive(VOPotions.NEEDLED) || victim.getType() == EntityType.PLAYER && ConfigVO.GENERAL.playersSpawnCorpses()))
+	}
+	
+	@SubscribeEvent(priority=EventPriority.LOW)
+	public static void unconsciousDeathEvent(LivingDeathEvent event)
+	{
+		LivingEntity victim = event.getEntityLiving();
+		EntityBodyUnconscious body = EntityBodyUnconscious.getBodyFromEntity(victim);
+		if(body != null)
+			victim.copyLocationAndAnglesFrom(body);
+	}
+	
+	/** Spawn a corpse when a Needled creature dies */
+	@SubscribeEvent(priority=EventPriority.LOWEST)
+	public static void corpseSpawnEvent(LivingDeathEvent event)
+	{
+		LivingEntity victim = event.getEntityLiving();
+		World world = victim.getEntityWorld();
+		if(event.getSource() == DamageSource.OUT_OF_WORLD || event.isCanceled())
+			return;
+		
+		if(!(victim instanceof MobEntity || victim instanceof PlayerEntity))
+			return;
+		
+		boolean spawnCorpse = false;
+		switch(ConfigVO.GENERAL.corpseSpawnRule())
 		{
+			case PLAYERS_ONLY:
+				spawnCorpse = victim.getType() == EntityType.PLAYER;
+				break;
+			case NEEDLED_ONLY:
+				spawnCorpse = victim.isPotionActive(VOPotions.NEEDLED);
+				break;
+			case PLAYERS_AND_NEEDLED:
+				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.isPotionActive(VOPotions.NEEDLED);
+				break;
+			case ALWAYS:
+				spawnCorpse = true;
+				break;
+			default:
+				spawnCorpse = false;
+				break;
+		}
+		
+		if(spawnCorpse)
+		{
+			AbstractBody.clearNearbyAttackTargetsOf(victim);
 			victim.removeActivePotionEffect(VOPotions.NEEDLED);
 			EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(victim);
-			if(corpse != null && !world.isRemote)
+			
+			if(victim.getType() == EntityType.PLAYER)
+			{
+				PlayerData playerData = PlayerData.forPlayer((PlayerEntity)victim);
+				
+				// If player is already dead, let them die as normal
+				if(PlayerData.isPlayerBodyDead((PlayerEntity)victim))
+					return;
+				// Otherwise, cancel the event and set them to be dead
+				else if(playerData.setConditionIsDead(corpse.getUniqueID()))
+				{
+					event.setCanceled(true);
+					world.getPlayers().forEach((player) -> { player.sendMessage(event.getSource().getDeathMessage(victim), victim.getUniqueID()); });
+					return;
+				}
+			}
+			else if(corpse != null && !world.isRemote)
 				world.addEntity(corpse);
+		}
+	}
+	
+	/**
+	 * Spawns an appropriate body (if any) in response to a player's change in condition.
+	 * @param event
+	 */
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public static void onPlayerConditionChange(PlayerChangeConditionEvent event)
+	{
+		if(event.bodyChange())
+		{
+			PlayerEntity player = event.getPlayer();
+			PlayerData data = PlayerData.forPlayer(player);
+			World world = player.getEntityWorld();
+			
+			if(!(event.getNewBody() == BodyCondition.ALIVE && event.getNewSoul() == SoulCondition.ALIVE))
+				AbstractBody.clearNearbyAttackTargetsOf(player);
+			
+			switch(event.getNewBody())
+			{
+				case DEAD:
+					player.removeActivePotionEffect(VOPotions.NEEDLED);
+					EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(player);
+					data.setBodyUUID(corpse.getUniqueID());
+					player.setHealth(2F);
+					if(!world.isRemote)
+						world.addEntity(corpse);
+					break;
+				case UNCONSCIOUS:
+					LivingEntity body = EntityBodyUnconscious.createBodyFrom(player);
+					data.setBodyUUID(body.getUniqueID());
+					if(!world.isRemote)
+						world.addEntity(body);
+					break;
+				case ALIVE:
+				default:
+					break;
+			}
 		}
 	}
 	

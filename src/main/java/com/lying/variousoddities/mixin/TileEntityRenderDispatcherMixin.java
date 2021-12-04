@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.utility.VOBusClient;
+import com.lying.variousoddities.client.special.BlindRender;
 
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraftforge.api.distmarker.Dist;
@@ -18,7 +18,7 @@ public class TileEntityRenderDispatcherMixin
 	@Inject(method = "renderTileEntity", at = @At("HEAD"), cancellable = true)
 	public void renderTileEntity(final CallbackInfo ci)
 	{
-		if(VOBusClient.playerIsBlind())
+		if(BlindRender.playerIsBlind())
 			ci.cancel();
 	}
 }

@@ -49,6 +49,7 @@ public class ClientProxy extends CommonProxy
         
 		IEventBus busForge = MinecraftForge.EVENT_BUS;
 		busForge.addListener(GuiHandler::renderAbilityOverlay);
+		busForge.addListener(GuiHandler::curtailHUDWhenAbnormal);
 		busForge.addListener(GuiHandler::renderBludgeoning);
 	}
 	

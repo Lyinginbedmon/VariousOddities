@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.utility.VOBusClient;
+import com.lying.variousoddities.client.special.BlindRender;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
@@ -22,7 +22,7 @@ public class EntityRendererManagerMixin
 	public <E extends Entity> void getPackedLight(E entityIn, float partialTicks, final CallbackInfoReturnable<Integer> ci)
 	{
 		PlayerEntity player = Minecraft.getInstance().player;
-		if(player != null && VOBusClient.playerIsBlind() && entityIn == player)
+		if(player != null && BlindRender.playerIsBlind() && entityIn == player)
 			ci.setReturnValue(8);
 	}
 }

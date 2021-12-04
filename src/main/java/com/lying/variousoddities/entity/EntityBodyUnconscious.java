@@ -5,11 +5,18 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -27,13 +34,123 @@ public class EntityBodyUnconscious extends AbstractBody
     }
 	
 	@Nullable
-	public static EntityBodyUnconscious createCorpseFrom(@Nonnull LivingEntity living)
+	public static EntityBodyUnconscious createBodyFrom(@Nonnull LivingEntity living)
 	{
 		if(living == null) return null;
-		EntityBodyUnconscious corpse = new EntityBodyUnconscious(VOEntities.BODY, living.getEntityWorld());
-		corpse.copyFrom(living);
-		return corpse;
+		EntityBodyUnconscious body = new EntityBodyUnconscious(VOEntities.BODY, living.getEntityWorld());
+		body.copyFrom(living);
+		body.setSoulUUID(living.getUniqueID());
+		
+		if(living.getType() == EntityType.PLAYER)
+		{
+			PlayerEntity player = (PlayerEntity)living;
+			PlayerData.forPlayer(player).setBodyUUID(body.getUniqueID());
+		}
+		
+		return body;
+	}
+	
+	public static EntityBodyUnconscious getBodyFromEntity(@Nonnull LivingEntity living)
+	{
+		World world = living.getEntityWorld();
+		for(EntityBodyUnconscious body : world.getEntitiesWithinAABB(EntityBodyUnconscious.class, AbstractBody.ENTIRE_WORLD))
+			if(body.getSoulUUID().equals(living.getUniqueID()))
+				return body;
+		return null;
+	}
+	
+	public boolean shouldBindIfPersistent(){ return true; }
+	
+	public void setBody(@Nullable LivingEntity living)
+	{
+		CompoundNBT data = new CompoundNBT();
+		
+		// Store entity equipment in body inventory
+		if(living != null)
+		{
+			setSoulUUID(living.getUniqueID());
+			
+			living.writeWithoutTypeId(data);
+			if(living.getType() == EntityType.PLAYER)
+			{
+				data.putString("id", "player");
+				getDataManager().set(PROFILE, NBTUtil.writeGameProfile(new CompoundNBT(), ((PlayerEntity)living).getGameProfile()));
+			}
+			else
+				data.putString("id", living.getEntityString());
+			
+			if(data.contains("Passengers"))
+				data.remove("Passengers");
+		}
+		else
+		{
+			this.bodyInventory.clear();
+			setSoulUUID(null);
+		}
+		
+		getDataManager().set(ENTITY, data);
+		updateSize();
+		onInventoryChanged(null);
+	}
+	
+	public LivingEntity getBody()
+	{
+		for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, ENTIRE_WORLD))
+			if(living.getUniqueID() == this.getSoulUUID())
+				return living;
+		
+		return super.getBody();
 	}
 	
     public boolean isNoDespawnRequired(){ return true; }
+	
+	protected void dropInventory(){ }
+	
+	// FIXME Unconscious bodies despawning should respawn their associated mob, if any
+	public void tick()
+	{
+		super.tick();
+		
+		if(hasBody())
+		{
+			LivingEntity soul = getSoul();
+//			if(soul == null)
+//			{
+//				if(!isPlayer())
+//					onKillCommand();
+//			}
+//			else
+//				moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
+			
+			boolean unconscious = LivingData.forEntity(getBody()).isActuallyUnconscious();
+			if(isPlayer())
+			{
+				// If the player is online and not unconscious, remove body
+				if(!PlayerData.isPlayerBodyAsleep(soul))
+					this.onKillCommand();
+				
+				return;
+			}
+			else if(!soul.isAlive())
+				this.onKillCommand();
+			
+			if(!unconscious)
+				this.onKillCommand();
+		}
+	}
+	
+	public boolean attackEntityFrom(DamageSource cause, float amount)
+	{
+		if(cause != DamageSource.OUT_OF_WORLD)
+			if(hasBody() && getSoul() != null)
+				getSoul().attackEntityFrom(cause, amount);
+		return super.attackEntityFrom(cause, amount);
+	}
+	
+	public boolean addPotionEffect(EffectInstance effectInstanceIn)
+	{
+		if(hasBody() && getSoul() != null)
+			getSoul().addPotionEffect(effectInstanceIn);
+		return false;
+	}
 }

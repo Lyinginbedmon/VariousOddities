@@ -1,5 +1,6 @@
 package com.lying.variousoddities.client.gui;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.config.ConfigVO.Client.EnumCorner;
 import com.lying.variousoddities.config.ConfigVO.Client.EnumCorner.SideX;
@@ -17,6 +19,7 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
+import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -68,7 +71,7 @@ public class GuiHandler
 				player = Minecraft.getInstance().player;
 				if(player != null)
 				{
-					if(!player.isSpectator() && player.isAlive())
+					if(!player.isSpectator() && player.isAlive() && !PlayerData.isPlayerSoulDetached(player))
 					{
 						EnumCorner corner = ConfigVO.CLIENT.abilityCorner.get();
 						if(corner == null)
@@ -81,20 +84,43 @@ public class GuiHandler
 		}
 	}
 	
+	private static final EnumSet<ElementType> CURTAIL_EXCEPTIONS = EnumSet.of
+			(
+				ElementType.ALL, 
+				ElementType.EXPERIENCE, 
+				ElementType.VIGNETTE,
+				ElementType.TEXT,
+				ElementType.CHAT,
+				ElementType.PLAYER_LIST,
+				ElementType.FPS_GRAPH,
+				ElementType.DEBUG,
+				ElementType.SUBTITLES,
+				ElementType.CROSSHAIRS);
+	
+	public static void curtailHUDWhenAbnormal(RenderGameOverlayEvent.Pre event)
+	{
+		if(!CURTAIL_EXCEPTIONS.contains(event.getType()))
+		{
+			PlayerEntity localPlayer = Minecraft.getInstance().player;
+			if(!PlayerData.isPlayerNormalFunction(localPlayer) && !VOHelper.isCreativeOrSpectator(localPlayer))
+				event.setCanceled(true);
+		}
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static void renderBludgeoning(RenderGameOverlayEvent.Pre event)
 	{
-		if(event.getType() != RenderGameOverlayEvent.ElementType.HEALTH || event.isCanceled())
+		mc = Minecraft.getInstance();
+		if(event.getType() != RenderGameOverlayEvent.ElementType.HEALTH || event.isCanceled() || !PlayerData.isPlayerNormalFunction(mc.player) || VOHelper.isCreativeOrSpectator(mc.player))
 			return;
 		
-		mc = Minecraft.getInstance();
 		profiler = mc.getProfiler();
 		profiler.startSection("varodd-hud-bludgeoning");
 			player = Minecraft.getInstance().player;
 			if(player != null)
 			{
 				LivingData data = LivingData.forEntity(player);
-				if(data != null)
+				if(data != null && !PlayerData.isPlayerBodyAsleep(player))
 				{
 					mc.getTextureManager().bindTexture(HUD_ICONS);
 					

@@ -1,10 +1,14 @@
 package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.init.VODamageSource;
+import com.lying.variousoddities.item.IBludgeoningItem;
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.block.AnvilBlock;
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
@@ -34,7 +38,7 @@ public class AbilityUnarmedStrike extends ToggledAbility
 		if(isValidDamageSource(event.getSource()))
 		{
 			LivingEntity trueSource = (LivingEntity)event.getSource().getTrueSource();
-			if(AbilityRegistry.hasAbility(trueSource, REGISTRY_NAME) && ((AbilityUnarmedStrike)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME)).isActive())
+			if(isValidItem(trueSource.getHeldItemMainhand(), AbilityRegistry.hasAbility(trueSource, REGISTRY_NAME) && ((AbilityUnarmedStrike)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME)).isActive()))
 			{
 				// Replace melee damage with bludgeoning damage
 				event.setCanceled(true);
@@ -43,13 +47,25 @@ public class AbilityUnarmedStrike extends ToggledAbility
 		}
 	}
 	
+	protected boolean isValidItem(ItemStack stackIn, boolean hasActiveAbility)
+	{
+		if(stackIn.getItem() instanceof IBludgeoningItem)
+			return true;
+		else if(Block.getBlockFromItem(stackIn.getItem()) instanceof AnvilBlock && stackIn.getDisplayName().getString().equalsIgnoreCase("ACME"))
+			return true;
+		return stackIn.isEmpty() && hasActiveAbility;
+	}
+	
 	protected boolean isValidDamageSource(DamageSource source)
 	{
 		if(source != VODamageSource.BLUDGEON && source instanceof EntityDamageSource && !((EntityDamageSource)source).getIsThornsDamage())
 		{
 			Entity trueSource = source.getTrueSource();
 			if(source.getImmediateSource() == trueSource && trueSource != null && trueSource instanceof LivingEntity && trueSource.isAlive())
-				return ((LivingEntity)trueSource).getHeldItemMainhand().isEmpty();
+			{
+				ItemStack weapon = ((LivingEntity)trueSource).getHeldItemMainhand();
+				return isValidItem(weapon, true);
+			}
 		}
 		return false;
 	}

@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.lying.variousoddities.client.special.BlindRender;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
@@ -27,7 +28,7 @@ public class WorldRendererMixin
 	@Inject(method = "renderSky(Lcom/mojang/blaze3d/matrix/MatrixStack;F)V", at = @At("HEAD"), cancellable = true)
 	private void renderSky(MatrixStack stack, float partialTicks, CallbackInfo ci)
 	{
-		if(VOBusClient.playerInWall() || VOBusClient.playerIsBlind())
+		if(VOBusClient.playerInWall() || BlindRender.playerIsBlind())
 		{
 			renderSkyEnd(stack);
 			ci.cancel();
@@ -37,7 +38,7 @@ public class WorldRendererMixin
 	@Inject(method = "renderBlockLayer", at = @At("HEAD"), cancellable = true)
 	private void renderBlockLayer(CallbackInfo ci)
 	{
-		if(VOBusClient.playerIsBlind())
+		if(BlindRender.playerIsBlind())
 			ci.cancel();
 	}
 	
@@ -45,7 +46,7 @@ public class WorldRendererMixin
 	private void renderEntity(Entity entityIn, double x, double y, double z, float f, MatrixStack stack, IRenderTypeBuffer buffer, CallbackInfo ci)
 	{
 		PlayerEntity player = Minecraft.getInstance().player;
-		if(VOBusClient.playerIsBlind())
+		if(BlindRender.playerIsBlind())
 			if(entityIn == player) return;
 			else if(!Minecraft.getInstance().isEntityGlowing(entityIn))
 				ci.cancel();
@@ -54,21 +55,21 @@ public class WorldRendererMixin
 	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
 	private void renderClouds(CallbackInfo ci)
 	{
-		if(VOBusClient.playerIsBlind())
+		if(BlindRender.playerIsBlind())
 			ci.cancel();
 	}
 	
 	@Inject(method = "renderStars", at = @At("HEAD"), cancellable = true)
 	private void renderStars(CallbackInfo ci)
 	{
-		if(VOBusClient.playerIsBlind())
+		if(BlindRender.playerIsBlind())
 			ci.cancel();
 	}
 	
 	@Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
 	private void renderRainSnow(CallbackInfo ci)
 	{
-		if(VOBusClient.playerIsBlind())
+		if(BlindRender.playerIsBlind())
 			ci.cancel();
 	}
 }

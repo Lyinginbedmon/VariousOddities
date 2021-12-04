@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.controller.LookController;
@@ -46,7 +49,7 @@ public class VOHelper
 		};
 	
 	public static final String NEWLINE = "/n";
-    
+	
     public static String getFormattedTime(int seconds)
     {
 		int minutes = Math.floorDiv(seconds, 60);
@@ -78,9 +81,9 @@ public class VOHelper
     	return (time < 10 ? "0" : "") + (time > 0 ? time : "0");
     }
 	
-	public static boolean isCreativeOrSpectator(PlayerEntity player)
+	public static boolean isCreativeOrSpectator(@Nullable LivingEntity player)
 	{
-		return player.isCreative() || player.isSpectator();
+		return player != null && (player.getType() == EntityType.PLAYER && ((PlayerEntity)player).abilities.isCreativeMode || player.isSpectator());
 	}
     
     /** Returns the modulus of the given value, accounting for errors in Java's function when dealing with negative values */
@@ -100,7 +103,7 @@ public class VOHelper
         return new Vector3d((double)(f1 * f2), (double)f3, (double)(f * f2));
 	}
 	
-	public static LivingEntity getEntityLookTarget(LivingEntity entityIn)
+	public static LivingEntity getEntityLookTarget(@Nullable LivingEntity entityIn)
 	{
 		if(entityIn == null) return null;
 		return getEntityLookTarget(entityIn, (entityIn instanceof PlayerEntity ? ((PlayerEntity)entityIn).getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue() : 5D));

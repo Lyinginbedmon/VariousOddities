@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
@@ -80,6 +81,9 @@ public class EntityMixin
 	@Shadow
 	public void setPose(Pose pose){ }
 	
+	@Shadow
+	public boolean isPoseClear(Pose poseIn){ return false; }
+	
 	@Inject(method = "pushOutOfBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;<init>(DDD)V"), cancellable = true)
 	public void incorporealPushOutOfBlock(double x, double y, double z, final CallbackInfo ci)
 	{
@@ -113,7 +117,7 @@ public class EntityMixin
 	public void incorporealStepCarefully(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && IPhasingAbility.isPhasing((LivingEntity)ent) && !isSprinting())
+		if(ent instanceof LivingEntity && IPhasingAbility.isPhasing((LivingEntity)ent) && !isSprinting() || (ent.getType() == EntityType.PLAYER && PlayerData.isPlayerSoulDetached((PlayerEntity)ent)))
 			ci.setReturnValue(true);
 	}
 	
