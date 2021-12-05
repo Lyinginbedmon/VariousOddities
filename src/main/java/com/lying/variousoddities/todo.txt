@@ -1,6 +1,4 @@
-Fix settlement room rendering in third-person
 Possession
-	Ray trace for click events
 	Possessed inventory, accessed with inventory key
 	Possessed mobs pick up items as players
 	Right-click handling for tile entities?

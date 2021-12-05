@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
@@ -49,7 +50,8 @@ public class BlindRender
 	private static boolean blindnessActive = false;
 	
 	private static final Map<BlockPos, Integer> BLIND_RENDERS = new HashMap<>();
-	private static final int BLIND_MEMORY = Reference.Values.TICKS_PER_SECOND * 15;
+	private static final int BLOCK_MEMORY = Reference.Values.TICKS_PER_SECOND * 15;
+	private static final double MEMORY_RANGE = 6D * 6D;
 	
 	/** Returns true if the local player has the Blind ability */
 	public static boolean playerIsBlind()
@@ -66,19 +68,37 @@ public class BlindRender
 	@SubscribeEvent
 	public static void renderBlindBlocks(RenderWorldLastEvent event)
 	{
-		List<BlockPos> clear = Lists.newArrayList();
-		BLIND_RENDERS.forEach((blockPos, ticks) -> { ticks--; if(ticks <= 0) clear.add(blockPos); else BLIND_RENDERS.put(blockPos, ticks); });
-		clear.forEach((blockPos) -> { BLIND_RENDERS.remove(blockPos); });
-		
+		float partialTicks = event.getPartialTicks();
+		if(player == null)
+			player = mc.player;
 		if(player == null || player.getEntityWorld() == null)
 			return;
 		World world = player.getEntityWorld();
-		float partialTicks = event.getPartialTicks();
+		
+		List<BlockPos> clear = Lists.newArrayList();
+		BLIND_RENDERS.forEach((blockPos, ticks) -> 
+			{
+				if(player.getPosition().distanceSq(blockPos) < MEMORY_RANGE)
+					BLIND_RENDERS.put(blockPos, Math.min(++ticks, BLOCK_MEMORY));
+				else
+				{
+					ticks--;
+					if(ticks <= 0)
+						clear.add(blockPos);
+					else
+						BLIND_RENDERS.put(blockPos, ticks);
+				}
+			});
+		clear.forEach((blockPos) -> { BLIND_RENDERS.remove(blockPos); });
 		
 		// Block the player is standing on
-		BlockPos floor = player.isOnGround() ? player.getPosition().down() : player.getPosition();
-		if(!world.isAirBlock(floor))
-			BLIND_RENDERS.put(floor, BLIND_MEMORY);
+		BlockPos floor = player.getPosition();
+		for(int i=0; i<player.getHeight(); i++)
+		{
+			registerBlock(floor.up(i), world);
+			for(Direction facing : Direction.values())
+				registerBlock(floor.up(i).offset(facing), world);
+		}
 		
 		// Block the player is looking at
 		Vector3d eyes = player.getEyePosition(partialTicks);
@@ -88,18 +108,14 @@ public class BlindRender
 		BlockRayTraceResult result = world.rayTraceBlocks(context);
 		
 		if(result.getType() == RayTraceResult.Type.BLOCK)
-		{
-			BlockPos look = result.getPos();
-			if(!world.isAirBlock(look))
-				BLIND_RENDERS.put(look, BLIND_MEMORY);
-		}
+			registerBlock(result.getPos(), world);
 		
 		blindnessActive = AbilityRegistry.hasAbility(player, AbilityBlind.REGISTRY_NAME);
 		
 		// Supplementary rendering to aid blind players in basic functioning
 		if(blindnessActive && mc.gameSettings.getPointOfView() == PointOfView.FIRST_PERSON)
 		{
-			BlockPos playerPos = new BlockPos(player.getPosX(), player.getPosYEye(), player.getPosZ());
+			BlockPos playerPos = new BlockPos(mc.getRenderManager().info.getProjectedView());
 			List<BlockPos> blindRenders = Lists.newArrayList();
 			blindRenders.addAll(BLIND_RENDERS.keySet());
 			blindRenders.sort(new Comparator<BlockPos>()
@@ -112,29 +128,39 @@ public class BlindRender
 						}
 					});
 			for(BlockPos pos : blindRenders)
-				renderBlock(world.getBlockState(pos), pos, world, event.getMatrixStack(), partialTicks);
+				renderBlock(world.getBlockState(pos), pos, world, event.getMatrixStack(), (float)BLIND_RENDERS.get(pos) / (float)BLOCK_MEMORY, partialTicks);
 		}
 	}
 	
-	private static void renderBlock(BlockState state, BlockPos pos, World world, MatrixStack stack, float partialTicks)
+	private static void registerBlock(BlockPos pos, World world)
+	{
+		if(!world.isAirBlock(pos))
+			BLIND_RENDERS.put(pos, BLOCK_MEMORY);
+	}
+	
+	private static void renderBlock(BlockState state, BlockPos pos, World world, MatrixStack stack, float alpha, float partialTicks)
 	{
 		BlockRendererDispatcher renderer = Minecraft.getInstance().getBlockRendererDispatcher();
 		IBakedModel model = renderer.getModelForState(state);
 		RenderType renderType = getStateRenderType(state);
 		stack.push();
-			Vector3d playerPos = Minecraft.getInstance().player.getEyePosition(partialTicks);
-			stack.translate(pos.getX() - playerPos.x, pos.getY() - playerPos.y, pos.getZ() - playerPos.z);
-			ForgeHooksClient.setRenderLayer(renderType);
-				IVertexBuilder vertex = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().getBuffer(getStateRenderType(state));
-				IModelData modelData = model.getModelData(world, pos, state, EmptyModelData.INSTANCE);
-				renderer.getBlockModelRenderer().renderModelSmooth(world, model, state, pos, stack, vertex, false, world.rand, 0L, OverlayTexture.NO_OVERLAY, modelData);
-			ForgeHooksClient.setRenderLayer(null);
-			
-			if(state.hasTileEntity())
-			{
-				TileEntity tile = world.getTileEntity(pos);
-				renderTile(tile, stack, partialTicks);
-			}
+			Vector3d playerPos = mc.getRenderManager().info.getProjectedView();
+			double alphaOffset = (1F - alpha) * 0.5D;
+			stack.translate(pos.getX() - playerPos.x + alphaOffset, pos.getY() - playerPos.y + alphaOffset, pos.getZ() - playerPos.z + alphaOffset);
+			stack.push();
+				stack.scale(alpha, alpha, alpha);
+				ForgeHooksClient.setRenderLayer(renderType);
+					IVertexBuilder vertex = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().getBuffer(getStateRenderType(state));
+					IModelData modelData = model.getModelData(world, pos, state, EmptyModelData.INSTANCE);
+					renderer.getBlockModelRenderer().renderModelSmooth(world, model, state, pos, stack, vertex, false, world.rand, 0L, OverlayTexture.NO_OVERLAY, modelData);
+				ForgeHooksClient.setRenderLayer(null);
+				
+				if(state.hasTileEntity())
+				{
+					TileEntity tile = world.getTileEntity(pos);
+					renderTile(tile, stack, partialTicks);
+				}
+			stack.pop();
 		stack.pop();
 	}
 	
