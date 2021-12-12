@@ -15,6 +15,7 @@
 		"MerchantResultSlotMixin",
 		"NearestAttackableTargetGoalMixin",
 		"PlayerEntityMixin",
+		"ServerPlayerEntityMixin",
 		"ServerWorldMixin",
 		"ServerPlayNetHandlerMixin",
 		"MobEntityMixin",
@@ -31,6 +32,8 @@
 		"ElytraMixinClient",
 		"MovementInputMixin",
 		"MinecraftMixin",
-		"IngameGuiMixin"
+		"IngameGuiMixin",
+		"MouseHelperMixin",
+		"ActiveRenderInfoMixin"
 	]
 }

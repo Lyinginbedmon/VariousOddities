@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
@@ -16,6 +15,7 @@ import com.lying.variousoddities.network.PacketDeadDeath;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketPossessionClick;
 import com.lying.variousoddities.network.PacketUnconsciousAwaken;
+import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -53,27 +53,11 @@ public class MinecraftMixin
 	@Shadow
 	private TutorialToast field_244598_aV;
 	
-	@Inject(method = "getRenderViewEntity()Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
-	public void getRenderViewEntity(final CallbackInfoReturnable<Entity> ci)
-	{
-		PlayerEntity player = ((Minecraft)(Object)this).player;
-		if(player == null || PlayerData.isPlayerNormalFunction(player) || player.isSpectator() || player.isCreative())
-			return;
-		
-		PlayerData data = PlayerData.forPlayer(player);
-		if(data == null)
-			return;
-		
-		Entity ent = data.getPossessed();
-		if(data.isPossessing() && ent != null)
-			ci.setReturnValue(ent);
-	}
-	
 	@Inject(method = "processKeyBinds()V", at = @At("HEAD"), cancellable = true)
 	public void processKeyBinds(final CallbackInfo ci)
 	{
 		PlayerEntity player = ((Minecraft)(Object)this).player;
-		if(player == null || PlayerData.isPlayerNormalFunction(player) || player.isSpectator() || player.isCreative())
+		if(player == null)
 			return;
 		
 		PlayerData data = PlayerData.forPlayer(player);
@@ -84,24 +68,57 @@ public class MinecraftMixin
 		if(data.isPossessing())
 		{
 	        while(mc.gameSettings.keyBindAttack.isPressed())
-	        {
 	        	PacketHandler.sendToServer(new PacketPossessionClick(true, false));
-	        }
 	        
 	        while(mc.gameSettings.keyBindUseItem.isPressed())
-	        {
 	        	PacketHandler.sendToServer(new PacketPossessionClick(false, true));
-	        }
+	        
+	        processVitalKeys(mc);
+			ci.cancel();
+			return;
 		}
+		
+		if(PlayerData.isPlayerNormalFunction(player) || VOHelper.isCreativeOrSpectator(player))
+			return;
 		
 		ci.cancel();
 		
+		while(mc.gameSettings.keyBindInventory.isPressed())
+		{
+			if(data.possessionEnabled())
+				;
+			else
+				switch(data.getBodyCondition())
+				{
+					case DEAD:
+						// Send respawn packet if delay completed
+						if(data.timeToRespawnable() == 0F)
+							PacketHandler.sendToServer(new PacketDeadDeath());
+					case UNCONSCIOUS:
+						// Send wakeup packet if no longer unconscious
+						if(!LivingData.forEntity(player).isUnconscious() && data.getSoulCondition() == SoulCondition.ALIVE)
+							PacketHandler.sendToServer(new PacketUnconsciousAwaken());
+					default:
+						;
+				}
+		}
+		
+		processVitalKeys(mc);
+		
+		if(this.player.isHandActive())
+			this.playerController.onStoppedUsingItem(this.player);
+		
+		this.sendClickBlockToController(false);
+	}
+	
+	private void processVitalKeys(Minecraft mc)
+	{
 		for(; mc.gameSettings.keyBindTogglePerspective.isPressed(); mc.worldRenderer.setDisplayListEntitiesDirty())
 		{
 			PointOfView pointofview = mc.gameSettings.getPointOfView();
 			mc.gameSettings.setPointOfView(mc.gameSettings.getPointOfView().func_243194_c());
 			if(pointofview.func_243192_a() != mc.gameSettings.getPointOfView().func_243192_a())
-				mc.gameRenderer.loadEntityShader(mc.gameSettings.getPointOfView().func_243192_a() ? this.renderViewEntity : null);
+				mc.gameRenderer.loadEntityShader(mc.gameSettings.getPointOfView().func_243192_a() ? mc.getRenderViewEntity() : null);
 		}
 		
 		while(mc.gameSettings.keyBindSmoothCamera.isPressed())
@@ -126,26 +143,6 @@ public class MinecraftMixin
 			}
 		}
 		
-		while(mc.gameSettings.keyBindInventory.isPressed())
-		{
-			if(data.possessionEnabled())
-				;
-			else
-				switch(data.getBodyCondition())
-				{
-					case DEAD:
-						// Send respawn packet if delay completed
-						if(data.timeToRespawnable() == 0F)
-							PacketHandler.sendToServer(new PacketDeadDeath());
-					case UNCONSCIOUS:
-						// Send wakeup packet if no longer unconscious
-						if(!LivingData.forEntity(player).isUnconscious() && data.getSoulCondition() == SoulCondition.ALIVE)
-							PacketHandler.sendToServer(new PacketUnconsciousAwaken());
-					default:
-						;
-				}
-		}
-		
 		while(mc.gameSettings.keyBindAdvancements.isPressed())
 			this.displayGuiScreen(new AdvancementsScreen(this.player.connection.getAdvancementManager()));
 		
@@ -157,11 +154,6 @@ public class MinecraftMixin
 			if(this.currentScreen == null && this.loadingGui == null && mc.gameSettings.keyBindCommand.isPressed())
 				this.openChatScreen("/");
 		}
-		
-		if(this.player.isHandActive())
-			this.playerController.onStoppedUsingItem(this.player);
-		
-		this.sendClickBlockToController(false);
 	}
 	
 	@Shadow

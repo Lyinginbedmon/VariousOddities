@@ -260,6 +260,8 @@
 	"command.varodd.species.templates.remove.success": "Removed template %s to %s",
 	"command.varodd.species.templates.clear.success": "Cleared all templates from %s",
 	"command.varodd.species.templates.get.success": "%s has the %s template",
+	"command.varodd.possess.start": "You are now possessing %s",
+	"command.varodd.depossess.end": "You are no longer possessing %s",
 		"_comment12": "Potions and status effects",
 	"effect.varodd.sleep": "Sleeping",
 	"effect.varodd.paralysis": "Paralysis",

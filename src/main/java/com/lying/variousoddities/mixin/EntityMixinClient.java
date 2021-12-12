@@ -56,8 +56,13 @@ public class EntityMixinClient
 	{
 		Entity ent = (Entity)(Object)this;
 		PlayerEntity player = Minecraft.getInstance().player;
-		if(player != null && ent != player && !VOHelper.isCreativeOrSpectator(player))
-			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent))
+		if(player != null && ent != player)
+			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent) && !VOHelper.isCreativeOrSpectator(player))
 				AbstractBody.moveWithinRangeOf(ent, player, PlayerData.forPlayer(player).getSoulCondition().getWanderRange());
+			else if(PlayerData.isPlayerPossessing(player, ent))
+			{
+//				Entity.IMoveCallback callback = Entity::setPosition;
+//				callback.accept(player, ent.getPosX(), ent.getPosY(), ent.getPosZ());
+			}
 	}
 }

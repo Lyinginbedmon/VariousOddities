@@ -18,7 +18,6 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public class CommandDepossess extends CommandBase
@@ -52,8 +51,7 @@ public class CommandDepossess extends CommandBase
 		
 		UUID possessedID = playerData.getPossessing();
 		
-		playerData.setPossession(false);
-		playerData.setPossessing(null);
+		playerData.stopPossessing();
 		playerData.setBodyCondition(BodyCondition.ALIVE);
 		playerData.setSoulCondition(SoulCondition.ALIVE);
 		
@@ -70,7 +68,7 @@ public class CommandDepossess extends CommandBase
 		else
 			throw INVALID_ENTITY_EXCEPTION.create();
 		
-		source.sendFeedback(new StringTextComponent("You are no longer possessing ").append(target.getDisplayName()), true);
+		source.sendFeedback(new TranslationTextComponent(translationSlug+"end", target.getDisplayName()), true);
 		
 		return 15;
 	}

@@ -34,6 +34,12 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	@Shadow
 	public void startFallFlying(){ }
 	
+	public boolean isPossessing()
+	{
+		PlayerEntity player = (PlayerEntity)(Object)this;
+		return player.isAlive() && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isPossessing();
+	}
+	
 	@Inject(method = "tick()V", at = @At("HEAD"))
 	public void tick(final CallbackInfo ci)
 	{

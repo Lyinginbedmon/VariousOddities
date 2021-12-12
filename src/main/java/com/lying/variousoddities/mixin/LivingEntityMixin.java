@@ -30,13 +30,16 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.Pose;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3d;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin extends EntityMixin
@@ -48,6 +51,15 @@ public class LivingEntityMixin extends EntityMixin
 	public int idleTime = 0;
 	
 	@Shadow
+	public float moveStrafing = 0F;
+	
+	@Shadow
+	public float moveForward = 0F;
+	
+	@Shadow
+	public boolean isJumping;
+	
+	@Shadow
 	public float getHealth(){ return 0F; }
 	
 	@Shadow
@@ -56,7 +68,7 @@ public class LivingEntityMixin extends EntityMixin
 	@Shadow
 	public boolean isElytraFlying(){ return false; }
 	
-	@Inject(method = "updatePotionEffects", at = @At("HEAD"))
+	@Inject(method = "updatePotionEffects()V", at = @At("HEAD"))
 	public void updatePotionEffects(final CallbackInfo ci)
 	{
 		LivingEntity living = (LivingEntity)(Object)this;
@@ -80,7 +92,7 @@ public class LivingEntityMixin extends EntityMixin
 		}
 	}
 	
-	@Inject(method = "baseTick", at = @At("TAIL"))
+	@Inject(method = "baseTick()V", at = @At("TAIL"))
 	public void baseTick(final CallbackInfo ci)
 	{
 		LivingData livingData = LivingData.forEntity((LivingEntity)(Object)this);
@@ -262,5 +274,81 @@ public class LivingEntityMixin extends EntityMixin
 			ci.setReturnValue(true);
 	}
 	
+	/** True if the current call to vanilla travel function is being performed by code in this class */
+	private boolean callingSuper = false;
 	
+	@Inject(method = "travel(Lnet/minecraft/util/math/vector/Vector3d;)V", at = @At("HEAD"), cancellable = true)
+	public void travel(Vector3d travelVector, final CallbackInfo ci)
+	{
+		if(callingSuper)
+		{
+			callingSuper = false;
+			return;
+		}
+		
+		if(!this.isAlive())
+			return;
+		
+		LivingEntity living = (LivingEntity)(Object)this;
+		if(!(living instanceof MobEntity))
+			return;
+		
+		MobEntity mob = (MobEntity)living;
+		LivingData data = LivingData.forEntity(mob);
+		if(data == null || !data.isBeingPossessed())
+			return;
+		System.out.println(""+living.getDisplayName().getString()+" is being possessed!");
+		
+		LivingEntity possessor = data.getPossessor();
+		if(possessor != null)
+		{
+			System.out.println(" * Possessor is "+possessor.getDisplayName().getString()+", treating as mounted animal");
+			ci.cancel();
+			mob.rotationYaw = possessor.rotationYaw;
+			mob.prevRotationYaw = mob.rotationYaw;
+			mob.rotationPitch = possessor.rotationPitch * 0.5F;
+			setRotation(mob.rotationYaw, mob.rotationPitch);
+			mob.renderYawOffset = mob.rotationYaw;
+			mob.rotationYawHead = mob.renderYawOffset;
+			float strafe = possessor.moveStrafing;
+			float forward = possessor.moveForward;
+			System.out.println(" * * Strafe: "+strafe);
+			System.out.println(" * * Forward: "+forward);
+			
+			// TODO Jump handling
+//			if(mob.isOnGround() && this.jumpPower == 0.0F && this.isRearing() && !this.allowStandSliding)
+//			{
+//				strafe = 0.0F;
+//				forward = 0.0F;
+//			}
+//			
+//			if(this.jumpPower > 0.0F && !this.isHorseJumping() && this.onGround)
+//			{
+//				double d0 = this.getHorseJumpStrength() * (double)this.jumpPower * (double)this.getJumpFactor();
+//				double d1;
+//				if (mob.isPotionActive(Effects.JUMP_BOOST))
+//					d1 = d0 + (double)((float)(mob.getActivePotionEffect(Effects.JUMP_BOOST).getAmplifier() + 1) * 0.1F);
+//				else
+//					d1 = d0;
+//				
+//				Vector3d vector3d = mob.getMotion();
+//				mob.setMotion(vector3d.x, d1, vector3d.z);
+//				mob.isAirBorne = true;
+//				net.minecraftforge.common.ForgeHooks.onLivingJump(mob);
+//				if (forward > 0.0F)
+//				{
+//					float f2 = MathHelper.sin(mob.rotationYaw * ((float)Math.PI / 180F));
+//					float f3 = MathHelper.cos(mob.rotationYaw * ((float)Math.PI / 180F));
+//					mob.setMotion(mob.getMotion().add((double)(-0.4F * f2 * this.jumpPower), 0.0D, (double)(0.4F * f3 * this.jumpPower)));
+//				}
+//			}
+//			
+//			this.jumpMovementFactor = this.getAIMoveSpeed() * 0.1F;
+			mob.setAIMoveSpeed((float)mob.getAttributeValue(Attributes.MOVEMENT_SPEED));
+			callingSuper = true;
+			mob.travel(new Vector3d((double)strafe, travelVector.y, (double)forward));
+			
+			mob.func_233629_a_(mob, false);
+		}
+	}
 }

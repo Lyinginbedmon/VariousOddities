@@ -96,7 +96,7 @@ public class AbilitySunBurn extends Ability
 		{
 			float light = entity.getBrightness();
 			BlockPos position = 
-					entity.getRidingEntity().getType() == EntityType.BOAT ? 
+					(entity.getRidingEntity() != null && entity.getRidingEntity().getType() == EntityType.BOAT) ? 
 							(new BlockPos(entity.getPosX(), (double)Math.round(entity.getPosY()), entity.getPosZ())).up() : 
 							new BlockPos(entity.getPosX(), (double)Math.round(entity.getPosY()), entity.getPosZ());
 			return light > 0.5F && entity.getRNG().nextFloat() * 30F < (light - 0.4F) * 2F && world.canSeeSky(position);

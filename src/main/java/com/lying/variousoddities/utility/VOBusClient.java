@@ -1,6 +1,7 @@
 package com.lying.variousoddities.utility;
 
 import java.util.Map;
+import java.util.UUID;
 
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
@@ -31,16 +32,21 @@ import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.settings.PointOfView;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.client.CEntityActionPacket;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -63,6 +69,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 @OnlyIn(Dist.CLIENT)
 public class VOBusClient
 {
+	private static final Minecraft mc = Minecraft.getInstance();
+	
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent(priority=EventPriority.LOWEST, receiveCanceled=true)
 	public static void noclipFog(FogDensity event)
@@ -90,9 +98,9 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onMouseScroll(GuiScreenEvent.MouseScrollEvent.Pre event)
 	{
-		if(Minecraft.getInstance().currentScreen != null && Minecraft.getInstance().currentScreen instanceof IScrollableGUI)
+		if(mc.currentScreen != null && mc.currentScreen instanceof IScrollableGUI)
 		{
-			((IScrollableGUI)Minecraft.getInstance().currentScreen).onScroll((int)Math.signum(event.getScrollDelta()));
+			((IScrollableGUI)mc.currentScreen).onScroll((int)Math.signum(event.getScrollDelta()));
 			event.setCanceled(true);
 		}
 	}
@@ -100,7 +108,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onDeadScroll(InputEvent.MouseScrollEvent event)
 	{
-		if(!PlayerData.isPlayerNormalFunction(Minecraft.getInstance().player))
+		if(!PlayerData.isPlayerNormalFunction(mc.player))
 			event.setCanceled(true);
 	}
 	
@@ -114,7 +122,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onLivingJump(LivingUpdateEvent event)
 	{
-		if(event.getEntityLiving() == Minecraft.getInstance().player)
+		if(event.getEntityLiving() == mc.player)
 		{
 			ClientPlayerEntity player = (ClientPlayerEntity)event.getEntityLiving();
 			LivingData data = LivingData.forEntity(event.getEntityLiving());
@@ -143,20 +151,75 @@ public class VOBusClient
 		}
 	}
 	
+	private static UUID possessedRender = null;
+	
 	@SubscribeEvent
 	public static void onPlayerRender(RenderPlayerEvent event)
 	{
-		PlayerEntity localPlayer = Minecraft.getInstance().player;
+		PlayerEntity localPlayer = mc.player;
 		PlayerEntity rendering = event.getPlayer();
 		
-		if(localPlayer == rendering)
+		PlayerData playerData = PlayerData.forPlayer(localPlayer);
+		PlayerData renderData = PlayerData.forPlayer(rendering);
+		if(playerData == null || renderData == null)
 			return;
-		else
+		
+		if(renderData.isPossessing())
 		{
-			PlayerData playerData = PlayerData.forPlayer(localPlayer);
-			PlayerData renderData = PlayerData.forPlayer(rendering);
+			LivingEntity possessed = renderData.getPossessed();
+			if(possessed != null)
+			{
+				event.setCanceled(true);
+				
+				if(localPlayer == rendering && mc.gameSettings.getPointOfView() == PointOfView.FIRST_PERSON)
+					return;
+				
+				EntityRendererManager renderManager = mc.getRenderManager();
+				CompoundNBT nbt = possessed.writeWithoutTypeId(new CompoundNBT());
+				Entity clone = possessed.getType().create(localPlayer.getEntityWorld());
+				clone.read(nbt);
+				clone.copyLocationAndAnglesFrom(rendering);
+				VOHelper.copyRotationFrom(rendering, clone);
+				
+				if(clone instanceof LivingEntity)
+				{
+					LivingEntity cloneLiving = (LivingEntity)clone;
+					cloneLiving.limbSwing = possessed.limbSwing;
+					cloneLiving.limbSwingAmount = possessed.limbSwingAmount;
+					cloneLiving.prevLimbSwingAmount = possessed.prevLimbSwingAmount;
+				}
+				
+				possessedRender = clone.getUniqueID();
+					renderManager.getRenderer(clone).render(clone, rendering.rotationYaw, event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight());
+				possessedRender = null;
+			}
+		}
+		else if(rendering != localPlayer)
+		{
 			if(renderData != null && playerData != null && renderData.getBodyCondition() != playerData.getBodyCondition())
 				event.setCanceled(true);
+		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@SubscribeEvent
+	public static void onRenderLiving(RenderLivingEvent.Pre event)
+	{
+		if(event.getEntity().getUniqueID().equals(possessedRender))
+			return;
+		
+		World world = mc.world;
+		boolean isBeingPossessed = false;
+		for(PlayerEntity player : world.getPlayers())
+			if(PlayerData.isPlayerPossessing(player, event.getEntity()))
+			{
+				isBeingPossessed = true;
+				break;
+			};
+		if(isBeingPossessed)
+		{
+			event.setCanceled(true);
+			return;
 		}
 	}
 	
@@ -173,7 +236,7 @@ public class VOBusClient
 			Vector3d posFeet = renderTarget.getPositionVec();
 			Vector3d posEyes = posFeet.add(0D, renderTarget.getEyeHeight(), 0D);
 			
-			PlayerEntity player = Minecraft.getInstance().player;
+			PlayerEntity player = mc.player;
 			Vector3d posView = player.getPositionVec().add(0D, player.getEyeHeight(), 0D);
 			
 			if(posView.distanceTo(posFeet) > 8D || posView.distanceTo(posEyes) > 8D)
@@ -188,7 +251,7 @@ public class VOBusClient
 			if(!AbilityRegistry.getAbilitiesOfType(renderTarget, AbilityPhasing.class).isEmpty() || (data != null && data.getBodyCondition() != BodyCondition.ALIVE))
 			{
 	            event.setCanceled(true);
-	            IRenderTypeBuffer.Impl iRenderTypeBuffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+	            IRenderTypeBuffer.Impl iRenderTypeBuffer = mc.getRenderTypeBuffers().getBufferSource();
 	            event.getMatrixStack().push();
 	            	skipRenderEvent = true;
 	            	event.getRenderer().render(renderTarget, renderTarget.rotationYaw, event.getPartialRenderTick(), event.getMatrixStack(), iRenderTypeBuffer, 0xffffff);
@@ -213,7 +276,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onDazedClickEvent(InputEvent.ClickInputEvent event)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player != null && VOPotions.isPotionVisible(player, VOPotions.DAZED))
 			event.setCanceled(true);
 	}
@@ -224,7 +287,6 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onRenderDazzled(RenderGameOverlayEvent.Pre event)
 	{
-		Minecraft mc = Minecraft.getInstance();
 		if(event.getType() != ElementType.VIGNETTE || mc.player == null)
 			return;
 		
@@ -268,7 +330,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onMountUIOpen(GuiOpenEvent event)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player != null && player.getRidingEntity() != null && player.getRidingEntity() instanceof IMountInventory && event.getGui() instanceof InventoryScreen)
 		{
 			event.setGui(null);
@@ -278,7 +340,7 @@ public class VOBusClient
 	
 	public static boolean playerInWall()
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player != null)
 			return IPhasingAbility.isPhasing(player) && getInWallBlockState(player) != null;
 		return false;
@@ -303,7 +365,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onSilencedChatEvent(ClientChatEvent event)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player != null && player.isPotionActive(VOPotions.SILENCED) && !event.getOriginalMessage().startsWith("/"))
 			event.setCanceled(true);
 	}
@@ -311,7 +373,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onDeafenedChatEvent(ClientChatReceivedEvent event)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player != null && player.isPotionActive(VOPotions.DEAFENED) && event.getType() == ChatType.CHAT)
 			event.setCanceled(true);
 	}
@@ -319,7 +381,7 @@ public class VOBusClient
 	@SubscribeEvent
 	public static void onDeafenedPlaySound(PlaySoundAtEntityEvent event)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		PlayerEntity player = mc.player;
 		if(player != null && player.isPotionActive(VOPotions.DEAFENED))
 			event.setCanceled(true);
 	}

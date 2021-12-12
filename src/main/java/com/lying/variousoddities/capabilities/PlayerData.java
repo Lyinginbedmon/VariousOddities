@@ -121,15 +121,34 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		this.conditionSoul = SoulCondition.fromString(nbt.getString("Soul"));
 		if(nbt.contains("BodyUUID", 11))
 			this.bodyUUID = nbt.getUniqueId("BodyUUID");
+		else
+			this.bodyUUID = null;
 		if(isBodyDead())
 			this.deadTimer = nbt.getInt("DeadTicks");
+		else
+			this.deadTimer = DEAD_TIME;
 		setPossession(nbt.getBoolean("CanPossess"));
 		if(nbt.contains("Possessing", 11))
 			setPossessing(nbt.getUniqueId("Possessing"));
+		else
+			setPossessing(null);
 	}
 	
+	public void stopPossessing()
+	{
+		LivingEntity target = getPossessed();
+		if(target != null)
+		{
+			LivingData data = LivingData.forEntity(target);
+			data.setPossessedBy(null);
+		}
+		
+		this.possessingUUID = null;
+		this.canPossess = false;
+		markDirty();
+	}
 	public boolean isPossessing(){ return this.possessingUUID != null; }
-	public void setPossessing(UUID idIn)
+	public void setPossessing(@Nullable UUID idIn)
 	{
 		this.possessingUUID = idIn;
 		markDirty();
@@ -228,6 +247,11 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	public static boolean isPlayerBody(@Nullable PlayerEntity player, Entity body)
 	{
 		return player != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isBody(body);
+	}
+	
+	public static boolean isPlayerPossessing(@Nullable PlayerEntity player, @Nullable Entity body)
+	{
+		return player != null && body != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isPossessing() && PlayerData.forPlayer(player).getPossessed() == body;
 	}
 	
 	private static boolean checkCondition(@Nullable LivingEntity playerIn, @Nullable BodyCondition bodyCondition, @Nullable SoulCondition soulCondition)

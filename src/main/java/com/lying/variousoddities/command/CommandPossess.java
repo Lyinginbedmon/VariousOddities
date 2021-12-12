@@ -15,7 +15,6 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.ForgeMod;
 
@@ -53,8 +52,10 @@ public class CommandPossess extends CommandBase
 			playerData.setBodyCondition(BodyCondition.ALIVE);
 			playerData.setSoulCondition(SoulCondition.ROAMING);
 			
+//			player.copyLocationAndAnglesFrom(target);
+			
 			LivingData.forEntity(target).setPossessedBy(player.getUniqueID());
-			source.sendFeedback(new StringTextComponent("You are now possessing ").append(target.getDisplayName()), true);
+			source.sendFeedback(new TranslationTextComponent(translationSlug+"start",target.getDisplayName()), true);
 		}
 		else
 			throw INVALID_ENTITY_EXCEPTION.create();

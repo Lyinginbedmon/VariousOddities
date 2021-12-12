@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -372,5 +373,49 @@ public class VOHelper
     		if(player.getName().getUnformattedComponentText().equals(playerName))
     			return player;
     	return null;
+    }
+    
+    public static void addRotationToEntityHead(@Nullable LivingEntity entity, double yaw, double pitch)
+    {
+    	if(entity == null)
+    		return;
+    	
+        double pitchAdj = pitch * 0.15D;
+        double yawAdj = yaw * 0.15D;
+        entity.rotationPitch = (float)((double)entity.rotationPitch + pitchAdj);
+        entity.rotationYaw = (float)((double)entity.rotationYaw + yawAdj);
+        entity.rotationPitch = MathHelper.clamp(entity.rotationPitch, -90.0F, 90.0F);
+        
+        entity.prevRotationPitch = (float)((double)entity.prevRotationPitch + pitchAdj);
+        entity.prevRotationYaw = (float)((double)entity.prevRotationYaw + yawAdj);
+        entity.prevRotationPitch = MathHelper.clamp(entity.prevRotationPitch, -90.0F, 90.0F);
+        
+        if(entity.getRidingEntity() != null)
+        	entity.getRidingEntity().applyOrientationToEntity(entity);
+    }
+    
+    public static void copyRotationFrom(Entity from, Entity to)
+    {
+    	to.rotationPitch = from.rotationPitch;
+    	to.rotationYaw = from.rotationYaw;
+		
+		to.prevRotationPitch = from.prevRotationPitch;
+		to.prevRotationYaw = from.prevRotationYaw;
+		
+		if(to instanceof LivingEntity && from instanceof LivingEntity)
+		{
+			LivingEntity livingTo = (LivingEntity)to;
+			LivingEntity livingFrom = (LivingEntity)from;
+			
+			livingTo.rotationYawHead = livingFrom.rotationYawHead;
+			livingTo.prevRotationYawHead = livingFrom.prevRotationYawHead;
+			
+			livingTo.renderYawOffset = livingFrom.renderYawOffset;
+			livingTo.prevRenderYawOffset = livingFrom.prevRenderYawOffset;
+			
+			livingTo.limbSwing = livingFrom.limbSwing;
+			livingTo.limbSwingAmount = livingFrom.limbSwingAmount;
+			livingTo.prevLimbSwingAmount = livingFrom.prevLimbSwingAmount;
+		}
     }
 }

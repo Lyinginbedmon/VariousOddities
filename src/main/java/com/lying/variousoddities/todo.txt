@@ -1,8 +1,13 @@
 Possession
 	Possessed inventory, accessed with inventory key
 	Possessed mobs pick up items as players
-	Right-click handling for tile entities?
-	See through possessed mob's eyes!
+	Fix lack of walking animation
+	Hide second shadow?
+Unconscious bodies
+	Proper Non-player handling
+	Player inventory access
+	Healing bludgeoning damage
+	Fix player binding to body
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg pipeline
 Warg
@@ -12,8 +17,3 @@ Warg
 	Held item rendering
 Potions
 	Fix sleep effect on players
-Unconscious bodies
-	Proper Non-player handling
-	Player inventory access
-	Healing bludgeoning damage
-	Fix player binding to body

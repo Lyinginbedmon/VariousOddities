@@ -207,7 +207,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.initialised = nbt.getBoolean("Initialised");
 		
 		if(nbt.contains("Possessor", 11))
-			this.possessorUUID = nbt.getUniqueId("Possessor");
+			setPossessedBy(nbt.getUniqueId("Possessor"));
 		
 		if(nbt.contains("HomeDim", 8))
 			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
@@ -254,12 +254,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.visualPotions = nbt.getByte("Potions");
 	}
 	
+	public static boolean isPossessed(@Nullable LivingEntity living)
+	{
+		return living != null && LivingData.forEntity(living) != null && LivingData.forEntity(living).isBeingPossessed();
+	}
 	public boolean isBeingPossessed(){ return this.possessorUUID != null; }
 	public void setPossessedBy(UUID idIn)
 	{
-		if(this.entity.getType() == EntityType.PLAYER)
-			return;
-		
 		this.possessorUUID = idIn;
 		markDirty();
 	}
@@ -585,8 +586,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		abilities.tick();
 		
-		handlePossession();
-		
 		if(this.dirty)
 		{
 			if(this.entity != null && !this.entity.getEntityWorld().isRemote)
@@ -600,18 +599,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			// Ping server for visualPotion value
 			
 		}
-	}
-	
-	public void handlePossession()
-	{
-		if(!isBeingPossessed()) return;
-		LivingEntity possessor = this.getPossessor();
-		if(possessor == null)
-			return;
-		
-		this.entity.rotationYaw = possessor.rotationYaw;
-		this.entity.rotationYawHead = possessor.rotationYawHead;
-		this.entity.rotationPitch = possessor.rotationPitch;
 	}
 	
 	public void setSpeciesSelected(){ setSelectedSpecies(true); }
