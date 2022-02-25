@@ -14,8 +14,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
+import com.lying.variousoddities.species.abilities.AbilitySize;
+import com.lying.variousoddities.species.abilities.AbilitySize.Size;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
 
@@ -27,9 +30,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class Species
 {
+	public static final Species HUMAN = new Species(new ResourceLocation("human"))
+			.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".human"))
+			.addType(EnumCreatureType.HUMANOID)
+			.addAbility(new AbilitySize(Size.MEDIUM));
 	private static final UUID UUID_SPECIES = UUID.fromString("d5da3b78-e6ca-4d2e-878b-0e7c3c57a668");
 	private ResourceLocation registryName;
 	

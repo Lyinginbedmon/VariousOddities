@@ -297,12 +297,10 @@ public class LivingEntityMixin extends EntityMixin
 		LivingData data = LivingData.forEntity(mob);
 		if(data == null || !data.isBeingPossessed())
 			return;
-		System.out.println(""+living.getDisplayName().getString()+" is being possessed!");
 		
 		LivingEntity possessor = data.getPossessor();
 		if(possessor != null)
 		{
-			System.out.println(" * Possessor is "+possessor.getDisplayName().getString()+", treating as mounted animal");
 			ci.cancel();
 			mob.rotationYaw = possessor.rotationYaw;
 			mob.prevRotationYaw = mob.rotationYaw;
@@ -312,8 +310,6 @@ public class LivingEntityMixin extends EntityMixin
 			mob.rotationYawHead = mob.renderYawOffset;
 			float strafe = possessor.moveStrafing;
 			float forward = possessor.moveForward;
-			System.out.println(" * * Strafe: "+strafe);
-			System.out.println(" * * Forward: "+forward);
 			
 			// TODO Jump handling
 //			if(mob.isOnGround() && this.jumpPower == 0.0F && this.isRearing() && !this.allowStandSliding)

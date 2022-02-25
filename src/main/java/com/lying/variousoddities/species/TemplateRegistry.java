@@ -226,7 +226,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addPrecondition(TypePrecondition.isLiving())
 				.addPrecondition(TypePrecondition.isNoneOf(EnumCreatureType.OOZE, EnumCreatureType.PLANT))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
-				.addOperation(new AbilityOperation(Operation.REMOVE, new AbilityModifierCon(1D)))
+				.addOperation(AbilityOperation.loseCon())
 				.addOperation(new AbilityOperation(Operation.REMOVE_ALL, Nature.SPELL_LIKE, Nature.SUPERNATURAL))
 				.addOperation(AbilityOperation.add(true, new AbilityNaturalArmour(2D)))
 				.addOperation(AbilityOperation.add(true, new AbilityModifierStr(1D)))
@@ -238,7 +238,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addPrecondition(TypePrecondition.isLiving())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.HUMANOID))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
-				.addOperation(new AbilityOperation(Operation.REMOVE, new AbilityModifierCon(1D)))
+				.addOperation(AbilityOperation.loseCon())
 				.addOperation(AbilityOperation.add(new AbilityNaturalArmour(5D)))
 				.addOperation(AbilityOperation.add(new AbilityDamageReduction(15, DamageType.MAGIC)))
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)))
@@ -277,9 +277,9 @@ public class TemplateRegistry extends JsonReloadListener
 		addTemplate(new Template(TEMPLATE_NECROPOLITAN, UUID_NECROPOLITAN)
 				.setPower(0)
 				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".necropolitan"))
-				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID))
+				.addPrecondition(TypePrecondition.isHumanShaped())
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
-				.addOperation(new AbilityOperation(Operation.REMOVE, new AbilityModifierCon(1D)))
+				.addOperation(AbilityOperation.loseCon())
 				.addOperation(AbilityOperation.add(new AbilityNaturalRegen())));
 	}
 }

@@ -20,6 +20,7 @@ import com.lying.variousoddities.network.PacketSyncAbilities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.Ability.Nature;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
@@ -29,6 +30,7 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -365,38 +367,95 @@ public class Abilities
 	
 	private Map<ResourceLocation, Ability> getCurrentAbilities()
 	{
-		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
 		if(this.entity != null)
 		{
+			LivingEntity bodyEntity = this.entity;
+			LivingEntity soulEntity = this.entity;
+			if(this.entity.getType() == EntityType.PLAYER)
+			{
+				PlayerEntity player = (PlayerEntity)this.entity;
+				PlayerData playerData = PlayerData.forPlayer(player);
+				if(playerData.isPossessing())
+					bodyEntity = playerData.getPossessed();
+			}
+			if(bodyEntity == null)
+				bodyEntity = this.entity;
+			
+			if(bodyEntity == soulEntity)
+				return getEntityAbilities(bodyEntity);
+			else
+			{
+				Map<ResourceLocation, Ability> bodyAbilityMap = getAbilitiesOfNature(getEntityAbilities(bodyEntity), Nature.EXTRAORDINARY, Nature.SUPERNATURAL);
+				Map<ResourceLocation, Ability> soulAbilityMap = getAbilitiesOfNature(getEntityAbilities(soulEntity), Nature.SPELL_LIKE);
+				
+				Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
+				bodyAbilityMap.forEach((mapName,ability) -> { abilityMap.put(mapName, ability); });
+				soulAbilityMap.forEach((mapName,ability) -> { abilityMap.put(mapName, ability); });
+				return abilityMap;
+			}
+		}
+		
+		return new HashMap<>();
+	}
+	
+	private static Map<ResourceLocation, Ability> getAbilitiesOfNature(Map<ResourceLocation, Ability> map, Nature... natures)
+	{
+		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
+		for(Nature nature : natures)
+		{
+			List<ResourceLocation> checked = Lists.newArrayList();
+			map.forEach((mapName, ability) -> 
+			{
+				if(ability.getNature() == nature)
+				{
+					abilityMap.put(mapName, ability);
+					checked.add(mapName);
+				}
+			});
+			checked.forEach((mapName) -> { map.remove(mapName); });
+		}
+		
+		return abilityMap;
+	}
+	
+	private static Map<ResourceLocation, Ability> getEntityAbilities(@Nullable LivingEntity entityIn)
+	{
+		if(entityIn != null)
+		{
+			Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
+			
 			// Collect abilities from creature's types
-			EnumCreatureType.getTypes(this.entity).addAbilitiesToMap(abilityMap);
+			EnumCreatureType.getTypes(entityIn).addAbilitiesToMap(abilityMap);
 			
 			// Collect abilities from creature's LivingData
-			LivingData data = LivingData.forEntity(this.entity);
-			if(data != null)
+			LivingData bodyData = LivingData.forEntity(entityIn);
+			if(bodyData != null)
 			{
-				if(data.hasSpecies())
-					abilityMap = data.getSpecies().addToMap(abilityMap);
-				abilityMap = data.getAbilities().addCustomToMap(abilityMap);
+				if(bodyData.hasSpecies())
+					abilityMap = bodyData.getSpecies().addToMap(abilityMap);
 				
-				if(data.hasTemplates())
-					for(Template template : data.getTemplates())
+				if(bodyData.hasTemplates())
+					for(Template template : bodyData.getTemplates())
 						template.applyAbilityOperations(abilityMap);
+				
+				abilityMap = bodyData.getAbilities().addCustomToMap(abilityMap);
 			}
 			
-			GatherAbilitiesEvent event = new GatherAbilitiesEvent(this.entity, abilityMap);
+			GatherAbilitiesEvent event = new GatherAbilitiesEvent(entityIn, abilityMap);
 			MinecraftForge.EVENT_BUS.post(event);
 			
 			abilityMap = event.getAbilityMap();
+			
+			// Remove any abilities not possessing a source ID
+			List<ResourceLocation> invalid = Lists.newArrayList();
+			abilityMap.forEach((mapName, ability) -> { if(ability.getSourceId() == null) invalid.add(mapName); });
+			for(ResourceLocation mapName : invalid)
+				abilityMap.remove(mapName);
+			
+			return abilityMap;
 		}
 		
-		// Remove any abilities not possessing a source ID
-		List<ResourceLocation> invalid = Lists.newArrayList();
-		abilityMap.forEach((mapName, ability) -> { if(ability.getSourceId() == null) invalid.add(mapName); });
-		for(ResourceLocation mapName : invalid)
-			abilityMap.remove(mapName);
-		
-		return abilityMap;
+		return new HashMap<>();
 	}
 	
 	public void updateAbilityCache()

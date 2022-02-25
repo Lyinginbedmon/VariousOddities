@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import com.lying.variousoddities.reference.Reference;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
@@ -160,6 +162,8 @@ public abstract class Ability
 		{
 			this.texIndex = index;
 		}
+		
+		public ITextComponent translated(){ return new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".ability_type."+name().toLowerCase()); }
 	}
 	
 	public static enum Nature implements IStringSerializable

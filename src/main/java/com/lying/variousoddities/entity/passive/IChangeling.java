@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 
 public interface IChangeling extends IFactionMob
 {
@@ -144,7 +145,7 @@ public interface IChangeling extends IFactionMob
 	
 	public static boolean teleportTo(CreatureEntity theMob, double x, double y, double z)
 	{
-        net.minecraftforge.event.entity.living.EnderTeleportEvent event = new net.minecraftforge.event.entity.living.EnderTeleportEvent(theMob, x, y, z, 0);
+		EntityTeleportEvent.EnderEntity event = new EntityTeleportEvent.EnderEntity(theMob, x, y, z);
         if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event)) return false;
         boolean success = false;//theMob.attemptTeleport(event.getTargetX(), event.getTargetY(), event.getTargetZ());
         if(success)

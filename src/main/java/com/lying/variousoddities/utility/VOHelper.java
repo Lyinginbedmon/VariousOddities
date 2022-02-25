@@ -7,6 +7,8 @@ import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Predicate;
+
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -114,7 +116,7 @@ public class VOHelper
 	{
 		if(entityIn == null || entityIn.getEntityWorld() == null || range < 0D) return null;
 		
-		Vector3d headPos = new Vector3d(entityIn.getPosX(), entityIn.getPosY() + entityIn.getEyeHeight(), entityIn.getPosZ());
+		Vector3d headPos = entityIn.getEyePosition(1F);
 		Vector3d lookVec = entityIn.getLookVec();
 		if(entityIn instanceof MobEntity)
 		{
@@ -127,11 +129,19 @@ public class VOHelper
 		
 		LivingEntity bestGuess = null;
 		double smallestDist = Double.MAX_VALUE;
-		for(LivingEntity nearby : entityIn.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entityIn.getBoundingBox().grow(range)))
+		for(LivingEntity nearby : entityIn.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entityIn.getBoundingBox().grow(range), new Predicate<LivingEntity>()
+				{
+					public boolean apply(LivingEntity input)
+					{
+						Vector3d lookEnd = headPos.add(entityIn.getLookVec().mul(range, range, range));
+						return entityIn.canEntityBeSeen(input) && input.getBoundingBox().intersects(headPos, lookEnd);
+					}
+				}))
 		{
-			if(nearby == entityIn || !entityIn.canEntityBeSeen(nearby)) continue;
+			if(nearby == entityIn) continue;
+			
 			double distToEnt = entityIn.getDistance(nearby);
-			if(nearby.getBoundingBox().contains(headPos.add(new Vector3d(lookVec.x * distToEnt, lookVec.y * distToEnt, lookVec.z * distToEnt))) && smallestDist > distToEnt)
+			if(smallestDist > distToEnt)
 			{
 				bestGuess = nearby;
 				smallestDist = distToEnt;

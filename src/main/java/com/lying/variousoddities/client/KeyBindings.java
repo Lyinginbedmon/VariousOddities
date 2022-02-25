@@ -65,7 +65,7 @@ public class KeyBindings
 	{
 		KeyBinding pressedKey = getPressedKey();
 		ClientPlayerEntity player = Minecraft.getInstance().player;
-		if(pressedKey == null || player == null || !player.isAlive() || player.isSleeping() || PlayerData.isPlayerSoulDetached(player) || Minecraft.getInstance().currentScreen != null)
+		if(pressedKey == null || player == null || !player.isAlive() || player.isSleeping() || (PlayerData.isPlayerSoulDetached(player) && !PlayerData.forPlayer(player).isPossessing()) || Minecraft.getInstance().currentScreen != null)
 			return;
 		
 		if(pressedKey == ABILITY_MENU)

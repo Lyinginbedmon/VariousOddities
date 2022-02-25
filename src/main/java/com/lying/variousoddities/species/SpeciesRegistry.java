@@ -57,7 +57,7 @@ public class SpeciesRegistry extends JsonReloadListener
 	
 	public static final ResourceLocation SPECIES_AASIMAR		= new ResourceLocation(Reference.ModInfo.MOD_ID, "aasimar");
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
-	public static final ResourceLocation SPECIES_CREEPER		= new ResourceLocation(Reference.ModInfo.MOD_ID, "creeper");
+	public static final ResourceLocation SPECIES_CREEPER		= new ResourceLocation("minecraft", "creeper");
 	public static final ResourceLocation SPECIES_DWARF			= new ResourceLocation(Reference.ModInfo.MOD_ID, "dwarf");
 	public static final ResourceLocation SPECIES_DRAGON_GREEN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "green_dragon");
 	public static final ResourceLocation SPECIES_GNOME			= new ResourceLocation(Reference.ModInfo.MOD_ID, "gnome");
@@ -111,14 +111,18 @@ public class SpeciesRegistry extends JsonReloadListener
             }
         });
 		
-		loaded.forEach((name,species) -> { VORegistries.SPECIES.put(name, species); });
-		
 		// If no species were found in the datapack, load the defaults
 		if(loaded.isEmpty())
 		{
 			VariousOddities.log.warn("No species found, loading defaults");
 			DEFAULT_SPECIES.forEach((species) -> { VORegistries.SPECIES.put(species.getRegistryName(), species); });
 		}
+		
+		// Ensure a plain no-features human species always exists
+		if(!loaded.containsKey(Species.HUMAN.getRegistryName()))
+			loaded.put(Species.HUMAN.getRegistryName(), Species.HUMAN);
+		
+		loaded.forEach((name,species) -> { VORegistries.SPECIES.put(name, species); });
 	}
 	
 	private static void addSpecies(Species speciesIn)

@@ -1,7 +1,9 @@
 Possession
+	Move players to body position w/out breaking motion controls
 	Possessed inventory, accessed with inventory key
 	Possessed mobs pick up items as players
 	Fix lack of walking animation
+	Fix command targetting
 	Hide second shadow?
 Unconscious bodies
 	Proper Non-player handling

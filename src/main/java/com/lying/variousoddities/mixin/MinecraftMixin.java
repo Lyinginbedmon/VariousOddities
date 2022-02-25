@@ -29,8 +29,12 @@ import net.minecraft.client.multiplayer.PlayerController;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.tutorial.Tutorial;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ChatVisibility;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.play.client.CInputPacket;
+import net.minecraft.network.play.client.CMoveVehiclePacket;
+import net.minecraft.network.play.client.CPlayerPacket;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -167,4 +171,23 @@ public class MinecraftMixin
 	
 	@Shadow
 	private void sendClickBlockToController(boolean leftClick){ }
+	
+	@Inject(method = "runTick()V", at = @At("HEAD"))
+	public void runTick(final CallbackInfo ci)
+	{
+		ClientPlayerEntity player = Minecraft.getInstance().player;
+		if(player != null && player.getEntityWorld() != null && PlayerData.forPlayer(player).isPossessing())
+		{
+			LivingEntity possessed = PlayerData.forPlayer(player).getPossessed();
+			if(possessed == null)
+				return;
+			
+			player.connection.sendPacket(new CPlayerPacket.RotationPacket(player.rotationYaw, player.rotationPitch, player.isOnGround()));
+			player.connection.sendPacket(new CInputPacket(player.moveStrafing, player.moveForward, player.movementInput.jump, player.movementInput.sneaking));
+			
+            Entity entity = possessed.getLowestRidingEntity();
+            if(entity != null)
+               player.connection.sendPacket(new CMoveVehiclePacket(entity));
+		}
+	}
 }

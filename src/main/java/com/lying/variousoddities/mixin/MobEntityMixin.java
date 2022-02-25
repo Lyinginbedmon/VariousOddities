@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
@@ -22,6 +22,28 @@ import net.minecraft.world.World;
 @Mixin(MobEntity.class)
 public class MobEntityMixin extends LivingEntityMixin 
 {
+	private boolean isPossessedSprinting = false;
+	
+	@Inject(method = "livingTick()V", at = @At("HEAD"), cancellable = true)
+	public void livingTick(final CallbackInfo ci)
+	{
+		MobEntity entity = (MobEntity)(Object)this;
+		LivingData data = LivingData.forEntity(entity);
+		if(data != null && data.isBeingPossessed())
+		{
+			LivingEntity possessor = data.getPossessor();
+			if(possessor == null)
+				return;
+			
+			boolean shouldSprint = possessor.isSprinting();
+			if(shouldSprint != isPossessedSprinting)
+			{
+				isPossessedSprinting = shouldSprint;
+				entity.setSprinting(shouldSprint);
+			}
+		}
+	}
+	
 	@Inject(method = "playAmbientSound()V", at = @At("HEAD"), cancellable = true)
 	public void playAmbientSound(final CallbackInfo ci)
 	{
@@ -82,38 +104,6 @@ public class MobEntityMixin extends LivingEntityMixin
 			}
 		}
 	}
-	
-	@Shadow
-	public void sendDebugPackets(){ }
-	
-//	@Inject(method = "updateEntityActionState()V", at = @At("HEAD"), cancellable = true)
-//	public void updateEntityActionState(final CallbackInfo ci)
-//	{
-//		MobEntity entity = (MobEntity)(Object)this;
-//		LivingData data = LivingData.forEntity(entity);
-//		if(data != null && data.isBeingPossessed())
-//		{
-//			ci.cancel();
-//			
-//			++this.idleTime;
-//			this.world.getProfiler().startSection("mob tick");
-//			this.world.getProfiler().endSection();
-//			this.world.getProfiler().startSection("controls");
-//			this.world.getProfiler().startSection("move");
-//			MovementController moveController = entity.getMoveHelper();
-//			if(moveController != null)
-//				moveController.tick();
-//			this.world.getProfiler().endStartSection("jump");
-//			JumpController jumpController = entity.getJumpController();
-//			if(jumpController != null)
-//				jumpController.tick();
-//			this.world.getProfiler().endSection();
-//			this.world.getProfiler().endSection();
-//			this.sendDebugPackets();
-//			
-//			entity.rotationYawHead = entity.rotationYaw;
-//		}
-//	}
 	
 	private void resetScentTimer(Random rand)
 	{

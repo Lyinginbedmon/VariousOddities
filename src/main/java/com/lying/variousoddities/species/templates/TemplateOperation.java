@@ -1,11 +1,13 @@
 package com.lying.variousoddities.species.templates;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
@@ -20,6 +22,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.event.RegistryEvent;
@@ -31,6 +34,8 @@ public abstract class TemplateOperation
 	protected UUID templateID;
 	protected Operation action;
 	
+	private IFormattableTextComponent customText = null;
+	
 	public TemplateOperation(Operation actionIn)
 	{
 		this.action = actionIn;
@@ -40,7 +45,15 @@ public abstract class TemplateOperation
 	
 	public void setTemplateID(UUID uuidIn){ this.templateID = uuidIn;  }
 	
-	public ITextComponent translate(){ return new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
+	public ITextComponent translate(){ return this.customText != null ? this.customText : new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
+	
+	protected TemplateOperation setCustomDisplay(IFormattableTextComponent textComponent){ this.customText = textComponent; return this; }
+	
+	public Operation action(){ return this.action; }
+	
+	public boolean canStackWith(TemplateOperation operationB){ return false; }
+	
+	public List<ITextComponent> stackAsList(List<TemplateOperation> operations){ return Lists.newArrayList(translate()); }
 	
 	public void applyToEntity(LivingEntity entity){ }
 	

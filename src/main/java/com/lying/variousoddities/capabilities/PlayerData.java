@@ -55,6 +55,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	protected SoulCondition conditionSoul = SoulCondition.ALIVE;
 	protected boolean canPossess = false;
 	protected UUID possessingUUID = null;
+	private MobEntity possessingCached = null;
 	
 	protected UUID bodyUUID = null;
 	protected int deadTimer = DEAD_TIME;
@@ -145,22 +146,33 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.possessingUUID = null;
 		this.canPossess = false;
+		
+		LivingData.forEntity(this.player).getAbilities().markForRecache();
 		markDirty();
 	}
 	public boolean isPossessing(){ return this.possessingUUID != null; }
 	public void setPossessing(@Nullable UUID idIn)
 	{
 		this.possessingUUID = idIn;
+		
+		LivingData data = LivingData.forEntity(this.player);
+		if(data != null)
+			data.getAbilities().markForRecache();
+		
 		markDirty();
 	}
 	public UUID getPossessing(){ return this.possessingUUID; }
 	public LivingEntity getPossessed()
 	{
-		List<MobEntity> candidates = player.getEntityWorld().getEntitiesWithinAABB(MobEntity.class, player.getBoundingBox().grow(128D), new Predicate<MobEntity>()
+		if(possessingCached == null || !possessingCached.isAlive())
 		{
-			public boolean apply(MobEntity input){ return input.getUniqueID().equals(getPossessing()); }
-		});
-		return candidates.isEmpty() ? null : candidates.get(0);
+			List<MobEntity> candidates = player.getEntityWorld().getEntitiesWithinAABB(MobEntity.class, player.getBoundingBox().grow(128D), new Predicate<MobEntity>()
+			{
+				public boolean apply(MobEntity input){ return input.getUniqueID().equals(getPossessing()); }
+			});
+			possessingCached = candidates.isEmpty() ? null : candidates.get(0);
+		}
+		return possessingCached;
 	}
 	
 	/** Returns a float between 1 and 0 representing how much death/respawn delay the player has left. */

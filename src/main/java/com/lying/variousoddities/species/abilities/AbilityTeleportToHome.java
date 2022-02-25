@@ -24,7 +24,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.EnderTeleportEvent;
+import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 
 public class AbilityTeleportToHome extends ActivatedAbility
 {
@@ -106,7 +106,7 @@ public class AbilityTeleportToHome extends ActivatedAbility
 	{
 		destWorld.playSound(null, entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
 		
-		EnderTeleportEvent event = new EnderTeleportEvent(entity, x, y, z, 0F);
+		EntityTeleportEvent.EnderEntity event = new EntityTeleportEvent.EnderEntity(entity, x, y, z);
 		if(MinecraftForge.EVENT_BUS.post(event))
 		{
 			putOnCooldown(entity);

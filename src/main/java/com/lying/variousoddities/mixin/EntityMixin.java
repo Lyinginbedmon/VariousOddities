@@ -231,4 +231,43 @@ public class EntityMixin
 				ci.setReturnValue(possessor);
 		}
 	}
+	
+//	@Inject(method = "getRidingEntity()Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
+//	public void getRidingEntity(final CallbackInfoReturnable<Entity> ci)
+//	{
+//		Entity ent = (Entity)(Object)this;
+//		if(ent.getType() == EntityType.PLAYER)
+//		{
+//			PlayerEntity player = (PlayerEntity)ent;
+//			PlayerData data = PlayerData.forPlayer(player);
+//			if(data != null && data.isPossessing())
+//				ci.setReturnValue(data.getPossessed());
+//		}
+//	}
+	
+//	@Inject(method = "isPassenger()Z", at = @At("HEAD"), cancellable = true)
+//	public void isPassenger(final CallbackInfoReturnable<Boolean> ci)
+//	{
+//		Entity ent = (Entity)(Object)this;
+//		if(ent.getType() == EntityType.PLAYER)
+//		{
+//			PlayerEntity player = (PlayerEntity)ent;
+//			PlayerData data = PlayerData.forPlayer(player);
+//			if(data != null && data.isPossessing())
+//				ci.setReturnValue(true);
+//		}
+//	}
+	
+	@Inject(method = "isPassenger(Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), cancellable = true)
+	public void isPassenger2(Entity entity, final CallbackInfoReturnable<Boolean> ci)
+	{
+		Entity ent = (Entity)(Object)this;
+		if(ent.getType() != EntityType.PLAYER && ent instanceof LivingEntity)
+		{
+			LivingEntity living = (LivingEntity)ent;
+			LivingData data = LivingData.forEntity(living);
+			if(data != null && data.isBeingPossessed() && data.getPossessor() != null)
+				ci.setReturnValue(data.getPossessor() == entity);
+		}
+	}
 }

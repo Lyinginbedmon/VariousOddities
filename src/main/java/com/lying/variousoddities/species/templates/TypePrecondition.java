@@ -48,6 +48,8 @@ public class TypePrecondition extends TemplatePrecondition
 	
 	public static TypePrecondition isLiving(){ return new TypePrecondition(Style.NOR, EnumCreatureType.UNDEAD).setCustomDisplay(new TranslationTextComponent("precondition."+Reference.ModInfo.MOD_ID+".type.living")); }
 	
+	public static TypePrecondition isHumanShaped(){ return new TypePrecondition(Style.OR, EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID).setCustomDisplay(new TranslationTextComponent("precondition."+Reference.ModInfo.MOD_ID+".type.humanoid")); }
+	
 	public static TypePrecondition isCorporeal(){ return new TypePrecondition(Style.NOR, EnumCreatureType.INCORPOREAL).setCustomDisplay(new TranslationTextComponent("precondition."+Reference.ModInfo.MOD_ID+".type.corporeal")); }
 	
 	protected TypePrecondition setCustomDisplay(IFormattableTextComponent textComponent){ this.customText = textComponent; return this; }

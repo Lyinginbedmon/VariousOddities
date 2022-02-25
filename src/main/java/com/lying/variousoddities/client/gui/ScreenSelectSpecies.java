@@ -3,6 +3,7 @@ package com.lying.variousoddities.client.gui;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -12,12 +13,12 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesSelected;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
-import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.Ability.Type;
 import com.lying.variousoddities.species.abilities.AbilityModifier;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
+import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -44,7 +45,7 @@ public class ScreenSelectSpecies extends Screen
 	public static final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
 	public static final ResourceLocation GUI_ICONS_LOCATION = new ResourceLocation("textures/gui/icons.png");
 	
-	private static final Comparator<Ability> ABILITY_SORT = new Comparator<Ability>()
+	public static final Comparator<Ability> ABILITY_SORT = new Comparator<Ability>()
 	{
 		public int compare(Ability o1, Ability o2)
 		{
@@ -60,7 +61,6 @@ public class ScreenSelectSpecies extends Screen
 	private final PlayerEntity player;
 	
 	private List<Species> selectableSpecies = Lists.newArrayList();
-	private List<Template> selectableTemplates = Lists.newArrayList();
 	private int index = 0;
 	
 	private Button typesButton;
@@ -75,7 +75,6 @@ public class ScreenSelectSpecies extends Screen
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
 		initSpecies();
-		initTemplates();
 	}
 	
 	private void initSpecies()
@@ -88,30 +87,6 @@ public class ScreenSelectSpecies extends Screen
 		selectableSpecies.sort(new Comparator<Species>()
 			{
 				public int compare(Species o1, Species o2)
-				{
-					String name1 = o1.getDisplayName().getString();
-					String name2 = o2.getDisplayName().getString();
-					
-					List<String> names = Arrays.asList(name1, name2);
-					Collections.sort(names);
-					
-					int index1 = names.indexOf(name1);
-					int index2 = names.indexOf(name2);
-					return (index1 > index2 ? 1 : index1 < index2 ? -1 : 0);
-				}
-			});
-	}
-	
-	private void initTemplates()
-	{
-		if(player.isCreative())
-			selectableTemplates.addAll(VORegistries.TEMPLATES.values());
-		else
-			VORegistries.TEMPLATES.values().forEach((species) -> { if(species.getPower() <= targetPower) selectableTemplates.add(species); });
-		
-		selectableTemplates.sort(new Comparator<Template>()
-			{
-				public int compare(Template o1, Template o2)
 				{
 					String name1 = o1.getDisplayName().getString();
 					String name2 = o2.getDisplayName().getString();
@@ -146,7 +121,7 @@ public class ScreenSelectSpecies extends Screen
 	
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
-		renderBackground(matrixStack);
+		renderDirtBackground(0);
 		renderBackgroundLayer(matrixStack, partialTicks);
 		int yPos = 20;
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
@@ -213,23 +188,38 @@ public class ScreenSelectSpecies extends Screen
 		int stars = Math.max(Math.abs(power), 1);
 		
 		int midX = this.width / 2;
-		int startX = midX - (this.font.FONT_HEIGHT * stars) / 2;
-		int endX = startX + this.font.FONT_HEIGHT;
+		int startX = midX - (9 * stars) / 2;
 		
+		drawStars(matrixStack, power, startX, yPos);
+	}
+	
+	public static void drawStars(MatrixStack matrixStack, int power, int xPos, int yPos)
+	{
 		float red = power > 0 ? 0F : power < 0 ? 1F : 0.5F;
 		float green = power > 0 ? 1F : power < 0 ? 0F : 0.5F;
 		float blue = power > 0 ? 0F : power < 0 ? 0F : 0.5F;
-		
+		drawStars(matrixStack, power, xPos, yPos, red, green, blue);
+	}
+	
+	public static void drawStars(MatrixStack matrixStack, int power, int xPos, int yPos, float red, float green, float blue)
+	{
+		int stars = Math.max(Math.abs(power), 1);
+		int startX = xPos;
 		for(int i=0; i<stars; i++)
 		{
-			matrixStack.push();
-				Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
-				blit(matrixStack.getLast().getMatrix(), startX, (int)endX, yPos, yPos + this.font.FONT_HEIGHT, 0, 0, ICON_TEX, ICON_TEX, ICON_TEX * 2, red, green, blue, 1F);
-			matrixStack.pop();
-			
-			startX += this.font.FONT_HEIGHT;
-			endX += this.font.FONT_HEIGHT;
+			drawStar(matrixStack, startX, yPos, red, green, blue);
+			startX += 9;
 		}
+	}
+	
+	public static void drawStar(MatrixStack matrixStack, int xPos, int yPos, float red, float green, float blue)
+	{
+		int startX = xPos;
+		int endX = startX + 9;
+		matrixStack.push();
+			Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
+			blit(matrixStack.getLast().getMatrix(), startX, (int)endX, yPos, yPos + 9, 0, 0, ICON_TEX, ICON_TEX, ICON_TEX * 2, red, green, blue, 1F);
+		matrixStack.pop();
 	}
 	
     public void init(Minecraft minecraft, int width, int height)
@@ -251,24 +241,27 @@ public class ScreenSelectSpecies extends Screen
     				index = selectableSpecies.size() - 1;
     		}));
     	
-    	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new StringTextComponent("Select"), (button) -> 
+    	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
     		{
-    			// Select species
-    			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID(), getCurrentSpecies().getRegistryName(), this.keepTypes));
-    			Minecraft.getInstance().displayGuiScreen(null);
+    			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower));
     		}));
     	
     	this.addButton(typesButton = new Button(midX - 60, height - 25, 120, 20, new TranslationTextComponent("gui.varodd.species_select.lose_types"), (button) ->
     		{
     			keepTypes = !keepTypes;
-    			typesButton.setMessage(new TranslationTextComponent("gui.varodd.species_select."+(keepTypes ? "keep_types" : "lose_types")));
-    		}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui.varodd.species_select.keep_types.info"), x, y); }));
+    			typesButton.setMessage(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select."+(keepTypes ? "keep_types" : "lose_types")));
+    		}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.keep_types.info"), x, y); }));
     	
     	this.addButton(new Button(midX + 100, 35, 20, 20, new StringTextComponent("X"), (button) -> 
     	{
 			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID()));
 			Minecraft.getInstance().displayGuiScreen(null);
     	}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui.varodd.species_select.exit"), x, y); }));
+    	this.addButton(new Button(this.width - 23, 3, 20, 20, new StringTextComponent(">"), (button) -> 
+    		{
+    			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower));
+    		},
+    			(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
     }
     
     public Species getCurrentSpecies()
@@ -278,7 +271,7 @@ public class ScreenSelectSpecies extends Screen
     
     public void drawHealthAndArmour(MatrixStack matrix, int yPos, int health, int armour)
     {
-		int xPos = this.width / 2;
+    	int xPos = this.width / 2;
 		yPos -= 2;
     	int healthX = xPos;
     	int armourX = xPos;
@@ -309,7 +302,7 @@ public class ScreenSelectSpecies extends Screen
 		}
     }
     
-    public void drawHUDIcon(MatrixStack matrix, int xPos, int yPos, int texX, int texY)
+    public static void drawHUDIcon(MatrixStack matrix, int xPos, int yPos, int texX, int texY)
     {
     	yPos -= 1;
 		matrix.push();
@@ -320,7 +313,7 @@ public class ScreenSelectSpecies extends Screen
 			float xMax = (texX + 9) * scale;
 			float yMin = texY * scale;
 			float yMax = (texY + 9) * scale;
-			blit(matrix.getLast().getMatrix(), xPos, xPos + this.font.FONT_HEIGHT, yPos, yPos + this.font.FONT_HEIGHT, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
+			blit(matrix.getLast().getMatrix(), xPos, xPos + Minecraft.getInstance().fontRenderer.FONT_HEIGHT, yPos, yPos + Minecraft.getInstance().fontRenderer.FONT_HEIGHT, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
 		matrix.pop();
     }
     

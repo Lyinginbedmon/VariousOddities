@@ -77,6 +77,7 @@ import net.minecraftforge.common.util.LazyOptional;
 public class LivingData implements ICapabilitySerializable<CompoundNBT>
 {
 	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
+	private static final UUID POSSESSED_WALKING_UUID = UUID.fromString("2a27427f-b79a-4366-9acd-fdebdf702e28");
 	
 	@CapabilityInject(LivingData.class)
 	public static final Capability<LivingData> CAPABILITY = null;
@@ -110,6 +111,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public boolean checkingFoodRegen = false;
 	
 	protected UUID possessorUUID = null;
+	private LivingEntity possessorCached = null;
 	
 	private boolean dirty = false;
 	
@@ -267,11 +269,15 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public UUID getPossessorUUID(){ return this.possessorUUID; }
 	public LivingEntity getPossessor()
 	{
-		List<LivingEntity> candidates = entity.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(128D), new Predicate<LivingEntity>()
+		if(possessorCached == null || !possessorCached.isAlive())
 		{
-			public boolean apply(LivingEntity input){ return input.getUniqueID().equals(getPossessorUUID()); }
-		});
-		return candidates.isEmpty() ? null : candidates.get(0);
+			List<LivingEntity> candidates = entity.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(128D), new Predicate<LivingEntity>()
+			{
+				public boolean apply(LivingEntity input){ return input.getUniqueID().equals(getPossessorUUID()); }
+			});
+			possessorCached = candidates.isEmpty() ? null : candidates.get(0);
+		}
+		return possessorCached;
 	}
 	
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
@@ -368,7 +374,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void setTemplates(Collection<Template> templatesIn)
 	{
 		clearTemplates();
-		templatesIn.forEach((template) -> { this.templates.put(template.getRegistryName(), template); });
+		templatesIn.forEach((template) -> { addTemplate(template); });
 	}
 	
 	public Collection<Template> getTemplates(){ return this.templates.values(); }
@@ -523,13 +529,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			markDirty();
 		}
 		
-		if(ConfigVO.MOBS.selectSpeciesOnLogin.get())
-		{
-			if(hasSelectedSpecies())
-				if(entity.isPotionActive(Effects.RESISTANCE) && entity.getActivePotionEffect(Effects.RESISTANCE).getAmplifier() == 15)
-					entity.removeActivePotionEffect(Effects.RESISTANCE);
-		}
-		else
+		if(!ConfigVO.MOBS.selectSpeciesOnLogin.get())
 			setSelectedSpecies(true);
 		
 		handleTypes(entity, world);
@@ -585,6 +585,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		abilities.tick();
+		handlePossession(entity);
 		
 		if(this.dirty)
 		{
@@ -601,7 +602,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 	}
 	
-	public void setSpeciesSelected(){ setSelectedSpecies(true); }
+	public void setSpeciesSelected()
+	{
+		setSelectedSpecies(true);
+		if(entity.isPotionActive(Effects.RESISTANCE) && entity.getActivePotionEffect(Effects.RESISTANCE).getAmplifier() == 15)
+			entity.removeActivePotionEffect(Effects.RESISTANCE);
+	}
 	
 	/** Manages the application and removal of creature types */
 	public void handleTypes(LivingEntity entity, World world)
@@ -711,6 +717,36 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		if(overrideAir() && isPlayer && !entity.getEntityWorld().isRemote && entity.getEntityWorld().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
 			PacketHandler.sendTo((ServerPlayerEntity)entity, new PacketSyncAir(getAir()));
+	}
+	
+	private void handlePossession(LivingEntity entity)
+	{
+		if(entity == null || !entity.isAlive() || entity.getEntityWorld().isRemote)
+			return;
+		/*
+		 * Check if possessor is sprinting
+		 * If NOT, regular speed attribute to non-sprinting player default (0.1D)
+		 */
+		
+		ModifiableAttributeInstance speedAtt = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+		if(speedAtt == null)
+			return;
+		
+		boolean hasModifier = speedAtt.getModifier(POSSESSED_WALKING_UUID) != null;
+		if(!isBeingPossessed())
+		{
+			if(hasModifier)
+				speedAtt.removeModifier(POSSESSED_WALKING_UUID);
+		}
+		else
+		{
+			boolean isSprinting = entity.isSprinting();
+			if(isSprinting == hasModifier)
+				if(isSprinting)
+					speedAtt.removeModifier(POSSESSED_WALKING_UUID);
+				else
+					speedAtt.applyPersistentModifier(new AttributeModifier(POSSESSED_WALKING_UUID, "possessed_walking", (0.1D / speedAtt.getBaseValue()) - 1D, AttributeModifier.Operation.MULTIPLY_BASE));
+		}
 	}
 	
 	private static AttributeModifier makeModifier(double amount)

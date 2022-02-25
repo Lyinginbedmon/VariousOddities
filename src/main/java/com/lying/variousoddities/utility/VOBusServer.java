@@ -61,7 +61,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
-import net.minecraftforge.event.entity.living.EnderTeleportEvent;
+import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -122,7 +122,7 @@ public class VOBusServer
 			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), data));
 			data.getAbilities().markDirty();
 			
-			if(!data.hasSelectedSpecies())
+			if(!data.hasSelectedSpecies() && ConfigVO.MOBS.selectSpeciesOnLogin.get())
 			{
 				if(!player.getEntityWorld().isRemote)
 					PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen());
@@ -446,7 +446,7 @@ public class VOBusServer
 	}
 	
 	@SubscribeEvent
-	public static void onAnchoredTeleport(EnderTeleportEvent event)
+	public static void onAnchoredTeleport(EntityTeleportEvent.EnderEntity event)
 	{
 		LivingEntity entity = event.getEntityLiving();
 		if(entity.isPotionActive(VOPotions.ANCHORED))

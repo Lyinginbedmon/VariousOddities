@@ -311,9 +311,27 @@ public enum EnumCreatureType implements IStringSerializable
 		return typesFinal;
 	}
 	
-	public static Types getTypes(LivingEntity entity)
+	public static Types getTypes(@Nullable LivingEntity entity)
 	{
 		return new Types(getCreatureTypes(entity));
+	}
+	
+	public static Types getCustomTypes(@Nullable LivingEntity entity)
+	{
+		List<EnumCreatureType> types = Lists.newArrayList();
+		
+		if(entity == null || !TypeBus.shouldFire())
+			return new Types(types);
+		
+		LivingData data = LivingData.forEntity(entity);
+		if(data != null)
+		{
+			// If creature has custom types, use those
+			if(data.hasCustomTypes())
+				types.addAll(data.getCustomTypes());
+		}
+		
+		return new Types(types);
 	}
 	
 	public static class ActionSet

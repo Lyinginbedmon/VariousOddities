@@ -20,11 +20,23 @@ import net.minecraft.util.text.TranslationTextComponent;
  */
 public class Types
 {
+	private static final EnumSet<EnumCreatureType> DIMENSIONAL = EnumSet.of(EnumCreatureType.NATIVE, EnumCreatureType.EXTRAPLANAR);
 	private final List<EnumCreatureType> types = Lists.newArrayList();
 	
 	public Types(Collection<EnumCreatureType> typesIn)
 	{
 		this.types.addAll(typesIn);
+		
+		if(types.containsAll(DIMENSIONAL))
+		{
+			int indexNative = types.indexOf(EnumCreatureType.NATIVE);
+			int indexExtraplanar = types.indexOf(EnumCreatureType.EXTRAPLANAR);
+			
+			if(indexNative > indexExtraplanar)
+				types.remove(indexExtraplanar);
+			else
+				types.remove(indexNative);
+		}
 	}
 	
 	public boolean hasCustomAttributes(){ return !getAttributes().isEmpty(); }

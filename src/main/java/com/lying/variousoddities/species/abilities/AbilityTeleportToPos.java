@@ -16,7 +16,7 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.EnderTeleportEvent;
+import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 
 public class AbilityTeleportToPos extends ActivatedAbility
 {
@@ -86,7 +86,7 @@ public class AbilityTeleportToPos extends ActivatedAbility
 			
 			world.playSound(null, entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1F, 0.2F + entity.getRNG().nextFloat() * 0.8F);
 			
-			EnderTeleportEvent event = new EnderTeleportEvent(entity, destination.getX(), destination.getY(), destination.getZ(), 0F);
+			EntityTeleportEvent.EnderEntity event = new EntityTeleportEvent.EnderEntity(entity, destination.getX(), destination.getY(), destination.getZ());
 			if(MinecraftForge.EVENT_BUS.post(event))
 			{
 				putOnCooldown(entity);

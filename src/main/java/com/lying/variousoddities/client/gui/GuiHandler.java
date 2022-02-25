@@ -71,7 +71,8 @@ public class GuiHandler
 				player = Minecraft.getInstance().player;
 				if(player != null)
 				{
-					if(!player.isSpectator() && player.isAlive() && !PlayerData.isPlayerSoulDetached(player))
+					PlayerData data = PlayerData.forPlayer(player);
+					if(!player.isSpectator() && player.isAlive() && (!PlayerData.isPlayerSoulDetached(player) || data != null && data.isPossessing()))
 					{
 						EnumCorner corner = ConfigVO.CLIENT.abilityCorner.get();
 						if(corner == null)
