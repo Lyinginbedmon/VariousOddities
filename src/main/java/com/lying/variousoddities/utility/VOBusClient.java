@@ -1,7 +1,6 @@
 package com.lying.variousoddities.utility;
 
 import java.util.Map;
-import java.util.UUID;
 
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
@@ -32,21 +31,16 @@ import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.settings.PointOfView;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.client.CEntityActionPacket;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
-import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -151,8 +145,6 @@ public class VOBusClient
 		}
 	}
 	
-	private static UUID possessedRender = null;
-	
 	@SubscribeEvent
 	public static void onPlayerRender(RenderPlayerEvent event)
 	{
@@ -164,62 +156,10 @@ public class VOBusClient
 		if(playerData == null || renderData == null)
 			return;
 		
-		if(renderData.isPossessing())
-		{
-			LivingEntity possessed = renderData.getPossessed();
-			if(possessed != null)
-			{
-				event.setCanceled(true);
-				
-				if(localPlayer == rendering && mc.gameSettings.getPointOfView() == PointOfView.FIRST_PERSON)
-					return;
-				
-				EntityRendererManager renderManager = mc.getRenderManager();
-				CompoundNBT nbt = possessed.writeWithoutTypeId(new CompoundNBT());
-				Entity clone = possessed.getType().create(localPlayer.getEntityWorld());
-				clone.read(nbt);
-				clone.copyLocationAndAnglesFrom(rendering);
-				VOHelper.copyRotationFrom(rendering, clone);
-				
-				if(clone instanceof LivingEntity)
-				{
-					LivingEntity cloneLiving = (LivingEntity)clone;
-					cloneLiving.limbSwing = possessed.limbSwing;
-					cloneLiving.limbSwingAmount = possessed.limbSwingAmount;
-					cloneLiving.prevLimbSwingAmount = possessed.prevLimbSwingAmount;
-				}
-				
-				possessedRender = clone.getUniqueID();
-					renderManager.getRenderer(clone).render(clone, rendering.rotationYaw, event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight());
-				possessedRender = null;
-			}
-		}
-		else if(rendering != localPlayer)
+		if(rendering != localPlayer)
 		{
 			if(renderData != null && playerData != null && renderData.getBodyCondition() != playerData.getBodyCondition())
 				event.setCanceled(true);
-		}
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@SubscribeEvent
-	public static void onRenderLiving(RenderLivingEvent.Pre event)
-	{
-		if(event.getEntity().getUniqueID().equals(possessedRender))
-			return;
-		
-		World world = mc.world;
-		boolean isBeingPossessed = false;
-		for(PlayerEntity player : world.getPlayers())
-			if(PlayerData.isPlayerPossessing(player, event.getEntity()))
-			{
-				isBeingPossessed = true;
-				break;
-			};
-		if(isBeingPossessed)
-		{
-			event.setCanceled(true);
-			return;
 		}
 	}
 	

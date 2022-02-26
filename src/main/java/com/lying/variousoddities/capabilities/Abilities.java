@@ -30,7 +30,6 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -371,13 +370,6 @@ public class Abilities
 		{
 			LivingEntity bodyEntity = this.entity;
 			LivingEntity soulEntity = this.entity;
-			if(this.entity.getType() == EntityType.PLAYER)
-			{
-				PlayerEntity player = (PlayerEntity)this.entity;
-				PlayerData playerData = PlayerData.forPlayer(player);
-				if(playerData.isPossessing())
-					bodyEntity = playerData.getPossessed();
-			}
 			if(bodyEntity == null)
 				bodyEntity = this.entity;
 			

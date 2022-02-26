@@ -15,7 +15,6 @@ import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -64,37 +63,6 @@ public class EntityMixinClient
 		{
 			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent) && !VOHelper.isCreativeOrSpectator(player))
 				AbstractBody.moveWithinRangeOf(ent, player, PlayerData.forPlayer(player).getSoulCondition().getWanderRange());
-			else if(PlayerData.isPlayerPossessing(player, ent))
-			{
-//				Entity.IMoveCallback callback = Entity::setPosition;
-//				callback.accept(player, ent.getPosX(), ent.getPosY(), ent.getPosZ());
-			}
 		}
 	}
-	
-//	@Inject(method = "isPassenger()Z", at = @At("HEAD"), cancellable = true)
-//	public void isPassenger(final CallbackInfoReturnable<Boolean> ci)
-//	{
-//		Entity ent = (Entity)(Object)this;
-//		if(ent.getType() == EntityType.PLAYER)
-//		{
-//			PlayerEntity player = (PlayerEntity)ent;
-//			PlayerData data = PlayerData.forPlayer(player);
-//			if(data != null && data.isPossessing())
-//				ci.setReturnValue(true);
-//		}
-//	}
-//	
-//	@Inject(method = "getRidingEntity()Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
-//	public void getRidingEntity(final CallbackInfoReturnable<Entity> ci)
-//	{
-//		Entity ent = (Entity)(Object)this;
-//		if(ent.getType() == EntityType.PLAYER)
-//		{
-//			PlayerEntity player = (PlayerEntity)ent;
-//			PlayerData data = PlayerData.forPlayer(player);
-//			if(data != null && data.isPossessing())
-//				ci.setReturnValue(data.getPossessed());
-//		}
-//	}
 }

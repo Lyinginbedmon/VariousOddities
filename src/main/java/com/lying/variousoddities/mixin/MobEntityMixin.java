@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
@@ -22,28 +21,6 @@ import net.minecraft.world.World;
 @Mixin(MobEntity.class)
 public class MobEntityMixin extends LivingEntityMixin 
 {
-	private boolean isPossessedSprinting = false;
-	
-	@Inject(method = "livingTick()V", at = @At("HEAD"), cancellable = true)
-	public void livingTick(final CallbackInfo ci)
-	{
-		MobEntity entity = (MobEntity)(Object)this;
-		LivingData data = LivingData.forEntity(entity);
-		if(data != null && data.isBeingPossessed())
-		{
-			LivingEntity possessor = data.getPossessor();
-			if(possessor == null)
-				return;
-			
-			boolean shouldSprint = possessor.isSprinting();
-			if(shouldSprint != isPossessedSprinting)
-			{
-				isPossessedSprinting = shouldSprint;
-				entity.setSprinting(shouldSprint);
-			}
-		}
-	}
-	
 	@Inject(method = "playAmbientSound()V", at = @At("HEAD"), cancellable = true)
 	public void playAmbientSound(final CallbackInfo ci)
 	{

@@ -23,8 +23,6 @@ public class VOCommands
     	CommandSpawns.register(dispatcher);
     	CommandAbilities.register(dispatcher);
     	CommandSpecies.register(dispatcher);
-    	CommandPossess.register(dispatcher);
-    	CommandDepossess.register(dispatcher);
     }
     
     /** Registers custom command arguments */

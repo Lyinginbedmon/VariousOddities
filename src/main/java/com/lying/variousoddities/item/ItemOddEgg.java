@@ -10,6 +10,7 @@ public class ItemOddEgg extends SpawnEggItem
 {
 	private final EntityType<?> entity;
 	
+	@SuppressWarnings("deprecation")
 	public ItemOddEgg(EntityType<?> typeIn, int primaryColorIn, int secondaryColorIn, Properties builder)
 	{
 		super(typeIn, primaryColorIn, secondaryColorIn, builder.group(VOItemGroup.EGGS));

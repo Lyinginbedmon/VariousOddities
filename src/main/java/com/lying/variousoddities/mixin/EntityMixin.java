@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
@@ -19,7 +18,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -164,110 +162,6 @@ public class EntityMixin
 					);
 			
 			ci.setReturnValue(trueSize);
-		}
-	}
-	
-	@Inject(method = "tick()V", at = @At("TAIL"))
-	public void tick(final CallbackInfo ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		if(ent.getType() == EntityType.PLAYER)
-			return;
-		
-		if(ent instanceof LivingEntity)
-		{
-			LivingData data = LivingData.forEntity((LivingEntity)ent);
-			if(data != null && data.isBeingPossessed())
-			{
-				LivingEntity possessor = data.getPossessor();
-				if(possessor != null)
-				{
-					if(possessor.getType() == EntityType.PLAYER)
-						if(!PlayerData.isPlayerPossessing((PlayerEntity)possessor, ent))
-						{
-							data.setPossessedBy(null);
-							return;
-						}
-					
-//					VOHelper.copyRotationFrom(possessor, ent);
-//					
-//					Entity.IMoveCallback callback = Entity::setPosition;
-//					callback.accept(possessor, ent.getPosX(), ent.getPosY(), ent.getPosZ());
-				}
-			}
-		}
-	}
-	
-	@Inject(method = "isBeingRidden()Z", at = @At("HEAD"), cancellable = true)
-	public void isBeingRidden(final CallbackInfoReturnable<Boolean> ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		if(ent instanceof MobEntity && LivingData.forEntity((MobEntity)ent) != null)
-			if(LivingData.forEntity((MobEntity)ent).isBeingPossessed())
-				ci.setReturnValue(true);
-	}
-	
-	@Inject(method = "canPassengerSteer()Z", at = @At("HEAD"), cancellable = true)
-	public void canPassengerSteer(final CallbackInfoReturnable<Boolean> ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		if(ent instanceof MobEntity && LivingData.forEntity((MobEntity)ent) != null)
-			if(LivingData.forEntity((MobEntity)ent).isBeingPossessed())
-				ci.setReturnValue(true);
-	}
-	
-	@Inject(method = "getControllingPassenger()Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
-	public void getControllingPassenger(final CallbackInfoReturnable<Entity> ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		if(ent instanceof MobEntity && LivingData.forEntity((MobEntity)ent) != null)
-		{
-			LivingData data = LivingData.forEntity((MobEntity)ent);
-			if(!data.isBeingPossessed())
-				return;
-			
-			LivingEntity possessor = data.getPossessor();
-			if(possessor != null)
-				ci.setReturnValue(possessor);
-		}
-	}
-	
-//	@Inject(method = "getRidingEntity()Lnet/minecraft/entity/Entity;", at = @At("HEAD"), cancellable = true)
-//	public void getRidingEntity(final CallbackInfoReturnable<Entity> ci)
-//	{
-//		Entity ent = (Entity)(Object)this;
-//		if(ent.getType() == EntityType.PLAYER)
-//		{
-//			PlayerEntity player = (PlayerEntity)ent;
-//			PlayerData data = PlayerData.forPlayer(player);
-//			if(data != null && data.isPossessing())
-//				ci.setReturnValue(data.getPossessed());
-//		}
-//	}
-	
-//	@Inject(method = "isPassenger()Z", at = @At("HEAD"), cancellable = true)
-//	public void isPassenger(final CallbackInfoReturnable<Boolean> ci)
-//	{
-//		Entity ent = (Entity)(Object)this;
-//		if(ent.getType() == EntityType.PLAYER)
-//		{
-//			PlayerEntity player = (PlayerEntity)ent;
-//			PlayerData data = PlayerData.forPlayer(player);
-//			if(data != null && data.isPossessing())
-//				ci.setReturnValue(true);
-//		}
-//	}
-	
-	@Inject(method = "isPassenger(Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), cancellable = true)
-	public void isPassenger2(Entity entity, final CallbackInfoReturnable<Boolean> ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		if(ent.getType() != EntityType.PLAYER && ent instanceof LivingEntity)
-		{
-			LivingEntity living = (LivingEntity)ent;
-			LivingData data = LivingData.forEntity(living);
-			if(data != null && data.isBeingPossessed() && data.getPossessor() != null)
-				ci.setReturnValue(data.getPossessor() == entity);
 		}
 	}
 }

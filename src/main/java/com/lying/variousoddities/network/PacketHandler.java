@@ -57,9 +57,6 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketSyncPlayerData.class, PacketSyncPlayerData::encode, PacketSyncPlayerData::decode, PacketSyncPlayerData::handle);
 		HANDLER.registerMessage(id++, PacketDeadDeath.class, PacketDeadDeath::encode, PacketDeadDeath::decode, PacketDeadDeath::handle);
 		HANDLER.registerMessage(id++, PacketUnconsciousAwaken.class, PacketUnconsciousAwaken::encode, PacketUnconsciousAwaken::decode, PacketUnconsciousAwaken::handle);
-		HANDLER.registerMessage(id++, PacketPossessionControl.class, PacketPossessionControl::encode, PacketPossessionControl::decode, PacketPossessionControl::handle);
-		HANDLER.registerMessage(id++, PacketPossessionClick.class, PacketPossessionClick::encode, PacketPossessionClick::decode, PacketPossessionClick::handle);
-		HANDLER.registerMessage(id++, PacketPossessionLook.class, PacketPossessionLook::encode, PacketPossessionLook::decode, PacketPossessionLook::handle);
 	}
 	
 	/**

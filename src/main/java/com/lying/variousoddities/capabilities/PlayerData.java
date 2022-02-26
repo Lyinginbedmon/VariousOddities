@@ -8,7 +8,6 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Predicate;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.PlayerChangeConditionEvent;
 import com.lying.variousoddities.config.ConfigVO;
@@ -20,7 +19,6 @@ import com.lying.variousoddities.reference.Reference;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -53,9 +51,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	
 	protected BodyCondition conditionBody = BodyCondition.ALIVE;
 	protected SoulCondition conditionSoul = SoulCondition.ALIVE;
-	protected boolean canPossess = false;
-	protected UUID possessingUUID = null;
-	private MobEntity possessingCached = null;
 	
 	protected UUID bodyUUID = null;
 	protected int deadTimer = DEAD_TIME;
@@ -108,9 +103,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 			compound.putUniqueId("BodyUUID", this.bodyUUID);
 		if(isBodyDead())
 			compound.putInt("DeadTicks", this.deadTimer);
-		compound.putBoolean("CanPossess", this.canPossess);
-		if(isPossessing())
-			compound.putUniqueId("Possessing", this.possessingUUID);
 		return compound;
 	}
 	
@@ -128,51 +120,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 			this.deadTimer = nbt.getInt("DeadTicks");
 		else
 			this.deadTimer = DEAD_TIME;
-		setPossession(nbt.getBoolean("CanPossess"));
-		if(nbt.contains("Possessing", 11))
-			setPossessing(nbt.getUniqueId("Possessing"));
-		else
-			setPossessing(null);
-	}
-	
-	public void stopPossessing()
-	{
-		LivingEntity target = getPossessed();
-		if(target != null)
-		{
-			LivingData data = LivingData.forEntity(target);
-			data.setPossessedBy(null);
-		}
-		
-		this.possessingUUID = null;
-		this.canPossess = false;
-		
-		LivingData.forEntity(this.player).getAbilities().markForRecache();
-		markDirty();
-	}
-	public boolean isPossessing(){ return this.possessingUUID != null; }
-	public void setPossessing(@Nullable UUID idIn)
-	{
-		this.possessingUUID = idIn;
-		
-		LivingData data = LivingData.forEntity(this.player);
-		if(data != null)
-			data.getAbilities().markForRecache();
-		
-		markDirty();
-	}
-	public UUID getPossessing(){ return this.possessingUUID; }
-	public LivingEntity getPossessed()
-	{
-		if(possessingCached == null || !possessingCached.isAlive())
-		{
-			List<MobEntity> candidates = player.getEntityWorld().getEntitiesWithinAABB(MobEntity.class, player.getBoundingBox().grow(128D), new Predicate<MobEntity>()
-			{
-				public boolean apply(MobEntity input){ return input.getUniqueID().equals(getPossessing()); }
-			});
-			possessingCached = candidates.isEmpty() ? null : candidates.get(0);
-		}
-		return possessingCached;
 	}
 	
 	/** Returns a float between 1 and 0 representing how much death/respawn delay the player has left. */
@@ -231,16 +178,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		return true;
 	}
 	
-	public boolean possessionEnabled(){ return this.canPossess; }
-	public void setPossession(boolean par1Bool)
-	{
-		if(par1Bool != this.canPossess)
-		{
-			this.canPossess = par1Bool;
-			markDirty();
-		}
-	}
-	
 	/** Returns true if the given player is operating normally */
 	public static boolean isPlayerNormalFunction(@Nullable LivingEntity player){ return checkCondition(player, BodyCondition.ALIVE, SoulCondition.ALIVE); }
 	
@@ -259,11 +196,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	public static boolean isPlayerBody(@Nullable PlayerEntity player, Entity body)
 	{
 		return player != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isBody(body);
-	}
-	
-	public static boolean isPlayerPossessing(@Nullable PlayerEntity player, @Nullable Entity body)
-	{
-		return player != null && body != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isPossessing() && PlayerData.forPlayer(player).getPossessed() == body;
 	}
 	
 	private static boolean checkCondition(@Nullable LivingEntity playerIn, @Nullable BodyCondition bodyCondition, @Nullable SoulCondition soulCondition)
