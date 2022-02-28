@@ -1,3 +1,4 @@
+3d8a3ec7a85ddd3982882e1d32f9793a0285bb8b data/minecraft/species/creeper.json
 b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/crab.json
 2bed3a24e87ac0d72a9f4ee93abb79985d327c6f data/varodd/loot_tables/entities/ghastling.json
 b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/giant_crab.json
@@ -11,7 +12,6 @@ b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/warg.j
 b705a53183c081c00818b1d091d58359ccb2ea2e data/varodd/loot_tables/entities/worg.json
 0b82bd3d794991e8fc5b1240da7aad8cfec36aa6 data/varodd/species/aasimar.json
 e79e65cd2abe4433c28875a59e19863280fa5060 data/varodd/species/archfey.json
-3d8a3ec7a85ddd3982882e1d32f9793a0285bb8b data/varodd/species/creeper.json
 a391a971a0933809762cad88477264ffdf177060 data/varodd/species/dwarf.json
 f603a7b67198a09fc0b67d45bda90d3ddd7fcce3 data/varodd/species/gnome.json
 13b6a437f25c73855bfc46f9f20befc04741d7b5 data/varodd/species/goblin.json
@@ -27,11 +27,11 @@ cb5eb7e1cefb92b065ac6edb604667721c4e6967 data/varodd/species/tiefling.json
 f2acdb7b69a985acb29f94d13f9cf9944a455cdb data/varodd/tags/entity_types/crabs.json
 ca069bbc2d6f8dbaa712e3dc66d963554f172225 data/varodd/tags/entity_types/rats.json
 a5c682eb0bdbb58d340a509b9ebea8c1fa59df73 data/varodd/tags/entity_types/scorpions.json
-7c8055800ab3364cd409fdb54b140dec32b7f697 data/varodd/templates/celestial.json
-9260f300f2f403213719a4b84c4b3db8f9c7028e data/varodd/templates/fiendish.json
-4707b2f588f89a13ec02844449769522bc5eb09a data/varodd/templates/insectile.json
-8abbe9351fb0c882021f0c9d041243d92b922ce1 data/varodd/templates/lich.json
-cd4e4b891475c4f5a9d816208a8dff31930d0a52 data/varodd/templates/necropolitan.json
-d772b996e7465861e8c4847e4817f4909d48a2f3 data/varodd/templates/reptilian.json
-704428606e4b55ea06a194fcbd9b89497e5f5231 data/varodd/templates/winged.json
-6198911754aa692f67cb768473a89f57e718488a data/varodd/templates/zombie.json
+700eee44c3520a6e5a4c421670b04ec5097ba241 data/varodd/templates/celestial.json
+6bfcffe40a766f0accc0b6e966be82069b2e2704 data/varodd/templates/fiendish.json
+aa711f11216ae7278d06e81720bbf6612522ea46 data/varodd/templates/insectile.json
+1a94d7d597b2bb69d6f82eaf5d6218d91d67ef6d data/varodd/templates/lich.json
+782d5cfb5f21a4cdb583e93aa5ac32ab13305319 data/varodd/templates/necropolitan.json
+149a397a23ceeec0d474cdf05c4125fa7326123c data/varodd/templates/reptilian.json
+bfaed45e1c5b9621fda4568d7e80ee9e46c38bb3 data/varodd/templates/winged.json
+a1e6fe25ba07242710517eea5262120981c9264c data/varodd/templates/zombie.json

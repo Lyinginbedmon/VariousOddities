@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
@@ -74,7 +76,7 @@ public class ScreenSelectTemplates extends Screen
 	
 	private Button clearButton;
 	
-	public ScreenSelectTemplates(PlayerEntity playerIn, Species speciesIn, EnumSet<EnumCreatureType> customTypesIn, int powerIn)
+	public ScreenSelectTemplates(@Nonnull PlayerEntity playerIn, @Nonnull Species speciesIn, EnumSet<EnumCreatureType> customTypesIn, int powerIn)
 	{
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select"));
 		this.player = playerIn;
@@ -265,7 +267,7 @@ public class ScreenSelectTemplates extends Screen
     	this.addButton(new Button(midX - 50, this.height - 25, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
     	this.addButton(new Button(midX - 62, this.height - 48, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
     	this.addButton(clearButton = new Button(midX + 2, this.height - 48, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
-    	this.addButton(new Button(3, 3, 20, 20, new StringTextComponent("<"), (button) -> { Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(player)); },
+    	this.addButton(new Button(3, 3, 20, 20, new StringTextComponent("<"), (button) -> { Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(player, this.baseSpecies)); },
     			(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"), x, y); }));
     }
     

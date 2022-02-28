@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.Ability.Nature;
@@ -53,6 +54,9 @@ public class AbilityOperation extends TemplateOperation
 	
 	public ITextComponent translate()
 	{
+		if(hasCustomDisplay())
+			return getCustomDisplay();
+		
 		String translationBase = "operation."+Reference.ModInfo.MOD_ID+".ability.";
 		switch(this.action)
 		{
@@ -111,6 +115,8 @@ public class AbilityOperation extends TemplateOperation
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
+		if(hasCustomDisplay())
+			compound.putString("CustomDisplay", ITextComponent.Serializer.toJson(this.getCustomDisplay()));
 		if(this.ability != null)
 		{
 			compound.put("Ability", this.ability.writeAtomically(new CompoundNBT()));
@@ -128,6 +134,18 @@ public class AbilityOperation extends TemplateOperation
 	
 	public void readFromNBT(CompoundNBT compound)
 	{
+		if(compound.contains("CustomDisplay"))
+		{
+			String s = compound.getString("CustomDisplay");
+			try
+			{
+				setCustomDisplay(ITextComponent.Serializer.getComponentFromJson(s));
+			}
+			catch (Exception exception)
+			{
+				VariousOddities.log.warn("Failed to parse species display name {}", s, exception);
+			}
+		}
 		if(compound.contains("Ability", 10))
 		{
 			try

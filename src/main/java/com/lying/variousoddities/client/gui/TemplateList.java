@@ -6,10 +6,11 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Template;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.list.ExtendedList;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IReorderingProcessor;
@@ -28,7 +29,7 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 	
 	public TemplateList(Minecraft mcIn, Screen screenIn, int listHeightIn, int screenHeightIn, boolean removeIn, ITextComponent titleIn)
 	{
-		super(mcIn, 150, listHeightIn, 32, screenHeightIn - 51, 36);
+		super(mcIn, 150, listHeightIn, 32, screenHeightIn - 51, 20);
 		this.parentScreen = screenIn;
 		this.removeList = removeIn;
 		this.title = titleIn;
@@ -66,9 +67,9 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 		return templates;
 	}
 	
-	public static class TemplateListEntry extends ExtendedList.AbstractListEntry<TemplateList.TemplateListEntry>
+	public class TemplateListEntry extends ExtendedList.AbstractListEntry<TemplateList.TemplateListEntry>
 	{
-		private static final ResourceLocation TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/templates_select.png");
+		private final ResourceLocation TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/templates_select.png");
 		private final Minecraft mc;
 		private final IReorderingProcessor field_243407_e;
 		private final TemplateList parentList;
@@ -87,7 +88,7 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 			this.remove = removeIn;
 		}
 		
-		private static IReorderingProcessor func_244424_a(Minecraft p_244424_0_, ITextComponent p_244424_1_)
+		private IReorderingProcessor func_244424_a(Minecraft p_244424_0_, ITextComponent p_244424_1_)
 		{
 			int i = p_244424_0_.fontRenderer.getStringPropertyWidth(p_244424_1_);
 			if (i > 157)
@@ -117,32 +118,49 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 			return false;
 		}
 		
+		@SuppressWarnings("deprecation")
 		public void render(MatrixStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
 		{
-			IReorderingProcessor processor = this.field_243407_e;
-			this.mc.fontRenderer.func_238407_a_(matrixStack, processor, (float)(rowLeft + 32 + 2), (float)(rowTop + 1), 16777215);
-			ScreenSelectSpecies.drawStars(matrixStack, template.getPower(), rowLeft + 32 + 2, rowTop + this.mc.fontRenderer.FONT_HEIGHT + 1);
+			this.mc.getTextureManager().bindTexture(Widget.WIDGETS_LOCATION);
+			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.enableBlend();
+			RenderSystem.defaultBlendFunc();
+			RenderSystem.enableDepthTest();
+			int texY = 46 + (mouseOver ? 2 : 1) * 20;
+			int texWidth = Math.min(200, rowWidth) / 2;
+			int texHeight = Math.min(20, rowHeight + 3) / 2;
+			// Top Left
+			blit(matrixStack, rowLeft - 2, rowTop, 0, texY, texWidth, texHeight);
+			// Bottom Left
+			blit(matrixStack, rowLeft - 2, rowTop + texHeight, 0, texY + 20 - texHeight, texWidth, texHeight);
+			// Top Right
+			blit(matrixStack, rowLeft - 2 + texWidth, rowTop, 200 - texWidth, texY, texWidth, texHeight);
+			// Bottom Right
+			blit(matrixStack, rowLeft - 2 + texWidth, rowTop + texHeight, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
+			
+			this.mc.fontRenderer.func_238407_a_(matrixStack, this.field_243407_e, (float)(rowLeft + 32 + 2), (float)(rowTop + (rowHeight - this.mc.fontRenderer.FONT_HEIGHT) / 2), 16777215);
+			ScreenSelectSpecies.drawStars(matrixStack, template.getPower(), rowLeft + rowWidth - 25 - (9 * Math.max(1, Math.abs(template.getPower()))), rowTop + (rowHeight - 9) / 2);
+			
 			this.mc.getTextureManager().bindTexture(TEXTURES);
-			
 			Segment hovered = getMouseOverSegment(mouseX, mouseY, rowLeft, rowTop, rowWidth, rowHeight, this.parentList.removeList);
-			int leftSeg = rowLeft;
-			int rightSeg = rowLeft + rowWidth - 32;
+			int leftSeg = rowLeft + 4;
+			int rightSeg = rowLeft + rowWidth - 20 - 4;
 			
+			int iconY = rowTop + (rowHeight - 16) / 2;
 			if(mouseOver && hovered == Segment.INFO)
 			{
-				AbstractGui.blit(matrixStack, this.parentList.removeList ? rightSeg : leftSeg, rowTop, 64F, 32F, 32, 32, 256, 256);
-				
+				blit(matrixStack, this.parentList.removeList ? rightSeg : leftSeg, iconY, 32, 16, 16, 16);
 				if(this.parentScreen instanceof ScreenSelectTemplates)
 					((ScreenSelectTemplates)this.parentScreen).highlightEntry = this;
 			}
 			else
-				AbstractGui.blit(matrixStack, this.parentList.removeList ? rightSeg : leftSeg, rowTop, 64F, 0F, 32, 32, 256, 256);
+				blit(matrixStack, this.parentList.removeList ? rightSeg : leftSeg, iconY, 32, 0, 16, 16);
 			
 			if(mouseOver)
 				if(hovered == Segment.ARROW)
-					AbstractGui.blit(matrixStack, this.parentList.removeList ? leftSeg : rightSeg, rowTop, this.parentList.removeList ? 32F : 0F, 32F, 32, 32, 256, 256);
+					blit(matrixStack, this.parentList.removeList ? leftSeg : rightSeg, iconY, this.parentList.removeList ? 16 : 0, 16, 16, 16);
 				else
-					AbstractGui.blit(matrixStack, this.parentList.removeList ? leftSeg : rightSeg, rowTop, this.parentList.removeList ? 32F : 0F, 0F, 32, 32, 256, 256);
+					blit(matrixStack, this.parentList.removeList ? leftSeg : rightSeg, iconY, this.parentList.removeList ? 16 : 0, 0, 16, 16);
 		}
 		
 		private Segment getMouseOverSegment(int mouseX, int mouseY, int rowLeft, int rowTop, int rowWidth, int rowHeight, boolean removeList)
@@ -152,18 +170,18 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 				return null;
 			
 			int relX = mouseX - rowLeft;
-			if(relX < 32 && relX > 0)
+			if(relX < 20 && relX > 4)
 				return removeList ? Segment.ARROW : Segment.INFO;
-			else if(relX >= rowWidth - 32 && relX < rowWidth)
+			else if(relX >= rowWidth - 20 - 4 && relX < rowWidth)
 				return removeList ? Segment.INFO : Segment.ARROW;
 			
 			return null;
 		}
-		
-		private enum Segment
-		{
-			ARROW,
-			INFO;
-		}
+	}
+	
+	private static enum Segment
+	{
+		ARROW,
+		INFO;
 	}
 }

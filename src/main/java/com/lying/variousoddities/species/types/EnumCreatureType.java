@@ -29,7 +29,6 @@ import com.lying.variousoddities.species.abilities.AbilityImmunityCrits;
 import com.lying.variousoddities.species.abilities.AbilityIncorporeality;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
 import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
-import com.lying.variousoddities.species.abilities.AbilityStatusImmunity.Paralysis;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
@@ -71,7 +70,7 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 10),
 	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e"))
 		.addAbility(new AbilityDarkvision())
-		.addAbility(new Paralysis()), Action.STANDARD, 12),
+		.addAbility(new AbilityStatusImmunity.Paralysis()), Action.STANDARD, 12),
 	EARTH(null, new TypeHandler(UUID.fromString("c1f5d866-365d-495c-9aa6-c5adaef000de"))
 		.addAbility(new AbilityBurrow(true, false))),
 	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b0047670-88a2-41a0-aaae-7c9da5a79a4b"))

@@ -1,6 +1,7 @@
 {
   "UUID": "d606248a-4cdc-47c4-b96e-33ad1bd16186",
   "Power": 2,
+  "CustomName": "{\"translate\":\"template.varodd.insectile\"}",
   "Operations": [
     {
       "Name": "varodd:replace_supertypes",

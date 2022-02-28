@@ -1,6 +1,7 @@
 {
   "UUID": "1e887c65-f18e-4418-9a0e-48ebc9baaa78",
   "Power": 2,
+  "CustomName": "{\"translate\":\"template.varodd.reptilian\"}",
   "Operations": [
     {
       "Action": "add",

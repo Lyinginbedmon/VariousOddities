@@ -45,8 +45,10 @@ public abstract class TemplateOperation
 	
 	public void setTemplateID(UUID uuidIn){ this.templateID = uuidIn;  }
 	
-	public ITextComponent translate(){ return this.customText != null ? this.customText : new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
+	public ITextComponent translate(){ return hasCustomDisplay() ? getCustomDisplay() : new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
 	
+	public boolean hasCustomDisplay(){ return this.customText != null; }
+	public IFormattableTextComponent getCustomDisplay(){ return this.customText; }
 	protected TemplateOperation setCustomDisplay(IFormattableTextComponent textComponent){ this.customText = textComponent; return this; }
 	
 	public Operation action(){ return this.action; }

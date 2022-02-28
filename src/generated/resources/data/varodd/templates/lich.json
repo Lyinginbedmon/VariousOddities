@@ -1,6 +1,7 @@
 {
   "UUID": "0f52db4b-4388-4fde-8e55-34ff8a68ca85",
   "Power": 4,
+  "CustomName": "{\"translate\":\"template.varodd.lich\"}",
   "Operations": [
     {
       "Name": "varodd:replace_supertypes",
@@ -9,7 +10,7 @@
     {
       "Action": "remove",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b,CustomDisplay:'{\"translate\":\"operation.varodd.ability.remove_constitution\"}'}"
     },
     {
       "Action": "add",

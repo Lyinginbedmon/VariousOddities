@@ -133,7 +133,6 @@ public class SpeciesRegistry extends JsonReloadListener
 	static
 	{
 		/*
-		 * Creeper
 		 * Dragon, blue
 		 * Dragon, ender
 		 * Dragon, red

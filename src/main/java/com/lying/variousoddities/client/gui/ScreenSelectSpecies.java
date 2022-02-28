@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VORegistries;
@@ -25,6 +27,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -60,6 +63,7 @@ public class ScreenSelectSpecies extends Screen
 	
 	private final PlayerEntity player;
 	
+	private SpeciesList speciesList;
 	private List<Species> selectableSpecies = Lists.newArrayList();
 	private int index = 0;
 	
@@ -74,7 +78,13 @@ public class ScreenSelectSpecies extends Screen
 	{
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
-		initSpecies();
+		setCurrentSpecies(Species.HUMAN);
+	}
+	
+	public ScreenSelectSpecies(PlayerEntity playerIn, @Nullable Species initialIn)
+	{
+		this(playerIn);
+		setCurrentSpecies(initialIn);
 	}
 	
 	private void initSpecies()
@@ -101,6 +111,22 @@ public class ScreenSelectSpecies extends Screen
 			});
 	}
 	
+	private int indexBySpecies(@Nullable Species speciesIn)
+	{
+		if(speciesIn != null && !this.selectableSpecies.isEmpty())
+			for(int index = 0; index < this.selectableSpecies.size(); index++)
+				if(this.selectableSpecies.get(index).getRegistryName().equals(speciesIn.getRegistryName()))
+					return index;
+		return 0;
+	}
+	
+	public void setCurrentSpecies(@Nullable Species speciesIn)
+	{
+		if(this.selectableSpecies.isEmpty())
+			initSpecies();
+		this.index = indexBySpecies(speciesIn);
+	}
+	
 	public boolean shouldCloseOnEsc(){ return false; }
 	
 	public boolean isPauseScreen(){ return true; }
@@ -110,19 +136,14 @@ public class ScreenSelectSpecies extends Screen
 		super.tick();
 		LivingData data = LivingData.forEntity(player);
 		typesButton.visible = typesButton.active = data.hasCustomTypes();
-		
-		selectButton.visible = selectButton.active = !selectableSpecies.isEmpty();
-		if(selectableSpecies.isEmpty())
-		{
-			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID()));
-			Minecraft.getInstance().displayGuiScreen(null);
-		}
 	}
 	
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		renderDirtBackground(0);
 		renderBackgroundLayer(matrixStack, partialTicks);
+    	this.speciesList.render(matrixStack, mouseX, mouseY, partialTicks);
+    	hideListEdge();
 		int yPos = 20;
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
 		yPos += 15;
@@ -171,16 +192,42 @@ public class ScreenSelectSpecies extends Screen
 		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
+    
+    @SuppressWarnings("deprecation")
+	private void hideListEdge()
+    {
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder bufferbuilder = tessellator.getBuffer();
+		this.minecraft.getTextureManager().bindTexture(AbstractGui.BACKGROUND_LOCATION);
+		int listRight = this.speciesList.getLeft() + this.speciesList.getWidth() + 5;
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		int listStart = 32;
+        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+	        bufferbuilder.pos(0.0D, (double)listStart, 0.0D).tex(0.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.pos((double)listRight, (double)listStart, 0.0D).tex((float)listRight / 32.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.pos((double)listRight, (double)0, 0.0D).tex((float)listRight / 32.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.pos(0.0D, (double)0, 0.0D).tex(0.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
+	    tessellator.draw();
+		
+		int listEnd = this.height - 51;
+        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+	        bufferbuilder.pos(0.0D, (double)this.height, 0.0D).tex(0.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.pos((double)listRight, (double)this.height, 0.0D).tex((float)listRight / 32.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.pos((double)listRight, (double)listEnd, 0.0D).tex((float)listRight / 32.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.pos(0.0D, (double)listEnd, 0.0D).tex(0.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
+        tessellator.draw();
+		RenderSystem.enableTexture();
+		RenderSystem.shadeModel(7424);
+		RenderSystem.enableAlphaTest();
+		RenderSystem.disableBlend();
+    }
 	
 	@SuppressWarnings("deprecation")
 	public void renderBackgroundLayer(MatrixStack matrixStack, float partialTicks)
 	{
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURE);
-		
-		int sizeX = 175;
-		int sizeY = 180;
-		this.blit(matrixStack, (this.width - sizeX) / 2, 45, 0, 0, sizeX, sizeY);
+		this.blit(matrixStack, (this.width - 175) / 2, 45, 0, 0, 175, 180);
 	}
 	
 	public void drawStars(MatrixStack matrixStack, int yPos, int power)
@@ -228,23 +275,18 @@ public class ScreenSelectSpecies extends Screen
         this.buttons.clear();
         
         int midX = width / 2;
-        
-    	this.addButton(new Button(midX + 100, 120, 20, 20, new StringTextComponent(">"), (button) -> 
-    		{
-    			index = ++index % selectableSpecies.size();
-    		}));
     	
-    	this.addButton(new Button(midX - 120, 120, 20, 20, new StringTextComponent("<"), (button) -> 
-    		{
-    			index--;
-    			if(index < 0)
-    				index = selectableSpecies.size() - 1;
-    		}));
+        if(this.selectableSpecies.isEmpty())
+        	initSpecies();
+		this.speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
+		this.speciesList.setLeftPos((this.width - 170) / 2 - 10 - this.speciesList.getRowWidth());
+		this.children.add(this.speciesList);
     	
     	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
     		{
     			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower));
-    		}));
+    		},
+				(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
     	
     	this.addButton(typesButton = new Button(midX - 60, height - 25, 120, 20, new TranslationTextComponent("gui.varodd.species_select.lose_types"), (button) ->
     		{

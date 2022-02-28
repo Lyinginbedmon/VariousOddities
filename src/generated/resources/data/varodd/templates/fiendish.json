@@ -1,6 +1,7 @@
 {
   "UUID": "ff6ac129-6eaf-4015-bbc3-75ec226e5bf6",
   "Power": 2,
+  "CustomName": "{\"translate\":\"template.varodd.fiendish\"}",
   "Operations": [
     {
       "Condition": {

@@ -1,6 +1,7 @@
 {
   "UUID": "c70089ac-ff68-487c-abd1-3e4cab1cb336",
   "Power": 2,
+  "CustomName": "{\"translate\":\"template.varodd.celestial\"}",
   "Operations": [
     {
       "Condition": {

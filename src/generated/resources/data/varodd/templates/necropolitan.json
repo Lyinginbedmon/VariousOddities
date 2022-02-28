@@ -1,6 +1,7 @@
 {
   "UUID": "4ca65fb7-fe3d-4e2c-a86f-469b8cfc13c7",
   "Power": 0,
+  "CustomName": "{\"translate\":\"template.varodd.necropolitan\"}",
   "Operations": [
     {
       "Name": "varodd:replace_supertypes",
@@ -9,7 +10,7 @@
     {
       "Action": "remove",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b,CustomDisplay:'{\"translate\":\"operation.varodd.ability.remove_constitution\"}'}"
     },
     {
       "Action": "add",
@@ -20,7 +21,7 @@
   "Preconditions": [
     {
       "Name": "varodd:type",
-      "Tag": "{Types:[\"humanoid\",\"monstrous_humanoid\"],Style:\"or\"}"
+      "Tag": "{Types:[\"humanoid\",\"monstrous_humanoid\"],CustomName:'{\"translate\":\"precondition.varodd.type.humanoid\"}',Style:\"or\"}"
     }
   ]
 }
