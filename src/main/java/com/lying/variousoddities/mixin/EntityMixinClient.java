@@ -59,7 +59,7 @@ public class EntityMixinClient
 		if(player == null)
 			return;
 		
-		if(ent != player)
+		if(ent != player && ent.isAlive())
 		{
 			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent) && !VOHelper.isCreativeOrSpectator(player))
 				AbstractBody.moveWithinRangeOf(ent, player, PlayerData.forPlayer(player).getSoulCondition().getWanderRange());

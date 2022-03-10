@@ -7,9 +7,18 @@ import java.util.Map;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.potion.IVisualPotion;
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.potion.*;
+import com.lying.variousoddities.potion.IVisualPotion;
+import com.lying.variousoddities.potion.PotionDazed;
+import com.lying.variousoddities.potion.PotionDazzled;
+import com.lying.variousoddities.potion.PotionEntangled;
+import com.lying.variousoddities.potion.PotionHealthDamage;
+import com.lying.variousoddities.potion.PotionHealthDrain;
+import com.lying.variousoddities.potion.PotionParalysis;
+import com.lying.variousoddities.potion.PotionPetrified;
+import com.lying.variousoddities.potion.PotionPetrifying;
+import com.lying.variousoddities.potion.PotionSleep;
+import com.lying.variousoddities.potion.PotionTempHP;
 import com.lying.variousoddities.potion.PotionVO;
 import com.lying.variousoddities.reference.Reference;
 
@@ -44,6 +53,9 @@ public class VOPotions
 	public static final Effect ENTANGLED			= addPotion(new PotionEntangled(9953313));
 	public static final Effect ANCHORED				= addPotion(new PotionVO("anchored", EffectType.HARMFUL, 1400709));
 	public static final Effect NEEDLED				= addPotion(new PotionVO("needled", EffectType.NEUTRAL, -1));
+	public static final Effect TEMP_HP				= addPotion(new PotionTempHP());
+	public static final Effect HEALTH_DAMAGE		= addPotion(new PotionHealthDamage());
+	public static final Effect HEALTH_DRAIN			= addPotion(new PotionHealthDrain());
 	
 	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
 	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();

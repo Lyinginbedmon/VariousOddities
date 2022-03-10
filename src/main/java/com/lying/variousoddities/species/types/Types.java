@@ -70,6 +70,7 @@ public class Types
 	public boolean isGolem()	{ return includesType(EnumCreatureType.CONSTRUCT); }
 	public boolean isHoly()		{ return includesType(EnumCreatureType.HOLY); }
 	public boolean isUndead()	{ return includesType(EnumCreatureType.UNDEAD); }
+	public boolean isLiving()	{ return !(isGolem() || isUndead()); }
 	
 	/** Returns how much health a player with these types would have */
 	public double getPlayerHealth()

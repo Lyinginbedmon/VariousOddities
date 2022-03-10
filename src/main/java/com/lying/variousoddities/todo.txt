@@ -1,21 +1,23 @@
-Possession
+Bodies
+	Proper non-player handling
+	Body inventory & equipment (draw from companion inventory for non-players)
+		Player inventory access via unconscious body
+	Healing bludgeoning damage
+	Fix player binding to body
+Warg
+	Saddle textures
+	Carpet textures
+	Armour textures
+	Fix held item rendering
+Potions
+	Fix sleep effect affecting players incorrectly
+AbstractGoblinWolf
+	Complete goblin->goblin tamer->worg->warg pipeline
+
+Possession (moved to separate workspace)
 	Move players to body position w/out breaking motion controls
 	Possessed inventory, accessed with inventory key
 	Possessed mobs pick up items as players
 	Fix lack of walking animation
 	Fix command targetting
 	Hide second shadow?
-Unconscious bodies
-	Proper Non-player handling
-	Player inventory access
-	Healing bludgeoning damage
-	Fix player binding to body
-AbstractGoblinWolf
-	Complete goblin->goblin tamer->worg->warg pipeline
-Warg
-	Saddle texture
-	Carpet textures
-	Armour textures
-	Held item rendering
-Potions
-	Fix sleep effect on players

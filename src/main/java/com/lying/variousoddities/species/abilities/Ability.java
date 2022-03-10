@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.lying.variousoddities.reference.Reference;
 
@@ -14,7 +15,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.ForgeRegistryEntry;
@@ -48,6 +51,8 @@ public abstract class Ability
 		this.registryName = registryNameIn;
 	}
 	
+	public Ability clone(){ return AbilityRegistry.getAbility(writeAtomically(new CompoundNBT())); }
+	
 	public final ResourceLocation getRegistryName(){ return this.registryName; }
 	
 	/** 
@@ -62,8 +67,11 @@ public abstract class Ability
 	 * The source ID determines if two instances of the same ability originate from separate places.<br>
 	 * Used in Abilities when refreshing the cache.
 	 */
+	@Nullable
 	public UUID getSourceId(){ return this.sourceId; }
-	public Ability setSourceId(UUID idIn){ this.sourceId = idIn; return this; }
+	public Ability setSourceId(@Nullable UUID idIn){ this.sourceId = idIn; return this; }
+	public boolean isTemporary(){ return getSourceId() == null; }
+	public Ability setTemporary(){ setSourceId(null); return this; }
 	
 	/** Compares this ability to the given one and returns an assessment of relative strength */
 	public int compare(Ability abilityIn){ return 0; }
@@ -94,7 +102,10 @@ public abstract class Ability
 	
 	public ITextComponent getDisplayName()
 	{
-		return hasCustomName() ? this.displayName : translatedName();
+		IFormattableTextComponent name = (IFormattableTextComponent)(hasCustomName() ? this.displayName : translatedName());
+		if(isTemporary())
+			name.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.ITALIC); });
+		return name;
 	}
 	
 	public ITextComponent translatedName()
@@ -190,5 +201,7 @@ public abstract class Ability
 		}
 		
 		public boolean canBeUsedInAntiMagic(){ return this.useInAntiMagic; }
+		
+		public ITextComponent translated(){ return new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".ability_nature."+getString()); }
 	}
 }

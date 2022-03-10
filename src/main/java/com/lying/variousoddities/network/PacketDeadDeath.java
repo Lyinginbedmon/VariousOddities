@@ -5,8 +5,10 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
+import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -50,6 +52,16 @@ public class PacketDeadDeath
 			return;
 		
 		PlayerData.forPlayer(player).setSoulCondition(SoulCondition.ROAMING);
-		player.setHealth(0F);
+		
+		if(!player.getEntityWorld().isRemote)
+		{
+			Entity body = PlayerData.forPlayer(player).getBody(player.getEntityWorld());
+			if(body != null && body.getType() == VOEntities.BODY)
+				body.onKillCommand();
+			else if(body == null)
+				VariousOddities.log.warn("Could not find corpse of player "+player.getDisplayName().getString()+" to despawn");
+		}
+		
+		player.onKillCommand();
 	}
 }

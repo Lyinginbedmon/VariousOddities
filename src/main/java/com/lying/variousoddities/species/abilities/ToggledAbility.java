@@ -53,6 +53,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 		}
 	}
 	
+	@Override
 	public boolean isActive(){ return this.isActive; }
 	
 	public static abstract class Builder extends Ability.Builder

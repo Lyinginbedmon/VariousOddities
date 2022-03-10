@@ -105,7 +105,7 @@ public class AbilityOperation extends TemplateOperation
 		StringTextComponent text = new StringTextComponent("[");
 		for(int i=0; i<natures.length; i++)
 		{
-			text.append(new StringTextComponent(natures[i].getString()));
+			text.append(natures[i].translated());
 			if(i < natures.length - 1)
 				text.append(new StringTextComponent(", "));
 		}

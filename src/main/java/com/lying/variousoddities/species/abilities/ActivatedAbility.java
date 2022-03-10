@@ -57,6 +57,7 @@ public abstract class ActivatedAbility extends Ability
 	
 	public void markForUpdate(LivingEntity entity)
 	{
+		LivingData.forEntity(entity).getAbilities().markForRecache();
 		LivingData.forEntity(entity).getAbilities().markDirty();
 	}
 }

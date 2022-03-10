@@ -113,7 +113,6 @@ public class PacketSpeciesSelected
 						if(template != null)
 						{
 							data.addTemplate(template);
-							System.out.println("Applied template "+templateName.toString()+" from select screen");
 						}
 					}
 				}

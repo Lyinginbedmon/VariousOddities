@@ -5,7 +5,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
-public abstract class AbilityVision extends Ability
+public abstract class AbilityVision extends ToggledAbility
 {
 	protected double range;
 	private double rangeMin = 0D;
@@ -14,6 +14,7 @@ public abstract class AbilityVision extends Ability
 	{
 		super(registryName);
 		this.range = Math.max(4D, rangeIn);
+		this.isActive = true;
 	}
 	
 	public AbilityVision(ResourceLocation registryName, double rangeIn, double rangeMinIn)
@@ -32,6 +33,7 @@ public abstract class AbilityVision extends Ability
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
 	{
+		super.writeToNBT(compound);
 		compound.putDouble("Max", this.range);
 		compound.putDouble("Min", this.rangeMin);
 		return compound;
@@ -39,11 +41,12 @@ public abstract class AbilityVision extends Ability
 	
 	public void readFromNBT(CompoundNBT compound)
 	{
+		super.readFromNBT(compound);
 		this.range = compound.getDouble("Max");
 		this.rangeMin = compound.getDouble("Min");
 	}
 	
-	public boolean isInRange(double range){ return range <= this.range && range >= this.rangeMin; }
+	public boolean isInRange(double range){ return isActive() && range <= this.range && range >= this.rangeMin; }
 	
 	public abstract boolean testEntity(Entity entity, LivingEntity owner);
 }

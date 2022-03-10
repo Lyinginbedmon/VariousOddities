@@ -78,6 +78,7 @@ public class PacketSyncAbilities
 			if(sender != null)
 			{
 				Abilities abilities = LivingData.forEntity(sender).getAbilities();
+				abilities.forceRecache();
 				CompoundNBT data = abilities.serializeNBT();
 				PacketHandler.sendToNearby(sender.getEntityWorld(), sender, new PacketSyncAbilities(sender.getUniqueID(), data));
 			}

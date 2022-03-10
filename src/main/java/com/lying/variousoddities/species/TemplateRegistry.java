@@ -21,8 +21,11 @@ import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
 import com.lying.variousoddities.species.abilities.AbilityDarkvision;
+import com.lying.variousoddities.species.abilities.AbilityDrainHealth;
+import com.lying.variousoddities.species.abilities.AbilityFastHealing;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
+import com.lying.variousoddities.species.abilities.AbilityForm;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityModifierStr;
@@ -67,6 +70,7 @@ public class TemplateRegistry extends JsonReloadListener
 	public static final ResourceLocation TEMPLATE_LICH			= new ResourceLocation(Reference.ModInfo.MOD_ID, "lich");
 	public static final ResourceLocation TEMPLATE_NECROPOLITAN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "necropolitan");
 	public static final ResourceLocation TEMPLATE_REPTILIAN		= new ResourceLocation(Reference.ModInfo.MOD_ID, "reptilian");
+	public static final ResourceLocation TEMPLATE_VAMPIRE		= new ResourceLocation(Reference.ModInfo.MOD_ID, "vampire");
 	public static final ResourceLocation TEMPLATE_WINGED		= new ResourceLocation(Reference.ModInfo.MOD_ID, "winged");
 	public static final ResourceLocation TEMPLATE_ZOMBIE		= new ResourceLocation(Reference.ModInfo.MOD_ID, "zombie");
 	
@@ -76,6 +80,7 @@ public class TemplateRegistry extends JsonReloadListener
 	private static final UUID UUID_LICH = UUID.fromString("0f52db4b-4388-4fde-8e55-34ff8a68ca85");
 	private static final UUID UUID_NECROPOLITAN = UUID.fromString("4ca65fb7-fe3d-4e2c-a86f-469b8cfc13c7");
 	private static final UUID UUID_REPTILIAN = UUID.fromString("1e887c65-f18e-4418-9a0e-48ebc9baaa78");
+	private static final UUID UUID_VAMPIRE = UUID.fromString("16c220bb-b995-4688-b477-53281049251f");
 	private static final UUID UUID_WINGED = UUID.fromString("97b43a6a-8626-4a6d-8a8c-b0caca354bc6");
 	private static final UUID UUID_ZOMBIE = UUID.fromString("eec62733-5e7b-4c47-a939-9590b9a6f492");
 	
@@ -281,5 +286,20 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
 				.addOperation(AbilityOperation.loseCon())
 				.addOperation(AbilityOperation.add(new AbilityNaturalRegen())));
+		addTemplate(new Template(TEMPLATE_VAMPIRE, UUID_VAMPIRE)
+				.setPower(8)
+				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".vampire"))
+				.addPrecondition(TypePrecondition.isHumanShaped())
+				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
+				.addOperation(AbilityOperation.loseCon())
+				.addOperation(AbilityOperation.add(true, new AbilityModifierStr(3D)))
+				.addOperation(AbilityOperation.add(new AbilityDrainHealth()))
+				.addOperation(AbilityOperation.add(new AbilityDamageReduction(10, DamageType.SILVER, DamageType.MAGIC)))
+				.addOperation(AbilityOperation.add(new AbilityFastHealing(5)))
+				.addOperation(AbilityOperation.add(new AbilityForm.Mist()))
+				.addOperation(AbilityOperation.add(new AbilityResistance(10, DamageType.COLD)))
+				.addOperation(AbilityOperation.add(new AbilityResistance(10, DamageType.LIGHTNING)))
+				.addOperation(AbilityOperation.add(new AbilityClimb()))
+				.addOperation(AbilityOperation.add(new AbilitySunBurn())));
 	}
 }

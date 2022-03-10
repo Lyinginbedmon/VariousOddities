@@ -8,7 +8,7 @@
   "Abilities": [
     "{Tag:{Amount:5.0d},Name:\"varodd:natural_armour\"}",
     "{Tag:{Amount:10,Exceptions:[\"silver\"]},Name:\"varodd:damage_reduction\"}",
-    "{Tag:{Rate:3.0f,Ticks:0,Damage:0.0f},Name:\"varodd:fast_healing\"}",
+    "{Tag:{Rate:3.0f,Ticks:0},Name:\"varodd:fast_healing\"}",
     "{Tag:{Type:\"magic\",Amount:5},Name:\"varodd:resistance\"}",
     "{Tag:{Max:20.0f,SoftCap:10.0f},Name:\"varodd:epic_resilience\"}",
     "{Tag:{Active:0,Cooldown:120,Range:16.0d},Name:\"varodd:teleport_to_position\"}",

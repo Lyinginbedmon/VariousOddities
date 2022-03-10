@@ -15,6 +15,11 @@ public class AbilityTremorsense extends AbilityVision
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "tremorsense");
 	
+	private AbilityTremorsense()
+	{
+		this(0D);
+	}
+	
 	public AbilityTremorsense(double rangeIn)
 	{
 		super(REGISTRY_NAME, rangeIn);
@@ -44,8 +49,9 @@ public class AbilityTremorsense extends AbilityVision
 		
 		public Ability create(CompoundNBT compound)
 		{
-			double range = compound.contains("Max", 6) ? compound.getDouble("Max") : 16;
-			return new AbilityTremorsense(range, compound.getDouble("Min"));
+			Ability ability = new AbilityTremorsense();
+			ability.readFromNBT(compound);
+			return ability;
 		}
 	}
 }

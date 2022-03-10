@@ -1,6 +1,8 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -8,31 +10,23 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-import net.minecraftforge.eventbus.api.IEventBus;
 
-public class AbilityGaseousForm extends AbilityPhasing
+public class AbilityGaseous extends AbilityPhasing implements ICompoundAbility
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "gaseous_form");
 	
 	public static final AbilityDamageReduction DAMAGE_REDUCTION = new AbilityDamageReduction(10, DamageType.MAGIC);
 	
-	public AbilityGaseousForm()
+	public AbilityGaseous()
 	{
 		super(REGISTRY_NAME);
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
-	public void addListeners(IEventBus bus)
+	public List<Ability> getSubAbilities()
 	{
-		super.addListeners(bus);
-		bus.addListener(this::gatherAbilities);
-	}
-	
-	public void gatherAbilities(GatherAbilitiesEvent event)
-	{
-		if(event.hasAbility(getRegistryName()) && !event.hasAbility(DAMAGE_REDUCTION.getMapName()))
-			event.addAbility(new AbilityDamageReduction(DAMAGE_REDUCTION.getAmount(), DamageType.MAGIC));
+		return Lists.newArrayList(new AbilityDamageReduction(DAMAGE_REDUCTION.getAmount(), DamageType.MAGIC));
 	}
 	
 	public boolean ignoresNonMagicDamage(){ return false; }
@@ -48,7 +42,7 @@ public class AbilityGaseousForm extends AbilityPhasing
 		
 		public Ability create(CompoundNBT compound)
 		{
-			return new AbilityGaseousForm();
+			return new AbilityGaseous();
 		}
 	}
 }

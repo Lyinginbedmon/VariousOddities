@@ -16,6 +16,11 @@ public class AbilityBlindsight extends AbilityVision
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "blindsight");
 	
+	private AbilityBlindsight()
+	{
+		this(0D);
+	}
+	
 	public AbilityBlindsight(double rangeIn)
 	{
 		super(REGISTRY_NAME, Math.max(4D, rangeIn));
@@ -54,8 +59,9 @@ public class AbilityBlindsight extends AbilityVision
 		
 		public Ability create(CompoundNBT compound)
 		{
-			double range = compound.contains("Max", 6) ? compound.getDouble("Max") : 16;
-			return new AbilityBlindsight(range, compound.getDouble("Min"));
+			Ability ability = new AbilityBlindsight();
+			ability.readFromNBT(compound);
+			return ability;
 		}
 	}
 }

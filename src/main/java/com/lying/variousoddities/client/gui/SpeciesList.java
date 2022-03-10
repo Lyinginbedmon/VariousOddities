@@ -66,6 +66,9 @@ public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
 			RenderSystem.defaultBlendFunc();
 			RenderSystem.enableDepthTest();
 			int texY = 46 + (mouseOver ? 2 : 1) * 20;
+			if(this.parentList.parentScreen.getCurrentSpecies().getRegistryName().equals(species.getRegistryName()))
+				texY = 46;
+			
 			int texWidth = Math.min(200, rowWidth) / 2;
 			int texHeight = Math.min(20, rowHeight + 3) / 2;
 			// Top Left
@@ -83,12 +86,15 @@ public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
 		
 	 	public boolean mouseClicked(double mouseX, double mouseY, int button)
 		{
+			if(this.parentList.parentScreen.getCurrentSpecies().getRegistryName().equals(species.getRegistryName()))
+				return false;
+			
 			double relX = mouseX - (double)this.parentList.getRowLeft();
 			if(relX > 0 && relX < this.parentList.getRowWidth())
-				{
-					this.parentList.parentScreen.setCurrentSpecies(this.species);
-					return true;
-				}
+			{
+				this.parentList.parentScreen.setCurrentSpecies(this.species);
+				return true;
+			}
 			
 			return false;
 		}

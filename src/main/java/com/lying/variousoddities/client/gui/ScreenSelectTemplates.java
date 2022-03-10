@@ -47,7 +47,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class ScreenSelectTemplates extends Screen
 {
-	public static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/species_select.png");
+	public static final ResourceLocation TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/templates_select.png");
 	private static final Comparator<Template> TEMPLATE_SORT = new Comparator<Template>()
 			{
 				public int compare(Template o1, Template o2)
@@ -73,6 +73,9 @@ public class ScreenSelectTemplates extends Screen
 	public TemplateList.TemplateListEntry highlightEntry = null;
 	
 	private final int targetPower;
+	
+	private static final int LIST_SEP = 7;
+	private static final int LIST_BORDER = 6;
 	
 	private Button clearButton;
 	
@@ -247,15 +250,15 @@ public class ScreenSelectTemplates extends Screen
     	super.init(minecraft, width, height);
     	
 		this.listAvailable = new TemplateList(minecraft, this, 200, this.height, false, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.allowed"));
-		this.listAvailable.setLeftPos(this.width / 2 - 4 - this.listAvailable.getRowWidth());
+		this.listAvailable.setLeftPos(this.width / 2 - this.listAvailable.getRowWidth() - LIST_SEP);
 		this.listAvailable.setEntries(getViableTemplates());
 		this.children.add(this.listAvailable);
 		
 		this.listApplied = new TemplateList(minecraft, this, 200, this.height, true, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.applied"));
-		this.listApplied.setLeftPos(this.width / 2 + 4);
+		this.listApplied.setLeftPos(this.width/2 + LIST_SEP);
 		this.children.add(this.listApplied);
 		
-		if(this.listAvailable.getTemplates().isEmpty())
+		if(this.listAvailable.getTemplates().isEmpty() && this.listApplied.getTemplates().isEmpty())
 		{
 			/* If there are no applicable templates at initialisation, conclude character creation outright */
 			finalise();
@@ -264,9 +267,9 @@ public class ScreenSelectTemplates extends Screen
 		
         this.buttons.clear();
         int midX = width / 2;
-    	this.addButton(new Button(midX - 50, this.height - 25, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
-    	this.addButton(new Button(midX - 62, this.height - 48, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
-    	this.addButton(clearButton = new Button(midX + 2, this.height - 48, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
+    	this.addButton(new Button(midX - 50, this.height - 22, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
+    	this.addButton(new Button(midX - 62, this.height - 44, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
+    	this.addButton(clearButton = new Button(midX + 2, this.height - 44, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
     	this.addButton(new Button(3, 3, 20, 20, new StringTextComponent("<"), (button) -> { Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(player, this.baseSpecies)); },
     			(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"), x, y); }));
     }
@@ -292,11 +295,13 @@ public class ScreenSelectTemplates extends Screen
     	this.listAvailable.render(matrixStack, mouseX, mouseY, partialTicks);
     	this.listApplied.render(matrixStack, mouseX, mouseY, partialTicks);
     	hideListEdge();
+    	ScreenSelectSpecies.drawListBorder(matrixStack, listAvailable, height, 0, 32, LIST_BORDER, TEXTURES);
+    	ScreenSelectSpecies.drawListBorder(matrixStack, listApplied, height, 0, 32, LIST_BORDER, TEXTURES);
     	
-		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 20, 16777215);
+		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 12, 16777215);
 		
-		displayBaseStats(matrixStack, mouseX, mouseY);
-		displayTemplatedStats(matrixStack, mouseX, mouseY);
+		displayBaseStats(matrixStack, mouseX, mouseY, (this.width / 2) - (this.listAvailable.getWidth() + LIST_SEP + LIST_BORDER) - 2);
+		displayTemplatedStats(matrixStack, mouseX, mouseY, this.width / 2 + LIST_SEP + this.listApplied.getWidth() + LIST_BORDER + 1 + 2);
 		
     	super.render(matrixStack, mouseX, mouseY, partialTicks);
     	if(this.highlightEntry != null)
@@ -315,18 +320,26 @@ public class ScreenSelectTemplates extends Screen
 		drawString(matrixStack, this.font, String.valueOf(armour), armourX + 10, yPos, 16777215);
     }
     
-    private void displayBaseStats(MatrixStack matrixStack, int mouseX, int mouseY)
+    @SuppressWarnings("deprecation")
+	private void displayBaseStats(MatrixStack matrixStack, int mouseX, int mouseY, int xPos)
     {
 		// Describe base creature
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURES);
 		int yPos = 20 + this.font.FONT_HEIGHT;
-		int xPos = this.width / 2 - this.listAvailable.getWidth() - 5;
-		drawString(matrixStack, this.font, this.baseSpecies.getDisplayName(), xPos - this.font.getStringWidth(this.baseSpecies.getDisplayName().getString()), yPos, 16777215);
-		yPos += this.font.FONT_HEIGHT;
+		this.blit(matrixStack, xPos - 100, 20 + this.font.FONT_HEIGHT, 0, 65, 100, 120);
+		xPos -= 8;
+		yPos += 10;
+    	
+		drawString(matrixStack, this.font, this.baseSpecies.getDisplayName().getString(), xPos - this.font.getStringWidth(this.baseSpecies.getDisplayName().getString()) - 2, yPos, 16777215);
+		yPos += this.font.FONT_HEIGHT + 8;
 		int basePower = this.baseSpecies.getPower();
-		while(basePower > 0)
+		int totalStars = Math.max(1, Math.abs(basePower));
+		while(totalStars > 0)
 		{
-			ScreenSelectSpecies.drawStars(matrixStack, Math.min(5, basePower), xPos - (this.baseSpecies.getPower() * 9), yPos);
-			basePower -= Math.min(5, basePower);
+			int stars = Math.min(5, totalStars);
+			ScreenSelectSpecies.drawStars(matrixStack, Math.min(5, basePower), xPos - (stars * 9), yPos);
+			totalStars -= stars;
 			yPos += this.font.FONT_HEIGHT;
 		}
 		yPos += 1;
@@ -362,12 +375,19 @@ public class ScreenSelectTemplates extends Screen
     }
     
 	/** Describe base creature after selected templates are applied */
-    private void displayTemplatedStats(MatrixStack matrixStack, int mouseX, int mouseY)
+    @SuppressWarnings("deprecation")
+	private void displayTemplatedStats(MatrixStack matrixStack, int mouseX, int mouseY, int xPos)
     {
-		int xPos = this.width / 2 + this.listApplied.getWidth() + 5;
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURES);
+		
 		int yPos = 20 + this.font.FONT_HEIGHT;
-		drawString(matrixStack, this.font, this.baseSpecies.getDisplayName(), xPos, yPos, 16777215);
-		yPos += this.font.FONT_HEIGHT;
+		this.blit(matrixStack, xPos, yPos, 0, 65, 100, 120);
+		xPos += 8;
+		yPos += 10;
+		
+		drawString(matrixStack, this.font, this.baseSpecies.getDisplayName().getString(), xPos + 2, yPos, 16777215);
+		yPos += this.font.FONT_HEIGHT + 8;
 		int templatePower = this.baseSpecies.getPower();
 		for(Template template : this.listApplied.getTemplates())
 			templatePower += template.getPower();

@@ -14,6 +14,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.potion.IStackingPotion;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityDarkvision;
@@ -157,6 +158,29 @@ public class LivingEntityMixin extends EntityMixin
 				if(!activePotionsMap.containsKey(potionIn) || effect.getAmplifier() > activePotionsMap.get(potionIn).getAmplifier())
 					ci.setReturnValue(new EffectInstance(potionIn, Integer.MAX_VALUE, effect.getAmplifier(), effect.isAmbient(), effect.doesShowParticles()));
 		}
+	}
+	
+	private boolean overridingAddPotionEffect = false;
+	
+	@Inject(method = "addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z", at = @At("HEAD"), cancellable = true)
+	public void stackPotion(EffectInstance effectIn, final CallbackInfoReturnable<Boolean> ci)
+	{
+		Effect effect = effectIn.getPotion();
+		if(!(effect instanceof IStackingPotion) || !activePotionsMap.containsKey(effect))
+			return;
+		
+		EffectInstance existing = activePotionsMap.get(effect);
+		if(existing != null && existing.getDuration() > 0 && !this.overridingAddPotionEffect)
+		{
+			LivingEntity entity = (LivingEntity)(Object)this;
+			effectIn = ((IStackingPotion)effect).stackInstances(effectIn, existing, entity);
+			this.overridingAddPotionEffect = true;
+			ci.setReturnValue(true);
+			ci.cancel();
+			entity.addPotionEffect(effectIn);
+		}
+		else
+			this.overridingAddPotionEffect = false;
 	}
 	
 	@Inject(method = "attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)

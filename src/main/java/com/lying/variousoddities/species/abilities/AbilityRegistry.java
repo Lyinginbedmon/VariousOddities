@@ -54,12 +54,14 @@ public class AbilityRegistry
 		registry.register(new AbilityDamageReduction.Builder());
 		registry.register(new AbilityDamageResistance.Builder());
 		registry.register(new AbilityDarkvision.Builder());
+		registry.register(new AbilityDrainHealth.Builder());
 		registry.register(new AbilityEtherealness.Builder());
 		registry.register(new AbilityExplode.Builder());
 		registry.register(new AbilityFastHealing.Builder());
+		registry.register(new AbilityForm.Ghost.Builder());
+		registry.register(new AbilityForm.Mist.Builder());
 		registry.register(new AbilityFlight.Builder());
-		registry.register(new AbilityGaseousForm.Builder());
-		registry.register(new AbilityGhostForm.Builder());
+		registry.register(new AbilityGaseous.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());
 		registry.register(new AbilityHurtByEnv.Builder());

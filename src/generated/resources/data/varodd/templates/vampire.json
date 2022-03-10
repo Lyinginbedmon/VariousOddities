@@ -1,0 +1,67 @@
+{
+  "UUID": "16c220bb-b995-4688-b477-53281049251f",
+  "Power": 8,
+  "CustomName": "{\"translate\":\"template.varodd.vampire\"}",
+  "Operations": [
+    {
+      "Name": "varodd:replace_supertypes",
+      "Tag": "{Types:[\"undead\"]}"
+    },
+    {
+      "Action": "remove",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:1.0d},Name:\"varodd:constitution_modifier\"},UnlessBetter:1b,CustomDisplay:'{\"translate\":\"operation.varodd.ability.remove_constitution\"}'}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:3.0d},Name:\"varodd:strength_modifier\"},UnlessBetter:1b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:120},Name:\"varodd:drain_health\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Amount:10,Exceptions:[\"silver\",\"magic\"]},Name:\"varodd:damage_reduction\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Rate:5.0f,Ticks:0},Name:\"varodd:fast_healing\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Active:0b,Cooldown:200},Name:\"varodd:mist_form\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"cold\",Amount:10},Name:\"varodd:resistance\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Type:\"lightning\",Amount:10},Name:\"varodd:resistance\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:climb\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{HelmetProtects:1b},Name:\"varodd:sunburn\"},UnlessBetter:0b}"
+    }
+  ],
+  "Preconditions": [
+    {
+      "Name": "varodd:type",
+      "Tag": "{Types:[\"humanoid\",\"monstrous_humanoid\"],CustomName:'{\"translate\":\"precondition.varodd.type.humanoid\"}',Style:\"or\"}"
+    }
+  ]
+}

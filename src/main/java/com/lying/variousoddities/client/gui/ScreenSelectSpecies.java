@@ -30,6 +30,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.widget.list.ExtendedList;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -144,8 +145,11 @@ public class ScreenSelectSpecies extends Screen
 		renderBackgroundLayer(matrixStack, partialTicks);
     	this.speciesList.render(matrixStack, mouseX, mouseY, partialTicks);
     	hideListEdge();
+		
+		drawListBorder(matrixStack, this.speciesList, this.height, 0, 180, 6, TEXTURE);
+		
 		int yPos = 20;
-		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
+		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 12, 16777215);
 		yPos += 15;
 		
 		if(selectableSpecies.isEmpty())
@@ -193,6 +197,36 @@ public class ScreenSelectSpecies extends Screen
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
     
+	@SuppressWarnings("deprecation")
+	public static void drawListBorder(MatrixStack matrixStack, ExtendedList<?> listIn, int heightIn, int texX, int texY, int growth, ResourceLocation texture)
+	{
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		Minecraft.getInstance().getTextureManager().bindTexture(texture);
+		
+		int listLeft = listIn.getLeft() - growth;
+		int listRight = listIn.getLeft() + listIn.getWidth() - 6 + growth;
+		int listTop = 32 - growth;
+		int listBottom = heightIn - 51 - 6 + growth;
+		int sideHeight = listBottom - (listTop + 6);
+		int sideWidth = listRight - (listLeft + 6);
+		// Top Left
+		AbstractGui.blit(matrixStack, listLeft, listTop, 6, 6, texX, texY, 6, 6, 256, 256);
+		// Top Right
+		AbstractGui.blit(matrixStack, listRight, listTop, 6, 6, texX + 26, texY, 6, 6, 256, 256);
+		// Bot Left
+		AbstractGui.blit(matrixStack, listLeft, listBottom, 6, 6, texX, texY + 26, 6, 6, 256, 256);
+		// Bot Right
+		AbstractGui.blit(matrixStack, listRight, listBottom, 6, 6, texX + 26, texY + 26, 6, 6, 256, 256);
+		// Left
+		AbstractGui.blit(matrixStack, listLeft, listTop + 6, 6, sideHeight, texX, texY + 6, 6, 20, 256, 256);
+		// Right
+		AbstractGui.blit(matrixStack, listRight, listTop + 6, 6, sideHeight, texX + 26, texY + 6, 6, 20, 256, 256);
+		// Top
+		AbstractGui.blit(matrixStack, listLeft + 6, listTop, sideWidth, 6, texX + 6, texY, 20, 6, 256, 256);
+		// Bottom
+		AbstractGui.blit(matrixStack, listLeft + 6, listBottom, sideWidth, 6, texX + 6, texY + 26, 20, 6, 256, 256);
+	}
+	
     @SuppressWarnings("deprecation")
 	private void hideListEdge()
     {
@@ -279,7 +313,7 @@ public class ScreenSelectSpecies extends Screen
         if(this.selectableSpecies.isEmpty())
         	initSpecies();
 		this.speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
-		this.speciesList.setLeftPos((this.width - 170) / 2 - 10 - this.speciesList.getRowWidth());
+		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
 		this.children.add(this.speciesList);
     	
     	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 

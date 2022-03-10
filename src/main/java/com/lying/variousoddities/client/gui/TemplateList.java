@@ -29,7 +29,7 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 	
 	public TemplateList(Minecraft mcIn, Screen screenIn, int listHeightIn, int screenHeightIn, boolean removeIn, ITextComponent titleIn)
 	{
-		super(mcIn, 150, listHeightIn, 32, screenHeightIn - 51, 20);
+		super(mcIn, 120, listHeightIn, 32, screenHeightIn - 51, 20);
 		this.parentScreen = screenIn;
 		this.removeList = removeIn;
 		this.title = titleIn;
@@ -129,21 +129,25 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 			int texY = 46 + (mouseOver ? 2 : 1) * 20;
 			int texWidth = Math.min(200, rowWidth) / 2;
 			int texHeight = Math.min(20, rowHeight + 3) / 2;
+			int left = rowLeft - 2;
+			int right = left + texWidth;
+			int top = rowTop;
+			int bottom = top + texHeight;
 			// Top Left
-			blit(matrixStack, rowLeft - 2, rowTop, 0, texY, texWidth, texHeight);
+			blit(matrixStack, left, top, 0, texY, texWidth, texHeight);
 			// Bottom Left
-			blit(matrixStack, rowLeft - 2, rowTop + texHeight, 0, texY + 20 - texHeight, texWidth, texHeight);
+			blit(matrixStack, left, bottom, 0, texY + 20 - texHeight, texWidth, texHeight);
 			// Top Right
-			blit(matrixStack, rowLeft - 2 + texWidth, rowTop, 200 - texWidth, texY, texWidth, texHeight);
+			blit(matrixStack, right, top, 200 - texWidth, texY, texWidth, texHeight);
 			// Bottom Right
-			blit(matrixStack, rowLeft - 2 + texWidth, rowTop + texHeight, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
+			blit(matrixStack, right, bottom, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
 			
-			this.mc.fontRenderer.func_238407_a_(matrixStack, this.field_243407_e, (float)(rowLeft + 32 + 2), (float)(rowTop + (rowHeight - this.mc.fontRenderer.FONT_HEIGHT) / 2), 16777215);
 			ScreenSelectSpecies.drawStars(matrixStack, template.getPower(), rowLeft + rowWidth - 25 - (9 * Math.max(1, Math.abs(template.getPower()))), rowTop + (rowHeight - 9) / 2);
+			this.mc.fontRenderer.func_238407_a_(matrixStack, this.field_243407_e, (float)(rowLeft + 17), (float)(rowTop + (rowHeight - this.mc.fontRenderer.FONT_HEIGHT) / 2), 16777215);
 			
 			this.mc.getTextureManager().bindTexture(TEXTURES);
 			Segment hovered = getMouseOverSegment(mouseX, mouseY, rowLeft, rowTop, rowWidth, rowHeight, this.parentList.removeList);
-			int leftSeg = rowLeft + 4;
+			int leftSeg = rowLeft + 1;
 			int rightSeg = rowLeft + rowWidth - 20 - 4;
 			
 			int iconY = rowTop + (rowHeight - 16) / 2;
@@ -170,7 +174,7 @@ public class TemplateList extends ExtendedList<TemplateList.TemplateListEntry>
 				return null;
 			
 			int relX = mouseX - rowLeft;
-			if(relX < 20 && relX > 4)
+			if(relX < 17 && relX > 1)
 				return removeList ? Segment.ARROW : Segment.INFO;
 			else if(relX >= rowWidth - 20 - 4 && relX < rowWidth)
 				return removeList ? Segment.INFO : Segment.ARROW;

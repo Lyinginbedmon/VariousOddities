@@ -207,10 +207,9 @@ public class VOHelper
 	
 	public static List<ITextProperties> getWrappedText(ITextComponent text, FontRenderer font, int maxWidth)
 	{
+		Style style = text.getStyle();
         List<ITextProperties> wrappedTextLines = new ArrayList<>();
-        List<ITextProperties> wrappedLine = font.getCharacterManager().func_238362_b_(text, maxWidth, Style.EMPTY);
-        
-        for(ITextProperties line : wrappedLine)
+        for(ITextProperties line : font.getCharacterManager().func_238362_b_(text, maxWidth, style))
             wrappedTextLines.add(line);
 		return wrappedTextLines;
 	}

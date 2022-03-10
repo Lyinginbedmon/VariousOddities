@@ -1,5 +1,6 @@
 package com.lying.variousoddities.capabilities;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IBonusJumpAbility;
 import com.lying.variousoddities.species.abilities.IBonusJumpAbility.JumpType;
+import com.lying.variousoddities.species.abilities.ICompoundAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.entity.EntityType;
@@ -410,7 +412,7 @@ public class Abilities
 		return abilityMap;
 	}
 	
-	private static Map<ResourceLocation, Ability> getEntityAbilities(@Nullable LivingEntity entityIn)
+	private Map<ResourceLocation, Ability> getEntityAbilities(@Nullable LivingEntity entityIn)
 	{
 		if(entityIn != null)
 		{
@@ -433,22 +435,50 @@ public class Abilities
 				abilityMap = bodyData.getAbilities().addCustomToMap(abilityMap);
 			}
 			
-			GatherAbilitiesEvent event = new GatherAbilitiesEvent(entityIn, abilityMap);
+			// Remove any existing temporary abilities (these should never exist in the standard sources)
+			List<ResourceLocation> invalid = Lists.newArrayList();
+			abilityMap.forEach((mapName, ability) -> { if(ability.isTemporary()) invalid.add(mapName); });
+			for(ResourceLocation mapName : invalid)
+				abilityMap.remove(mapName);
+			
+			GatherAbilitiesEvent event = new GatherAbilitiesEvent(entityIn, abilityMap, cachedAbilities);
 			MinecraftForge.EVENT_BUS.post(event);
 			
 			abilityMap = event.getAbilityMap();
 			
-			// Remove any abilities not possessing a source ID
-			List<ResourceLocation> invalid = Lists.newArrayList();
-			abilityMap.forEach((mapName, ability) -> { if(ability.getSourceId() == null) invalid.add(mapName); });
-			for(ResourceLocation mapName : invalid)
-				abilityMap.remove(mapName);
+			// Add in new temporary abilities
+			for(Ability ability : event.getTempAbilities().values())
+				if(!abilityMap.containsKey(ability.getMapName()))
+					abilityMap.put(ability.getMapName(), ability);
+			
+			List<Ability> subAbilities = gatherSubAbilities(abilityMap.values());
+			if(!subAbilities.isEmpty())
+				for(Ability ability : subAbilities)
+					if(!abilityMap.containsKey(ability.getMapName()))
+						abilityMap.put(ability.getMapName(), ability.clone().setTemporary());
 			
 			return abilityMap;
 		}
 		
 		return new HashMap<>();
 	}
+	
+	/** Recursively adds all sub-abilities from ICompoundAbility abilities */
+	private List<Ability> gatherSubAbilities(Collection<Ability> abilitiesIn)
+	{
+		List<Ability> subAbilities = Lists.newArrayList();
+		for(Ability ability : abilitiesIn)
+			if(ability instanceof ICompoundAbility)
+			{
+				ICompoundAbility compound = (ICompoundAbility)ability;
+				subAbilities.addAll(compound.getSubAbilities());
+				subAbilities.addAll(gatherSubAbilities(compound.getSubAbilities()));
+			}
+		
+		return subAbilities;
+	}
+	
+	public void forceRecache(){ updateAbilityCache(); }
 	
 	public void updateAbilityCache()
 	{
@@ -458,6 +488,7 @@ public class Abilities
 		boolean dirty = false;
 		
 		Map<ResourceLocation, Ability> currentAbilities = getCurrentAbilities();
+		
 		// If a map name in cachedAbilities doesn't exist in currentAbilities, remove it from cachedAbilities
 		List<ResourceLocation> removedAbilities = Lists.newArrayList();
 		cachedAbilities.keySet().forEach((mapname) -> { if(!currentAbilities.containsKey(mapname)) removedAbilities.add(mapname); });
@@ -478,7 +509,7 @@ public class Abilities
 		{
 			// If a map name exists in currentAbilities that isn't in cachedAbilities, add it to cachedAbilities
 			// If the source ID of an ability in currentAbilities doesn't match its counterpart in cachedAbilities, overwrite it in cachedAbilities
-			if(!cachedAbilities.containsKey(mapname) || !ability.getSourceId().equals(cachedAbilities.get(mapname).getSourceId()))
+			if(!cachedAbilities.containsKey(mapname) || !ability.isTemporary() && !ability.getSourceId().equals(cachedAbilities.get(mapname).getSourceId()))
 				overrides.add(mapname);
 		});
 		if(!overrides.isEmpty())

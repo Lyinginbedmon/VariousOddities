@@ -335,7 +335,7 @@ public class VOBusServer
 					player.removeActivePotionEffect(VOPotions.NEEDLED);
 					EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(player);
 					data.setBodyUUID(corpse.getUniqueID());
-					player.setHealth(2F);
+					player.setHealth(player.getMaxHealth());
 					if(!world.isRemote)
 						world.addEntity(corpse);
 					break;
