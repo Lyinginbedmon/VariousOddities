@@ -1,6 +1,8 @@
 package com.lying.variousoddities.entity;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -42,6 +44,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 
 public abstract class AbstractBody extends LivingEntity implements IInventoryChangedListener
@@ -65,9 +68,9 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		this.bodyInventory.addListener(this);
 	}
 	
-	public void copyFrom(LivingEntity living)
+	public void copyFrom(LivingEntity living, boolean withDropChances)
 	{
-		setBody(living);
+		setBody(living, withDropChances);
 		setPositionAndRotation(living.getPosX(), living.getPosY(), living.getPosZ(), living.rotationYaw, living.rotationPitch);
 		setMotion(living.getMotion());
 	}
@@ -180,7 +183,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public boolean isPlayer(){ return hasBody() && getDataManager().get(ENTITY).getString("id").equalsIgnoreCase("player"); }
 	
-	public void setBody(@Nullable LivingEntity living)
+	public void setBody(@Nullable LivingEntity living, boolean withDropChance)
 	{
 		CompoundNBT data = new CompoundNBT();
 		
@@ -189,17 +192,58 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		{
 			setSoulUUID(living.getUniqueID());
 			
+			Random rand = living.getRNG();
+			boolean checkDrop = living instanceof MobEntity && withDropChance;
+			if(checkDrop)
+				if(!living.isChild() && living.getEntityWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT))
+					;
+				else
+					checkDrop = false;
+			
+			float[] armorChances = new float[4];
+			float[] handChances = new float[2];
+			Arrays.fill(armorChances, 0F);
+			Arrays.fill(handChances, 0F);
+			if(checkDrop)
+			{
+				MobEntity mob = (MobEntity)living;
+				CompoundNBT mobData = new CompoundNBT();
+				mob.writeAdditional(mobData);
+				
+				if(mobData.contains("ArmorDropChances", 9))
+				{
+					ListNBT armorList = mobData.getList("ArmorDropChances", 5);
+					for(int i=0; i<armorList.size(); ++i)
+						armorChances[i] = armorList.getFloat(i);
+				}
+				
+				if(mobData.contains("HandDropChances", 5))
+				{
+					ListNBT handList = mobData.getList("HandDropChances", 5);
+					for(int i=0; i<handList.size(); ++i)
+						handChances[i] = handList.getFloat(i);
+				}
+			}
+			
 			int slot = 0;
 			for(ItemStack stack : living.getArmorInventoryList())
 			{
-				this.bodyInventory.setInventorySlotContents(slot, stack.copy());
-				living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.ARMOR, slot++), ItemStack.EMPTY);
+				if(!checkDrop || checkDrop && rand.nextFloat() <= armorChances[slot])
+				{
+					this.bodyInventory.setInventorySlotContents(slot, stack.copy());
+					living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.ARMOR, slot), ItemStack.EMPTY);
+				}
+				slot++;
 			}
 			
+			int handSlot = 0;
 			for(ItemStack stack : living.getHeldEquipment())
 			{
-				this.bodyInventory.setInventorySlotContents(slot, stack.copy());
-				living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.HAND, slot-4), ItemStack.EMPTY);
+				if(!checkDrop || checkDrop && rand.nextFloat() <= handChances[handSlot++])
+				{
+					this.bodyInventory.setInventorySlotContents(slot, stack.copy());
+					living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.HAND, handSlot), ItemStack.EMPTY);
+				}
 				slot++;
 			}
 			
@@ -251,11 +295,14 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		if(isPlayer())
 			return getEntityWorld().getPlayerByUuid(getSoulUUID());
 		else
-			for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, ENTIRE_WORLD))
-				if(living.getUniqueID() == getSoulUUID())
-					return living;
+		{
+			return getBody();
+//			for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, ENTIRE_WORLD))
+//				if(living.getUniqueID() == getSoulUUID())
+//					return living;
+		}
 		
-		return null;
+//		return null;
 	}
 	
 	/**
@@ -428,7 +475,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			Entity entity = entityType.create(player.getEntityWorld());
 			if(entity instanceof LivingEntity && !player.getEntityWorld().isRemote)
 			{
-				this.setBody((LivingEntity)entity);
+				this.setBody((LivingEntity)entity, false);
 				
 				if(!player.abilities.isCreativeMode)
 					heldStack.shrink(1);

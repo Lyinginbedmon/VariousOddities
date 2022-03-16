@@ -163,6 +163,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			compound.putInt("Air", this.air);
 			compound.putFloat("Bludgeoning", getBludgeoning());
+			compound.putInt("Recovery", this.recoveryTimer);
 			compound.putBoolean("Unconscious", isActuallyUnconscious());
 			
 			if(this.species != null)
@@ -205,6 +206,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.air = nbt.getInt("Air");
 		this.bludgeoning = nbt.getFloat("Bludgeoning");
+		this.recoveryTimer = nbt.getInt("Recovery");
 		this.isUnconscious = nbt.getBoolean("Unconscious");
 		
 		this.species = null;
@@ -400,7 +402,10 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	}
 	
 	/** Returns true if the entity is currently actually unconscious */
-	public boolean isActuallyUnconscious(){ return this.entity != null && this.entity.getType() == EntityType.PLAYER ? PlayerData.isPlayerBodyAsleep(entity) : this.isUnconscious; }
+	public boolean isActuallyUnconscious()
+	{
+		return this.entity != null && this.entity.getType() == EntityType.PLAYER ? PlayerData.isPlayerBodyAsleep(entity) : this.isUnconscious;
+	}
 	
 	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
 	public List<EnumCreatureType> getCustomTypes(){ return this.customTypes; }
@@ -535,17 +540,27 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			{
 				if(isUnconscious)
 					PlayerData.forPlayer((PlayerEntity)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
+				
+				this.isUnconscious = isUnconscious();
 			}
-			else if(isUnconscious())
+			else
 			{
-				AbstractBody.clearNearbyAttackTargetsOf(entity);
-				// Spawn body
-				LivingEntity body = EntityBodyUnconscious.createBodyFrom(entity);
-				if(!entity.getEntityWorld().isRemote)
-					entity.getEntityWorld().addEntity(body);
+				if(isUnconscious())
+				{
+					AbstractBody.clearNearbyAttackTargetsOf(entity);
+					
+					// Spawn body
+					LivingEntity body = EntityBodyUnconscious.createBodyFrom(entity);
+					if(!world.isRemote && entity.isAddedToWorld())
+					{
+						world.addEntity(body);
+						entity.remove();
+					}
+				}
+				
+				this.isUnconscious = isUnconscious();
 			}
 			
-			this.isUnconscious = isUnconscious();
 			markDirty();
 		}
 		

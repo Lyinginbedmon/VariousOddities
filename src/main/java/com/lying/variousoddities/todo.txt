@@ -1,16 +1,15 @@
 Bodies
-	Proper non-player handling
 	Body inventory & equipment (draw from companion inventory for non-players)
 		Player inventory access via unconscious body
-	Healing bludgeoning damage
 	Fix player binding to body
+Potions
+	Fix sleep effect affecting players incorrectly
+	Add icons for Health Drain, Health Damage, and Temp HP
 Warg
 	Saddle textures
 	Carpet textures
 	Armour textures
 	Fix held item rendering
-Potions
-	Fix sleep effect affecting players incorrectly
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg pipeline
 

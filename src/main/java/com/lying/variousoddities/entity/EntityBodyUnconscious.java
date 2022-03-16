@@ -38,7 +38,7 @@ public class EntityBodyUnconscious extends AbstractBody
 	{
 		if(living == null) return null;
 		EntityBodyUnconscious body = new EntityBodyUnconscious(VOEntities.BODY, living.getEntityWorld());
-		body.copyFrom(living);
+		body.copyFrom(living, false);
 		body.setSoulUUID(living.getUniqueID());
 		
 		if(living.getType() == EntityType.PLAYER)
@@ -113,44 +113,92 @@ public class EntityBodyUnconscious extends AbstractBody
 		
 		if(hasBody())
 		{
-			LivingEntity soul = getSoul();
-//			if(soul == null)
-//			{
-//				if(!isPlayer())
-//					onKillCommand();
-//			}
-//			else
-//				moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
-			
-			boolean unconscious = LivingData.forEntity(getBody()).isActuallyUnconscious();
 			if(isPlayer())
 			{
+				LivingEntity soul = getSoul();
+//				if(soul == null)
+//				{
+//					if(!isPlayer())
+//						onKillCommand();
+//				}
+//				else
+//					moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
+				
 				// If the player is online and not unconscious, remove body
 				if(!PlayerData.isPlayerBodyAsleep(soul))
 					this.onKillCommand();
 				
 				return;
 			}
-			else if(!soul.isAlive())
-				this.onKillCommand();
-			
-			if(!unconscious)
-				this.onKillCommand();
+			else
+			{
+				LivingEntity body = getBody();
+				LivingData bodyData = LivingData.forEntity(body);
+				if(!body.isAlive() || !bodyData.isUnconscious())
+				{
+					respawnMob(body);
+					return;
+				}
+				
+				body.tick();
+				setBody(body);
+			}
 		}
+	}
+	
+	public void respawnMob(LivingEntity body)
+	{
+		body.setPosition(getPosX(), getPosY(), getPosZ());
+		getEntityWorld().addEntity(body);
+		remove();
 	}
 	
 	public boolean attackEntityFrom(DamageSource cause, float amount)
 	{
 		if(cause != DamageSource.OUT_OF_WORLD)
 			if(hasBody() && getSoul() != null)
-				getSoul().attackEntityFrom(cause, amount);
+			{
+				if(isPlayer())
+					getSoul().attackEntityFrom(cause, amount);
+				else
+				{
+					LivingEntity body = getBody();
+					body.attackEntityFrom(cause, amount);
+					setBody(body);
+				}
+			}
 		return super.attackEntityFrom(cause, amount);
 	}
 	
 	public boolean addPotionEffect(EffectInstance effectInstanceIn)
 	{
 		if(hasBody() && getSoul() != null)
-			getSoul().addPotionEffect(effectInstanceIn);
+		{
+			if(isPlayer())
+				getSoul().addPotionEffect(effectInstanceIn);
+			else
+			{
+				LivingEntity body = getBody();
+				body.addPotionEffect(effectInstanceIn);
+				setBody(body);
+			}
+		}
 		return false;
+	}
+	
+	public void onKillCommand()
+	{
+		super.onKillCommand();
+		if(!isPlayer() && getBody() != null && !getEntityWorld().isRemote)
+		{
+			LivingEntity body = getBody();
+			body.setPosition(getPosX(), getPosY(), getPosZ());
+			
+			LivingData data = LivingData.forEntity(body);
+			data.setBludgeoning(0F);
+			
+			getEntityWorld().addEntity(body);
+			body.onKillCommand();
+		}
 	}
 }

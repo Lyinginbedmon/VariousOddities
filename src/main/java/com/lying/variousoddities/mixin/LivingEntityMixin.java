@@ -37,6 +37,9 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin extends EntityMixin
@@ -256,10 +259,42 @@ public class LivingEntityMixin extends EntityMixin
 	public void onClimbWall(final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
+		if(entity.getType() == EntityType.PLAYER && ((PlayerEntity)entity).isSpectator())
+			return;
+		
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilityMap.containsKey(AbilityClimb.REGISTRY_NAME) && abilityMap.get(AbilityClimb.REGISTRY_NAME).isActive())
-			if(entity.collidedHorizontally)
-				ci.setReturnValue(true);
+		if(abilityMap.containsKey(AbilityClimb.REGISTRY_NAME) && abilityMap.get(AbilityClimb.REGISTRY_NAME).isActive() && hasAdjacentClimbable(entity))
+			ci.setReturnValue(true);
+	}
+	
+	private boolean hasAdjacentClimbable(LivingEntity entity)
+	{
+		if(entity.collidedHorizontally)
+			return true;
+		
+		AxisAlignedBB boundingBox = entity.getBoundingBox().grow(1D, 0D, 1D);
+		int minX = (int)Math.floor(boundingBox.minX);
+		int maxX = (int)Math.ceil(boundingBox.maxX);
+		
+		int minY = (int)boundingBox.minY;
+		int maxY = (int)boundingBox.maxY;
+		
+		int minZ = (int)Math.floor(boundingBox.minZ);
+		int maxZ = (int)Math.ceil(boundingBox.maxZ);
+		
+		World world = entity.getEntityWorld();
+		for(int y=minY; y<maxY; y++)
+			for(int x=minX; x<maxX; x++)
+					for(int z=minZ; z<maxZ; z++)
+					{
+						BlockPos pos = new BlockPos(x, y, z);
+						BlockState state = world.getBlockState(pos);
+						// TODO More precision climbability check than simply "not being air"
+						if(!state.getBlock().isAir(state, world, pos))
+							return true;
+					}
+		
+		return false;
 	}
 	
 	@Inject(method = "heal(F)V", at = @At("TAIL"))

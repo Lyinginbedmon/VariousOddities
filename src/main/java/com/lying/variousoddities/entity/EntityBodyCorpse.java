@@ -46,7 +46,7 @@ public class EntityBodyCorpse extends AbstractBody
 	{
 		if(living == null) return null;
 		EntityBodyCorpse corpse = new EntityBodyCorpse(VOEntities.CORPSE, living.getEntityWorld());
-		corpse.copyFrom(living);
+		corpse.copyFrom(living, true);
 		return corpse;
 	}
 	
