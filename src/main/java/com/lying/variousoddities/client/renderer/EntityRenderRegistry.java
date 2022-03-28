@@ -3,26 +3,8 @@ package com.lying.variousoddities.client.renderer;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.client.renderer.entity.EntityBodyRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityChangelingRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityCorpseRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityCrabRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityGhastlingRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityGoblinRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityKoboldRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityMarimoRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityPatronKirinRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityPatronWitchRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityRatRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
-import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
-import com.lying.variousoddities.client.renderer.entity.layer.LayerDazed;
-import com.lying.variousoddities.client.renderer.entity.layer.LayerEntangled;
-import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
-import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
-import com.lying.variousoddities.client.renderer.entity.layer.LayerPetrified;
+import com.lying.variousoddities.client.renderer.entity.*;
+import com.lying.variousoddities.client.renderer.entity.layer.*;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOEntities;
 
@@ -73,6 +55,7 @@ public class EntityRenderRegistry
 		registerRenderer(VOEntities.PATRON_KIRIN, new EntityPatronKirinRenderer.RenderFactory());
 		registerRenderer(VOEntities.PATRON_WITCH, new EntityPatronWitchRenderer.RenderFactory());
 		registerRenderer(VOEntities.CHANGELING, new EntityChangelingRenderer.RenderFactory());
+		registerRenderer(VOEntities.MIND_FLAYER, new EntityMindFlayerRenderer.RenderFactory());
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })

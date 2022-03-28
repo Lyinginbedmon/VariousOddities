@@ -2,6 +2,7 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
@@ -31,7 +32,7 @@ public class AbilityDarkvision extends ToggledAbility
 	
 	public static boolean isDarkvisionActive(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbility(entity, AbilityDarkvision.REGISTRY_NAME) && ((AbilityDarkvision)AbilityRegistry.getAbilityByName(entity, AbilityDarkvision.REGISTRY_NAME)).isActive();
+		return AbilityRegistry.hasAbility(entity, AbilityDarkvision.REGISTRY_NAME) && (entity.getType() != EntityType.PLAYER || AbilityRegistry.getAbilityByName(entity, AbilityDarkvision.REGISTRY_NAME).isActive());
 	}
 	
 	public static class Builder extends ToggledAbility.Builder

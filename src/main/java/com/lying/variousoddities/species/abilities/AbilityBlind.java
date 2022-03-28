@@ -2,6 +2,9 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
@@ -24,6 +27,18 @@ public class AbilityBlind extends AbilityStatusEffect
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Ability.Type.WEAKNESS; }
+	
+	public static boolean canMobDetectEntity(LivingEntity mob, LivingEntity entity)
+	{
+		// If mob's vision of entity is compromised...
+		double followRange = mob instanceof MobEntity ? mob.getAttributeValue(Attributes.FOLLOW_RANGE) : 4D;
+		if(entity.isInvisible() && mob.getDistanceSq(entity) > followRange || mob.isPotionActive(Effects.BLINDNESS) || AbilityRegistry.hasAbility(mob, REGISTRY_NAME))
+		{
+			// Check if vision abilities can compensate
+			return AbilityVision.canMobSeeEntity(mob, entity);
+		}
+		return true;
+	}
 	
 	public static class Builder extends Ability.Builder
 	{

@@ -8,11 +8,13 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.init.VOEntities;
+import com.lying.variousoddities.inventory.ContainerBody;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.potion.EffectInstance;
@@ -106,7 +108,6 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	protected void dropInventory(){ }
 	
-	// FIXME Unconscious bodies despawning should respawn their associated mob, if any
 	public void tick()
 	{
 		super.tick();
@@ -199,6 +200,18 @@ public class EntityBodyUnconscious extends AbstractBody
 			
 			getEntityWorld().addEntity(body);
 			body.onKillCommand();
+		}
+	}
+	
+	public void openContainer(PlayerEntity playerIn)
+	{
+		LivingEntity soul = getSoul();
+		if(!isPlayer())
+			super.openContainer(playerIn);
+		else if(soul != null)
+		{
+			// FIXME Open player inventory container instead of basic mob inventory
+			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerBody(window, player, getInventory(), this), soul.getDisplayName()));
 		}
 	}
 }

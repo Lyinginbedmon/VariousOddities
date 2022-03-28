@@ -1,5 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.LivingEntity;
@@ -61,11 +62,15 @@ public class AbilityFastHealing extends Ability
 		if(AbilityRegistry.hasAbility(entity, getMapName()))
 		{
 			AbilityFastHealing ability = (AbilityFastHealing)AbilityRegistry.getAbilityByName(entity, getMapName());
-			if(entity.getHealth() < entity.getMaxHealth() && entity.isAlive())
+			LivingData data = LivingData.forEntity(entity);
+			if((entity.getHealth() < entity.getMaxHealth() || data.getBludgeoning() > 0F) && entity.isAlive())
 			{
 				if(++ability.ticksSinceHeal >= Reference.Values.TICKS_PER_SECOND * 6)
 				{
-					entity.heal(ability.rate);
+					if(data.getBludgeoning() > 0F)
+						data.setBludgeoning(data.getBludgeoning() - ability.rate);
+					else
+						entity.heal(ability.rate);
 					ability.ticksSinceHeal = 0;
 				}
 			}

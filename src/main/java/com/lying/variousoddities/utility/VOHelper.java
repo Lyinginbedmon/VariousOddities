@@ -1,7 +1,9 @@
 package com.lying.variousoddities.utility;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -17,6 +19,10 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.controller.LookController;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.DyeColor;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -26,6 +32,7 @@ import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeMod;
 
@@ -427,4 +434,75 @@ public class VOHelper
 			livingTo.prevLimbSwingAmount = livingFrom.prevLimbSwingAmount;
 		}
     }
+    
+	
+	public static double getMobAttackReachSqr(LivingEntity attacker, LivingEntity attackTarget)
+	{
+		return (double)(attacker.getWidth() * 2.0F * attacker.getWidth() * 2.0F + attackTarget.getWidth());
+	}
+	
+	public static int getSkyLight(BlockPos pos, World world)
+	{
+		if(!world.getDimensionType().hasSkyLight())
+			return 0;
+		
+		int light = world.getLightFor(LightType.SKY, pos) - world.getSkylightSubtracted();
+		if(light > 0)
+		{
+			float sunAngle = world.getCelestialAngleRadians(1.0F);
+		    float f1 = sunAngle < (float)Math.PI ? 0.0F : ((float)Math.PI * 2F);
+		    sunAngle = sunAngle + (f1 - sunAngle) * 0.2F;
+		    light = Math.round((float)light * MathHelper.cos(sunAngle));
+		}
+		
+		return MathHelper.clamp(light, 0, 15);
+	}
+	
+	private static final Map<EntityType<?>, String> SKULL_MAP = new HashMap<>();
+	
+	public static ItemStack getSkullFromEntity(LivingEntity entity)
+	{
+		if(entity.getType() == EntityType.WITHER_SKELETON)
+			return new ItemStack(Items.WITHER_SKELETON_SKULL);
+		else if(entity.getType() == EntityType.SKELETON)
+			return new ItemStack(Items.SKELETON_SKULL);
+		else if(entity.getType() == EntityType.ZOMBIE)
+			return new ItemStack(Items.ZOMBIE_HEAD);
+		else if(entity.getType() == EntityType.CREEPER)
+			return new ItemStack(Items.CREEPER_HEAD);
+		else if(entity.getType() == EntityType.ENDER_DRAGON)
+			return new ItemStack(Items.DRAGON_HEAD);
+		else
+		{
+			ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
+			CompoundNBT data = new CompoundNBT();
+			if(SKULL_MAP.containsKey(entity.getType()))
+				data.putString("SkullOwner", SKULL_MAP.get(entity.getType()));
+			else if(entity.getType() == EntityType.PLAYER)
+				data.put("SkullOwner", NBTUtil.writeGameProfile(new CompoundNBT(), ((PlayerEntity)entity).getGameProfile()));
+			stack.setTag(data);
+			return stack;
+		}
+	}
+	
+	static
+	{
+		SKULL_MAP.put(EntityType.BLAZE, "MHF_Blaze");
+		SKULL_MAP.put(EntityType.CAVE_SPIDER, "MHF_CaveSpider");
+		SKULL_MAP.put(EntityType.CHICKEN, "MHF_Chicken");
+		SKULL_MAP.put(EntityType.COW, "MHF_Cow");
+		SKULL_MAP.put(EntityType.ENDERMAN, "MHF_Enderman");
+		SKULL_MAP.put(EntityType.GHAST, "MHF_Ghast");
+		SKULL_MAP.put(EntityType.IRON_GOLEM, "MHF_Golem");
+		SKULL_MAP.put(EntityType.MAGMA_CUBE, "MHF_LavaSlime");
+		SKULL_MAP.put(EntityType.MOOSHROOM, "MHF_MushroomCow");
+		SKULL_MAP.put(EntityType.OCELOT, "MHF_Ocelot");
+		SKULL_MAP.put(EntityType.PIG, "MHF_Pig");
+		SKULL_MAP.put(EntityType.PIGLIN, "MHF_PigZombie");
+		SKULL_MAP.put(EntityType.SHEEP, "MHF_Sheep");
+		SKULL_MAP.put(EntityType.SLIME, "MHF_Slime");
+		SKULL_MAP.put(EntityType.SPIDER, "MHF_Spider");
+		SKULL_MAP.put(EntityType.SQUID, "MHF_Squid");
+		SKULL_MAP.put(EntityType.VILLAGER, "MHF_Villager");
+	}
 }

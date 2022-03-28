@@ -72,7 +72,7 @@ public class ScreenSelectSpecies extends Screen
 	private Button selectButton;
 	private boolean keepTypes = false;
 	
-	// TODO Replace arbitrary power value with server variable
+	// FIXME Replace arbitrary power value with server variable
 	private int targetPower = 6;
 	
 	public ScreenSelectSpecies(PlayerEntity playerIn)

@@ -1,6 +1,6 @@
 Bodies
 	Body inventory & equipment (draw from companion inventory for non-players)
-		Player inventory access via unconscious body
+		Unconscious player inventory access
 	Fix player binding to body
 Potions
 	Fix sleep effect affecting players incorrectly
@@ -11,7 +11,7 @@ Warg
 	Armour textures
 	Fix held item rendering
 AbstractGoblinWolf
-	Complete goblin->goblin tamer->worg->warg pipeline
+	Complete goblin->goblin tamer->worg->warg->warg rider pipeline
 
 Possession (moved to separate workspace)
 	Move players to body position w/out breaking motion controls

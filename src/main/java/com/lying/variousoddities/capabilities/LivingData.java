@@ -551,10 +551,14 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					
 					// Spawn body
 					LivingEntity body = EntityBodyUnconscious.createBodyFrom(entity);
-					if(!world.isRemote && entity.isAddedToWorld())
+					if(entity.isAddedToWorld())
 					{
-						world.addEntity(body);
-						entity.remove();
+						// TODO Play crit attack noise when creature is knocked unconscious
+						if(!world.isRemote)
+						{
+							world.addEntity(body);
+							entity.remove();
+						}
 					}
 				}
 				

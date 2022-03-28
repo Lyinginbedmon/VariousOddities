@@ -15,6 +15,7 @@ import com.lying.variousoddities.world.savedata.ScentsManager;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
@@ -37,12 +38,24 @@ public class MobEntityMixin extends LivingEntityMixin
 			ci.cancel();
 	}
 	
-	@Inject(method = "updateAITasks", at = @At("HEAD"), cancellable = true)
-	public void isMobParalysed(final CallbackInfo ci)
+	@Inject(method = "updateAITasks()V", at = @At("HEAD"), cancellable = true)
+	public void mobAIHalting(final CallbackInfo ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		if(VOPotions.isParalysed(entity))
+		// Mobs paralysed or dazed do not update their AI tasks
+		if(VOPotions.isParalysed(entity) || entity.isPotionActive(VOPotions.DAZED))
 			ci.cancel();
+		
+		// Mobs unable to detect their attack target beyond arm's length will lose interest
+		MobEntity mob = (MobEntity)entity;
+		LivingEntity attackTarget = mob.getAttackTarget();
+		if(attackTarget != null)
+		{
+			double visibility = attackTarget.getVisibilityMultiplier(mob);
+			if(visibility < 1D)
+				if(mob.getDistanceSq(attackTarget) > mob.getAttributeValue(Attributes.FOLLOW_RANGE) * visibility * 1.5D)
+					mob.setAttackTarget(null);
+		}
 	}
 	
 	private int scentTimer = -1;

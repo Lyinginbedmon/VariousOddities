@@ -289,7 +289,7 @@ public class LivingEntityMixin extends EntityMixin
 					{
 						BlockPos pos = new BlockPos(x, y, z);
 						BlockState state = world.getBlockState(pos);
-						// TODO More precision climbability check than simply "not being air"
+						// FIXME More precision climbability check than simply "not being air"
 						if(!state.getBlock().isAir(state, world, pos))
 							return true;
 					}

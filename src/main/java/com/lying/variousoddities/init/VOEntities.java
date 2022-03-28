@@ -12,22 +12,11 @@ import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.entity.EntityDummyBiped;
 import com.lying.variousoddities.entity.EntitySpell;
-import com.lying.variousoddities.entity.hostile.EntityCrabGiant;
-import com.lying.variousoddities.entity.hostile.EntityGoblin;
-import com.lying.variousoddities.entity.hostile.EntityRatGiant;
-import com.lying.variousoddities.entity.hostile.EntityScorpionGiant;
-import com.lying.variousoddities.entity.mount.EntityWarg;
-import com.lying.variousoddities.entity.passive.EntityCrab;
-import com.lying.variousoddities.entity.passive.EntityGhastling;
-import com.lying.variousoddities.entity.passive.EntityKobold;
-import com.lying.variousoddities.entity.passive.EntityMarimo;
-import com.lying.variousoddities.entity.passive.EntityRat;
-import com.lying.variousoddities.entity.passive.EntityScorpion;
-import com.lying.variousoddities.entity.passive.EntityWorg;
-import com.lying.variousoddities.entity.projectile.EntityFireballGhastling;
-import com.lying.variousoddities.entity.wip.EntityChangeling;
-import com.lying.variousoddities.entity.wip.EntityPatronKirin;
-import com.lying.variousoddities.entity.wip.EntityPatronWitch;
+import com.lying.variousoddities.entity.hostile.*;
+import com.lying.variousoddities.entity.mount.*;
+import com.lying.variousoddities.entity.passive.*;
+import com.lying.variousoddities.entity.projectile.*;
+import com.lying.variousoddities.entity.wip.*;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
@@ -37,6 +26,7 @@ import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.IPlacementPredicate;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.PlacementType;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.item.Item;
 import net.minecraft.tags.EntityTypeTags;
@@ -88,6 +78,7 @@ public class VOEntities
 	public static final EntityType<EntityPatronKirin> PATRON_KIRIN			= register("patron_kirin",		EntityPatronKirin::new, EntityClassification.CREATURE, 0.6F, 1.999F, EntityPatronKirin::canSpawnAt, -1, 1);
 	public static final EntityType<EntityPatronWitch> PATRON_WITCH			= register("patron_witch",		EntityPatronWitch::new, EntityClassification.CREATURE, 0.6F, 1.8F, EntityPatronWitch::canSpawnAt, -1, 1);
 	public static final EntityType<EntityChangeling> CHANGELING				= register("changeling",		EntityChangeling::new, EntityClassification.CREATURE, 0.6F, 1.8F, EntityChangeling::canSpawnAt, -1, 1);
+	public static final EntityType<EntityMindFlayer> MIND_FLAYER			= register("mind_flayer",		EntityMindFlayer::new, EntityClassification.MONSTER, 0.6F, 1.8F, EntityMindFlayer::canSpawnAt, -1, -1);
 	
 	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
 	
@@ -197,6 +188,7 @@ public class VOEntities
     	event.put(PATRON_KIRIN, EntityPatronKirin.getAttributes().create());
     	event.put(PATRON_WITCH, EntityPatronWitch.getAttributes().create());
     	event.put(CHANGELING, EntityChangeling.getAttributes().create());
+    	event.put(MIND_FLAYER, MobEntity.func_233666_p_().create());
     }
     
     @SubscribeEvent
