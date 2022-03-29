@@ -8,23 +8,35 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.init.VOEntities;
-import com.lying.variousoddities.inventory.ContainerBody;
+import com.lying.variousoddities.inventory.ContainerPlayerBody;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 public class EntityBodyUnconscious extends AbstractBody
 {
+    protected static final DataParameter<CompoundNBT> LAST_KNOWN_EQUIPMENT	= EntityDataManager.<CompoundNBT>createKey(EntityBodyUnconscious.class, DataSerializers.COMPOUND_NBT);
+	private final NonNullList<ItemStack> lastKnownArmour = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
+	private final NonNullList<ItemStack> lastKnownEquip = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
+	
 	public EntityBodyUnconscious(EntityType<? extends EntityBodyUnconscious> type, World worldIn)
 	{
 		super(type, worldIn);
@@ -34,6 +46,12 @@ public class EntityBodyUnconscious extends AbstractBody
     {
 	    return true;
     }
+	
+	public void registerData()
+	{
+		super.registerData();
+		getDataManager().register(LAST_KNOWN_EQUIPMENT, new CompoundNBT());
+	}
 	
 	@Nullable
 	public static EntityBodyUnconscious createBodyFrom(@Nonnull LivingEntity living)
@@ -60,6 +78,8 @@ public class EntityBodyUnconscious extends AbstractBody
 				return body;
 		return null;
 	}
+	
+	public boolean stealsGear(){ return false; }
 	
 	public boolean shouldBindIfPersistent(){ return true; }
 	
@@ -117,6 +137,32 @@ public class EntityBodyUnconscious extends AbstractBody
 			if(isPlayer())
 			{
 				LivingEntity soul = getSoul();
+				if(soul != null && !this.world.isRemote)
+				{
+					boolean needsUpdate = false;
+					for(int slot=0; slot<4; slot++)
+					{
+						ItemStack equipped = soul.getItemStackFromSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.ARMOR, slot));
+						if(!(ItemStack.areItemsEqual(equipped, lastKnownArmour.get(slot)) && ItemStack.areItemStackTagsEqual(equipped, lastKnownArmour.get(slot))))
+						{
+							needsUpdate = true;
+							lastKnownArmour.set(slot, equipped.copy());
+						}
+					}
+					
+					for(int slot=0; slot<2; slot++)
+					{
+						ItemStack equipped = soul.getItemStackFromSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.HAND, slot));
+						if(!(ItemStack.areItemsEqual(equipped, lastKnownEquip.get(slot)) && ItemStack.areItemStackTagsEqual(equipped, lastKnownEquip.get(slot))))
+						{
+							needsUpdate = true;
+							lastKnownEquip.set(slot, equipped.copy());
+						}
+					}
+					
+					if(needsUpdate)
+						getDataManager().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundNBT(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
+				}
 //				if(soul == null)
 //				{
 //					if(!isPlayer())
@@ -126,7 +172,7 @@ public class EntityBodyUnconscious extends AbstractBody
 //					moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
 				
 				// If the player is online and not unconscious, remove body
-				if(!PlayerData.isPlayerBodyAsleep(soul))
+				if(soul != null && !PlayerData.isPlayerBodyAsleep(soul))
 					this.onKillCommand();
 				
 				return;
@@ -145,6 +191,46 @@ public class EntityBodyUnconscious extends AbstractBody
 				setBody(body);
 			}
 		}
+	}
+	
+	private void readLastKnownFromNBT(CompoundNBT compound)
+	{
+		ListNBT armourList = compound.getList("ArmorItems", 10);
+		for(int i=0; i<this.lastKnownArmour.size(); i++)
+			this.lastKnownArmour.set(i, ItemStack.read(armourList.getCompound(i)));
+		
+		ListNBT handList = compound.getList("HandItems", 10);
+		for(int i=0; i<this.lastKnownEquip.size(); i++)
+			this.lastKnownEquip.set(i, ItemStack.read(handList.getCompound(i)));
+	}
+	
+	private ItemStack getSlotFromLastKnown(EquipmentSlotType.Group group, int index)
+	{
+		readLastKnownFromNBT(getDataManager().get(LAST_KNOWN_EQUIPMENT));
+		switch(group)
+		{
+			case ARMOR:	return this.lastKnownArmour.get(index);
+			case HAND:	return this.lastKnownEquip.get(index);
+			default:	return ItemStack.EMPTY;
+		}
+	}
+	
+	@Nullable
+	public LivingEntity getBodyForRender()
+	{
+		if(isPlayer())
+		{
+			LivingEntity body = super.getBodyForRender();
+			
+			for(int slot=0; slot<4; slot++)
+				body.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.ARMOR, slot), getSlotFromLastKnown(EquipmentSlotType.Group.ARMOR, slot));
+			
+			for(int slot=0; slot<2; slot++)
+				body.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.HAND, slot), getSlotFromLastKnown(EquipmentSlotType.Group.HAND, slot));
+			
+			return body;
+		}
+		return super.getBodyForRender();
 	}
 	
 	public void respawnMob(LivingEntity body)
@@ -211,7 +297,7 @@ public class EntityBodyUnconscious extends AbstractBody
 		else if(soul != null)
 		{
 			// FIXME Open player inventory container instead of basic mob inventory
-			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerBody(window, player, getInventory(), this), soul.getDisplayName()));
+			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerPlayerBody(window, player, ((PlayerEntity)soul).inventory, this), soul.getDisplayName()));
 		}
 	}
 }

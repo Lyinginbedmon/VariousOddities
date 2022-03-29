@@ -4,8 +4,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.client.gui.GuiBody;
+import com.lying.variousoddities.client.gui.GuiPlayerBody;
 import com.lying.variousoddities.client.gui.GuiWarg;
 import com.lying.variousoddities.inventory.ContainerBody;
+import com.lying.variousoddities.inventory.ContainerPlayerBody;
 import com.lying.variousoddities.inventory.ContainerWarg;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemMossBottle;
@@ -55,6 +57,7 @@ public class VOItems
 	// Containers
 	public static final ContainerType<ContainerWarg> CONTAINER_WARG	= registerContainer("warg_inventory", ContainerWarg::fromNetwork);
 	public static final ContainerType<ContainerBody> CONTAINER_BODY	= registerContainer("body_inventory", ContainerBody::fromNetwork);
+	public static final ContainerType<ContainerPlayerBody> CONTAINER_PLAYER_BODY	= registerContainer("player_body_inventory", ContainerPlayerBody::fromNetwork);
 	
 	public static Item register(String nameIn, Item itemIn)
 	{
@@ -110,6 +113,9 @@ public class VOItems
 		});
     	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
 			ScreenManager.registerFactory(CONTAINER_BODY, GuiBody::new);
+		});
+    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+			ScreenManager.registerFactory(CONTAINER_PLAYER_BODY, GuiPlayerBody::new);
 		});
     }
 }

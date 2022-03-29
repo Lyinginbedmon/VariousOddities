@@ -492,6 +492,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					if(!mobDefaults.defaultAbilities().isEmpty())
 						mobDefaults.defaultAbilities().forEach((ability) -> { this.abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundNBT()))); });
 				}
+				else
+				{
+					Species guess = SpeciesRegistry.getSpecies(entity.getType().getRegistryName());
+					if(guess != null)
+						setSpecies(guess);
+				}
 				setSelectedSpecies(true);
 			}
 			

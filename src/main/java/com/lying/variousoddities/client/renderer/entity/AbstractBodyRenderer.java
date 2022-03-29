@@ -44,7 +44,7 @@ public abstract class AbstractBodyRenderer extends LivingRenderer<AbstractBody, 
 			return;
 		}
 		
-		LivingEntity body = entityIn.getBody();
+		LivingEntity body = entityIn.getBodyForRender();
 		poseEntity(body, new Random(entityIn.getUniqueID().getLeastSignificantBits()));
 		
 		matrixStackIn.push();

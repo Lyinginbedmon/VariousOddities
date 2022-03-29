@@ -151,6 +151,30 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return compound;
 	}
 	
+	protected static CompoundNBT writeInventoryToNBT(CompoundNBT compound, IInventory armour, IInventory hands, IInventory bag)
+	{
+		if(armour != null)
+			compound.put("ArmorItems", writeInventoryToList(new ListNBT(), armour));
+		if(hands != null)
+			compound.put("HandItems", writeInventoryToList(new ListNBT(), hands));
+		if(bag != null)
+			compound.put("Inventory", writeInventoryToList(new ListNBT(), bag));
+		return compound;
+	}
+	
+	protected static ListNBT writeInventoryToList(ListNBT list, IInventory inv)
+	{
+		for(int i=0; i<inv.getSizeInventory(); i++)
+		{
+			CompoundNBT stackData = new CompoundNBT();
+			ItemStack stack = inv.getStackInSlot(i);
+			if(!stack.isEmpty())
+				stack.write(stackData);
+			list.add(stackData);
+		}
+		return list;
+	}
+	
 	private void readInventoryFromNBT(CompoundNBT compound)
 	{
 		ListNBT armourList = compound.getList("ArmorItems", 10);
@@ -225,26 +249,29 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 				}
 			}
 			
-			int slot = 0;
-			for(ItemStack stack : living.getArmorInventoryList())
+			if(stealsGear())
 			{
-				if(!checkDrop || checkDrop && rand.nextFloat() <= armorChances[slot])
+				int slot = 0;
+				for(ItemStack stack : living.getArmorInventoryList())
 				{
-					this.bodyInventory.setInventorySlotContents(slot, stack.copy());
-					living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.ARMOR, slot), ItemStack.EMPTY);
+					if(!checkDrop || checkDrop && rand.nextFloat() <= armorChances[slot])
+					{
+						this.bodyInventory.setInventorySlotContents(slot, stack.copy());
+						living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.ARMOR, slot), ItemStack.EMPTY);
+					}
+					slot++;
 				}
-				slot++;
-			}
-			
-			int handSlot = 0;
-			for(ItemStack stack : living.getHeldEquipment())
-			{
-				if(!checkDrop || checkDrop && rand.nextFloat() <= handChances[handSlot++])
+				
+				int handSlot = 0;
+				for(ItemStack stack : living.getHeldEquipment())
 				{
-					this.bodyInventory.setInventorySlotContents(slot, stack.copy());
-					living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.HAND, handSlot), ItemStack.EMPTY);
+					if(!checkDrop || checkDrop && rand.nextFloat() <= handChances[handSlot++])
+					{
+						this.bodyInventory.setInventorySlotContents(slot, stack.copy());
+						living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.HAND, handSlot), ItemStack.EMPTY);
+					}
+					slot++;
 				}
-				slot++;
 			}
 			
 			living.writeWithoutTypeId(data);
@@ -269,6 +296,8 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		updateSize();
 		onInventoryChanged(null);
 	}
+	
+	public boolean stealsGear(){ return true; }
 	
 	public GameProfile getGameProfile()
 	{
@@ -339,6 +368,12 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		}
 		
 		return (LivingEntity)entity;
+	}
+	
+	@Nullable
+	public LivingEntity getBodyForRender()
+	{
+		return getBody();
 	}
 	
 	public boolean isPersistenceRequired(){ return this.persistent; }
