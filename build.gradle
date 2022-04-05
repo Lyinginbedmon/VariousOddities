@@ -13,7 +13,7 @@ buildscript {
 		}
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 
@@ -24,7 +24,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.16_001q5'
+version = '1.16_001q6'
 group = 'com.lying.variousoddities' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'varodd'
 
@@ -91,7 +91,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'varodd', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'varodd', '--all', '--existing', '"' + file('src/main/resources/') + '"', '--existing', '"' + file('src/generated/resources/') + '"', '--output', '"' + file('src/generated/resources/') + '"'
             arg "-mixin.config=varodd.mixins.json"
 			
             mods {
@@ -136,8 +136,8 @@ dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
-    minecraft 'net.minecraftforge:forge:1.16.5-36.0.43' 
-
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.26'
+	
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
     // compile "some.group:artifact:version"
