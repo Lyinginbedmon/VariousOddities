@@ -46,6 +46,7 @@ import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.FireballEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
@@ -63,6 +64,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -309,7 +311,17 @@ public class VOBusServer
 				}
 			}
 			else if(corpse != null && !world.isRemote)
+			{
+				corpse.setPocketInventory(LivingData.forEntity(victim).getPocketInventory());
 				world.addEntity(corpse);
+			}
+		}
+		else if(!world.isRemote)
+		{
+			LivingData livingData = LivingData.forEntity(victim);
+			for(ItemStack stack : livingData.getPocketInventory())
+				if(!stack.isEmpty())
+					victim.entityDropItem(stack, victim.getRNG().nextFloat());
 		}
 	}
 	
@@ -486,5 +498,16 @@ public class VOBusServer
 		for(EntityGoblin goblin : nearbyGoblins)
 			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
 				goblin.setGrowingAge(Math.max(0, goblin.getGrowingAge() - amount));
+	}
+	
+	// FIXME Repair mixin and remove temp fix
+	@SubscribeEvent
+	public static void tempLivingTick(LivingUpdateEvent event)
+	{
+		if(event.getEntityLiving() instanceof LivingEntity)
+		{
+			LivingData data = LivingData.forEntity(event.getEntityLiving());
+			data.tick(event.getEntityLiving());
+		}
 	}
 }

@@ -254,7 +254,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					setBody(body);
 				}
 			}
-		return super.attackEntityFrom(cause, amount);
+		return false;
 	}
 	
 	public boolean addPotionEffect(EffectInstance effectInstanceIn)
@@ -295,9 +295,6 @@ public class EntityBodyUnconscious extends AbstractBody
 		if(!isPlayer())
 			super.openContainer(playerIn);
 		else if(soul != null)
-		{
-			// FIXME Open player inventory container instead of basic mob inventory
 			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerPlayerBody(window, player, ((PlayerEntity)soul).inventory, this), soul.getDisplayName()));
-		}
 	}
 }

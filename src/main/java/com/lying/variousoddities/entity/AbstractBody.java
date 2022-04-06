@@ -8,6 +8,7 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.inventory.ContainerBody;
 import com.lying.variousoddities.utility.VOHelper;
@@ -224,6 +225,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 				else
 					checkDrop = false;
 			
+			// FIXME Ensure equipment is preserved appropriately
 			float[] armorChances = new float[4];
 			float[] handChances = new float[2];
 			Arrays.fill(armorChances, 0F);
@@ -365,6 +367,9 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			
 			for(EquipmentSlotType slot : EquipmentSlotType.values())
 				entity.setItemStackToSlot(slot, getItemStackFromSlot(slot));
+			
+			if(entity instanceof LivingEntity)
+				LivingData.forEntity((LivingEntity)entity).setPocketInventory(getPocketInventory());
 		}
 		
 		return (LivingEntity)entity;
@@ -429,6 +434,21 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		for(int i=0; i<2; i++)
 			stacks.set(i, getInventory().getStackInSlot(4+i));
 		return stacks;
+	}
+	
+	public NonNullList<ItemStack> getPocketInventory()
+	{
+		NonNullList<ItemStack> stacks = NonNullList.withSize(6, ItemStack.EMPTY);
+		for(int i=0; i<6; i++)
+			stacks.set(i, getInventory().getStackInSlot(6+i));
+		return stacks;
+	}
+	
+	public void setPocketInventory(NonNullList<ItemStack> inventory)
+	{
+		getInventory();
+		for(int i=0; i<6; i++)
+			this.bodyInventory.setInventorySlotContents(i+6, inventory.get(i));
 	}
 	
 	public IInventory getInventory()

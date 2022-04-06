@@ -95,6 +95,8 @@
 	"gui.varodd.warg.sit": "Sit",
 	"gui.varodd.dead_player_respawn": "Press %s to enter respawn",
 	"gui.varodd.unconscious_player_awaken": "Press %s to wake up",
+	"gui.varodd.unconscious": "Unconscious %s",
+	"gui.varodd.corpse": "Body of %s",
 		"_comment6": "Mod information",
 	"mod.varodd": "Various Oddities",
 		"_comment7": "Creative Tabs",

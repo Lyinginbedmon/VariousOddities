@@ -35,7 +35,9 @@ import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeBus;
+import com.lying.variousoddities.utility.CompanionMarking.Mark;
 import com.lying.variousoddities.utility.DataHelper;
+import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -46,9 +48,11 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectUtils;
@@ -58,6 +62,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -84,6 +89,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private final LazyOptional<LivingData> handler;
 	
 	private LivingEntity entity = null;
+	private boolean isPlayer = false;
 	
 	private boolean initialised = false;
 	private List<EnumCreatureType> customTypes = Lists.newArrayList();
@@ -105,6 +111,15 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private float bludgeoning = 0F;
 	private boolean isUnconscious = false;
 	private int recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
+	private NonNullList<ItemStack> pockets = NonNullList.withSize(6, ItemStack.EMPTY);
+	
+	@SuppressWarnings("unused")
+	private Pair<Mark, Object> currentMark = null;
+	
+	/** A map of UUIDs to durations and bit masks determining charmed, feared, or dominated statuses */
+	private Map<UUID, Integer> mapCharmed = new HashMap<>();
+	private Map<UUID, Integer> mapFeared = new HashMap<>();
+	private Map<UUID, Integer> mapDominated = new HashMap<>();
 	
 	public boolean checkingFoodRegen = false;
 	
@@ -151,6 +166,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	{
 		this.entity = entityIn;
 		this.abilities.entity = entityIn;
+		this.isPlayer = entityIn.getType() == EntityType.PLAYER;
 	}
 	
 	public CompoundNBT serializeNBT()
@@ -193,7 +209,25 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			compound.put("Abilities", this.abilities.serializeNBT());
 			
+			if(!this.mapCharmed.isEmpty())
+				compound.put("Charmed", writeControlMap(this.mapCharmed));
+			
+			if(!this.mapFeared.isEmpty())
+				compound.put("Feared", writeControlMap(this.mapFeared));
+			
+			if(!this.mapDominated.isEmpty())
+				compound.put("Dominated", writeControlMap(this.mapDominated));
+			
 			compound.putByte("Potions", this.visualPotions);
+			
+			if(!isPlayer)
+			{
+				ListNBT pocketItems = new ListNBT();
+				for(ItemStack stack : pockets)
+					pocketItems.add(stack.write(new CompoundNBT()));
+				
+				compound.put("Pockets", pocketItems);
+			}
 		return compound;
 	}
 	
@@ -244,7 +278,62 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
 		
+		if(nbt.contains("Charmed", 9))
+			this.mapCharmed = readControlMap(nbt.getList("Charmed", 10));
+		
+		if(nbt.contains("Feared", 9))
+			this.mapFeared = readControlMap(nbt.getList("Feared", 10));
+		
+		if(nbt.contains("Dominated", 9))
+			this.mapDominated = readControlMap(nbt.getList("Dominated", 10));
+		
 		this.visualPotions = nbt.getByte("Potions");
+		
+		if(nbt.contains("Pockets", 10))
+		{
+			ListNBT pocketItems = nbt.getList("Pockets", 10);
+			for(int i=0; i<6; i++)
+			{
+				CompoundNBT stackData = pocketItems.getCompound(i);
+				this.pockets.set(i, ItemStack.read(stackData));
+			}
+		}
+	}
+	
+	private static ListNBT writeControlMap(Map<UUID, Integer> mapIn)
+	{
+		ListNBT list = new ListNBT();
+		for(UUID uuid : mapIn.keySet())
+		{
+			CompoundNBT data = new CompoundNBT();
+			data.put("UUID", NBTUtil.func_240626_a_(uuid));
+			data.putInt("Duration", mapIn.get(uuid));
+			
+			list.add(data);
+		}
+		return list;
+	}
+	
+	private static Map<UUID, Integer> readControlMap(ListNBT listIn)
+	{
+		Map<UUID, Integer> map = new HashMap<>();
+		for(int i=0; i<listIn.size(); i++)
+		{
+			CompoundNBT dominatedData = listIn.getCompound(i);
+			map.put(NBTUtil.readUniqueId(dominatedData.get("UUID")), dominatedData.getInt("Duration"));
+		}
+		return map;
+	}
+	
+	public NonNullList<ItemStack> getPocketInventory(){ return this.pockets; }
+	public void setPocketInventory(NonNullList<ItemStack> inventory)
+	{
+		if(isPlayer)
+			return;
+		
+		for(int i=0; i<6; i++)
+			this.pockets.set(i, inventory.get(i));
+		markDirty();
 	}
 	
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
@@ -383,7 +472,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		{
 			this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
 			
-			if(this.entity != null && this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
+			if(this.entity != null && this.isPlayer && !this.entity.getEntityWorld().isRemote)
 				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketSyncBludgeoning(this.bludgeoning));
 			markDirty();
 		}
@@ -404,7 +493,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	/** Returns true if the entity is currently actually unconscious */
 	public boolean isActuallyUnconscious()
 	{
-		return this.entity != null && this.entity.getType() == EntityType.PLAYER ? PlayerData.isPlayerBodyAsleep(entity) : this.isUnconscious;
+		return this.entity != null && this.isPlayer ? PlayerData.isPlayerBodyAsleep(entity) : this.isUnconscious;
 	}
 	
 	public boolean hasCustomTypes(){ return !this.customTypes.isEmpty(); }
@@ -441,12 +530,27 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		markDirty();
 	}
 	
+	public boolean isAfraidOf(LivingEntity entity)
+	{
+		return this.mapFeared.containsKey(entity.getUniqueID());
+	}
+	
+	public boolean isCharmedBy(LivingEntity entity)
+	{
+		return this.mapCharmed.containsKey(entity.getUniqueID());
+	}
+	
+	public boolean isControlledBy(LivingEntity entity)
+	{
+		return this.mapDominated.containsKey(entity.getUniqueID());
+	}
+	
 	public void tick(LivingEntity entity)
 	{
 		IDefaultSpecies mobDefaults = entity instanceof IDefaultSpecies ? (IDefaultSpecies)entity : null;
 		
 		World world = entity.getEntityWorld();
-		if(!this.initialised && (!(entity.getType() == EntityType.PLAYER) || entity.getType() == EntityType.PLAYER && ((PlayerEntity)entity).getGameProfile() != null))
+		if(!this.initialised && (!isPlayer || ((PlayerEntity)entity).getGameProfile() != null))
 		{
 			// TODO Check default home dimension registry for creature before setting to current dim
 			if(mobDefaults != null)
@@ -457,7 +561,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			else
 				setHomeDimension(world.getDimensionKey().getLocation());
 			
-			if(entity.getType() == EntityType.PLAYER)
+			if(isPlayer)
 			{
 				PlayerEntity player = (PlayerEntity)entity;
 				String name = player.getName().getUnformattedComponentText();
@@ -510,13 +614,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		handleTypes(entity, world);
 		
-		boolean isPlayer = false;
 		PlayerEntity player = null;
-		if(entity.getType() == EntityType.PLAYER)
-		{
-			isPlayer = true;
+		if(isPlayer)
 			player = (PlayerEntity)entity;
-		}
 		
 		if(isPlayer)
 			handleHealth(player);
@@ -542,7 +642,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		if(isUnconscious() != isActuallyUnconscious())
 		{
-			if(entity.getType() == EntityType.PLAYER)
+			if(isPlayer)
 			{
 				if(isUnconscious)
 					PlayerData.forPlayer((PlayerEntity)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
@@ -557,6 +657,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					
 					// Spawn body
 					LivingEntity body = EntityBodyUnconscious.createBodyFrom(entity);
+					((AbstractBody)body).setPocketInventory(getPocketInventory());
 					if(entity.isAddedToWorld())
 					{
 						// TODO Play crit attack noise when creature is knocked unconscious
@@ -576,6 +677,23 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		abilities.tick();
 		
+		// Decrement all durations in control maps
+		if(!this.mapCharmed.isEmpty())
+		{
+			this.mapCharmed = handleControl(this.mapCharmed);
+			markDirty();
+		}
+		if(!this.mapFeared.isEmpty())
+		{
+			this.mapFeared = handleControl(this.mapFeared);
+			markDirty();
+		}
+		if(!this.mapDominated.isEmpty())
+		{
+			this.mapDominated = handleControl(this.mapDominated);
+			markDirty();
+		}
+		
 		if(this.dirty)
 		{
 			if(this.entity != null && !this.entity.getEntityWorld().isRemote)
@@ -589,6 +707,24 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			// Ping server for visualPotion value
 			
 		}
+	}
+	
+	private static Map<UUID, Integer> handleControl(Map<UUID, Integer> controlMap)
+	{
+		if(controlMap.isEmpty())
+			return controlMap;
+		
+		List<UUID> charmers = Lists.newArrayList();
+		charmers.addAll(controlMap.keySet());
+		charmers.forEach((uuid) -> { controlMap.put(uuid, controlMap.get(uuid) - 1); });
+		
+		List<UUID> expired = Lists.newArrayList();
+		controlMap.forEach((uuid, duration) -> { if(duration <= 0) expired.add(uuid); });
+		
+		if(!expired.isEmpty())
+			expired.forEach((uuid) -> { controlMap.remove(uuid); });
+		
+		return controlMap;
 	}
 	
 	public void setSpeciesSelected()
@@ -663,7 +799,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	{
 		boolean isPlayer = false;
 		boolean isInvulnerablePlayer = false;
-		if(entity.getType() == EntityType.PLAYER)
+		if(isPlayer)
 		{
 			isPlayer = true;
 			isInvulnerablePlayer = ((PlayerEntity)entity).abilities.disableDamage;

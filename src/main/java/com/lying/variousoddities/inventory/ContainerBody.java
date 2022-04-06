@@ -1,6 +1,7 @@
 package com.lying.variousoddities.inventory;
 
 import com.lying.variousoddities.entity.AbstractBody;
+import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOItems;
 import com.mojang.datafixers.util.Pair;
 
@@ -48,12 +49,14 @@ public class ContainerBody extends Container
 	}
 	
 	public final AbstractBody theBody;
+	public final boolean isCorpse;
 	private final IInventory bodyInventory;
 	
 	public ContainerBody(int windowId, PlayerInventory playerInventory, IInventory bodyInventory, final AbstractBody bodyIn)
 	{
 		super(VOItems.CONTAINER_BODY, windowId);
 		this.theBody = bodyIn;
+		this.isCorpse = bodyIn.getType() == VOEntities.CORPSE;
 		this.bodyInventory = bodyInventory;
 		
 		PlayerEntity player = playerInventory.player;
