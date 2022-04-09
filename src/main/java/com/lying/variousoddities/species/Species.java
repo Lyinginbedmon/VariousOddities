@@ -18,7 +18,6 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySize;
-import com.lying.variousoddities.species.abilities.AbilitySize.Size;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
 
@@ -36,8 +35,7 @@ public class Species
 {
 	public static final Species HUMAN = new Species(new ResourceLocation("human"))
 			.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".human"))
-			.addType(EnumCreatureType.HUMANOID)
-			.addAbility(new AbilitySize(Size.MEDIUM));
+			.addType(EnumCreatureType.HUMANOID);
 	private static final UUID UUID_SPECIES = UUID.fromString("d5da3b78-e6ca-4d2e-878b-0e7c3c57a668");
 	private ResourceLocation registryName;
 	
@@ -53,6 +51,7 @@ public class Species
 	public Species(ResourceLocation name)
 	{
 		this.registryName = name;
+		addAbility(AbilitySize.MEDIUM.clone());
 	}
 	
 	public final void setRegistryName(ResourceLocation name){ this.registryName = name; }
@@ -322,6 +321,7 @@ public class Species
 		}
 		
 		public ResourceLocation getRegistryName(){ return this.registryName; }
+		public ITextComponent getDisplayName(){ return SpeciesRegistry.getSpecies(getRegistryName()).getDisplayName(); }
 		
 		private SpeciesInstance addOriginDimension(@Nullable ResourceLocation dimension){ this.originDimension = dimension; return this; }
 		private SpeciesInstance addTypes(Collection<EnumCreatureType> typesIn){ this.types.addAll(typesIn); return this; }

@@ -42,6 +42,7 @@ public abstract class Ability
 	};
 	
 	private ITextComponent displayName = null;
+	private ITextComponent description = null;
 	private Nature customNature = null;
 	private final ResourceLocation registryName;
 	private UUID sourceId = null;
@@ -98,6 +99,17 @@ public abstract class Ability
 		return this;
 	}
 	
+	public boolean hasCustomDesc() { return this.description != null; }
+	
+	public Ability setCustomDesc(ITextComponent descIn)
+	{
+		if(descIn != null)
+			this.description = descIn;
+		else
+			this.description = null;
+		return this;
+	}
+	
 	public void setCustomNature(Nature natureIn){ this.customNature = natureIn; }
 	
 	public ITextComponent getDisplayName()
@@ -113,6 +125,16 @@ public abstract class Ability
 		return new TranslationTextComponent("ability."+getMapName());
 	}
 	
+	public ITextComponent getDescription()
+	{
+		return hasCustomDesc() ? this.description : description();
+	}
+	
+	public ITextComponent description()
+	{
+		return new TranslationTextComponent("ability."+getRegistryName()+".desc");
+	}
+	
 	/** Writes all data needed to reinstantiate this ability to NBT */
 	public final CompoundNBT writeAtomically(CompoundNBT compound)
 	{
@@ -122,6 +144,9 @@ public abstract class Ability
 		
 		if(hasCustomName())
 			compound.putString("CustomName", ITextComponent.Serializer.toJson(this.displayName));
+		
+		if(hasCustomDesc())
+			compound.putString("CustomDesc", ITextComponent.Serializer.toJson(this.description));
 		
 		if(this.customNature != null)
 			compound.putString("CustomNature", this.customNature.getString());

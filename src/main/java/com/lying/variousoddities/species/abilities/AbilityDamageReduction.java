@@ -50,7 +50,34 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 			}
 		}
 		
-		return new TranslationTextComponent("ability.varodd.damage_reduction", amount, exceptionTranslated);
+		return new TranslationTextComponent("ability.varodd.damage_reduction", amount, exceptions());
+	}
+	
+	public ITextComponent description()
+	{
+		if(exceptions.length == 0)
+			return new TranslationTextComponent("ability.varodd:damage_reduction.desc", amount);
+		else
+			return new TranslationTextComponent("ability.varodd:damage_reduction.desc.exceptions", exceptions(), amount);
+	}
+	
+	private ITextComponent exceptions()
+	{
+		StringTextComponent exceptionTranslated;
+		if(exceptions.length == 0)
+			exceptionTranslated = new StringTextComponent("-");
+		else
+		{
+			exceptionTranslated = new StringTextComponent("");
+			for(int i=0; i<exceptions.length; i++)
+			{
+				DamageType type = exceptions[i];
+				exceptionTranslated.append(type.getTranslated());
+				if(i < exceptions.length - 1)
+					exceptionTranslated.append(new StringTextComponent(", "));
+			}
+		}
+		return exceptionTranslated;
 	}
 	
 	public int compare(Ability abilityIn)

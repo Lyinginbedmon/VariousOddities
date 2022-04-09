@@ -118,6 +118,9 @@ public class AbilityRegistry
 			if(compound.contains("CustomName", 8))
 				ability.setDisplayName(ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomName")));
 			
+			if(compound.contains("CustomDesc", 8))
+				ability.setCustomDesc(ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomDesc")));
+			
 			if(compound.contains("CustomNature", 8))
 				ability.setCustomNature(Nature.fromString(compound.getString("CustomNature")));
 		}

@@ -38,6 +38,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -344,7 +346,47 @@ public enum EnumCreatureType implements IStringSerializable
 			add(actions);
 		}
 		
+		public boolean isEmpty() { return this.actions.isEmpty(); }
+		
 		public String toString(){ return actions.toString(); }
+		
+		@Nullable
+		public ITextComponent translated()
+		{
+			IFormattableTextComponent translated = null;
+			if(!actions.isEmpty())
+				translated = new TranslationTextComponent("enum.varodd.type_action.does", actionsToList(actions));
+			
+			if(EnumSet.complementOf(actions).size() > 0)
+			{
+				IFormattableTextComponent doesnt = new TranslationTextComponent("enum.varodd.type_action.doesnt", actionsToList(EnumSet.complementOf(actions)));
+				if(translated == null)
+					translated = doesnt;
+				else
+				{
+					translated.appendString("\n");
+					translated.append(doesnt);
+				}
+			}
+			
+			return translated;
+		}
+		
+		@Nullable
+		private static ITextComponent actionsToList(EnumSet<Action> actions)
+		{
+			IFormattableTextComponent actionSet = null;
+			for(Action action : actions)
+			{
+				IFormattableTextComponent name = new StringTextComponent(action.translated().getString().toLowerCase());
+				if(actionSet != null)
+					actionSet.appendString(", ");
+				else
+					actionSet = new StringTextComponent("");
+				actionSet.append(name);
+			}
+			return actionSet;
+		}
 		
 		public void applyType(TypeHandler handler, Collection<EnumCreatureType> types)
 		{
@@ -405,7 +447,7 @@ public enum EnumCreatureType implements IStringSerializable
 			return set;
 		}
 		
-		public static ActionSet fromTypes(LivingEntity entity, Collection<EnumCreatureType> types)
+		public static ActionSet fromTypes(@Nullable LivingEntity entity, Collection<EnumCreatureType> types)
 		{
 			if(types.isEmpty())
 				return new ActionSet(Action.STANDARD);
@@ -426,7 +468,8 @@ public enum EnumCreatureType implements IStringSerializable
 				});
 			
 			GetTypeActionsEvent event = new GetTypeActionsEvent(entity, types, set.actions);
-			MinecraftForge.EVENT_BUS.post(event);
+			if(entity != null)
+				MinecraftForge.EVENT_BUS.post(event);
 			
 			return event.getActions();
 		}
@@ -453,5 +496,7 @@ public enum EnumCreatureType implements IStringSerializable
 		/** Creatures that have no natural needs, but also cannot regenerate health. */
 		public static final EnumSet<Action> NONE = EnumSet.noneOf(Action.class);
 		public static final EnumSet<Action> ALL = EnumSet.allOf(Action.class);
+		
+		public ITextComponent translated() { return new TranslationTextComponent("enum.varodd.type_action."+name().toLowerCase()); }
 	}
 }

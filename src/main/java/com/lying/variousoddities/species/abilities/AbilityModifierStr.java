@@ -34,6 +34,11 @@ public class AbilityModifierStr extends AbilityModifier
 		return new TranslationTextComponent("ability.varodd.strength_modifier", translatedAmount());
 	}
 	
+	public ITextComponent description()
+	{
+		return new TranslationTextComponent("ability.varodd:strength_modifier.desc"+(amount < 0 ? ".minus" : ".plus"), (int)Math.abs(amount));
+	}
+	
 	public void applyModifier(LivingUpdateEvent event)
 	{
 		LivingEntity entity = event.getEntityLiving();
@@ -43,8 +48,8 @@ public class AbilityModifierStr extends AbilityModifier
 		
 		if(AbilityRegistry.hasAbility(entity, getMapName()))
 		{
-			AbilityModifierStr armour = (AbilityModifierStr)AbilityRegistry.getAbilityByName(entity, getMapName());
-			double amount = armour.amount;
+			AbilityModifierStr strength = (AbilityModifierStr)AbilityRegistry.getAbilityByName(entity, getMapName());
+			double amount = strength.amount;
 			
 			AttributeModifier modifier = attribute.getModifier(STRENGTH_UUID);
 			if(modifier != null && modifier.getAmount() != amount)

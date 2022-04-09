@@ -27,6 +27,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -103,6 +104,11 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 			indexEnd = Math.min(index + 7, abilities.size());
 			abilitySet.addAll(this.abilities.subList(index, indexEnd));
 		}
+		
+    	this.addButton(new Button(this.width - 23, 3, 20, 20, new StringTextComponent(">"), (button) -> 
+    		{
+    			Minecraft.getInstance().displayGuiScreen(new ScreenCharacterSheet());
+    		}));
 	}
 	
 	public void tick()
@@ -113,7 +119,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	public boolean mouseClicked(double mouseX, double mouseY, int button)
 	{
 		ActivatedAbility selected = getAbilitySlice(mouseX, mouseY);
-		if(selected == null)
+		if(selected == null && !super.mouseClicked(mouseX, mouseY, button))
 		{
 			closeScreen();
 			return true;

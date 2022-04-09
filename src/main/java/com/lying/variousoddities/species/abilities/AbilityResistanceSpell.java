@@ -52,6 +52,11 @@ public class AbilityResistanceSpell extends Ability
 		return new TranslationTextComponent("ability.varodd.resistance_spell", (descriptor == null ? school.translatedName() : descriptor.translatedName()));
 	}
 	
+	public ITextComponent description()
+	{
+		return new TranslationTextComponent("ability.varodd:resistance_spell.desc", (descriptor == null ? school.translatedName() : descriptor.translatedName()));
+	}
+	
 	public void addListeners(IEventBus bus)
 	{
 		bus.addListener(this::spellAffectEntity);

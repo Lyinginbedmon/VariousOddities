@@ -27,6 +27,8 @@ public class AbilitySize extends AbilityModifier
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "size");
 	private static final UUID SIZE_MODIFIER = UUID.fromString("3e3cf3f2-7d4f-41ce-91de-8557f02b2b91");
 	
+	public static final Ability MEDIUM = new AbilitySize(Size.MEDIUM).setTemporary();
+	
 	private Size sizeClass;
 	
 	private float scale = -1F;
@@ -49,9 +51,31 @@ public class AbilitySize extends AbilityModifier
 		return size.getScale() < getScale() ? 1 : size.getScale() > getScale() ? -1 : 0;
 	}
 	
+	public boolean displayInSpecies(){ return sizeClass != Size.MEDIUM; }
+	
 	public ITextComponent translatedName()
 	{
 		return new TranslationTextComponent("ability." + Reference.ModInfo.MOD_ID + ".size", sizeClass.translate());
+	}
+	
+	public ITextComponent description()
+	{
+		switch(sizeClass)
+		{
+			case COLOSSAL:
+			case GARGANTUAN:
+			case HUGE:
+			case LARGE:
+				return new TranslationTextComponent("ability.varodd:size.big");
+			case FINE:
+			case DIMINUTIVE:
+			case TINY:
+			case SMALL:
+				return new TranslationTextComponent("ability.varodd:size.small");
+			case MEDIUM:
+			default:
+				return new TranslationTextComponent("ability.varodd:size.normal");
+		}
 	}
 	
 	public Type getType(){ return Type.UTILITY; }

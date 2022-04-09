@@ -78,6 +78,8 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".breath_weapon", (int)distance, type.translated(damage)); }
 	
+	public ITextComponent description(){ return new TranslationTextComponent("ability.varodd:breath_weapon.desc", damage.getTranslated()); }
+	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
 	public AbilityBreathWeapon setParticle(IParticleData particleIn){ this.particle = particleIn; return this; }

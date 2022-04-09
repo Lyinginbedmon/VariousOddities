@@ -34,6 +34,11 @@ public class AbilityResistance extends Ability
 		return new TranslationTextComponent("ability.varodd.resistance", damage.getTranslated(), amount);
 	}
 	
+	public ITextComponent description()
+	{
+		return new TranslationTextComponent("ability.varodd:resistance.desc", damage.getTranslated(), amount);
+	}
+	
 	public int compare(Ability abilityIn)
 	{
 		AbilityResistance resistance = (AbilityResistance)abilityIn;

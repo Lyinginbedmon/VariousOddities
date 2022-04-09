@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityDamageResistance extends Ability
@@ -37,6 +38,11 @@ public class AbilityDamageResistance extends Ability
 	public ITextComponent translatedName()
 	{
 		return resistType.getTranslated(damageType);
+	}
+	
+	public ITextComponent description()
+	{
+		return new TranslationTextComponent("ability.varodd:damage_resistance."+resistType.getString(), damageType.getTranslated());
 	}
 	
 	public Type getType(){ return resistType == DamageResist.VULNERABLE ? Ability.Type.WEAKNESS : Ability.Type.DEFENSE; }

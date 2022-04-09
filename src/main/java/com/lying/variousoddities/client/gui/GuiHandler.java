@@ -229,12 +229,12 @@ public class GuiHandler
 		}
 	}
 	
-	private static void drawIconAt(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY)
+	public static void drawIconAt(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY)
 	{
 		drawIconAt(matrix, posX, posY, indexX, indexY, sizeX, sizeY, 1F, 1F, 1F, 1F);
 	}
 	
-	private static void drawIconAt(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float red, float green, float blue, float alpha)
+	public static void drawIconAt(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float red, float green, float blue, float alpha)
 	{
 		// Texture co-ordinates
 		float texXMin = ICON_TEX * (float)indexX;
@@ -253,7 +253,7 @@ public class GuiHandler
 		matrix.pop();
 	}
 	
-	private static void drawAbilitySlot(MatrixStack matrix, float posX, float posY)
+	public static void drawAbilitySlot(MatrixStack matrix, float posX, float posY)
 	{
 		drawIconAt(matrix, posX - 1, posY - 1, 1, 1, ICON_SIZE + 2, ICON_SIZE + 2);
 	}
