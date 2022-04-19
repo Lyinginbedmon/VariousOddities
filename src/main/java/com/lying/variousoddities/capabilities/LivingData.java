@@ -14,12 +14,16 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.entity.IDefaultSpecies;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
+import com.lying.variousoddities.api.event.SpeciesEvent;
+import com.lying.variousoddities.api.event.SpeciesEvent.TemplateApplied;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
+import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
+import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncBludgeoning;
@@ -233,6 +237,11 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public void deserializeNBT(CompoundNBT nbt)
 	{
+		if(nbt.isEmpty())
+		{
+			resetLivingData();
+			return;
+		}
 		this.initialised = nbt.getBoolean("Initialised");
 		
 		if(nbt.contains("HomeDim", 8))
@@ -298,6 +307,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 				this.pockets.set(i, ItemStack.read(stackData));
 			}
 		}
+	}
+	
+	private void resetLivingData()
+	{
+		LivingData fresh = new LivingData();
+		CompoundNBT freshData = fresh.serializeNBT();
+		this.deserializeNBT(freshData);
 	}
 	
 	private static ListNBT writeControlMap(Map<UUID, Integer> mapIn)
@@ -395,14 +411,29 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.selectedSpecies = bool;
 	}
 	
-	public void addTemplate(Template templateIn)
+	public boolean addTemplateInitial(Template templateIn)
+	{
+		if(addTemplate(templateIn))
+		{
+			if(this.entity != null && this.entity.getType() == EntityType.PLAYER)
+			{
+				SpeciesEvent.TemplateApplied event = new TemplateApplied((PlayerEntity)this.entity, templateIn.getRegistryName());
+				MinecraftForge.EVENT_BUS.post(event);
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean addTemplate(Template templateIn)
 	{
 		if(this.templates.containsKey(templateIn.getRegistryName()))
-			return;
+			return false;
 		
 		this.templates.put(templateIn.getRegistryName(), templateIn);
 		this.abilities.markForRecache();
 		this.markDirty();
+		return true;
 	}
 	
 	public void removeTemplate(Template templateIn)
@@ -530,19 +561,76 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		markDirty();
 	}
 	
+	/** Returns true if this entity is afraid of the given entity */
 	public boolean isAfraidOf(LivingEntity entity)
 	{
-		return this.mapFeared.containsKey(entity.getUniqueID());
+		return isMindControlledBy(entity, MindControl.AFRAID);
 	}
 	
+	/** Returns true if this entity is being charmed by the given entity */
 	public boolean isCharmedBy(LivingEntity entity)
 	{
-		return this.mapCharmed.containsKey(entity.getUniqueID());
+		return isMindControlledBy(entity, MindControl.CHARMED);
 	}
 	
+	/** Returns true if this entity is being dominated by the given entity */
 	public boolean isControlledBy(LivingEntity entity)
 	{
-		return this.mapDominated.containsKey(entity.getUniqueID());
+		return isMindControlledBy(entity, MindControl.DOMINATED);
+	}
+	
+	public boolean isMindControlledBy(LivingEntity entity, MindControl type)
+	{
+		UUID uuid = entity.getUniqueID();
+		switch(type)
+		{
+			case AFRAID:	return this.mapFeared.containsKey(uuid);
+			case CHARMED:	return this.mapCharmed.containsKey(uuid);
+			case DOMINATED:	return this.mapDominated.containsKey(uuid);
+		}
+		return false;
+	}
+	
+	public void setMindControlled(LivingEntity entity, int duration, MindControl type)
+	{
+		UUID uuid = entity.getUniqueID();
+		switch(type)
+		{
+			case AFRAID:
+				this.mapFeared.put(uuid, duration);
+				break;
+			case CHARMED:
+				this.mapCharmed.put(uuid, duration);
+				break;
+			case DOMINATED:
+				this.mapDominated.put(uuid, duration);
+				break;
+		}
+		markDirty();
+	}
+	
+	public void clearMindControlled(LivingEntity entity, MindControl type)
+	{
+		if(!isMindControlledBy(entity, type))
+			return;
+		
+		UUID uuid = entity.getUniqueID();
+		switch(type)
+		{
+			case AFRAID:	this.mapFeared.remove(uuid); break;
+			case CHARMED:	this.mapCharmed.remove(uuid); break;
+			case DOMINATED:	this.mapDominated.remove(uuid); break;
+		}
+		markDirty();
+	}
+	
+	/** Returns true if this entity is being charmed, dominated, or is afraid of the given entity */
+	public boolean isTargetingHindered(LivingEntity target)
+	{
+		for(MindControl type : MindControl.values())
+			if(isMindControlledBy(target, type))
+				return true;
+		return false;
 	}
 	
 	public void tick(LivingEntity entity)
@@ -587,7 +675,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 						{
 							Template template = VORegistries.TEMPLATES.getOrDefault(temp, null);
 							if(template != null)
-								addTemplate(template);
+								addTemplateInitial(template);
 						});
 					
 					if(!mobDefaults.defaultCreatureTypes().isEmpty())
@@ -644,7 +732,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		{
 			if(isPlayer)
 			{
-				if(isUnconscious)
+				if(isUnconscious())
 					PlayerData.forPlayer((PlayerEntity)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
 				
 				this.isUnconscious = isUnconscious();
@@ -852,6 +940,25 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void markDirty()
 	{
 		this.dirty = true;
+	}
+	
+	public static enum MindControl
+	{
+		CHARMED(MagicSchool.ENCHANTMENT, null),
+		DOMINATED(MagicSchool.ENCHANTMENT, null),
+		AFRAID(null, MagicSubType.FEAR);
+		
+		private final MagicSchool school;
+		private final MagicSubType descriptor;
+		
+		private MindControl(MagicSchool schoolIn, MagicSubType descriptorIn)
+		{
+			this.school = schoolIn;
+			this.descriptor = descriptorIn;
+		}
+		
+		public MagicSchool getSchool() { return this.school; }
+		public MagicSubType getDescriptor() { return this.descriptor; }
 	}
 	
 	public static class Storage implements Capability.IStorage<LivingData>

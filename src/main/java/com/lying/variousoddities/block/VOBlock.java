@@ -12,18 +12,18 @@ public class VOBlock extends Block
 {
 	public static boolean isntSolid(BlockState state, IBlockReader reader, BlockPos pos){ return false; }
 	
-	public VOBlock(String nameIn, AbstractBlock.Properties properties)
+	public VOBlock(AbstractBlock.Properties properties)
 	{
 		super(properties);
 	}
 	
 	public VOBlock(String nameIn, Material materialIn)
 	{
-		this(nameIn, AbstractBlock.Properties.create(materialIn));
+		this(AbstractBlock.Properties.create(materialIn));
 	}
 	
 	public VOBlock(String nameIn, Material materialIn, MaterialColor colorIn)
 	{
-		this(nameIn, AbstractBlock.Properties.create(materialIn, colorIn));
+		this(AbstractBlock.Properties.create(materialIn, colorIn));
 	}
 }

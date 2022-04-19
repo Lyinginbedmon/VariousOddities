@@ -66,7 +66,7 @@ public abstract class AbilityVision extends ToggledAbility
 			}
 			
 			// Blind mobs have minimal vision capacity
-			if(mob.isPotionActive(Effects.BLINDNESS) || AbilityRegistry.hasAbility(mob, AbilityBlind.REGISTRY_NAME))
+			if(AbilityBlind.isMobBlind(mob))
 				event.modifyVisibility(0.07D / event.getVisibilityModifier());
 			
 			// Vision abilities confer guaranteed vision

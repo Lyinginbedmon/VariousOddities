@@ -17,6 +17,7 @@ public class VOTileEntities
 {
 	public static final TileEntityType<TileEntityDraftingTable> TABLE_DRAFTING = TileEntityType.Builder.create(TileEntityDraftingTable::new, VOBlocks.TABLE_DRAFTING).build(null);
 	public static final TileEntityType<TileEntityEggKobold> EGG_KOBOLD = TileEntityType.Builder.create(TileEntityEggKobold::new, VOBlocks.EGG_KOBOLD).build(null);
+	public static final TileEntityType<TileEntityPhylactery> PHYLACTERY = TileEntityType.Builder.create(TileEntityPhylactery::new, VOBlocks.PHYLACTERY).build(null);
 	
     @SubscribeEvent
 	public static void registerTiles(final RegistryEvent.Register<TileEntityType<?>> tileRegistryevent)
@@ -24,6 +25,7 @@ public class VOTileEntities
     	IForgeRegistry<TileEntityType<?>> registry = tileRegistryevent.getRegistry();
 		register(registry, new ResourceLocation(Reference.ModInfo.MOD_ID, "kobold_egg"), EGG_KOBOLD);
 		register(registry, new ResourceLocation(Reference.ModInfo.MOD_ID, "drafting_table"), TABLE_DRAFTING);
+		register(registry, new ResourceLocation(Reference.ModInfo.MOD_ID, "phylactery"), PHYLACTERY);
 	}
     
     private static void register(IForgeRegistry<TileEntityType<?>> registry, ResourceLocation name, IForgeRegistryEntry<TileEntityType<?>> tile)

@@ -91,7 +91,8 @@ public class PacketSyncLivingData
 			if(target != null)
 			{
 				LivingData data = LivingData.forEntity(target);
-				data.deserializeNBT(msg.dataNBT);
+				if(data != null)
+					data.deserializeNBT(msg.dataNBT);
 			}
 		}
 		context.setPacketHandled(true);

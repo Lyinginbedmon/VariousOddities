@@ -41,6 +41,11 @@
       "Action": "add",
       "Name": "varodd:ability",
       "Tag": "{Ability:{CustomName:'{\"translate\":\"ability.varodd:lich_touch\"}',Tag:{Effects:[{Ambient:0b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:1b,ShowParticles:1b,Duration:300,Id:33b,Amplifier:0b}],Chance:0.65f},Name:\"varodd:poison\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Items:[{id:\"varodd:phylactery\",Count:1b}]},Name:\"varodd:starting_item\"},UnlessBetter:0b}"
     }
   ],
   "Preconditions": [

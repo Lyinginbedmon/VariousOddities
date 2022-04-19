@@ -22,7 +22,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class AbilityOperation extends TemplateOperation
 {
-	private static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "ability");
+	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "ability");
 	
 	private Ability ability = null;
 	private boolean unlessBetter = true;
@@ -198,6 +198,8 @@ public class AbilityOperation extends TemplateOperation
 				break;
 		}
 	}
+	
+	public Ability getAbility() { return this.ability.clone(); }
 	
 	public static class Builder extends TemplateOperation.Builder
 	{

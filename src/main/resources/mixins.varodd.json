@@ -18,7 +18,8 @@
 		"ServerWorldMixin",
 		"ServerPlayNetHandlerMixin",
 		"MobEntityMixin",
-		"EntityPredicateMixin"
+		"EntityPredicateMixin",
+		"TargetGoalMixin"
 	],
 	"client":
 	[

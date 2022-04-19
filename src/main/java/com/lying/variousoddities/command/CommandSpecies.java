@@ -304,7 +304,9 @@ public class CommandSpecies extends CommandBase
 				{
 					LivingEntity living = (LivingEntity)entityIn;
 					LivingData data = LivingData.forEntity(living);
-					data.addTemplate(template);
+					if(!data.addTemplateInitial(template))
+						throw INVALID_ENTITY_EXCEPTION.create();
+					
 					source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", templateName, entityIn.getDisplayName()), true);
 					return 15;
 				}

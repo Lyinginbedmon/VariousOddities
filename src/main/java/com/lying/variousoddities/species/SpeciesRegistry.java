@@ -15,9 +15,11 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species.SpeciesInstance;
+import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityBreathWeapon;
 import com.lying.variousoddities.species.abilities.AbilityBreathWeapon.BreathType;
 import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
+import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityDamageCap;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
 import com.lying.variousoddities.species.abilities.AbilityDamageResistance;
@@ -31,12 +33,17 @@ import com.lying.variousoddities.species.abilities.AbilityLightSensitivity;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityModifierStr;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
+import com.lying.variousoddities.species.abilities.AbilityPoison;
 import com.lying.variousoddities.species.abilities.AbilityResistance;
+import com.lying.variousoddities.species.abilities.AbilityScent;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilitySize.Size;
 import com.lying.variousoddities.species.abilities.AbilityStability;
+import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
+import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToHome;
 import com.lying.variousoddities.species.abilities.AbilityTeleportToPos;
+import com.lying.variousoddities.species.abilities.AbilityTremorsense;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
@@ -57,18 +64,32 @@ public class SpeciesRegistry extends JsonReloadListener
 	
 	public static final ResourceLocation SPECIES_AASIMAR		= new ResourceLocation(Reference.ModInfo.MOD_ID, "aasimar");
 	public static final ResourceLocation SPECIES_ARCHFEY		= new ResourceLocation(Reference.ModInfo.MOD_ID, "archfey");
+	public static final ResourceLocation SPECIES_BAT			= new ResourceLocation("minecraft", "bat");
+	public static final ResourceLocation SPECIES_CAT			= new ResourceLocation("minecraft", "cat");
+	public static final ResourceLocation SPECIES_CAVE_SPIDER	= new ResourceLocation("minecraft", "cave_spider");
 	public static final ResourceLocation SPECIES_CREEPER		= new ResourceLocation("minecraft", "creeper");
+	public static final ResourceLocation SPECIES_DONKEY			= new ResourceLocation("minecraft", "donkey");
 	public static final ResourceLocation SPECIES_DWARF			= new ResourceLocation(Reference.ModInfo.MOD_ID, "dwarf");
 	public static final ResourceLocation SPECIES_DRAGON_GREEN	= new ResourceLocation(Reference.ModInfo.MOD_ID, "green_dragon");
+	public static final ResourceLocation SPECIES_GIANT_RAT		= new ResourceLocation(Reference.ModInfo.MOD_ID, "giant_rat");
 	public static final ResourceLocation SPECIES_GNOME			= new ResourceLocation(Reference.ModInfo.MOD_ID, "gnome");
 	public static final ResourceLocation SPECIES_GOBLIN			= new ResourceLocation(Reference.ModInfo.MOD_ID, "goblin");
 	public static final ResourceLocation SPECIES_HALFLING		= new ResourceLocation(Reference.ModInfo.MOD_ID, "halfling");
 	public static final ResourceLocation SPECIES_HALF_ORC		= new ResourceLocation(Reference.ModInfo.MOD_ID, "half_orc");
+	public static final ResourceLocation SPECIES_HORSE			= new ResourceLocation("minecraft", "horse");
 	public static final ResourceLocation SPECIES_KOBOLD			= new ResourceLocation(Reference.ModInfo.MOD_ID, "kobold");
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
+	public static final ResourceLocation SPECIES_MULE			= new ResourceLocation("minecraft", "mule");
 	public static final ResourceLocation SPECIES_ORC			= new ResourceLocation(Reference.ModInfo.MOD_ID, "orc");
+	public static final ResourceLocation SPECIES_PIG			= new ResourceLocation("minecraft", "pig");
+	public static final ResourceLocation SPECIES_RAT			= new ResourceLocation(Reference.ModInfo.MOD_ID, "rat");
+	public static final ResourceLocation SPECIES_SKELETON		= new ResourceLocation("minecraft", "skeleton");
+	public static final ResourceLocation SPECIES_SPIDER			= new ResourceLocation("minecraft", "spider");
+	public static final ResourceLocation SPECIES_SQUID			= new ResourceLocation("minecraft", "squid");
 	public static final ResourceLocation SPECIES_TIEFLING		= new ResourceLocation(Reference.ModInfo.MOD_ID, "tiefling");
 	public static final ResourceLocation SPECIES_TROGLODYTE		= new ResourceLocation(Reference.ModInfo.MOD_ID, "troglodyte");
+	public static final ResourceLocation SPECIES_WOLF			= new ResourceLocation("minecraft", "wolf");
+	public static final ResourceLocation SPECIES_ZOMBIE			= new ResourceLocation("minecraft", "zombie");
 	
 	private static SpeciesRegistry instance;
 	
@@ -244,6 +265,107 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityModifierCon(4D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityNaturalArmour(6D)));
+		
+		// Utility species used exclusively by mobs
+		
+		addSpecies(new Species(SPECIES_BAT)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityFlight(Grade.GOOD))
+				.addAbility(new AbilityBlindsight(6D))
+				.addAbility(new AbilitySize(Size.DIMINUTIVE)));
+		addSpecies(new Species(SPECIES_CAT)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityScent())
+				.addAbility(new AbilitySize(Size.TINY)));
+		addSpecies(new Species(SPECIES_CAVE_SPIDER)
+				.setPower(1)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.VERMIN)
+				.addAbility(new AbilityNaturalArmour(1D))
+				.addAbility(new AbilityClimb())
+				.addAbility(new AbilityTremorsense(16))
+				.addAbility(new AbilityPoison())
+				.addAbility(new AbilityStatusImmunity.Poison())
+				.addAbility(new AbilitySize(Size.SMALL)));
+		addSpecies(new Species(SPECIES_DONKEY)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityNaturalArmour(2D))
+				.addAbility(new AbilityScent()));
+		addSpecies(new Species(SPECIES_GIANT_RAT)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityNaturalArmour(1D))
+				.addAbility(new AbilityClimb())
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityScent())
+				.addAbility(new AbilitySize(Size.SMALL)));
+		addSpecies(new Species(SPECIES_HORSE)
+				.setPower(1)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityNaturalArmour(3D))
+				.addAbility(new AbilityModifierStr(1D))
+				.addAbility(new AbilityScent())
+				.addAbility(new AbilitySize(Size.LARGE)));
+		addSpecies(new Species(SPECIES_MULE)
+				.setPower(1)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityNaturalArmour(3D))
+				.addAbility(new AbilityModifierStr(3D))
+				.addAbility(new AbilityScent()));
+		addSpecies(new Species(SPECIES_PIG)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityScent()));
+		addSpecies(new Species(SPECIES_RAT)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityClimb())
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityScent())
+				.addAbility(new AbilitySize(Size.TINY)));
+		addSpecies(new Species(SPECIES_SKELETON)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.UNDEAD)
+				.addAbility(new AbilityNaturalArmour(2D))
+				.addAbility(new AbilityModifierStr(1D))
+				.addAbility(new AbilityDamageReduction(2))
+				.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)));
+		addSpecies(new Species(SPECIES_SPIDER)
+				.setPower(1)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.VERMIN)
+				.addAbility(new AbilityNaturalArmour(1D))
+				.addAbility(new AbilityClimb())
+				.addAbility(new AbilityTremorsense(16))
+				.addAbility(new AbilityStatusImmunity.Poison()));
+		addSpecies(new Species(SPECIES_SQUID)
+				.setPower(1)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL, EnumCreatureType.AQUATIC)
+				.addAbility(new AbilitySwim())
+				.addAbility(new AbilityNaturalArmour(3D))
+				.addAbility(new AbilityModifierStr(2D)));
+		addSpecies(new Species(SPECIES_WOLF)
+				.setPower(1)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.ANIMAL)
+				.addAbility(new AbilityNaturalArmour(2D))
+				.addAbility(new AbilityModifierStr(1D))
+				.addAbility(new AbilityDarkvision())
+				.addAbility(new AbilityScent()));
+		addSpecies(new Species(SPECIES_ZOMBIE)
+				.notPlayerSelectable()
+				.addType(EnumCreatureType.UNDEAD)
+				.addAbility(new AbilityNaturalArmour(2D))
+				.addAbility(new AbilityModifierStr(1D))
+				.addAbility(new AbilityDamageReduction(2)));
 	}
 	
 	@Nullable

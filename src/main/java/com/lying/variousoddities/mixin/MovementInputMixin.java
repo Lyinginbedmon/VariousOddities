@@ -39,45 +39,6 @@ public class MovementInputMixin
 		}
 	}
 	
-//	@Inject(method = "tickMovement(Z)V", at = @At("HEAD"), cancellable = true)
-//	public void possessedTransmitMovement(boolean forceDown, final CallbackInfo ci)
-//	{
-//		PlayerEntity player = Minecraft.getInstance().player;
-//		if(player != null)
-//		{
-//			PlayerData playerData = PlayerData.forPlayer(player);
-//			if(playerData != null && playerData.isPossessing())
-//			{
-//				boolean forwardKeyDown = this.gameSettings.keyBindForward.isKeyDown();
-//				boolean backKeyDown = this.gameSettings.keyBindBack.isKeyDown();
-//				boolean leftKeyDown = this.gameSettings.keyBindLeft.isKeyDown();
-//				boolean rightKeyDown = this.gameSettings.keyBindRight.isKeyDown();
-//				float moveForward = forwardKeyDown == backKeyDown ? 0.0F : (forwardKeyDown ? 1.0F : -1.0F);
-//				float moveStrafe = leftKeyDown == rightKeyDown ? 0.0F : (leftKeyDown ? 1.0F : -1.0F);
-//				boolean jump = this.gameSettings.keyBindJump.isKeyDown();
-//				boolean sneaking = this.gameSettings.keyBindSneak.isKeyDown();
-//				if(forceDown)
-//				{
-//					moveStrafe = (float)((double)moveStrafe * 0.3D);
-//					moveForward = (float)((double)moveForward * 0.3D);
-//				}
-//				PacketHandler.sendToServer(new PacketPossessionControl(moveStrafe, moveForward, sneaking, jump));
-//				
-//				MobEntity mob = (MobEntity)playerData.getPossessed();
-//				if(mob != null)
-//				{
-//					mob.getMoveHelper().strafe(moveForward, moveStrafe);
-//					mob.setSneaking(sneaking);
-//					if(jump)
-//						mob.getJumpController().setJumping();
-//				}
-//				
-//				clearInputs();
-//				ci.cancel();
-//			}
-//		}
-//	}
-	
 	private void clearInputs()
 	{
 		MovementInput input = (MovementInput)(Object)this;

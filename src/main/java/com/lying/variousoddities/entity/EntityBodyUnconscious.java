@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.inventory.ContainerPlayerBody;
 
@@ -136,7 +137,7 @@ public class EntityBodyUnconscious extends AbstractBody
 		{
 			if(isPlayer())
 			{
-				LivingEntity soul = getSoul();
+				PlayerEntity soul = (PlayerEntity)getSoul();
 				if(soul != null && !this.world.isRemote)
 				{
 					boolean needsUpdate = false;
@@ -162,6 +163,11 @@ public class EntityBodyUnconscious extends AbstractBody
 					
 					if(needsUpdate)
 						getDataManager().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundNBT(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
+					
+					// If the player is online and not unconscious, remove body
+					PlayerData data = PlayerData.forPlayer(soul);
+					if(data.getBodyCondition() != BodyCondition.UNCONSCIOUS)
+						this.onKillCommand();
 				}
 //				if(soul == null)
 //				{
@@ -170,10 +176,6 @@ public class EntityBodyUnconscious extends AbstractBody
 //				}
 //				else
 //					moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
-				
-				// If the player is online and not unconscious, remove body
-				if(soul != null && !PlayerData.isPlayerBodyAsleep(soul))
-					this.onKillCommand();
 				
 				return;
 			}
@@ -243,6 +245,7 @@ public class EntityBodyUnconscious extends AbstractBody
 	public boolean attackEntityFrom(DamageSource cause, float amount)
 	{
 		if(cause != DamageSource.OUT_OF_WORLD)
+		{
 			if(hasBody() && getSoul() != null)
 			{
 				if(isPlayer())
@@ -254,7 +257,9 @@ public class EntityBodyUnconscious extends AbstractBody
 					setBody(body);
 				}
 			}
-		return false;
+			return false;
+		}
+		return super.attackEntityFrom(cause, amount);
 	}
 	
 	public boolean addPotionEffect(EffectInstance effectInstanceIn)

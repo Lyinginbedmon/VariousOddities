@@ -412,7 +412,7 @@ public class Abilities
 		return abilityMap;
 	}
 	
-	private Map<ResourceLocation, Ability> getEntityAbilities(@Nullable LivingEntity entityIn)
+	public Map<ResourceLocation, Ability> getEntityAbilities(@Nullable LivingEntity entityIn)
 	{
 		if(entityIn != null)
 		{

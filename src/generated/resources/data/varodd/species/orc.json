@@ -1,10 +1,12 @@
 {
   "Power": 0,
+  "PlayerSelectable": true,
   "CustomName": "{\"translate\":\"species.varodd.orc\"}",
   "Types": [
     "humanoid"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Size:\"medium\",Amount:1.0d,Scale:0.7f},Name:\"varodd:size\"}",
     "{Tag:{Amount:2.0d},Name:\"varodd:strength_modifier\"}",
     "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"}",

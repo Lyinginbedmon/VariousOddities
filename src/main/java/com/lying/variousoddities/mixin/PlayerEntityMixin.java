@@ -43,6 +43,13 @@ public class PlayerEntityMixin extends LivingEntityMixin
 			data.tick(player);
 	}
 	
+	@Inject(method = "isPlayerFullyAsleep()Z", at = @At("HEAD"), cancellable = true)
+	public void fullySleeping(final CallbackInfoReturnable<Boolean> ci)
+	{
+		if(PlayerData.isPlayerBodyAsleep((PlayerEntity)(Object)this))
+			ci.setReturnValue(true);
+	}
+	
 	@Inject(method = "shouldHeal()Z", at = @At("HEAD"), cancellable = true)
 	public void shouldHeal(final CallbackInfoReturnable<Boolean> ci)
 	{

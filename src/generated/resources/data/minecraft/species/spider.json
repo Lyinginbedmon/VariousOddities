@@ -1,0 +1,14 @@
+{
+  "Power": 1,
+  "PlayerSelectable": false,
+  "Types": [
+    "vermin"
+  ],
+  "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
+    "{Tag:{Amount:1.0d},Name:\"varodd:natural_armour\"}",
+    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:climb\"}",
+    "{Tag:{Active:0,Min:0.0d,Max:16.0d,Cooldown:20,IsActive:1b},Name:\"varodd:tremorsense\"}",
+    "{Name:\"varodd:poison_immunity\"}"
+  ]
+}

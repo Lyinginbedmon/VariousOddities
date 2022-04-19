@@ -6,7 +6,9 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.api.event.ReputationEvent;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.capabilities.LivingData.MindControl;
 import com.lying.variousoddities.faction.FactionBus.ReputationChange;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.world.savedata.FactionManager;
@@ -54,6 +56,16 @@ public class FactionReputation
 	{
 		factionName = validateName(factionName);
 		int rep = getPlayerReputation(player, factionName);
+		
+		if(sourceMob != null)
+		{
+			LivingData data = LivingData.forEntity(sourceMob);
+			if(data != null)
+				if(data.isMindControlledBy(player, MindControl.DOMINATED))
+					rep = 100;
+				else if(data.isMindControlledBy(player, MindControl.CHARMED))
+					rep = 50;
+		}
 		
 		ReputationEvent.Get event = new ReputationEvent.Get(player, factionName, rep, sourceMob);
 		MinecraftForge.EVENT_BUS.post(event);

@@ -94,7 +94,7 @@ public class ScreenSelectSpecies extends Screen
 		if(player.isCreative())
 			selectableSpecies.addAll(VORegistries.SPECIES.values());
 		else
-			VORegistries.SPECIES.values().forEach((species) -> { if(species.getPower() <= targetPower) selectableSpecies.add(species); });
+			VORegistries.SPECIES.values().forEach((species) -> { if(species.getPower() <= targetPower && species.isPlayerSelectable()) selectableSpecies.add(species); });
 		
 		selectableSpecies.sort(new Comparator<Species>()
 			{

@@ -25,7 +25,7 @@ public class BlockLayerScale extends VOBlock
 	
 	public BlockLayerScale(AbstractBlock.Properties properties)
 	{
-		super("scale_layer", properties.hardnessAndResistance(0.5F).sound(SoundType.PLANT).notSolid().setOpaque(VOBlock::isntSolid));
+		super(properties.hardnessAndResistance(0.5F).sound(SoundType.PLANT).notSolid().setOpaque(VOBlock::isntSolid));
 	}
 	
     public Item getItemDropped(BlockState state, Random rand, int fortune)

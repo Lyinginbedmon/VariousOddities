@@ -1,11 +1,13 @@
 {
   "Power": 10,
+  "PlayerSelectable": true,
   "CustomName": "{\"translate\":\"species.varodd.archfey\"}",
   "Types": [
     "fey",
     "holy"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Amount:5.0d},Name:\"varodd:natural_armour\"}",
     "{Tag:{Amount:10,Exceptions:[\"silver\"]},Name:\"varodd:damage_reduction\"}",
     "{Tag:{Rate:3.0f,Ticks:0},Name:\"varodd:fast_healing\"}",

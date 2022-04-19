@@ -28,11 +28,16 @@ public class AbilityBlind extends AbilityStatusEffect
 	
 	public Type getType(){ return Ability.Type.WEAKNESS; }
 	
+	public static boolean isMobBlind(LivingEntity mob)
+	{
+		return mob.isPotionActive(Effects.BLINDNESS) || AbilityRegistry.hasAbility(mob, REGISTRY_NAME);
+	}
+	
 	public static boolean canMobDetectEntity(LivingEntity mob, LivingEntity entity)
 	{
 		// If mob's vision of entity is compromised...
 		double followRange = mob instanceof MobEntity ? mob.getAttributeValue(Attributes.FOLLOW_RANGE) : 4D;
-		if(entity.isInvisible() && mob.getDistanceSq(entity) > followRange || mob.isPotionActive(Effects.BLINDNESS) || AbilityRegistry.hasAbility(mob, REGISTRY_NAME))
+		if(entity.isInvisible() && mob.getDistanceSq(entity) > followRange || isMobBlind(mob))
 		{
 			// Check if vision abilities can compensate
 			return AbilityVision.canMobSeeEntity(mob, entity);

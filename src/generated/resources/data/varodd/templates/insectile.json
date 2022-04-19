@@ -25,7 +25,7 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Min:0.0d,Max:16.0d},Name:\"varodd:tremorsense\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Active:0,Min:0.0d,Max:16.0d,Cooldown:20,IsActive:1b},Name:\"varodd:tremorsense\"},UnlessBetter:1b}"
     }
   ],
   "Preconditions": [

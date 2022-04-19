@@ -12,6 +12,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
@@ -26,6 +27,7 @@ import com.lying.variousoddities.species.abilities.AbilityFastHealing;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityFlight.Grade;
 import com.lying.variousoddities.species.abilities.AbilityForm;
+import com.lying.variousoddities.species.abilities.AbilityGaze;
 import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityModifierStr;
@@ -36,6 +38,7 @@ import com.lying.variousoddities.species.abilities.AbilityResistance;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
 import com.lying.variousoddities.species.abilities.AbilityScent;
 import com.lying.variousoddities.species.abilities.AbilitySmite;
+import com.lying.variousoddities.species.abilities.AbilityStartingItem;
 import com.lying.variousoddities.species.abilities.AbilitySunBurn;
 import com.lying.variousoddities.species.abilities.AbilityTremorsense;
 import com.lying.variousoddities.species.abilities.DamageType;
@@ -52,6 +55,7 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
 import net.minecraft.client.resources.JsonReloadListener;
+import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
@@ -249,7 +253,8 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.LIGHTNING, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityResistanceSpell(MagicSubType.MIND_AFFECTING)))
-				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new EffectInstance(VOPotions.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(new TranslationTextComponent("ability.varodd:lich_touch")))));
+				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new EffectInstance(VOPotions.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(new TranslationTextComponent("ability.varodd:lich_touch"))))
+				.addOperation(AbilityOperation.add(new AbilityStartingItem(new ItemStack(VOBlocks.PHYLACTERY)))));
 		addTemplate(new Template(TEMPLATE_WINGED, UUID_WINGED)
 				.setPower(2)
 				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".winged"))
@@ -300,6 +305,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityResistance(10, DamageType.COLD)))
 				.addOperation(AbilityOperation.add(new AbilityResistance(10, DamageType.LIGHTNING)))
 				.addOperation(AbilityOperation.add(new AbilityClimb()))
-				.addOperation(AbilityOperation.add(new AbilitySunBurn())));
+				.addOperation(AbilityOperation.add(new AbilitySunBurn()))
+				.addOperation(AbilityOperation.add(new AbilityGaze.Dominate())));
 	}
 }

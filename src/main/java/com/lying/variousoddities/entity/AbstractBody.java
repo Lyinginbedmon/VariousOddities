@@ -326,14 +326,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		if(isPlayer())
 			return getEntityWorld().getPlayerByUuid(getSoulUUID());
 		else
-		{
 			return getBody();
-//			for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, ENTIRE_WORLD))
-//				if(living.getUniqueID() == getSoulUUID())
-//					return living;
-		}
-		
-//		return null;
 	}
 	
 	/**

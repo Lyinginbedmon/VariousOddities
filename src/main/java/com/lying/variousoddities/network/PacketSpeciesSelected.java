@@ -5,6 +5,8 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.api.event.SpeciesEvent;
+import com.lying.variousoddities.api.event.SpeciesEvent.SpeciesSelected;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.species.Species;
@@ -19,6 +21,7 @@ import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class PacketSpeciesSelected
@@ -111,10 +114,11 @@ public class PacketSpeciesSelected
 					{
 						Template template = VORegistries.TEMPLATES.get(templateName);
 						if(template != null)
-						{
-							data.addTemplate(template);
-						}
+							data.addTemplateInitial(template);
 					}
+					
+					SpeciesEvent.SpeciesSelected event = new SpeciesSelected(player, msg.selectedSpecies, msg.selectedTemplates);
+					MinecraftForge.EVENT_BUS.post(event);
 				}
 			}
 		}

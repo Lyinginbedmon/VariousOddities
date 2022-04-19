@@ -1,0 +1,12 @@
+{
+  "Power": 0,
+  "PlayerSelectable": false,
+  "Types": [
+    "animal"
+  ],
+  "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
+    "{Tag:{Amount:2.0d},Name:\"varodd:natural_armour\"}",
+    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:scent\"}"
+  ]
+}

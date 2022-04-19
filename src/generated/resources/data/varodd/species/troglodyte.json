@@ -1,11 +1,13 @@
 {
   "Power": 2,
+  "PlayerSelectable": true,
   "CustomName": "{\"translate\":\"species.varodd.troglodyte\"}",
   "Types": [
     "humanoid",
     "reptile"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Amount:4.0d},Name:\"varodd:constitution_modifier\"}",
     "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"}",
     "{Tag:{Amount:6.0d},Name:\"varodd:natural_armour\"}"

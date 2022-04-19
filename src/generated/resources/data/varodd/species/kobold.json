@@ -1,11 +1,13 @@
 {
   "Power": 0,
+  "PlayerSelectable": true,
   "CustomName": "{\"translate\":\"entity.varodd.kobold\"}",
   "Types": [
     "humanoid",
     "reptile"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Size:\"small\",Amount:0.888888955116272d},Name:\"varodd:size\"}",
     "{Tag:{Amount:-2.0d},Name:\"varodd:strength_modifier\"}",
     "{Tag:{Amount:-2.0d},Name:\"varodd:constitution_modifier\"}",

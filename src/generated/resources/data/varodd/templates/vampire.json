@@ -35,7 +35,7 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0b,Cooldown:200},Name:\"varodd:mist_form\"},UnlessBetter:0b}"
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:200,IsActive:0b},Name:\"varodd:mist_form\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
@@ -56,6 +56,11 @@
       "Action": "add",
       "Name": "varodd:ability",
       "Tag": "{Ability:{Tag:{HelmetProtects:1b},Name:\"varodd:sunburn\"},UnlessBetter:0b}"
+    },
+    {
+      "Action": "add",
+      "Name": "varodd:ability",
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:200},Name:\"varodd:dominating_gaze\"},UnlessBetter:0b}"
     }
   ],
   "Preconditions": [

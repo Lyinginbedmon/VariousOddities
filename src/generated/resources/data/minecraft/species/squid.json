@@ -1,0 +1,14 @@
+{
+  "Power": 1,
+  "PlayerSelectable": false,
+  "Types": [
+    "animal",
+    "aquatic"
+  ],
+  "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
+    "{Tag:{Speed:0.2d},Name:\"varodd:swim\"}",
+    "{Tag:{Amount:3.0d},Name:\"varodd:natural_armour\"}",
+    "{Tag:{Amount:2.0d},Name:\"varodd:strength_modifier\"}"
+  ]
+}

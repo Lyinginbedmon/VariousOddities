@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import com.lying.variousoddities.api.entity.IFactionMob;
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 import com.lying.variousoddities.faction.FactionReputation.EnumInteraction;
@@ -41,6 +42,11 @@ public class NearestAttackableTargetGoalMixin
 				if(goalOwnerIn.isNonBoss() && goalOwnerIn.isEntityUndead())
 					if(target.isEntityUndead())
 						return false;
+				
+				// Mobs do not attack creatures that have mind-controlled them somehow
+				LivingData mobData = LivingData.forEntity(goalOwnerIn);
+				if(mobData != null && mobData.isTargetingHindered(target))
+					return false;
 				
 				// Faction mobs do not attack mobs with good reputation
 				if(goalOwnerIn instanceof IFactionMob)

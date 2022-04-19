@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.collect.Maps;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.potion.IStackingPotion;
 import com.lying.variousoddities.species.abilities.Ability;
@@ -95,25 +94,14 @@ public class LivingEntityMixin extends EntityMixin
 	@Inject(method = "baseTick()V", at = @At("TAIL"))
 	public void baseTick(final CallbackInfo ci)
 	{
-		LivingData livingData = LivingData.forEntity((LivingEntity)(Object)this);
+		LivingEntity living = (LivingEntity)(Object)this;
+		LivingData livingData = LivingData.forEntity(living);
 		if(livingData == null)
 			return;
 		
-		livingData.tick((LivingEntity)(Object)this);
+		livingData.tick(living);
 		if(livingData.overrideAir())
 			this.setAir(livingData.getAir());
-	}
-	
-	@Inject(method = "isSleeping()V", at = @At("HEAD"), cancellable = true)
-	public void isSleeping(final CallbackInfoReturnable<Boolean> ci)
-	{
-		LivingEntity entity = (LivingEntity)(Object)this;
-		if(entity.getType() == EntityType.PLAYER)
-		{
-			PlayerEntity player = (PlayerEntity)entity;
-			if(PlayerData.forPlayer(player).getBodyCondition() == BodyCondition.UNCONSCIOUS)
-				ci.setReturnValue(true);
-		}
 	}
 	
 	@Inject(method = "isPotionApplicable", at = @At("HEAD"), cancellable = true)
@@ -315,5 +303,14 @@ public class LivingEntityMixin extends EntityMixin
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
 		if(abilityMap.containsKey(AbilityHurtByEnv.REGISTRY_NAME) && ((AbilityHurtByEnv)abilityMap.get(AbilityHurtByEnv.REGISTRY_NAME)).getEnvType() == EnvType.WATER)
 			ci.setReturnValue(true);
+	}
+	
+	@Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
+	public void canTarget(LivingEntity living, final CallbackInfoReturnable<Boolean> ci)
+	{
+		LivingEntity entity = (LivingEntity)(Object)this;
+		LivingData data = LivingData.forEntity(entity);
+		if(data.isTargetingHindered(living))
+			ci.setReturnValue(false);
 	}
 }

@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 
 import net.minecraft.entity.EntityPredicate;
@@ -18,7 +19,16 @@ public class EntityPredicateMixin
 	@Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/LivingEntity;)Z", at = @At("RETURN"), cancellable = true)
 	public void canTarget(LivingEntity attacker, LivingEntity victim, final CallbackInfoReturnable<Boolean> ci)
 	{
-		if(victim != null && victim.getType() == EntityType.PLAYER)
+		if(victim == null)
+			return;
+		
+		LivingData data = LivingData.forEntity(attacker);
+		if(data != null && data.isTargetingHindered(victim))
+		{
+			ci.setReturnValue(false);
+			ci.cancel();
+		}
+		else if(victim.getType() == EntityType.PLAYER)
 			if(!PlayerData.isPlayerNormalFunction(victim))
 			{
 				if(attacker instanceof MobEntity)

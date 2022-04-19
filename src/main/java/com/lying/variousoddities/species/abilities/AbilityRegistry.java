@@ -62,6 +62,8 @@ public class AbilityRegistry
 		registry.register(new AbilityForm.Mist.Builder());
 		registry.register(new AbilityFlight.Builder());
 		registry.register(new AbilityGaseous.Builder());
+		registry.register(new AbilityGaze.Charm.Builder());
+		registry.register(new AbilityGaze.Dominate.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());
 		registry.register(new AbilityHurtByEnv.Builder());
@@ -84,6 +86,7 @@ public class AbilityRegistry
 		registry.register(new AbilitySize.Builder());
 		registry.register(new AbilitySmite.Builder());
 		registry.register(new AbilityStability.Builder());
+		registry.register(new AbilityStartingItem.Builder());
 		registry.register(new AbilityStatusEffect.Builder());
 		registry.register(new AbilitySunBurn.Builder());
 		registry.register(new AbilitySwim.Builder());

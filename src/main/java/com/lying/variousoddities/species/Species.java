@@ -44,6 +44,7 @@ public class Species
 	private ResourceLocation origin = null;
 	private final List<Ability> abilities = Lists.newArrayList();
 	private final List<EnumCreatureType> types = Lists.newArrayList();
+	private boolean playerSelectable = true;
 	
 	private ITextComponent customName = null;
 	
@@ -85,6 +86,10 @@ public class Species
 		this.power = MathHelper.clamp(par1Int, 0, 10);
 		return this;
 	}
+	
+	public boolean isPlayerSelectable() { return this.playerSelectable; }
+	
+	public Species notPlayerSelectable() { this.playerSelectable = false; return this; }
 	
 	public Species setOriginDimension(@Nullable ResourceLocation dimension)
 	{
@@ -139,6 +144,7 @@ public class Species
 	{
 		nbt.putString("Name", this.getRegistryName().toString());
 		nbt.putInt("Power", getPower());
+		nbt.putBoolean("PlayerSelectable", isPlayerSelectable());
 		
 		if(customName != null)
 			nbt.putString("CustomName", ITextComponent.Serializer.toJson(this.customName));
@@ -169,6 +175,7 @@ public class Species
 		Species species = new Species(registryName);
 		
 		species.setPower(nbt.getInt("Power"));
+		species.playerSelectable = nbt.getBoolean("PlayerSelectable");
 		
 		if(nbt.contains("CustomName", 8))
 		{
@@ -221,6 +228,7 @@ public class Species
 		JsonObject json = new JsonObject();
 		
 		json.addProperty("Power", getPower());
+		json.addProperty("PlayerSelectable", isPlayerSelectable());
 		
 		if(this.customName != null)
 			json.addProperty("CustomName", ITextComponent.Serializer.toJson(this.customName));
@@ -256,6 +264,9 @@ public class Species
 		
 		if(object.has("Power"))
 			species.setPower(object.get("Power").getAsInt());
+		
+		if(object.has("PlayerSelectable"))
+			species.playerSelectable = object.get("PlayerSelectable").getAsBoolean();
 		
 		if(object.has("CustomName"))
 		{

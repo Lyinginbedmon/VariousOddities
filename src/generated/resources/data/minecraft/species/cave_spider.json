@@ -1,0 +1,16 @@
+{
+  "Power": 1,
+  "PlayerSelectable": false,
+  "Types": [
+    "vermin"
+  ],
+  "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
+    "{Tag:{Amount:1.0d},Name:\"varodd:natural_armour\"}",
+    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:climb\"}",
+    "{Tag:{Active:0,Min:0.0d,Max:16.0d,Cooldown:20,IsActive:1b},Name:\"varodd:tremorsense\"}",
+    "{Tag:{Effects:[{Ambient:0b,CurativeItems:[{id:\"minecraft:milk_bucket\",Count:1b}],ShowIcon:1b,ShowParticles:1b,Duration:40,Id:19b,Amplifier:0b}],Chance:1.0f},Name:\"varodd:poison\"}",
+    "{Name:\"varodd:poison_immunity\"}",
+    "{Tag:{Size:\"small\",Amount:0.888888955116272d},Name:\"varodd:size\"}"
+  ]
+}

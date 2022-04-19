@@ -1,10 +1,12 @@
 {
   "Power": 0,
+  "PlayerSelectable": true,
   "CustomName": "{\"translate\":\"species.varodd.gnome\"}",
   "Types": [
     "humanoid"
   ],
   "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Amount:2.0d},Name:\"varodd:constitution_modifier\"}",
     "{Tag:{Size:\"small\",Amount:0.888888955116272d,Scale:0.4f},Name:\"varodd:size\"}"
   ]

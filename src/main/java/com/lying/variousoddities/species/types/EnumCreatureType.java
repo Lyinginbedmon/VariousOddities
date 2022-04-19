@@ -347,6 +347,7 @@ public enum EnumCreatureType implements IStringSerializable
 		}
 		
 		public boolean isEmpty() { return this.actions.isEmpty(); }
+		public int size() { return this.actions.size(); }
 		
 		public String toString(){ return actions.toString(); }
 		
@@ -479,15 +480,24 @@ public enum EnumCreatureType implements IStringSerializable
 	public enum Action
 	{
 		/** Eating food and starving to death without it */
-		EAT,
+		EAT(0),
 		/** Sleeping in a bed and spawning phantoms without sleep */
-		SLEEP,
+		SLEEP(1),
 		/** Breathing air and drowning without it */
-		BREATHE_AIR,
+		BREATHE_AIR(3),
 		/** Breathing water and suffocating without it */
-		BREATHE_WATER,
+		BREATHE_WATER(4),
 		/** Regain health naturally over time */
-		REGENERATE;
+		REGENERATE(2);
+		
+		// TODO Expand breathing action to accept an array of fluid tags
+		
+		private final int iconIndex;
+		
+		private Action(int index)
+		{
+			this.iconIndex = index;
+		}
 		
 		/** The most common array. */
 		public static final EnumSet<Action> STANDARD = EnumSet.of(Action.EAT, Action.SLEEP, Action.BREATHE_AIR, REGENERATE);
@@ -498,5 +508,7 @@ public enum EnumCreatureType implements IStringSerializable
 		public static final EnumSet<Action> ALL = EnumSet.allOf(Action.class);
 		
 		public ITextComponent translated() { return new TranslationTextComponent("enum.varodd.type_action."+name().toLowerCase()); }
+		
+		public int index(){ return this.iconIndex; }
 	}
 }

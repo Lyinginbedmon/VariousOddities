@@ -1,17 +1,32 @@
 Bodies
-	Body inventory & equipment (draw from companion inventory for non-players)
-		Unconscious player inventory access
-	Fix player binding to body
+	Fix player binding to body (limit movement away according to binding status)
+	Fix mob body spawning unreliability
+Character Sheet
+	Background textures
+	Ability cooldown indicator?
+Conditions
+	Implement Fear Aura
+	Frightened cannot voluntarily move closer to aggressor
+	Aura visuals for players to determine condition
+	Mob AI to avoid aggressor when Frightened
 Potions
-	Fix sleep effect affecting players incorrectly
-	Add icons for Health Drain, Health Damage, and Temp HP
+	Sleep effect should put players in unconscious sleep state)
 Warg
-	Saddle textures
-	Carpet textures
-	Armour textures
+	Saddle, carpet, armour textures
 	Fix held item rendering
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg->warg rider pipeline
+Misc
+	Adjust mob vision to widen loss-of-detection range from darkness
+	As many outstanding FIXMEs and TODOs as possible
+	Phylactery!
+		Textures
+		Binding on item pickup
+		Chunk loading
+		Respawn point
+		Beacon effects
+		Dungeon mist aura
+		Everything else: Next version w/ Companion function!
 
 Possession (moved to separate workspace)
 	Move players to body position w/out breaking motion controls

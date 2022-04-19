@@ -1,5 +1,7 @@
 package com.lying.variousoddities.species.abilities;
 
+import javax.annotation.Nullable;
+
 import com.lying.variousoddities.api.event.SpellEvent.SpellAffectEntityEvent;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
@@ -65,26 +67,42 @@ public class AbilityResistanceSpell extends Ability
 	public void spellAffectEntity(SpellAffectEntityEvent event)
 	{
 		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
-		{
-			IMagicEffect spell = event.getSpellData().getSpell();
-			for(Ability ability : AbilityRegistry.getAbilitiesOfType((LivingEntity)event.getTarget(), REGISTRY_NAME))
+			if(!canSpellAffectMob((LivingEntity)event.getTarget(), event.getSpellData().getSpell()))
 			{
-				AbilityResistanceSpell resist = (AbilityResistanceSpell)ability;
-				if(resist.applies(spell))
-				{
-					event.setCanceled(true);
-					return;
-				}
+				event.setCanceled(true);
+				return;
 			}
-		}
 	}
 	
-	private boolean applies(IMagicEffect spell)
+	public static boolean canSpellAffectMob(@Nullable LivingEntity living, IMagicEffect spell)
 	{
-		if(this.school != null && spell.getSchool() == this.school)
+		return canSpellAffectMob(living, spell.getSchool(), spell.getDescriptors().toArray(new MagicSubType[0]));
+	}
+	
+	public static boolean canSpellAffectMob(@Nullable LivingEntity living, MagicSchool school, MagicSubType... subtypes)
+	{
+		if(living == null)
+			return false;
+		
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(living, REGISTRY_NAME))
+		{
+			AbilityResistanceSpell resist = (AbilityResistanceSpell)ability;
+			if(resist.effectiveAgainst(school, subtypes))
+				return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean effectiveAgainst(MagicSchool school, MagicSubType... subtypes)
+	{
+		if(this.school != null && school == this.school)
 			return true;
-		else if(this.descriptor != null && spell.getDescriptors().contains(this.descriptor))
-			return true;
+		else if(subtypes != null && subtypes.length > 0)
+			for(MagicSubType subtype : subtypes)
+				if(subtype == this.descriptor)
+					return true;
+		
 		return false;
 	}
 	

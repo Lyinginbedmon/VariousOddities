@@ -51,6 +51,7 @@ public class MobEntityMixin extends LivingEntityMixin
 		LivingEntity attackTarget = mob.getAttackTarget();
 		if(attackTarget != null)
 		{
+			// FIXME Extend range to target loss to make detection more dangerous
 			double visibility = attackTarget.getVisibilityMultiplier(mob);
 			if(visibility < 1D)
 				if(mob.getDistanceSq(attackTarget) > mob.getAttributeValue(Attributes.FOLLOW_RANGE) * visibility * 1.5D)

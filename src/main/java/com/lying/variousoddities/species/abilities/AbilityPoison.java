@@ -24,6 +24,11 @@ public class AbilityPoison extends AbilityMeleeDamage
 	private float triggerChance = 0.65F;
 	private EffectInstance[] effects = {new EffectInstance(Effects.POISON, Reference.Values.TICKS_PER_SECOND * 7)};
 	
+	public AbilityPoison()
+	{
+		this(1F, new EffectInstance(Effects.POISON, Reference.Values.TICKS_PER_SECOND * 2));
+	}
+	
 	public AbilityPoison(float chanceIn, EffectInstance... effectsIn)
 	{
 		super(REGISTRY_NAME);

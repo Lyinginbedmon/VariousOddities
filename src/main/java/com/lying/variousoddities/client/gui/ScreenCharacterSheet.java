@@ -21,6 +21,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -29,10 +30,15 @@ import net.minecraft.util.text.event.HoverEvent.Action;
 
 public class ScreenCharacterSheet extends Screen
 {
+	private static final int ACTION_ICON_SIZE = 12;
+	private static final int ACTION_ICON_SEP = 4;
+	
 	private final StringTextComponent speciesHeader;
 	private ITextComponent typesHeader;
+	private final ActionSet actionSet;
 	private double health, armour;
 	private AbilityList listActives, listPassives;
+	private boolean isDoubleList = false;
 	
 	public ScreenCharacterSheet()
 	{
@@ -44,11 +50,8 @@ public class ScreenCharacterSheet extends Screen
 		this.speciesHeader = new StringTextComponent("");
 		
 		// Species name and actions
-		ITextComponent actionSet = ActionSet.fromTypes(player, EnumCreatureType.getTypes(player).asSet()).translated();
-		speciesHeader.append(((IFormattableTextComponent)data.getSpecies().getDisplayName().copyRaw()).modifyStyle((style) -> 
-			{
-				return style.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, actionSet));
-			}));
+		actionSet = ActionSet.fromTypes(player, EnumCreatureType.getTypes(player).asSet());
+		speciesHeader.append(((IFormattableTextComponent)data.getSpecies().getDisplayName().copyRaw()));
 		
 		// Templates (if any)
 		List<Template> templates = Lists.newArrayList();
@@ -78,12 +81,60 @@ public class ScreenCharacterSheet extends Screen
 	
 	public boolean isPauseScreen(){ return false; }
 	
+    public void init(Minecraft minecraft, int width, int height)
+    {
+    	super.init(minecraft, width, height);
+        this.buttons.clear();
+		
+		PlayerEntity player = Minecraft.getInstance().player;
+		
+		Types types = EnumCreatureType.getTypes(player);
+		this.typesHeader = types.toHeader();
+		this.health = types.getPlayerHealth();
+		this.armour = 0D;
+		
+		List<Ability> passives = Lists.newArrayList();
+		List<Ability> actives = Lists.newArrayList();
+		for(Ability ability : AbilityRegistry.getCreatureAbilities(player).values())
+		{
+			if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+				armour += ((AbilityNaturalArmour)ability).amount(); 
+			
+			if(ability.getRegistryName().equals(AbilityModifierCon.REGISTRY_NAME))
+				health += ((AbilityModifier)ability).amount();
+			
+			if(ability.passive())
+				passives.add(ability);
+			else
+				actives.add(ability);
+		};
+        
+		this.isDoubleList = !actives.isEmpty();
+		int listWidth = Math.max((int)(this.width * (actives.isEmpty() ? 0.6D : 0.3D)), 200);
+		int listSep = (ACTION_ICON_SIZE + ACTION_ICON_SEP * 2) / 2;
+		this.listPassives = new AbilityList(minecraft, isDoubleList ? (this.width / 2) + listSep : (this.width - listWidth) / 2, listWidth, this.height, 20);
+		if(!passives.isEmpty())
+		{
+			passives.sort(ScreenSelectSpecies.ABILITY_SORT);
+			this.listPassives.addAbilities(passives);
+			this.children.add(this.listPassives);
+		}
+		
+		this.listActives = new AbilityList(minecraft, (this.width / 2) - listWidth - listSep, listWidth, this.height, 20);
+		if(this.isDoubleList)
+		{
+			actives.sort(ScreenSelectSpecies.ABILITY_SORT);
+			this.listActives.addAbilities(actives);
+			this.children.add(this.listActives);
+		}
+    }
+	
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		Style tooltipToRender = null;
 		
 		renderDirtBackground(0);
-		if(!this.listActives.isEmpty())
+		if(this.isDoubleList)
 			this.listActives.render(matrixStack, mouseX, mouseY, partialTicks);
 		this.listPassives.render(matrixStack, mouseX, mouseY, partialTicks);
 		
@@ -116,64 +167,55 @@ public class ScreenCharacterSheet extends Screen
 		ScreenSelectSpecies.drawHealthAndArmour(matrixStack, this.font, this.width / 2, yPos + 2, (int)health, (int)armour);
 		yPos += this.font.FONT_HEIGHT + 2;
 		
-		if(!this.listActives.isEmpty())
+		if(this.isDoubleList)
+		{
 			drawCenteredString(matrixStack, this.font, new TranslationTextComponent("gui.varodd.character_sheet.actives"), this.listActives.getLeft() + this.listActives.getWidth() / 2, yPos, 16777215);
+			drawCenteredString(matrixStack, this.font, new TranslationTextComponent("gui.varodd.character_sheet.passives"), this.listPassives.getLeft() + this.listPassives.getWidth() / 2, yPos, 16777215);
+		}
 		
-		drawCenteredString(matrixStack, this.font, new TranslationTextComponent("gui.varodd.character_sheet.passives"), this.listPassives.getLeft() + this.listPassives.getWidth() / 2, yPos, 16777215);
+		this.listActives.setTop(65);
+		this.listPassives.setTop(65);
 		
-		yPos += this.font.FONT_HEIGHT;
-		this.listActives.setTop(yPos);
-		this.listPassives.setTop(yPos);
+		renderActionSet(matrixStack, mouseX, mouseY);
 		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 		if(tooltipToRender != null)
 			renderComponentHoverEffect(matrixStack, tooltipToRender, mouseX, mouseY);
 	}
 	
-    public void init(Minecraft minecraft, int width, int height)
-    {
-    	super.init(minecraft, width, height);
-        this.buttons.clear();
-		
-		PlayerEntity player = Minecraft.getInstance().player;
-		
-		Types types = EnumCreatureType.getTypes(player);
-		this.typesHeader = types.toHeader();
-		this.health = types.getPlayerHealth();
-		this.armour = 0D;
-		
-		List<Ability> passives = Lists.newArrayList();
-		List<Ability> actives = Lists.newArrayList();
-		for(Ability ability : AbilityRegistry.getCreatureAbilities(player).values())
+	private void renderActionSet(MatrixStack matrixStack, int mouseX, int mouseY)
+	{
+		EnumCreatureType.Action hovered = null;
+		int count = EnumCreatureType.Action.values().length;
+		int iconX = this.listPassives.getLeft() - ACTION_ICON_SEP - ACTION_ICON_SIZE;
+		int iconY = (this.height - (count * ACTION_ICON_SIZE + count - 1 * ACTION_ICON_SEP)) / 2;
+		for(EnumCreatureType.Action action : EnumCreatureType.Action.values())
 		{
-			if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
-				armour += ((AbilityNaturalArmour)ability).amount(); 
+			if(renderAction(matrixStack, iconX, iconY, mouseX, mouseY, action, this.actionSet.contains(action)))
+				hovered = action;
 			
-			if(ability.getRegistryName().equals(AbilityModifierCon.REGISTRY_NAME))
-				health += ((AbilityModifier)ability).amount();
-			
-			if(ability.passive())
-				passives.add(ability);
+			iconY += ACTION_ICON_SIZE + ACTION_ICON_SEP;
+		}
+		
+		if(hovered != null)
+		{
+			List<ITextProperties> tooltip = Lists.newArrayList();
+			String translated = hovered.translated().getString().toLowerCase();
+			if(this.actionSet.contains(hovered))
+				tooltip.add(new TranslationTextComponent("enum.varodd.type_action.does", translated));
 			else
-				actives.add(ability);
-		};
-        
-		boolean singleList = actives.isEmpty();
-		int listWidth = Math.max((int)(this.width * (actives.isEmpty() ? 0.6D : 0.3D)), 200);
-		this.listPassives = new AbilityList(minecraft, singleList ? (this.width - listWidth) / 2 : (this.width / 2) + 2, listWidth, this.height, 20);
-		if(!passives.isEmpty())
-		{
-			passives.sort(ScreenSelectSpecies.ABILITY_SORT);
-			this.listPassives.addAbilities(passives);
-			this.children.add(this.listPassives);
+				tooltip.add(new TranslationTextComponent("enum.varodd.type_action.doesnt", translated));
+			
+			renderWrappedToolTip(matrixStack, tooltip, mouseX, mouseY, this.font);
 		}
-		
-		this.listActives = new AbilityList(minecraft, (this.width / 2) - listWidth - 2, listWidth, this.height, 20);
-		if(!actives.isEmpty())
-		{
-			actives.sort(ScreenSelectSpecies.ABILITY_SORT);
-			this.listActives.addAbilities(actives);
-			this.children.add(this.listActives);
-		}
-    }
+	}
+	
+	/** Renders the given action on the screen, returning true if the mouse is hovered over it */
+	private boolean renderAction(MatrixStack matrixStack, int x, int y, int mouseX, int mouseY, EnumCreatureType.Action action, boolean present)
+	{
+		float colR = present ? 0F : 1F;
+		float colG = present ? 1F : 0F;
+		GuiHandler.drawIconAt(matrixStack, x, y, action.index(), 2, ACTION_ICON_SIZE, ACTION_ICON_SIZE, colR, colG, 0F, 1F);
+		return mouseX >= x && mouseX <= x + ACTION_ICON_SIZE && mouseY >= y && mouseY <= y + ACTION_ICON_SIZE;
+	}
 }

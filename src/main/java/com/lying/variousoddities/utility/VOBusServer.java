@@ -9,6 +9,7 @@ import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.api.event.PlayerChangeConditionEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.capabilities.LivingData.MindControl;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.config.ConfigVO;
@@ -16,6 +17,7 @@ import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
+import com.lying.variousoddities.entity.ai.EntityAIFrightened;
 import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
@@ -38,6 +40,7 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
+import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -64,7 +67,6 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -152,8 +154,11 @@ public class VOBusServer
 		PlayerData newPlayer = PlayerData.forPlayer(event.getPlayer());
 		if(oldPlayer != null && newPlayer != null)
 		{
-			newPlayer.setBodyCondition(oldPlayer.getBodyCondition());
-			newPlayer.setBodyUUID(oldPlayer.getBodyUUID());
+			if(!event.isWasDeath())
+			{
+				newPlayer.setBodyCondition(oldPlayer.getBodyCondition());
+				newPlayer.setBodyUUID(oldPlayer.getBodyUUID());
+			}
 			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundNBT()));
 		}
 	}
@@ -203,6 +208,9 @@ public class VOBusServer
 		{
 			MobEntity living = (MobEntity)theEntity;
 			living.goalSelector.addGoal(1, new EntityAISleep(living));
+			
+			if(living instanceof CreatureEntity)
+				living.goalSelector.addGoal(1, new EntityAIFrightened((CreatureEntity)living));
 		}
 		
 		// Spook worgs
@@ -434,6 +442,26 @@ public class VOBusServer
 		}
 	}
 	
+	@SubscribeEvent(priority = EventPriority.LOW)
+	public static void onCharmedHurtEvent(LivingHurtEvent event)
+	{
+		if(event.getAmount() > 0F && !event.isCanceled())
+		{
+			DamageSource source = event.getSource();
+			
+			LivingData data = LivingData.forEntity(event.getEntityLiving());
+			if(data == null)
+				return;
+			
+			Entity immediate = source.getImmediateSource();
+			Entity distant = source.getTrueSource();
+			if(immediate != null && immediate instanceof LivingEntity && data.isCharmedBy((LivingEntity)immediate))
+				data.clearMindControlled((LivingEntity)immediate, MindControl.CHARMED);
+			if(distant != null && distant instanceof LivingEntity && data.isCharmedBy((LivingEntity)distant))
+				data.clearMindControlled((LivingEntity)distant, MindControl.CHARMED);
+		}
+	}
+	
 	/**
 	 * Prevents bludgeoning damage from affecting the entity's health instead of their bludgeoning value.
 	 * @param event
@@ -498,16 +526,5 @@ public class VOBusServer
 		for(EntityGoblin goblin : nearbyGoblins)
 			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
 				goblin.setGrowingAge(Math.max(0, goblin.getGrowingAge() - amount));
-	}
-	
-	// FIXME Repair mixin and remove temp fix
-	@SubscribeEvent
-	public static void tempLivingTick(LivingUpdateEvent event)
-	{
-		if(event.getEntityLiving() instanceof LivingEntity)
-		{
-			LivingData data = LivingData.forEntity(event.getEntityLiving());
-			data.tick(event.getEntityLiving());
-		}
 	}
 }

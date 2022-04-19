@@ -67,8 +67,8 @@ public class MinecraftMixin
 		
 		if(PlayerData.isPlayerNormalFunction(player) || VOHelper.isCreativeOrSpectator(player))
 			return;
-//		else
-//			ci.cancel();
+		else
+			ci.cancel();
 		
 		while(mc.gameSettings.keyBindInventory.isPressed())
 		{

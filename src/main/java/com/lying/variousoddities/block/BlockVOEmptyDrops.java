@@ -13,7 +13,7 @@ public class BlockVOEmptyDrops extends VOBlock
 {
 	public BlockVOEmptyDrops(String nameIn, AbstractBlock.Properties properties)
 	{
-		super(nameIn, properties);
+		super(properties);
 	}
 	
 	public BlockVOEmptyDrops(String nameIn, Material materialIn)
