@@ -19,6 +19,7 @@ public class AbilityDrainHealth extends AbilityGaze
 	public AbilityDrainHealth()
 	{
 		super(REGISTRY_NAME, 1D, Reference.Values.TICKS_PER_SECOND * 6);
+		this.needsLooking = false;
 	}
 	
 	public Type getType(){ return Type.ATTACK; }

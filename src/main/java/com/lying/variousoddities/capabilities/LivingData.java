@@ -518,7 +518,14 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	 */
 	public boolean isUnconscious()
 	{
-		return this.entity != null && this.entity.getHealth() > 0 && this.entity.isAlive() && getBludgeoning() > 0 && this.entity.getHealth() <= getBludgeoning();
+		if(this.entity != null && this.entity.isAlive())
+		{
+			if(this.entity.getHealth() > 0 && getBludgeoning() > 0 && this.entity.getHealth() <= getBludgeoning())
+				return true;
+			else if(this.entity.getActivePotionEffect(VOPotions.SLEEP) != null && this.entity.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
+				return true;
+		}
+		return false;
 	}
 	
 	/** Returns true if the entity is currently actually unconscious */

@@ -11,6 +11,7 @@ import com.lying.variousoddities.inventory.ContainerPlayerBody;
 import com.lying.variousoddities.inventory.ContainerWarg;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemMossBottle;
+import com.lying.variousoddities.item.ItemPhylactery;
 import com.lying.variousoddities.item.ItemSap;
 import com.lying.variousoddities.item.ItemSpellContainer;
 import com.lying.variousoddities.item.VOItemGroup;
@@ -53,7 +54,7 @@ public class VOItems
 	public static final BlockItem EGG_KOBOLD_INERT	= registerBlock("inert_kobold_egg", VOBlocks.EGG_KOBOLD_INERT);
 	public static final BlockItem MOSS_BLOCK		= registerBlock("moss_block", VOBlocks.MOSS_BLOCK);
 	public static final BlockItem LAYER_SCALE		= registerBlock("scale_layer", VOBlocks.LAYER_SCALE);
-	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", VOBlocks.PHYLACTERY);
+	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", new ItemPhylactery(new Item.Properties().group(VOItemGroup.BLOCKS)));
 	
 	// Containers
 	public static final ContainerType<ContainerWarg> CONTAINER_WARG	= registerContainer("warg_inventory", ContainerWarg::fromNetwork);

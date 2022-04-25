@@ -54,7 +54,7 @@ minecraft {
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
-            arg "-mixin.config=varodd.mixins.json"
+            arg "-mixin.config=mixins.varodd.json"
 
             mods {
                 varodd {
@@ -72,7 +72,7 @@ minecraft {
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
-            arg "-mixin.config=varodd.mixins.json"
+            arg "-mixin.config=mixins.varodd.json"
 
             mods {
                 varodd {
@@ -92,7 +92,7 @@ minecraft {
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             args '--mod', 'varodd', '--all', '--existing', '"' + file('src/main/resources/') + '"', '--existing', '"' + file('src/generated/resources/') + '"', '--output', '"' + file('src/generated/resources/') + '"'
-            arg "-mixin.config=varodd.mixins.json"
+            arg "-mixin.config=mixins.varodd.json"
 			
             mods {
                 variousoddities {
@@ -148,15 +148,23 @@ dependencies {
 
     // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
     // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
+	
     // These dependencies get remapped to your current MCP mappings
     // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
     
-
     // For more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+}
+
+mixin {
+	// MixinGradle Settings
+	add sourceSets.main, 'mixins.varodd.refmap.json'
+	config 'mixins.varodd.json'
+	
+	debug.verbose = true
+	debug.export = true
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
@@ -170,7 +178,7 @@ jar {
             "Implementation-Version": "${version}",
             "Implementation-Vendor" :"lyinginbedmon",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-            "MixinConfigs": "varodd.mixins.json"
+            "MixinConfigs": "mixins.varodd.json"
         ])
     }
 }

@@ -24,22 +24,6 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 public class AbilityRegistry
 {
-	/*
-	 * To do:
-	 * 
-	 * Enderman
-	 * 	Silk Touch
-	 * Blaze
-	 * 	#Fireballs
-	 * Spider
-	 * 	#Web
-	 * Rat
-	 * 	Disease (# when used on held item)
-	 * 
-	 * Low-light Vision
-	 * Blindsense
-	 */
-	
 	public static void onRegisterAbilities(RegistryEvent.Register<Ability.Builder> event)
 	{
 		IForgeRegistry<Ability.Builder> registry = event.getRegistry();
@@ -64,6 +48,7 @@ public class AbilityRegistry
 		registry.register(new AbilityGaseous.Builder());
 		registry.register(new AbilityGaze.Charm.Builder());
 		registry.register(new AbilityGaze.Dominate.Builder());
+		registry.register(new AbilityGaze.Petrify.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());
 		registry.register(new AbilityHurtByEnv.Builder());

@@ -167,21 +167,15 @@ public class TemplateRegistry extends JsonReloadListener
 		 *   Flight (Average)
 		 *   Breath weapon (type-based)
 		 *   Damage immunity (type-based)
-		 * Lich
-		 *   Phylactery
 		 * Vampire
 		 *   Power 8
-		 *   Drain blood
 		 *   Summon mobs
-		 *   Domination
 		 *   Create vampire spawn
 		 *   Energy drain
 		 *   Alternate forms
 		 *   Turn resistance
 		 *   Vampire weaknesses (?)
 		 * Vampire Spawn
-		 *   Drain blood
-		 *   Domination
 		 *   Energy drain
 		 *   Vampire weaknesses
 		 * Acidborn
@@ -200,7 +194,6 @@ public class TemplateRegistry extends JsonReloadListener
 		 * Mummy
 		 *   Power 4
 		 *   Despair (temp paralysis on sight)
-		 *   Mummy rot (disease)
 		 * Revived Fossil
 		 * 	 Mostly just a buff skeleton
 		 */

@@ -432,13 +432,7 @@ public class VOBusServer
 			
 			if(PotionSleep.isSleeping(hurtEntity) && tier < 1)
 				if(!MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(hurtEntity, true)))
-				{
-					if(hurtEntity instanceof PlayerEntity && ((PlayerEntity)hurtEntity).isSleeping())
-						((PlayerEntity)hurtEntity).wakeUp();
-					else if(hurtEntity instanceof LivingEntity)
-						PotionSleep.setSleeping((LivingEntity)hurtEntity, false);
 					hurtEntity.removePotionEffect(VOPotions.SLEEP);
-				}
 		}
 	}
 	
@@ -504,7 +498,7 @@ public class VOBusServer
 			{
 				double wakeupChance = (new Random(entity.getUniqueID().getLeastSignificantBits())).nextDouble();
 				if(entity.getRNG().nextDouble() < wakeupChance && !MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(entity, true)))
-					PotionSleep.setSleeping((LivingEntity)entity, false);
+					entity.removeActivePotionEffect(VOPotions.SLEEP);
 			}
 			else if(entity instanceof PlayerEntity)
 			{

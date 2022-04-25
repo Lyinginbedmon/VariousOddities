@@ -9,8 +9,6 @@ Conditions
 	Frightened cannot voluntarily move closer to aggressor
 	Aura visuals for players to determine condition
 	Mob AI to avoid aggressor when Frightened
-Potions
-	Sleep effect should put players in unconscious sleep state)
 Warg
 	Saddle, carpet, armour textures
 	Fix held item rendering
@@ -21,9 +19,7 @@ Misc
 	As many outstanding FIXMEs and TODOs as possible
 	Phylactery!
 		Textures
-		Binding on item pickup
 		Chunk loading
-		Respawn point
 		Beacon effects
 		Dungeon mist aura
 		Everything else: Next version w/ Companion function!
