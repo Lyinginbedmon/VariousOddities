@@ -1,6 +1,7 @@
 package com.lying.variousoddities.block;
 
 import com.lying.variousoddities.init.VOBlocks;
+import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 
 import net.minecraft.block.AbstractBlock;
@@ -8,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -15,11 +17,14 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.world.ForgeChunkManager;
 
 @SuppressWarnings("deprecation")
 public class BlockPhylactery extends VOBlock implements ITileEntityProvider
@@ -51,11 +56,32 @@ public class BlockPhylactery extends VOBlock implements ITileEntityProvider
 		return new TileEntityPhylactery();
 	}
 	
+	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)
+	{
+		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+		TileEntity tile = worldIn.getTileEntity(pos);
+		if(tile instanceof TileEntityPhylactery)
+		{
+			if(worldIn.isRemote) return;
+			
+			ChunkPos chunk = worldIn.getChunk(pos).getPos();
+			ServerWorld world = (ServerWorld)worldIn;
+			ForgeChunkManager.forceChunk(world, Reference.ModInfo.MOD_ID, pos, chunk.x, chunk.z, true, true);
+		}
+	}
+	
 	public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player)
 	{
 		TileEntity tile = worldIn.getTileEntity(pos);
 		if(tile instanceof TileEntityPhylactery)
 		{
+			if(!worldIn.isRemote)
+			{
+				ChunkPos chunk = worldIn.getChunk(pos).getPos();
+				ServerWorld world = (ServerWorld)worldIn;
+				ForgeChunkManager.forceChunk(world, Reference.ModInfo.MOD_ID, pos, chunk.x, chunk.z, false, true);
+			}
+			
 			TileEntityPhylactery phylacteryTile = (TileEntityPhylactery)tile;
 			if(!worldIn.isRemote && player.isCreative())
 			{

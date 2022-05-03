@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.entity.IDefaultSpecies;
+import com.lying.variousoddities.api.event.AbilityEvent.AbilityGetBreathableFluidEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.SpeciesEvent;
@@ -52,6 +53,7 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -64,6 +66,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.stats.ServerStatisticsManager;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.ITag;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
@@ -110,7 +113,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private int potionSyncTimer = 0;
 	
 	private int air = Reference.Values.TICKS_PER_DAY;
-	private boolean overridingAir = false;
 	
 	private float bludgeoning = 0F;
 	private boolean isUnconscious = false;
@@ -477,7 +479,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	}
 	
 	/** True if this object should override the vanilla air value */
-	public boolean overrideAir(){ return this.overridingAir; }
+	public boolean overrideAir(){ return true; }
 	
 	public int getAir(){ return this.air; }
 	public void setAir(int airIn){ this.air = airIn; }
@@ -729,7 +731,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			}
 		}
 		
-		handleAir(actions.breathesAir(), actions.breathesWater(), entity);
+		handleAir(actions.breathes(), entity);
 		
 		if(this.bludgeoning > 0F)
 			if(--this.recoveryTimer <= 0)
@@ -889,54 +891,80 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 	}
 	
-	/** Manage air for creatures that breathe water and/or don't breathe air */
-	public void handleAir(boolean breatheAir, boolean breatheWater, LivingEntity entity)
+	/** Manage air for creatures that breathe */
+	public void handleAir(boolean breathes, LivingEntity entity)
 	{
-		boolean isPlayer = false;
+		boolean isPlayer = entity.getType() == EntityType.PLAYER;
 		boolean isInvulnerablePlayer = false;
 		if(isPlayer)
 		{
 			isPlayer = true;
-			isInvulnerablePlayer = ((PlayerEntity)entity).abilities.disableDamage;
+			isInvulnerablePlayer = ((PlayerEntity)entity).abilities.disableDamage || !PlayerData.isPlayerNormalFunction(entity);
 		}
 		
-		this.overridingAir = false;
 		if(getAir() > entity.getMaxAir())
 			setAir(entity.getMaxAir());
-		if(!breatheAir && !breatheWater)
-		{
+		
+		if(!breathes)
 			setAir(entity.getMaxAir());
-			if(entity.getAir() < getAir())
-				this.overridingAir = true;
-		}
 		else if(entity.isAlive() && !isInvulnerablePlayer)
 		{
-			boolean isInWater = entity.areEyesInFluid(FluidTags.WATER) && !entity.getEntityWorld().getBlockState(new BlockPos(entity.getPosX(), entity.getPosYEye(), entity.getPosZ())).isIn(Blocks.BUBBLE_COLUMN);
+			List<ITag.INamedTag<Fluid>> breathables = getBreathableFluids(entity);
+			if(breathables.isEmpty())
+				return;
 			
-			// Prevents drowning due to water
-			if(breatheWater)
-				if(isInWater && getAir() < entity.getMaxAir())
+			List<ITag<Fluid>> fluidInEyes = Lists.newArrayList();
+			FluidTags.getAllTags().forEach((fluid) -> { if(entity.areEyesInFluid(fluid)) fluidInEyes.add(fluid); });
+			
+			boolean hasSpecialBreathing = 
+					EffectUtils.canBreatheUnderwater(entity) ||
+					entity.getEntityWorld().getBlockState(new BlockPos(entity.getPosX(), entity.getPosYEye(), entity.getPosZ())).isIn(Blocks.BUBBLE_COLUMN);
+			
+			boolean canBreathe = false;
+			for(ITag<Fluid> fluid : fluidInEyes)
+				if(breathables.contains(fluid))
 				{
-					this.overridingAir = true;
+					canBreathe = true;
+					break;
+				}
+			if(fluidInEyes.isEmpty() && breathables.contains(null))
+				canBreathe = true;
+			
+			if(canBreathe)
+			{
+				if(getAir() < entity.getMaxAir())
 					setAir(determineNextAir(getAir(), entity));
-				}
-			
-			// Causes drowning due to air
-			if(!breatheAir)
-				if(!(EffectUtils.canBreatheUnderwater(entity) || isInWater))
+			}
+			else if(!hasSpecialBreathing)
+			{
+				setAir(Math.min(entity.getMaxAir(), decreaseAirSupply(getAir(), entity)));
+				if(getAir() == -20)
 				{
-					setAir(Math.min(entity.getMaxAir(), decreaseAirSupply(getAir(), entity)));
-					if(getAir() == -20)
-					{
-						setAir(0);
-						entity.attackEntityFrom(DamageSource.DROWN, 2.0F);
-					}
-					this.overridingAir = true;
+					setAir(0);
+					entity.attackEntityFrom(DamageSource.DROWN, 2.0F);
 				}
+			}
 		}
 		
-		if(overrideAir() && isPlayer && !entity.getEntityWorld().isRemote && entity.getEntityWorld().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
+		if(isPlayer && !entity.getEntityWorld().isRemote && entity.getEntityWorld().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
 			PacketHandler.sendTo((ServerPlayerEntity)entity, new PacketSyncAir(getAir()));
+	}
+	
+	public List<ITag.INamedTag<Fluid>> getBreathableFluids(LivingEntity entity)
+	{
+		AbilityGetBreathableFluidEvent.Add event1 = new AbilityGetBreathableFluidEvent.Add(entity);
+		MinecraftForge.EVENT_BUS.post(event1);
+		
+		List<ITag.INamedTag<Fluid>> breathables = event1.getFluids();
+		if(!breathables.isEmpty())
+		{
+			AbilityGetBreathableFluidEvent.Remove event2 = new AbilityGetBreathableFluidEvent.Remove(entity);
+			MinecraftForge.EVENT_BUS.post(event2);
+			
+			event2.getFluids().forEach((fluid) -> { breathables.remove(fluid); });
+		}
+		
+		return breathables;
 	}
 	
 	private static AttributeModifier makeModifier(double amount)

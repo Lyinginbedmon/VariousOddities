@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityBreatheFluid;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.EnumCreatureType.Action;
 
@@ -16,6 +18,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemTier;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -40,6 +43,11 @@ public class TypeHandler
 	/** Returns a default instance */
 	public static final TypeHandler get(UUID idIn){ return new TypeHandler(idIn); }
 	
+	public static final TypeHandler getBreathesAir(UUID idIn)
+	{
+		return get(idIn).addAbility(new AbilityBreatheFluid(null));
+	}
+	
 	/** Called when the type is first applied in LivingData */
 	public void onApply(LivingEntity entity){ }
 	/** Called when the type is removed in LivingData */
@@ -52,6 +60,12 @@ public class TypeHandler
 	}
 	
 	public List<Ability> getAbilities(){ return this.abilities; }
+	
+	/** Adds the abilities of this type to the given ability map. */
+	public void addAbilitiesToMap(Map<ResourceLocation, Ability> abilityMap)
+	{
+		this.abilities.forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); });
+	}
 	
 	public ITextComponent getDetails()
 	{

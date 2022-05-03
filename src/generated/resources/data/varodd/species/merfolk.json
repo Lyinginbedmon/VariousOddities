@@ -1,0 +1,14 @@
+{
+  "Power": 1,
+  "PlayerSelectable": true,
+  "CustomName": "{\"translate\":\"species.varodd.merfolk\"}",
+  "Types": [
+    "humanoid",
+    "aquatic"
+  ],
+  "Abilities": [
+    "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
+    "{Tag:{Speed:0.2d},Name:\"varodd:swim\"}",
+    "{Tag:{Amount:3.0d},Name:\"varodd:natural_armour\"}"
+  ]
+}

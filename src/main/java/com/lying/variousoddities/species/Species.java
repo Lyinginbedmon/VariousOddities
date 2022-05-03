@@ -108,8 +108,8 @@ public class Species
 	{
 		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
 		
-		this.types.forEach((type) -> { if(type.isSupertype()) type.getHandler().getAbilities().forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); }); });
-		this.types.forEach((type) -> { if(!type.isSupertype()) type.getHandler().getAbilities().forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); }); });
+		this.types.forEach((type) -> { if(type.isSupertype()) type.getHandler().addAbilitiesToMap(abilityMap); });
+		this.types.forEach((type) -> { if(!type.isSupertype()) type.getHandler().addAbilitiesToMap(abilityMap); });
 		
 		this.abilities.forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); });
 		

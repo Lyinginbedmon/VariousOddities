@@ -100,8 +100,7 @@ public class LivingEntityMixin extends EntityMixin
 			return;
 		
 		livingData.tick(living);
-		if(livingData.overrideAir())
-			this.setAir(livingData.getAir());
+		this.setAir(livingData.getAir());
 	}
 	
 	@Inject(method = "isPotionApplicable", at = @At("HEAD"), cancellable = true)
@@ -260,7 +259,7 @@ public class LivingEntityMixin extends EntityMixin
 		if(entity.collidedHorizontally)
 			return true;
 		
-		AxisAlignedBB boundingBox = entity.getBoundingBox().grow(1D, 0D, 1D);
+		AxisAlignedBB boundingBox = entity.getBoundingBox().grow(0.18D, 0D, 0.18D);
 		int minX = (int)Math.floor(boundingBox.minX);
 		int maxX = (int)Math.ceil(boundingBox.maxX);
 		
@@ -274,13 +273,8 @@ public class LivingEntityMixin extends EntityMixin
 		for(int y=minY; y<maxY; y++)
 			for(int x=minX; x<maxX; x++)
 					for(int z=minZ; z<maxZ; z++)
-					{
-						BlockPos pos = new BlockPos(x, y, z);
-						BlockState state = world.getBlockState(pos);
-						// FIXME More precision climbability check than simply "not being air"
-						if(!state.getBlock().isAir(state, world, pos))
+						if(AbilityClimb.isClimbable(new BlockPos(x, y, z), world))
 							return true;
-					}
 		
 		return false;
 	}

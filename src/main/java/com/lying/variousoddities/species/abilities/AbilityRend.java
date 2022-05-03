@@ -63,6 +63,9 @@ public class AbilityRend extends AbilityMeleeDamage
 				AbilityRend rend = (AbilityRend)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME);
 				
 				LivingEntity victim = event.getEntityLiving();
+				if(!canAbilityAffectEntity(victim, trueSource))
+					return;
+				
 				int slotIndex = victim.getEntityWorld().rand.nextInt(4);
 				EquipmentSlotType slot = EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.ARMOR, slotIndex);
 				ItemStack armor = victim.getItemStackFromSlot(slot);

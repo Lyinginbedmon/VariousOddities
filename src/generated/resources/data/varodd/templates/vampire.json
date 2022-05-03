@@ -20,7 +20,7 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0,Cooldown:120},Name:\"varodd:drain_health\"},UnlessBetter:0b}"
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:120,Range:1.0d,NeedsLooking:0b},Name:\"varodd:drain_health\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
@@ -60,7 +60,7 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0,Cooldown:200},Name:\"varodd:dominating_gaze\"},UnlessBetter:0b}"
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:1200,Duration:2400,Range:9.0d},Name:\"varodd:dominating_gaze\"},UnlessBetter:0b}"
     }
   ],
   "Preconditions": [

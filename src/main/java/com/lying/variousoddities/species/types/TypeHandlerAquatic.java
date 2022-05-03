@@ -1,13 +1,9 @@
 package com.lying.variousoddities.species.types;
 
-import java.util.Collection;
-import java.util.EnumSet;
 import java.util.UUID;
 
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
-import com.lying.variousoddities.species.types.EnumCreatureType.Action;
-import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
+import com.lying.variousoddities.species.abilities.AbilityBreatheFluid;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.EffectInstance;
@@ -16,21 +12,13 @@ import net.minecraft.tags.FluidTags;
 
 public class TypeHandlerAquatic extends TypeHandler
 {
-	private final boolean breathesAir;
-	
 	public TypeHandlerAquatic(UUID idIn, boolean breatheAir)
 	{
 		super(idIn);
-		this.breathesAir = breatheAir;
-		addAbility(new AbilityBreatheWater());
-	}
-	
-	public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types)
-	{
-		if(new ActionSet(actions).breathes())
-			if(!breathesAir && !types.contains(EnumCreatureType.AMPHIBIOUS))
-				actions.remove(Action.BREATHE_AIR);
-		return actions;
+		addAbility(AbilityBreatheFluid.water());
+		
+		if(!breatheAir)
+			addAbility(AbilityBreatheFluid.noAir());
 	}
 	
 	public void onLivingTick(LivingEntity living)

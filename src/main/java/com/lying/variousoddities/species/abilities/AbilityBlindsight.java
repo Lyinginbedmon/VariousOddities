@@ -43,6 +43,9 @@ public class AbilityBlindsight extends AbilityVision
 	
 	public boolean testEntity(Entity entity, LivingEntity player)
 	{
+		if(canAbilityAffectEntity(entity, player))
+			return false;
+		
 		Vector3d eyePos = new Vector3d(player.getPosX(), player.getPosYEye(), player.getPosZ());
 		for(int i=5; i>0; i--)
 		{

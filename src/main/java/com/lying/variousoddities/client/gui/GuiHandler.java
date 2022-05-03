@@ -189,7 +189,7 @@ public class GuiHandler
 					maxFav = Math.max(maxFav, i);
 					ActivatedAbility ability = (ActivatedAbility)abilityMap.get(mapName);
 					if(ability != null)
-						drawAbility(ability, posX, posY, matrix, corner.textSide);
+						drawAbility(ability, abilities.getCooldown(mapName), posX, posY, matrix, corner.textSide);
 				}
 				posX -= posXInc;
 				posY += posYInc;
@@ -253,12 +253,35 @@ public class GuiHandler
 		matrix.pop();
 	}
 	
+	public static void drawPartialIcon(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float startP, float endP, float red, float green, float blue, float alpha)
+	{
+		double yMin = MathHelper.clamp(Math.min(startP, endP), 0F, 1F);
+		double yMax = MathHelper.clamp(Math.max(startP, endP), 0F, 1F);
+		
+		// Texture co-ordinates
+		float texXMin = ICON_TEX * (float)indexX;
+		float texXMax = ICON_TEX + texXMin;
+		
+		float texYMin = ICON_TEX * (float)indexY + (float)(ICON_TEX * yMin);
+		float texYMax = ICON_TEX * (float)indexY + (float)(ICON_TEX * yMax);
+		
+		// Screen co-ordinates
+		double endX = posX + sizeX;
+		double endY = posY + (sizeY * yMax);
+		posY += sizeY * yMin;
+		
+		matrix.push();
+			mc.getTextureManager().bindTexture(ABILITY_ICONS);
+			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
+		matrix.pop();
+	}
+	
 	public static void drawAbilitySlot(MatrixStack matrix, float posX, float posY)
 	{
 		drawIconAt(matrix, posX - 1, posY - 1, 1, 1, ICON_SIZE + 2, ICON_SIZE + 2);
 	}
 	
-	private static void drawAbility(ActivatedAbility ability, double posX, double posY, MatrixStack matrix, SideX side)
+	private static void drawAbility(ActivatedAbility ability, int cooldown, double posX, double posY, MatrixStack matrix, SideX side)
 	{
 		EnumNameDisplay displayStyle = ConfigVO.CLIENT.nameDisplay.get();
 		if(displayStyle == null)
@@ -271,8 +294,21 @@ public class GuiHandler
 		
 		matrix.push();
 			boolean canTrigger = ability.canTrigger(player);
-			float col = canTrigger ? 1F : 0.5F;
-			drawIconAt(matrix, posX, posY, ability.getType().texIndex, 0, ICON_SIZE, ICON_SIZE, col, col, col, 1F);
+			
+			if(cooldown <= 0)
+			{
+				float col = canTrigger ? 1F : 0.5F;
+				drawIconAt(matrix, posX, posY, ability.getType().texIndex, 0, ICON_SIZE, ICON_SIZE, col, col, col, 1F);
+			}
+			else
+			{
+				int texIndex = ability.getType().texIndex;
+				float coolRemaining = (float)cooldown / (float)ability.getCooldown();
+				coolRemaining -= coolRemaining % 0.1F;
+				
+				drawIconAt(matrix, posX, posY, texIndex, 0, ICON_SIZE, ICON_SIZE, 0.5F, 0.5F, 0.5F, 1F);
+				drawPartialIcon(matrix, posX, posY, texIndex, 0, ICON_SIZE, ICON_SIZE, coolRemaining, 1F, 1F, 1F, 1F, 1F);
+			}
 			
 			if(displayStyle != EnumNameDisplay.SNEAKING || player.isSneaking())
 			{

@@ -26,9 +26,9 @@ public class AbilityDrainHealth extends AbilityGaze
 	
 	protected Nature getDefaultNature() { return Nature.EXTRAORDINARY; }
 	
-	public boolean isValidTarget(@Nullable LivingEntity living)
+	public boolean isValidTarget(@Nullable LivingEntity living, @Nullable LivingEntity owner)
 	{
-		return living != null && EnumCreatureType.getCustomTypes(living).isLiving();
+		return living != null && EnumCreatureType.getCustomTypes(living).isLiving() && canAbilityAffectEntity(living, owner);
 	}
 	
 	public boolean affectTarget(LivingEntity entity, LivingEntity owner)

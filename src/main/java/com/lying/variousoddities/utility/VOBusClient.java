@@ -1,7 +1,10 @@
 package com.lying.variousoddities.utility;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
@@ -9,6 +12,7 @@ import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOTileEntities;
 import com.lying.variousoddities.network.PacketBonusJump;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketMountGui;
@@ -21,6 +25,7 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
+import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.BlockRenderType;
@@ -36,11 +41,13 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.play.client.CEntityActionPacket;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -54,6 +61,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -143,6 +151,68 @@ public class VOBusClient
 				}
 			}
 		}
+	}
+	
+	@SubscribeEvent
+	public static void onWorldRender(RenderWorldLastEvent event)
+	{
+		PlayerEntity localPlayer = mc.player;
+		if(localPlayer.getEntityWorld() == null)
+			return;
+		
+		Random rand = localPlayer.getRNG();
+		if(rand.nextInt(20) != 0)
+			return;
+		
+		// Find all loaded phylacteries
+		World world = localPlayer.getEntityWorld();
+		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
+		world.loadedTileEntityList.forEach((tile) -> { if(tile.getType() == VOTileEntities.PHYLACTERY) phylacteries.add((TileEntityPhylactery)tile); });
+		if(phylacteries.isEmpty())
+			return;
+		
+		// Select up to 18 positions that are valid for mist effects near player
+		BlockPos origin = localPlayer.getPosition();
+		List<BlockPos> particleBlocks = Lists.newArrayList();
+		int attempts = 150;
+		while(particleBlocks.size() < 36 && attempts > 0)
+		{
+			int offX = rand.nextInt(32) - 16;
+			int offY = Math.min(origin.getY(), rand.nextInt(4) - 2);
+			int offZ = rand.nextInt(32) - 16;
+			BlockPos pos = origin.add(offX, offY, offZ);
+			if(TileEntityPhylactery.isValidForMist(pos, world) && !particleBlocks.contains(pos))
+				particleBlocks.add(pos);
+			else
+				--attempts;
+		}
+		if(particleBlocks.isEmpty())
+			return;
+		
+		// Constrain positions to actual phylactery mist area
+		List<BlockPos> actualMist = Lists.newArrayList();
+		for(BlockPos pos : particleBlocks)
+		{
+			boolean found = false;
+			for(TileEntityPhylactery phylactery : phylacteries)
+				if(phylactery.isInsideMist(pos))
+				{
+					found = true;
+					break;
+				}
+			
+			if(found)
+				actualMist.add(pos);
+		}
+		if(actualMist.isEmpty())
+			return;
+		
+		// Spawn particles at all remaining positions
+		double speed = 0.01D;
+		double windX = (rand.nextInt(3) - 1) * speed;
+		double windZ = (rand.nextInt(3) - 1) * speed;
+		for(BlockPos pos : actualMist)
+			world.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, windX, 0, windZ);
 	}
 	
 	@SubscribeEvent

@@ -247,7 +247,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		if(damage)
 			for(LivingEntity hit : world.getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(distance)))
 			{
-				if(hit == entity || ignoreEntities.contains(hit.getUniqueID()))
+				if(hit == entity || ignoreEntities.contains(hit.getUniqueID()) || !canAbilityAffectEntity(hit, entity))
 					continue;
 				
 				double distFromEye = eyePos.distanceTo(new Vector3d(hit.getPosX(), hit.getPosY() + (hit.getHeight() / 2), hit.getPosZ()));

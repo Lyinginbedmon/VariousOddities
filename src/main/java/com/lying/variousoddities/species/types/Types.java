@@ -91,13 +91,7 @@ public class Types
 	
 	public Map<ResourceLocation, Ability> addAbilitiesToMap(Map<ResourceLocation, Ability> map)
 	{
-		this.types.forEach((type) -> 
-			{
-				type.getHandler().getAbilities().forEach((ability) -> 
-					{
-						map.put(ability.getMapName(), ability);
-					}); 
-			});
+		this.types.forEach((type) -> { type.getHandler().addAbilitiesToMap(map); });
 		return map;
 	}
 	

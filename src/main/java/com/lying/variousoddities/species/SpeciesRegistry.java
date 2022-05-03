@@ -18,7 +18,7 @@ import com.lying.variousoddities.species.Species.SpeciesInstance;
 import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityBreathWeapon;
 import com.lying.variousoddities.species.abilities.AbilityBreathWeapon.BreathType;
-import com.lying.variousoddities.species.abilities.AbilityBreatheWater;
+import com.lying.variousoddities.species.abilities.AbilityBreatheFluid;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
 import com.lying.variousoddities.species.abilities.AbilityDamageCap;
 import com.lying.variousoddities.species.abilities.AbilityDamageReduction;
@@ -79,6 +79,7 @@ public class SpeciesRegistry extends JsonReloadListener
 	public static final ResourceLocation SPECIES_HORSE			= new ResourceLocation("minecraft", "horse");
 	public static final ResourceLocation SPECIES_KOBOLD			= new ResourceLocation(Reference.ModInfo.MOD_ID, "kobold");
 	public static final ResourceLocation SPECIES_LIZARDFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "lizardfolk");
+	public static final ResourceLocation SPECIES_MERFOLK		= new ResourceLocation(Reference.ModInfo.MOD_ID, "merfolk");
 	public static final ResourceLocation SPECIES_MULE			= new ResourceLocation("minecraft", "mule");
 	public static final ResourceLocation SPECIES_ORC			= new ResourceLocation(Reference.ModInfo.MOD_ID, "orc");
 	public static final ResourceLocation SPECIES_PIG			= new ResourceLocation("minecraft", "pig");
@@ -202,7 +203,7 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityModifierCon(10D))
 				.addAbility(new AbilityNaturalArmour(7D))
 				.addAbility(new AbilityDamageResistance(DamageType.ACID, DamageResist.IMMUNE))
-				.addAbility(new AbilityBreatheWater())
+				.addAbility(AbilityBreatheFluid.water())
 				.addAbility(new AbilityFlight(Grade.POOR))
 				.addAbility(new AbilityBreathWeapon(DamageType.ACID, BreathType.CONE, 9D, 4F, 24F).setParticle(ParticleTypes.DRAGON_BREATH)));
 		addSpecies(new Species(SPECIES_GOBLIN)
@@ -243,6 +244,12 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityModifierCon(2D))
 				.addAbility(new AbilityNaturalArmour(5D))
 				.addAbility(new AbilityHoldBreath()));
+		addSpecies(new Species(SPECIES_MERFOLK)
+				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".merfolk"))
+				.setPower(1)
+				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.AQUATIC)
+				.addAbility(new AbilitySwim())
+				.addAbility(new AbilityNaturalArmour(3D)));
 		addSpecies(new Species(SPECIES_ORC)
 				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".orc"))
 				.addType(EnumCreatureType.HUMANOID)
@@ -267,7 +274,6 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityNaturalArmour(6D)));
 		
 		// Utility species used exclusively by mobs
-		
 		addSpecies(new Species(SPECIES_BAT)
 				.notPlayerSelectable()
 				.addType(EnumCreatureType.ANIMAL)

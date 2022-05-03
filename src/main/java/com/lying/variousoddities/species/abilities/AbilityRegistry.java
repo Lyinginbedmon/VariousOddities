@@ -28,9 +28,10 @@ public class AbilityRegistry
 	{
 		IForgeRegistry<Ability.Builder> registry = event.getRegistry();
 		
+		registry.register(new AbilityAmphibious.Builder());
 		registry.register(new AbilityBlind.Builder());
 		registry.register(new AbilityBlindsight.Builder());
-		registry.register(new AbilityBreatheWater.Builder());
+		registry.register(new AbilityBreatheFluid.Builder());
 		registry.register(new AbilityBreathWeapon.Builder());
 		registry.register(new AbilityBurrow.Builder());
 		registry.register(new AbilityClimb.Builder());

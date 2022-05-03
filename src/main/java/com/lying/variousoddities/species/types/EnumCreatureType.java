@@ -17,6 +17,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.species.Template;
+import com.lying.variousoddities.species.abilities.AbilityAmphibious;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityBlindsight;
 import com.lying.variousoddities.species.abilities.AbilityBurrow;
@@ -46,15 +47,15 @@ import net.minecraftforge.common.MinecraftForge;
 
 public enum EnumCreatureType implements IStringSerializable
 {
-	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("2145fe0a-c00c-405c-9ecf-a5d3e636834c"))
+	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("2145fe0a-c00c-405c-9ecf-a5d3e636834c"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
 	AIR(null, new TypeHandler(UUID.fromString("6c8fc47e-8485-465a-a1a9-c79f125c9286"))
 		.addAbility(new AbilityFlight(Grade.PERFECT, 0.7D))),
 	AMPHIBIOUS(null, new TypeHandler(UUID.fromString("b4728431-bea6-4d37-894c-d45a629a1109"))
 		{
 			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(AQUATIC); }
-		}),
-	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("af347e37-0c1b-4e89-aaaf-de9f62ee1db2")), Action.STANDARD, 8),
+		}.addAbility(new AbilityAmphibious())),
+	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("af347e37-0c1b-4e89-aaaf-de9f62ee1db2")), Action.STANDARD, 8),
 	AQUATIC(null, new TypeHandlerAquatic(UUID.fromString("be78378d-5aeb-43ea-bce7-f1ade0dea14b"), false)),
 	AUGMENTED(UUID.fromString("a7d80091-f713-470f-9878-7d2479cf7a2a")),
 	COLD(null, new TypeHandler(UUID.fromString("9bef87fa-7f6e-47f0-b227-a9d3a7b7fed1"))
@@ -70,7 +71,7 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 10),
-	DRAGON(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e"))
+	DRAGON(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityStatusImmunity.Paralysis()), Action.STANDARD, 12),
 	EARTH(null, new TypeHandler(UUID.fromString("c1f5d866-365d-495c-9aa6-c5adaef000de"))
@@ -84,47 +85,47 @@ public enum EnumCreatureType implements IStringSerializable
 	EVIL(null, new TypeHandler(UUID.fromString("c03386d7-96e2-487c-905d-974777a889ea"))
 		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))),
-	FEY(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("07c3a904-0cc5-43a5-b801-d67445175d4d"))
+	FEY(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("07c3a904-0cc5-43a5-b801-d67445175d4d"))
 		.addAbility(new AbilityDamageReduction(4, DamageType.SILVER)), Action.STANDARD, 6),
 	FIRE(null, new TypeHandler(UUID.fromString("3c798e03-0af6-4a02-8297-d70eb012427d"))
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.VULNERABLE))),
-	GIANT(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("1278a0dc-ba70-4641-b6af-24ba2a815cab")), Action.STANDARD, 8),
+	GIANT(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("1278a0dc-ba70-4641-b6af-24ba2a815cab")), Action.STANDARD, 8),
 	GOBLIN(UUID.fromString("6bc4dbf3-fc00-4419-8a91-5ff4f9a59703")),
 	HOLY(null, new TypeHandler(UUID.fromString("7096bdb3-2ab4-4094-9c66-3367d13b9065"))
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.VULNERABLE))),
-	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("77bc6296-eab6-4ccd-963a-84caeb703e4c")), Action.STANDARD, 8),
+	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("77bc6296-eab6-4ccd-963a-84caeb703e4c")), Action.STANDARD, 8),
 	INCORPOREAL(null, new TypeHandler(UUID.fromString("aba0ffd1-cf26-4363-85bd-0866a5fdea10"))
 		.addAbility(new AbilityIncorporeality())
 		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))),
-	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("4e2f8461-9965-43db-ab1b-8de4ce8dcd30"))
+	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("4e2f8461-9965-43db-ab1b-8de4ce8dcd30"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 10),
-	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.get(UUID.fromString("6f5802ec-231c-48f4-a535-08c64e5aaf0f"))
+	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("6f5802ec-231c-48f4-a535-08c64e5aaf0f"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
-	OUTSIDER(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b71f6adc-179b-4f13-b1fd-d7f2372f7ad0"))
-		.addAbility(new AbilityDarkvision()), EnumSet.of(Action.BREATHE_AIR, Action.REGENERATE), 8),
+	OUTSIDER(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("b71f6adc-179b-4f13-b1fd-d7f2372f7ad0"))
+		.addAbility(new AbilityDarkvision()), EnumSet.of(Action.BREATHES, Action.REGENERATE), 8),
 	NATIVE(null, new TypeHandler(UUID.fromString("d7dc8434-e8f3-454d-b51c-2f6c9a24589b"))
 		{
 			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
 			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(OUTSIDER); }
 		}),
-	PLANT(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("a696c570-84ce-46aa-859b-46c4b2c1fa85"))
+	PLANT(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("a696c570-84ce-46aa-859b-46c4b2c1fa85"))
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
-		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 8),
+		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.EAT, Action.REGENERATE), 8),
 	REPTILE(UUID.fromString("b7b6e1bc-d1c5-4c6c-af9d-994b73bf73d8")),
 	SHAPECHANGER(UUID.fromString("b9956455-2bd2-456d-8e3e-976864fb23e6")),
-	OOZE(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("38debdac-03a3-432f-8f77-66a09417e44b"))
+	OOZE(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("38debdac-03a3-432f-8f77-66a09417e44b"))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
 		.addAbility(new AbilityBlind())
 		.addAbility(new AbilityBlindsight(16D))
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
-		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.BREATHE_AIR, Action.EAT, Action.REGENERATE), 10),
+		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.EAT, Action.BREATHES, Action.REGENERATE), 10),
 	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler(UUID.fromString("1e5ae3b8-b509-447f-b790-51ed71d090b7"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))
@@ -134,7 +135,7 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 12),
-	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.get(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef"))
+	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.getBreathesAir(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
 	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(UUID.fromString("98c06c81-ed84-4974-bb47-e5d728ce83b8"), true));
 	
@@ -422,9 +423,9 @@ public enum EnumCreatureType implements IStringSerializable
 		
 		public boolean eats(){ return actions.contains(Action.EAT); }
 		public boolean sleeps(){ return actions.contains(Action.SLEEP); }
-		public boolean breathes(){ return breathesAir() || breathesWater(); }
-		public boolean breathesAir(){ return actions.contains(Action.BREATHE_AIR); }
-		public boolean breathesWater(){ return actions.contains(Action.BREATHE_WATER); }
+		
+		public boolean breathes(){ return actions.contains(Action.BREATHES); }
+		
 		public boolean regenerates(){ return actions.contains(Action.REGENERATE); }
 		
 		public static ActionSet fromSupertypes(Collection<EnumCreatureType> types)
@@ -483,14 +484,10 @@ public enum EnumCreatureType implements IStringSerializable
 		EAT(0),
 		/** Sleeping in a bed and spawning phantoms without sleep */
 		SLEEP(1),
-		/** Breathing air and drowning without it */
-		BREATHE_AIR(3),
-		/** Breathing water and suffocating without it */
-		BREATHE_WATER(4),
+		/** Breathing at least one fluid (or air) */
+		BREATHES(3),
 		/** Regain health naturally over time */
 		REGENERATE(2);
-		
-		// TODO Expand breathing action to accept an array of fluid tags
 		
 		private final int iconIndex;
 		
@@ -500,7 +497,7 @@ public enum EnumCreatureType implements IStringSerializable
 		}
 		
 		/** The most common array. */
-		public static final EnumSet<Action> STANDARD = EnumSet.of(Action.EAT, Action.SLEEP, Action.BREATHE_AIR, REGENERATE);
+		public static final EnumSet<Action> STANDARD = EnumSet.of(Action.EAT, Action.SLEEP, Action.BREATHES, REGENERATE);
 		/** Creatures that do not need to eat, sleep, or breathe, but can regenerate health. */
 		public static final EnumSet<Action> REGEN_ONLY = EnumSet.of(REGENERATE);
 		/** Creatures that have no natural needs, but also cannot regenerate health. */

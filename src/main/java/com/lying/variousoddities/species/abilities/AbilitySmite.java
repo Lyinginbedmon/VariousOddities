@@ -64,7 +64,7 @@ public class AbilitySmite extends ToggledAbility
 			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
 			for(AbilitySmite smite : AbilityRegistry.getAbilitiesOfType(attacker, AbilitySmite.class))
 			{
-				if(!smite.isActive() || !smite.appliesTo(victim))
+				if(!smite.isActive() || !smite.appliesTo(victim) || !smite.canAbilityAffectEntity(victim, attacker))
 					continue;
 				
 				smite.isActive = false;

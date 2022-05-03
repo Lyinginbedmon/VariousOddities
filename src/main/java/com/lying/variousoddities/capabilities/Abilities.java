@@ -233,6 +233,11 @@ public class Abilities
 		return abilityMap;
 	}
 	
+	public int getCooldown(@Nonnull ResourceLocation mapName)
+	{
+		return this.cooldowns.containsKey(mapName) ? this.cooldowns.get(mapName) : -1;
+	}
+	
 	public void putOnCooldown(@Nonnull ResourceLocation mapName, int cooldown)
 	{
 		this.cooldowns.put(mapName, cooldown);

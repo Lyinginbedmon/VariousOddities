@@ -19,7 +19,8 @@
 		"ServerPlayNetHandlerMixin",
 		"MobEntityMixin",
 		"EntityPredicateMixin",
-		"TargetGoalMixin"
+		"TargetGoalMixin",
+		"BeaconTileEntityMixin"
 	],
 	"client":
 	[

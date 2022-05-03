@@ -9,8 +9,10 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IStringSerializable;
@@ -19,6 +21,7 @@ import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
@@ -171,6 +174,11 @@ public abstract class Ability
 	public void onAbilityAdded(LivingEntity entity){ }
 	
 	public void onAbilityRemoved(LivingEntity entity){ }
+	
+	public boolean canAbilityAffectEntity(Entity target, LivingEntity owner)
+	{
+		return !MinecraftForge.EVENT_BUS.post(new AbilityAffectEntityEvent(target, this, owner));
+	}
 	
 	public abstract Type getType();
 	

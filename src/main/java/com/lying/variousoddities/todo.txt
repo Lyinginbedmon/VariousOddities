@@ -3,7 +3,6 @@ Bodies
 	Fix mob body spawning unreliability
 Character Sheet
 	Background textures
-	Ability cooldown indicator?
 Conditions
 	Implement Fear Aura
 	Frightened cannot voluntarily move closer to aggressor
@@ -19,9 +18,7 @@ Misc
 	As many outstanding FIXMEs and TODOs as possible
 	Phylactery!
 		Textures
-		Chunk loading
-		Beacon effects
-		Dungeon mist aura
+		Area notification
 		Everything else: Next version w/ Companion function!
 
 Possession (moved to separate workspace)

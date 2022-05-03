@@ -33,6 +33,7 @@ b441d5603a303354262eaf3b732ef96110694842 data/varodd/species/gnome.json
 6b995db366b0cb4d6dfcaf122c73246e63ba3df0 data/varodd/species/halfling.json
 d8df5114412c91616c6c5bd50a94fc4c043969aa data/varodd/species/kobold.json
 2fa1f0479500af9aac901b0f6ffe33e8322d9efa data/varodd/species/lizardfolk.json
+799a673da073e2314442c08db187ae1fd8dbb00d data/varodd/species/merfolk.json
 c9060ae1dce528a687a046a9bede73d4de989249 data/varodd/species/orc.json
 51ec0bc97ecf3e50258ff81aad88972ba1bde8f1 data/varodd/species/rat.json
 fb9a470c037cbd528c773768ced5a6d34e7ddbb2 data/varodd/species/tiefling.json
@@ -47,6 +48,6 @@ a5c682eb0bdbb58d340a509b9ebea8c1fa59df73 data/varodd/tags/entity_types/scorpions
 71326df2a468b09d13361decfb22b1be269a87c4 data/varodd/templates/lich.json
 782d5cfb5f21a4cdb583e93aa5ac32ab13305319 data/varodd/templates/necropolitan.json
 149a397a23ceeec0d474cdf05c4125fa7326123c data/varodd/templates/reptilian.json
-0c8f4e64058dc591f44714496d95b24c0c7347d5 data/varodd/templates/vampire.json
+e4cf34f8999c8a95fb71fa870fb27742307012c3 data/varodd/templates/vampire.json
 bfaed45e1c5b9621fda4568d7e80ee9e46c38bb3 data/varodd/templates/winged.json
 a1e6fe25ba07242710517eea5262120981c9264c data/varodd/templates/zombie.json

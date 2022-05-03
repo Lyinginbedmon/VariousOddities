@@ -19,6 +19,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.tags.ITag;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
@@ -36,6 +38,7 @@ public class ScreenCharacterSheet extends Screen
 	private final StringTextComponent speciesHeader;
 	private ITextComponent typesHeader;
 	private final ActionSet actionSet;
+	private final List<ITag.INamedTag<Fluid>> fluids;
 	private double health, armour;
 	private AbilityList listActives, listPassives;
 	private boolean isDoubleList = false;
@@ -51,6 +54,8 @@ public class ScreenCharacterSheet extends Screen
 		
 		// Species name and actions
 		actionSet = ActionSet.fromTypes(player, EnumCreatureType.getTypes(player).asSet());
+		fluids = data.getBreathableFluids(player);
+		
 		speciesHeader.append(((IFormattableTextComponent)data.getSpecies().getDisplayName().copyRaw()));
 		
 		// Templates (if any)
@@ -202,7 +207,18 @@ public class ScreenCharacterSheet extends Screen
 			List<ITextProperties> tooltip = Lists.newArrayList();
 			String translated = hovered.translated().getString().toLowerCase();
 			if(this.actionSet.contains(hovered))
+			{
 				tooltip.add(new TranslationTextComponent("enum.varodd.type_action.does", translated));
+				
+				if(hovered == EnumCreatureType.Action.BREATHES)
+					this.fluids.forEach((fluid) -> 
+					{
+						String name = "air";
+						if(fluid != null)
+							name = fluid.getName().getPath();
+						tooltip.add(new StringTextComponent(" "+name));
+					});
+			}
 			else
 				tooltip.add(new TranslationTextComponent("enum.varodd.type_action.doesnt", translated));
 			

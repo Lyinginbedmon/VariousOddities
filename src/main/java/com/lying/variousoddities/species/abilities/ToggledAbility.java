@@ -19,7 +19,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 	
 	protected ToggledAbility(ResourceLocation registryName)
 	{
-		this(registryName, Reference.Values.TICKS_PER_SECOND);
+		this(registryName, Reference.Values.TICKS_PER_SECOND / 2);
 	}
 	
 	public CompoundNBT writeToNBT(CompoundNBT compound)
@@ -48,7 +48,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 				break;
 			default:
 				this.isActive = !this.isActive;
-				putOnCooldown(entity, Reference.Values.TICKS_PER_SECOND / 2);
+				putOnCooldown(entity, getCooldown());
 				break;
 		}
 	}
@@ -63,7 +63,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 		public Ability create(CompoundNBT compound)
 		{
 			ToggledAbility ability = createAbility(compound);
-			ability.isActive = compound.getBoolean("IsActive");
+			ability.readFromNBT(compound);
 			return ability;
 		}
 		

@@ -3,6 +3,7 @@ package com.lying.variousoddities.utility;
 import java.util.List;
 import java.util.Random;
 
+import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
@@ -485,6 +486,18 @@ public class VOBusServer
 		LivingEntity entity = event.getEntityLiving();
 		if(entity.isPotionActive(VOPotions.ANCHORED))
 			event.setCanceled(true);
+	}
+	
+	/**
+	 * Prevents players not currently in their physical bodies from being affected by abilities.<br>
+	 * Does not prevent their physical bodies from being affected.
+	 */
+	@SubscribeEvent
+	public static void onAbilityAffectPlayer(AbilityAffectEntityEvent event)
+	{
+		if(event.getEntity() != null && event.getEntity().getType() == EntityType.PLAYER)
+			if(!PlayerData.isPlayerNormalFunction((PlayerEntity)event.getEntity()))
+				event.setCanceled(true);
 	}
 	
 	public static void wakeupEntitiesAround(Entity source, double rangeXZ, double rangeY)

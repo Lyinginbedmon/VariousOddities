@@ -52,10 +52,10 @@ public class AbilityHeat extends Ability
 			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
 			if(attacker != null)
 			{
-				if(AbilityRegistry.hasAbility(attacker, REGISTRY_NAME))
+				if(AbilityRegistry.hasAbility(attacker, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME).canAbilityAffectEntity(victim, attacker))
 					applyHeatTo(victim, (AbilityHeat)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME), attacker.getRNG());
 				
-				if(AbilityRegistry.hasAbility(victim, REGISTRY_NAME))
+				if(AbilityRegistry.hasAbility(victim, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME).canAbilityAffectEntity(attacker, victim))
 					applyHeatTo(attacker, (AbilityHeat)AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME), victim.getRNG());
 			}
 		}

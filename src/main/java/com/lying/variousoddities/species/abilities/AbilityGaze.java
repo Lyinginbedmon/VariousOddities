@@ -55,7 +55,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public boolean isValidTarget(@Nullable LivingEntity living, @Nonnull LivingEntity owner)
 	{
-		if(living != null && !owner.isInvisible())
+		if(living != null && !owner.isInvisible() && canAbilityAffectEntity(living, owner))
 		{
 			// Ignore players not currently functioning normally (to prevent detached spirits or unconscious minds being affected)
 			if(living.getType() == EntityType.PLAYER && !PlayerData.isPlayerNormalFunction(living))
