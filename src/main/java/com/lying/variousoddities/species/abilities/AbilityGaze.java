@@ -4,8 +4,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.capabilities.LivingData.MindControl;
 import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.condition.Condition;
+import com.lying.variousoddities.condition.ConditionInstance;
+import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
@@ -16,12 +18,13 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.api.distmarker.Dist;
 
 public abstract class AbilityGaze extends ActivatedAbility
 {
-	private double range = 9D;
+	protected double range = 9D;
 	protected boolean needsLooking = true;
 	
 	protected AbilityGaze(ResourceLocation registryName, double rangeIn, int cooldownIn)
@@ -68,11 +71,10 @@ public abstract class AbilityGaze extends ActivatedAbility
 				
 				// Is target look vector close enough to ability owner?
 				Vector3d lookVec = living.getLook(1.0F).normalize();
-				Vector3d direction = new Vector3d(owner.getPosX() - living.getPosX(), owner.getPosYEye() - living.getPosYEye(), owner.getPosZ() - living.getPosZ());
-				double dist = direction.length();
-				direction = direction.normalize();
-				double d1 = lookVec.dotProduct(direction);
-				return d1 > 1.0D - 0.025D / dist ? living.canEntityBeSeen(owner) : false;
+				Vector3d eyeVec = living.getEyePosition(1F);
+				AxisAlignedBB box = owner.getBoundingBox();
+				
+				return box.intersects(eyeVec, eyeVec.add(lookVec.mul(range, range, range)));
 			}
 		}
 		return false;
@@ -111,14 +113,14 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public static abstract class AbilityGazeControl extends AbilityGaze
 	{
-		private final MindControl type;
+		private final Condition condition;
 		private int durationMin = Reference.Values.TICKS_PER_MINUTE * 2;
 		private int durationMax = durationMin;
 		
-		public AbilityGazeControl(ResourceLocation registryName, MindControl typeIn, double rangeIn, int cooldownIn)
+		public AbilityGazeControl(ResourceLocation registryName, Condition conditionIn, double rangeIn, int cooldownIn)
 		{
 			super(registryName, rangeIn, cooldownIn);
-			this.type = typeIn;
+			this.condition = conditionIn;
 		}
 		
 		public CompoundNBT writeToNBT(CompoundNBT compound)
@@ -148,18 +150,18 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public boolean canAffect(LivingEntity entity)
 		{
-			return entity.isNonBoss() && AbilityResistanceSpell.canSpellAffectMob(entity, type.getSchool(), type.getDescriptor());
+			return condition.canAffect(entity);
 		}
 		
 		public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 		{
 			LivingData data = LivingData.forEntity(entity);
-			if(data.isMindControlledBy(owner, type))
+			if(data.hasCondition(condition, owner))
 				return false;
 			else
 			{
 				int duration = isDurationVariable() ? owner.getRNG().nextInt(this.durationMin, this.durationMax) : this.durationMax;
-				data.setMindControlled(owner, duration, type);
+				data.addCondition(new ConditionInstance(condition, duration, owner.getUniqueID()));
 				if(entity instanceof MobEntity)
 				{
 					MobEntity mob = (MobEntity)entity;
@@ -214,7 +216,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public Charm()
 		{
-			super(REGISTRY_NAME, MindControl.CHARMED, 9D, Reference.Values.TICKS_PER_SECOND * 10);
+			super(REGISTRY_NAME, Conditions.CHARMED, 9D, Reference.Values.TICKS_PER_SECOND * 10);
 		}
 		
 		protected Nature getDefaultNature() { return Nature.SPELL_LIKE; }
@@ -240,7 +242,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public Dominate()
 		{
-			super(REGISTRY_NAME, MindControl.DOMINATED, 9D, Reference.Values.TICKS_PER_MINUTE);
+			super(REGISTRY_NAME, Conditions.DOMINATED, 9D, Reference.Values.TICKS_PER_MINUTE);
 		}
 		
 		protected Nature getDefaultNature() { return Nature.SPELL_LIKE; }

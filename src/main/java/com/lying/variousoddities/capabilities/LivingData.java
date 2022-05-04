@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
@@ -18,13 +19,13 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.SpeciesEvent;
 import com.lying.variousoddities.api.event.SpeciesEvent.TemplateApplied;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
+import com.lying.variousoddities.condition.Condition;
+import com.lying.variousoddities.condition.ConditionInstance;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
-import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
-import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncBludgeoning;
@@ -58,7 +59,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectUtils;
@@ -122,10 +122,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	@SuppressWarnings("unused")
 	private Pair<Mark, Object> currentMark = null;
 	
-	/** A map of UUIDs to durations and bit masks determining charmed, feared, or dominated statuses */
-	private Map<UUID, Integer> mapCharmed = new HashMap<>();
-	private Map<UUID, Integer> mapFeared = new HashMap<>();
-	private Map<UUID, Integer> mapDominated = new HashMap<>();
+	/** Complex status effects */
+	private List<ConditionInstance> conditions = Lists.newArrayList();
 	
 	public boolean checkingFoodRegen = false;
 	
@@ -215,14 +213,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			compound.put("Abilities", this.abilities.serializeNBT());
 			
-			if(!this.mapCharmed.isEmpty())
-				compound.put("Charmed", writeControlMap(this.mapCharmed));
-			
-			if(!this.mapFeared.isEmpty())
-				compound.put("Feared", writeControlMap(this.mapFeared));
-			
-			if(!this.mapDominated.isEmpty())
-				compound.put("Dominated", writeControlMap(this.mapDominated));
+			if(!this.conditions.isEmpty())
+			{
+				ListNBT conditionList = new ListNBT();
+				this.conditions.forEach((instance) -> { conditionList.add(instance.write(new CompoundNBT())); });
+				compound.put("Conditions", conditionList);
+			}
 			
 			compound.putByte("Potions", this.visualPotions);
 			
@@ -289,14 +285,16 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
 		
-		if(nbt.contains("Charmed", 9))
-			this.mapCharmed = readControlMap(nbt.getList("Charmed", 10));
-		
-		if(nbt.contains("Feared", 9))
-			this.mapFeared = readControlMap(nbt.getList("Feared", 10));
-		
-		if(nbt.contains("Dominated", 9))
-			this.mapDominated = readControlMap(nbt.getList("Dominated", 10));
+		if(nbt.contains("Conditions", 9))
+		{
+			ListNBT conditionList = nbt.getList("Conditions", 10);
+			for(int i=0; i<conditionList.size(); i++)
+			{
+				ConditionInstance instance = ConditionInstance.read(conditionList.getCompound(i));
+				if(instance != null)
+					this.conditions.add(instance);
+			}
+		}
 		
 		this.visualPotions = nbt.getByte("Potions");
 		
@@ -316,31 +314,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		LivingData fresh = new LivingData();
 		CompoundNBT freshData = fresh.serializeNBT();
 		this.deserializeNBT(freshData);
-	}
-	
-	private static ListNBT writeControlMap(Map<UUID, Integer> mapIn)
-	{
-		ListNBT list = new ListNBT();
-		for(UUID uuid : mapIn.keySet())
-		{
-			CompoundNBT data = new CompoundNBT();
-			data.put("UUID", NBTUtil.func_240626_a_(uuid));
-			data.putInt("Duration", mapIn.get(uuid));
-			
-			list.add(data);
-		}
-		return list;
-	}
-	
-	private static Map<UUID, Integer> readControlMap(ListNBT listIn)
-	{
-		Map<UUID, Integer> map = new HashMap<>();
-		for(int i=0; i<listIn.size(); i++)
-		{
-			CompoundNBT dominatedData = listIn.getCompound(i);
-			map.put(NBTUtil.readUniqueId(dominatedData.get("UUID")), dominatedData.getInt("Duration"));
-		}
-		return map;
 	}
 	
 	public NonNullList<ItemStack> getPocketInventory(){ return this.pockets; }
@@ -570,74 +543,110 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		markDirty();
 	}
 	
-	/** Returns true if this entity is afraid of the given entity */
-	public boolean isAfraidOf(LivingEntity entity)
+	public void addCondition(@Nullable ConditionInstance condition)
 	{
-		return isMindControlledBy(entity, MindControl.AFRAID);
-	}
-	
-	/** Returns true if this entity is being charmed by the given entity */
-	public boolean isCharmedBy(LivingEntity entity)
-	{
-		return isMindControlledBy(entity, MindControl.CHARMED);
-	}
-	
-	/** Returns true if this entity is being dominated by the given entity */
-	public boolean isControlledBy(LivingEntity entity)
-	{
-		return isMindControlledBy(entity, MindControl.DOMINATED);
-	}
-	
-	public boolean isMindControlledBy(LivingEntity entity, MindControl type)
-	{
-		UUID uuid = entity.getUniqueID();
-		switch(type)
+		if(condition != null)
 		{
-			case AFRAID:	return this.mapFeared.containsKey(uuid);
-			case CHARMED:	return this.mapCharmed.containsKey(uuid);
-			case DOMINATED:	return this.mapDominated.containsKey(uuid);
+			System.out.println("Added condition "+condition.condition().getRegistryName());
+			this.conditions.add(condition);
+			
+			condition.start(this.entity);
+			markDirty();
 		}
+	}
+	
+	public boolean hasCondition(@Nonnull Condition condition)
+	{
+		return hasConditionFrom(condition, null);
+	}
+	
+	public boolean hasCondition(@Nonnull Condition condition, @Nullable LivingEntity entity)
+	{
+		return entity == null ? false : hasConditionFrom(condition, entity.getUniqueID());
+	}
+	
+	public boolean hasConditionFrom(@Nonnull Condition condition, @Nullable UUID uuidIn)
+	{
+		if(!this.conditions.isEmpty())
+			for(ConditionInstance instance : this.conditions)
+				if(instance.condition() == condition && (uuidIn == null || instance.originUUID().equals(uuidIn)))
+					return true;
 		return false;
 	}
 	
-	public void setMindControlled(LivingEntity entity, int duration, MindControl type)
+	public List<ConditionInstance> getConditions(@Nonnull Condition condition)
 	{
-		UUID uuid = entity.getUniqueID();
-		switch(type)
-		{
-			case AFRAID:
-				this.mapFeared.put(uuid, duration);
-				break;
-			case CHARMED:
-				this.mapCharmed.put(uuid, duration);
-				break;
-			case DOMINATED:
-				this.mapDominated.put(uuid, duration);
-				break;
-		}
-		markDirty();
+		List<ConditionInstance> conditions = Lists.newArrayList();
+		if(!this.conditions.isEmpty())
+			this.conditions.forEach((instance) -> { if(instance.condition() == condition) conditions.add(instance); }); 
+		return conditions;
 	}
 	
-	public void clearMindControlled(LivingEntity entity, MindControl type)
+	public List<UUID> getConditionSources(@Nonnull Condition condition)
 	{
-		if(!isMindControlledBy(entity, type))
+		List<UUID> sources = Lists.newArrayList();
+		if(!this.conditions.isEmpty())
+			this.conditions.forEach((instance) -> { if(instance.condition() == condition && instance.originUUID() != null) sources.add(instance.originUUID()); });
+		return sources;
+	}
+	
+	public List<ConditionInstance> getConditionsFromUUID(@Nonnull UUID uuidIn)
+	{
+		List<ConditionInstance> conditions = Lists.newArrayList();
+		if(!this.conditions.isEmpty())
+			this.conditions.forEach((instance) -> { if(instance.originUUID().equals(uuidIn)) conditions.add(instance); }); 
+		return conditions;
+	}
+	
+	public void clearCondition(@Nonnull LivingEntity entity, Condition condition)
+	{
+		if(!hasCondition(condition, entity))
 			return;
 		
-		UUID uuid = entity.getUniqueID();
-		switch(type)
-		{
-			case AFRAID:	this.mapFeared.remove(uuid); break;
-			case CHARMED:	this.mapCharmed.remove(uuid); break;
-			case DOMINATED:	this.mapDominated.remove(uuid); break;
-		}
-		markDirty();
+		getConditionsFromUUID(entity.getUniqueID()).forEach((instance) -> { if(instance.condition() == condition) removeCondition(instance); });
 	}
 	
-	/** Returns true if this entity is being charmed, dominated, or is afraid of the given entity */
+	public void removeCondition(ConditionInstance instance)
+	{
+		if(this.conditions.remove(instance))
+		{
+			instance.reset(this.entity);
+			markDirty();
+		}
+	}
+	
+	public List<LivingEntity> getMindControlled(Condition condition, double distance)
+	{
+		List<LivingEntity> entities = Lists.newArrayList();
+		Collection<UUID> controllers = getConditionSources(condition);
+		if(controllers.isEmpty())
+			return entities;
+		
+		World world = this.entity.getEntityWorld();
+		for(UUID uuid : controllers)
+		{
+			LivingEntity entity = world.getPlayerByUuid(uuid);
+			if(entity != null)
+			{
+				if(PlayerData.isPlayerNormalFunction(entity))
+					entities.add(entity);
+			}
+			else
+				for(LivingEntity ent : world.getEntitiesWithinAABB(LivingEntity.class, this.entity.getBoundingBox().grow(distance)))
+					if(ent.getUniqueID().equals(uuid))
+					{
+						entities.add(ent);
+						break;
+					}
+		}
+		
+		return entities;
+	}
+	
 	public boolean isTargetingHindered(LivingEntity target)
 	{
-		for(MindControl type : MindControl.values())
-			if(isMindControlledBy(target, type))
+		for(ConditionInstance instance : this.conditions)
+			if(instance.condition().affectsMobTargeting() && instance.originUUID() != null && instance.originUUID().equals(target.getUniqueID()))
 				return true;
 		return false;
 	}
@@ -773,23 +782,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		}
 		
 		abilities.tick();
-		
-		// Decrement all durations in control maps
-		if(!this.mapCharmed.isEmpty())
-		{
-			this.mapCharmed = handleControl(this.mapCharmed);
-			markDirty();
-		}
-		if(!this.mapFeared.isEmpty())
-		{
-			this.mapFeared = handleControl(this.mapFeared);
-			markDirty();
-		}
-		if(!this.mapDominated.isEmpty())
-		{
-			this.mapDominated = handleControl(this.mapDominated);
-			markDirty();
-		}
+		handleConditions();
 		
 		if(this.dirty)
 		{
@@ -801,27 +794,27 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(world.isRemote && --this.potionSyncTimer <= 0)
 		{
 			this.potionSyncTimer = Reference.Values.TICKS_PER_MINUTE;
-			// Ping server for visualPotion value
+			// TODO Ping server for visualPotion value
 			
 		}
 	}
 	
-	private static Map<UUID, Integer> handleControl(Map<UUID, Integer> controlMap)
+	private void handleConditions()
 	{
-		if(controlMap.isEmpty())
-			return controlMap;
-		
-		List<UUID> charmers = Lists.newArrayList();
-		charmers.addAll(controlMap.keySet());
-		charmers.forEach((uuid) -> { controlMap.put(uuid, controlMap.get(uuid) - 1); });
-		
-		List<UUID> expired = Lists.newArrayList();
-		controlMap.forEach((uuid, duration) -> { if(duration <= 0) expired.add(uuid); });
-		
-		if(!expired.isEmpty())
-			expired.forEach((uuid) -> { controlMap.remove(uuid); });
-		
-		return controlMap;
+		List<ConditionInstance> expired = Lists.newArrayList();
+		this.conditions.forEach((instance) -> 
+		{
+			if(instance.isExpired())
+			{
+				instance.end(this.entity);
+				expired.add(instance);
+			}
+			else
+				instance.tick(this.entity);
+		});
+		this.conditions.removeAll(expired);
+		if(!expired.isEmpty() || !this.conditions.isEmpty())
+			markDirty();
 	}
 	
 	public void setSpeciesSelected()
@@ -975,25 +968,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void markDirty()
 	{
 		this.dirty = true;
-	}
-	
-	public static enum MindControl
-	{
-		CHARMED(MagicSchool.ENCHANTMENT, null),
-		DOMINATED(MagicSchool.ENCHANTMENT, null),
-		AFRAID(null, MagicSubType.FEAR);
-		
-		private final MagicSchool school;
-		private final MagicSubType descriptor;
-		
-		private MindControl(MagicSchool schoolIn, MagicSubType descriptorIn)
-		{
-			this.school = schoolIn;
-			this.descriptor = descriptorIn;
-		}
-		
-		public MagicSchool getSchool() { return this.school; }
-		public MagicSubType getDescriptor() { return this.descriptor; }
 	}
 	
 	public static class Storage implements Capability.IStorage<LivingData>

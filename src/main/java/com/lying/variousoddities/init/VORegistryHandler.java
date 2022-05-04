@@ -1,5 +1,7 @@
 package com.lying.variousoddities.init;
 
+import com.lying.variousoddities.condition.Condition;
+import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.templates.TemplateOperation;
@@ -34,5 +36,11 @@ public class VORegistryHandler
     public void onRegisterPreconditions(RegistryEvent.Register<TemplatePrecondition.Builder> event)
     {
 		TemplatePrecondition.onRegisterPreconditions(event);
+    }
+	
+	@SubscribeEvent
+    public void onRegisterConditions(RegistryEvent.Register<Condition> event)
+    {
+		Conditions.onRegisterConditions(event);
     }
 }

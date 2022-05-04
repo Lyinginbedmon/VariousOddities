@@ -10,9 +10,9 @@ import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.api.event.PlayerChangeConditionEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.capabilities.LivingData.MindControl;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
+import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
@@ -450,10 +450,10 @@ public class VOBusServer
 			
 			Entity immediate = source.getImmediateSource();
 			Entity distant = source.getTrueSource();
-			if(immediate != null && immediate instanceof LivingEntity && data.isCharmedBy((LivingEntity)immediate))
-				data.clearMindControlled((LivingEntity)immediate, MindControl.CHARMED);
-			if(distant != null && distant instanceof LivingEntity && data.isCharmedBy((LivingEntity)distant))
-				data.clearMindControlled((LivingEntity)distant, MindControl.CHARMED);
+			if(immediate != null && immediate instanceof LivingEntity && data.hasCondition(Conditions.CHARMED, (LivingEntity)immediate))
+				data.clearCondition((LivingEntity)immediate, Conditions.CHARMED);
+			if(distant != null && distant instanceof LivingEntity && data.hasCondition(Conditions.CHARMED, (LivingEntity)distant))
+				data.clearCondition((LivingEntity)distant, Conditions.CHARMED);
 		}
 	}
 	

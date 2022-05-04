@@ -4,13 +4,11 @@ Bodies
 Character Sheet
 	Background textures
 Conditions
-	Implement Fear Aura
 	Frightened cannot voluntarily move closer to aggressor
-	Aura visuals for players to determine condition
-	Mob AI to avoid aggressor when Frightened
+	Aura icon textures & multi-icon handling
 Warg
 	Saddle, carpet, armour textures
-	Fix held item rendering
+	Refine held item rendering
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg->warg rider pipeline
 Misc

@@ -10,6 +10,8 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
+import com.lying.variousoddities.condition.Condition;
+import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VOTileEntities;
@@ -26,6 +28,7 @@ import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.block.BlockRenderType;
@@ -36,6 +39,7 @@ import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.LivingEntity;
@@ -45,6 +49,7 @@ import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.world.World;
@@ -72,6 +77,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class VOBusClient
 {
 	private static final Minecraft mc = Minecraft.getInstance();
+	
+	private static int phylacteryNotification = -1;
 	
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent(priority=EventPriority.LOWEST, receiveCanceled=true)
@@ -157,21 +164,70 @@ public class VOBusClient
 	public static void onWorldRender(RenderWorldLastEvent event)
 	{
 		PlayerEntity localPlayer = mc.player;
-		if(localPlayer.getEntityWorld() == null)
-			return;
-		
-		Random rand = localPlayer.getRNG();
-		if(rand.nextInt(20) != 0)
+		if(localPlayer == null || localPlayer.getEntityWorld() == null)
 			return;
 		
 		// Find all loaded phylacteries
-		World world = localPlayer.getEntityWorld();
 		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
-		world.loadedTileEntityList.forEach((tile) -> { if(tile.getType() == VOTileEntities.PHYLACTERY) phylacteries.add((TileEntityPhylactery)tile); });
-		if(phylacteries.isEmpty())
+		localPlayer.getEntityWorld().loadedTileEntityList.forEach((tile) -> { if(tile.getType() == VOTileEntities.PHYLACTERY) phylacteries.add((TileEntityPhylactery)tile); });
+		
+		handleMistNotification(localPlayer, phylacteries);
+		spawnMistParticles(localPlayer, phylacteries);
+		displayMindControl(event.getMatrixStack(), localPlayer);
+	}
+	
+	private static void displayMindControl(MatrixStack stack, PlayerEntity localPlayer)
+	{
+		LivingData playerData = LivingData.forEntity(localPlayer);
+		List<LivingEntity> nearbyMobs = localPlayer.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, localPlayer.getBoundingBox().grow(16D));
+		// FIXME Display mind control icons in a row instead of on top of one another when multiple are active
+		for(Condition condition : Conditions.getAllConditions())
+			for(LivingEntity mob : nearbyMobs)
+			{
+				LivingData data = LivingData.forEntity(mob);
+				if(data != null && data.hasCondition(condition, localPlayer))
+					renderConditionIconAt(stack, mob, localPlayer, condition, true);
+				else if(playerData.hasCondition(condition, mob))
+					renderConditionIconAt(stack, mob, localPlayer, condition, false);
+			}
+	}
+	
+	private static void renderConditionIconAt(MatrixStack stack, LivingEntity mob, PlayerEntity localPlayer, Condition condition, boolean affecting)
+	{
+		double scale = Math.min(0.5D, mob.getWidth());
+		scale *= 0.5D;
+		
+		Vector3d mobPos = mob.getPositionVec().add(0D, mob.getHeight() + scale + 0.1D, 0D);
+		Vector3d viewVec = mc.getRenderManager().info.getProjectedView();
+		Vector3d iconPos = mobPos.subtract(viewVec);
+		
+		Vector3d direction = iconPos.normalize().rotateYaw((float)Math.toRadians(90D));
+		double xOff = direction.getX() * scale;
+		double yOff = scale;
+		double zOff = direction.getZ() * scale;
+		
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+		Matrix4f matrix = stack.getLast().getMatrix();
+		stack.push();
+			mc.getTextureManager().bindTexture(condition.getIconTexture(affecting));
+			buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+				buffer.pos(matrix, (float)(iconPos.getX() - xOff), (float)(iconPos.getY() + yOff), (float)(iconPos.getZ() - zOff)).tex(0, 0).endVertex();
+				buffer.pos(matrix, (float)(iconPos.getX() + xOff), (float)(iconPos.getY() + yOff), (float)(iconPos.getZ() + zOff)).tex(1, 0).endVertex();
+				buffer.pos(matrix, (float)(iconPos.getX() + xOff), (float)(iconPos.getY() - yOff), (float)(iconPos.getZ() + zOff)).tex(1, 1).endVertex();
+				buffer.pos(matrix, (float)(iconPos.getX() - xOff), (float)(iconPos.getY() - yOff), (float)(iconPos.getZ() - zOff)).tex(0, 1).endVertex();
+			buffer.finishDrawing();
+    		WorldVertexBufferUploader.draw(buffer);
+		stack.pop();
+	}
+	
+	private static void spawnMistParticles(PlayerEntity localPlayer, List<TileEntityPhylactery> phylacteries)
+	{
+		Random rand = localPlayer.getRNG();
+		if(phylacteries.isEmpty() || rand.nextInt(20) != 0)
 			return;
 		
-		// Select up to 18 positions that are valid for mist effects near player
+		// Select up to 36 positions that are valid for mist effects near player
+		World world = localPlayer.getEntityWorld();
 		BlockPos origin = localPlayer.getPosition();
 		List<BlockPos> particleBlocks = Lists.newArrayList();
 		int attempts = 150;
@@ -213,6 +269,27 @@ public class VOBusClient
 		double windZ = (rand.nextInt(3) - 1) * speed;
 		for(BlockPos pos : actualMist)
 			world.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, windX, 0, windZ);
+	}
+	
+	private static void handleMistNotification(PlayerEntity localPlayer, List<TileEntityPhylactery> phylacteries)
+	{
+		boolean isPlayerInMist = false;
+		for(TileEntityPhylactery phylactery : phylacteries)
+			if(phylactery.isInsideMist(localPlayer))
+			{
+				isPlayerInMist = true;
+				break;
+			};
+		
+		if(!isPlayerInMist)
+			phylacteryNotification = Math.max(--phylacteryNotification, -1);
+		else if(phylacteryNotification < 0)
+		{
+			phylacteryNotification = Reference.Values.TICKS_PER_MINUTE * 3;
+			
+			// FIXME Issue random notification to player that they have entered dungeon mist
+			
+		}
 	}
 	
 	@SubscribeEvent

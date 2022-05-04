@@ -8,7 +8,7 @@ import com.lying.variousoddities.api.entity.IFactionMob;
 import com.lying.variousoddities.api.event.ReputationEvent;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.capabilities.LivingData.MindControl;
+import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.faction.FactionBus.ReputationChange;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.world.savedata.FactionManager;
@@ -61,9 +61,9 @@ public class FactionReputation
 		{
 			LivingData data = LivingData.forEntity(sourceMob);
 			if(data != null)
-				if(data.isMindControlledBy(player, MindControl.DOMINATED))
+				if(data.hasCondition(Conditions.DOMINATED, player))
 					rep = 100;
-				else if(data.isMindControlledBy(player, MindControl.CHARMED))
+				else if(data.hasCondition(Conditions.CHARMED, player))
 					rep = 50;
 		}
 		

@@ -541,6 +541,8 @@
 	"ability.varodd:explode_charged": "Charged Explosion",
 	"ability.varodd.fast_healing": "Fast Healing %s",
 	"ability.varodd:fast_healing.desc": "Your body naturally recovers vitality at a rapid rate",
+	"ability.varodd:fear_aura": "Fear Aura",
+	"ability.varodd:fear_aura.desc": "You can issue a horrible malevolence, terrifying those around you",
 	"ability.varodd:flight.desc": "You can propel yourself into the sky even without rocket propulsion",
 	"ability.varodd.fluid_breathing": "Can breathe %s",
 	"ability.varodd:fluid_breathing.desc": "You can breathe in %s without difficulty",

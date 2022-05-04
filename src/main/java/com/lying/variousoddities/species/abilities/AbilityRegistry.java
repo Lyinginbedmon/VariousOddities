@@ -49,6 +49,7 @@ public class AbilityRegistry
 		registry.register(new AbilityGaseous.Builder());
 		registry.register(new AbilityGaze.Charm.Builder());
 		registry.register(new AbilityGaze.Dominate.Builder());
+		registry.register(new AbilityFearAura.Builder());
 		registry.register(new AbilityGaze.Petrify.Builder());
 		registry.register(new AbilityHeat.Builder());
 		registry.register(new AbilityHoldBreath.Builder());

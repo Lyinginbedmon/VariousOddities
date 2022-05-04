@@ -132,6 +132,7 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityDamageResistance(DamageType.NONLETHAL, DamageResist.IMMUNE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSubType.DEATH))
+		.addAbility(new AbilityResistanceSpell(MagicSubType.FEAR))
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 12),
