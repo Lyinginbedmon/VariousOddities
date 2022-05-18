@@ -11,7 +11,7 @@ import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.condition.Condition;
-import com.lying.variousoddities.condition.Conditions;
+import com.lying.variousoddities.condition.ConditionInstance;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VOTileEntities;
@@ -48,10 +48,15 @@ import net.minecraft.network.play.client.CEntityActionPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -173,35 +178,65 @@ public class VOBusClient
 		
 		handleMistNotification(localPlayer, phylacteries);
 		spawnMistParticles(localPlayer, phylacteries);
-		displayMindControl(event.getMatrixStack(), localPlayer);
+		
+		if(Minecraft.isGuiEnabled())
+			displayConditions(event.getMatrixStack(), localPlayer);
 	}
 	
-	private static void displayMindControl(MatrixStack stack, PlayerEntity localPlayer)
+	private static void displayConditions(MatrixStack stack, PlayerEntity localPlayer)
 	{
 		LivingData playerData = LivingData.forEntity(localPlayer);
 		List<LivingEntity> nearbyMobs = localPlayer.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, localPlayer.getBoundingBox().grow(16D));
-		// FIXME Display mind control icons in a row instead of on top of one another when multiple are active
-		for(Condition condition : Conditions.getAllConditions())
-			for(LivingEntity mob : nearbyMobs)
-			{
-				LivingData data = LivingData.forEntity(mob);
-				if(data != null && data.hasCondition(condition, localPlayer))
-					renderConditionIconAt(stack, mob, localPlayer, condition, true);
-				else if(playerData.hasCondition(condition, mob))
-					renderConditionIconAt(stack, mob, localPlayer, condition, false);
-			}
+		for(LivingEntity mob : nearbyMobs)
+		{
+			List<ConditionInstance> conditions = playerData == null ? Lists.newArrayList() : playerData.getConditionsFromUUID(mob.getUniqueID());
+			
+			LivingData data = LivingData.forEntity(mob);
+			if(data != null)
+				conditions.addAll(data.getConditionsFromUUID(localPlayer.getUniqueID()));
+			
+			if(!conditions.isEmpty())
+				renderConditionStack(stack, mob, conditions);
+		}
 	}
 	
-	private static void renderConditionIconAt(MatrixStack stack, LivingEntity mob, PlayerEntity localPlayer, Condition condition, boolean affecting)
+	private static void renderConditionStack(MatrixStack stack, LivingEntity mob, List<ConditionInstance> conditions)
 	{
-		double scale = Math.min(0.5D, mob.getWidth());
-		scale *= 0.5D;
+		if(conditions.isEmpty())
+			return;
 		
-		Vector3d mobPos = mob.getPositionVec().add(0D, mob.getHeight() + scale + 0.1D, 0D);
+		double scale = Math.min(0.5D, mob.getWidth());
+		
+		Vector3d mobPos = mob.getPositionVec().add(0D, mob.getHeight() + (scale * 0.5D) + 0.1D, 0D);
 		Vector3d viewVec = mc.getRenderManager().info.getProjectedView();
 		Vector3d iconPos = mobPos.subtract(viewVec);
+		Vector3d direction = iconPos.normalize().mul(1D, 0D, 1D).rotateYaw((float)Math.toRadians(90D));
 		
-		Vector3d direction = iconPos.normalize().rotateYaw((float)Math.toRadians(90D));
+		double iconSep = 0.1D;
+		
+		if(conditions.size() > 1)
+		{
+			double barWidth = (scale + iconSep) * (conditions.size() - 1);
+			iconPos = iconPos.subtract(direction.scale(barWidth * 0.5D));
+		}
+		
+		for(ConditionInstance instance : conditions)
+		{
+			renderConditionIcon(stack, iconPos, direction, scale * 0.5D, instance.condition(), !instance.originUUID().equals(mob.getUniqueID()));
+			iconPos = iconPos.add(direction.scale(scale + iconSep));
+		}
+	}
+	
+	/**
+	 * @param stack
+	 * @param pos	Relative position icon should be rendered relative to the projected view position
+	 * @param direction	Direction vector from projected view position to icon position
+	 * @param scale	Radius of the icon, ie. how far left/right/etc. from pos it will be rendered 
+	 * @param condition
+	 * @param affecting
+	 */
+	private static void renderConditionIcon(MatrixStack stack, Vector3d pos, Vector3d direction, double scale, Condition condition, boolean affecting)
+	{
 		double xOff = direction.getX() * scale;
 		double yOff = scale;
 		double zOff = direction.getZ() * scale;
@@ -209,14 +244,16 @@ public class VOBusClient
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
 		Matrix4f matrix = stack.getLast().getMatrix();
 		stack.push();
+			RenderSystem.enableBlend();
 			mc.getTextureManager().bindTexture(condition.getIconTexture(affecting));
 			buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
-				buffer.pos(matrix, (float)(iconPos.getX() - xOff), (float)(iconPos.getY() + yOff), (float)(iconPos.getZ() - zOff)).tex(0, 0).endVertex();
-				buffer.pos(matrix, (float)(iconPos.getX() + xOff), (float)(iconPos.getY() + yOff), (float)(iconPos.getZ() + zOff)).tex(1, 0).endVertex();
-				buffer.pos(matrix, (float)(iconPos.getX() + xOff), (float)(iconPos.getY() - yOff), (float)(iconPos.getZ() + zOff)).tex(1, 1).endVertex();
-				buffer.pos(matrix, (float)(iconPos.getX() - xOff), (float)(iconPos.getY() - yOff), (float)(iconPos.getZ() - zOff)).tex(0, 1).endVertex();
+				buffer.pos(matrix, (float)(pos.getX() - xOff), (float)(pos.getY() + yOff), (float)(pos.getZ() - zOff)).tex(1, 0).endVertex();
+				buffer.pos(matrix, (float)(pos.getX() + xOff), (float)(pos.getY() + yOff), (float)(pos.getZ() + zOff)).tex(0, 0).endVertex();
+				buffer.pos(matrix, (float)(pos.getX() + xOff), (float)(pos.getY() - yOff), (float)(pos.getZ() + zOff)).tex(0, 1).endVertex();
+				buffer.pos(matrix, (float)(pos.getX() - xOff), (float)(pos.getY() - yOff), (float)(pos.getZ() - zOff)).tex(1, 1).endVertex();
 			buffer.finishDrawing();
     		WorldVertexBufferUploader.draw(buffer);
+    		RenderSystem.disableBlend();
 		stack.pop();
 	}
 	
@@ -276,10 +313,8 @@ public class VOBusClient
 		boolean isPlayerInMist = false;
 		for(TileEntityPhylactery phylactery : phylacteries)
 			if(phylactery.isInsideMist(localPlayer))
-			{
-				isPlayerInMist = true;
-				break;
-			};
+				if(isPlayerInMist = !phylactery.isOwner(localPlayer))
+					break;
 		
 		if(!isPlayerInMist)
 			phylacteryNotification = Math.max(--phylacteryNotification, -1);
@@ -287,8 +322,13 @@ public class VOBusClient
 		{
 			phylacteryNotification = Reference.Values.TICKS_PER_MINUTE * 3;
 			
-			// FIXME Issue random notification to player that they have entered dungeon mist
+			Random rand = localPlayer.getRNG();
+			String translation = "gui."+Reference.ModInfo.MOD_ID+":ominous_warning_" + rand.nextInt(20);
+			TranslationTextComponent warning = new TranslationTextComponent(translation);
+			StringTextComponent obfuscated = new StringTextComponent(VOHelper.obfuscateStringRandomly(warning.getString(), TextFormatting.WHITE + "", rand.nextLong(), 0.2F, true));
+			localPlayer.sendStatusMessage(obfuscated, true);
 			
+			localPlayer.getEntityWorld().playSound(localPlayer, localPlayer.getPosition(), SoundEvents.AMBIENT_CAVE, SoundCategory.AMBIENT, 1F, rand.nextFloat());
 		}
 	}
 	

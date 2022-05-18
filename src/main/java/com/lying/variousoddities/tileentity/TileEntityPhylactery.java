@@ -151,6 +151,8 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 	@Nullable
 	public LivingEntity getOwner() { return this.owner; }
 	
+	public boolean isOwner(LivingEntity entity) { return entity.getUniqueID().equals(ownerUUID); }
+	
 	public double getMistRadius() { return Math.min(this.maxSize, Math.floorDiv(this.timeSincePlaced, Reference.Values.TICKS_PER_MINUTE * 5) * 3D); }
 	
 	public boolean isInsideMist(LivingEntity entity)

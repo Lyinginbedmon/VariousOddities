@@ -86,9 +86,9 @@ public class ClientProxy extends CommonProxy
 		return spells;
 	}
 	
-	public void openSpeciesSelectScreen(PlayerEntity entity)
+	public void openSpeciesSelectScreen(PlayerEntity entity, int power, boolean random)
 	{
 		if(Minecraft.getInstance().currentScreen == null)
-			Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(entity));
+			Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(entity, power, random));
 	}
 }

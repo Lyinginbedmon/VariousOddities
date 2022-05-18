@@ -72,18 +72,20 @@ public class ScreenSelectTemplates extends Screen
 	private TemplateList listApplied;
 	public TemplateList.TemplateListEntry highlightEntry = null;
 	
-	private final int targetPower;
+	private int targetPower;
+	private boolean randomise;
 	
 	private static final int LIST_SEP = 7;
 	private static final int LIST_BORDER = 6;
 	
 	private Button clearButton;
 	
-	public ScreenSelectTemplates(@Nonnull PlayerEntity playerIn, @Nonnull Species speciesIn, EnumSet<EnumCreatureType> customTypesIn, int powerIn)
+	public ScreenSelectTemplates(@Nonnull PlayerEntity playerIn, @Nonnull Species speciesIn, EnumSet<EnumCreatureType> customTypesIn, int powerIn, boolean random)
 	{
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select"));
 		this.player = playerIn;
 		this.targetPower = powerIn;
+		this.randomise = random;
 		this.customTypes = customTypesIn.isEmpty() ? null : new Types(customTypesIn);
 		this.baseSpecies = speciesIn;
 	}
@@ -270,13 +272,19 @@ public class ScreenSelectTemplates extends Screen
     	this.addButton(new Button(midX - 50, this.height - 22, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
     	this.addButton(new Button(midX - 62, this.height - 44, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
     	this.addButton(clearButton = new Button(midX + 2, this.height - 44, 60, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
-    	this.addButton(new Button(3, 3, 20, 20, new StringTextComponent("<"), (button) -> { Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(player, this.baseSpecies)); },
+    	this.addButton(new Button(3, 3, 20, 20, new StringTextComponent("<"), (button) -> { Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(player, this.targetPower, this.randomise, this.baseSpecies)); },
     			(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"), x, y); }));
     }
     
     public void tick()
     {
     	this.clearButton.active = !this.listApplied.getTemplates().isEmpty();
+    	
+    	if(this.randomise)
+    	{
+    		randomise();
+    		finalise();
+    	}
     }
     
     private void finalise()

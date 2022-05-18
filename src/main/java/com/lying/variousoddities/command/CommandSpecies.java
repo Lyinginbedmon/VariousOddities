@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
@@ -80,7 +81,7 @@ public class CommandSpecies extends CommandBase
 				.then(newLiteral("select")
 					.executes((source) -> { return selectSpecies(source.getSource().asPlayer(), source.getSource()); })
 					.then(newArgument(PLAYER, EntityArgument.player())
-							.executes((source) -> { return selectSpecies(EntityArgument.getEntity(source, PLAYER), source.getSource()); })))
+						.executes((source) -> { return selectSpecies(EntityArgument.getEntity(source, PLAYER), source.getSource()); })))
 				.then(Templates.build());
 		
 		dispatcher.register(literal);
@@ -171,7 +172,7 @@ public class CommandSpecies extends CommandBase
 		{
 			PlayerEntity player = (PlayerEntity)entity;
 			if(!player.world.isRemote)
-				PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen());
+				PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), false));
 			return 15;
 		}
 		else

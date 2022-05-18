@@ -10,17 +10,24 @@ import net.minecraftforge.fml.network.NetworkEvent;
 
 public class PacketSpeciesOpenScreen
 {
-	public PacketSpeciesOpenScreen(){ }
+	private int targetPower;
+	private boolean randomise;
+	
+	public PacketSpeciesOpenScreen(int power, boolean random)
+	{
+		this.targetPower = power;
+		this.randomise = random;
+	}
 	
 	public static PacketSpeciesOpenScreen decode(PacketBuffer par1Buffer)
 	{
-		PacketSpeciesOpenScreen packet = new PacketSpeciesOpenScreen();
-		return packet;
+		return new PacketSpeciesOpenScreen(par1Buffer.readInt(), par1Buffer.readBoolean());
 	}
 	
 	public static void encode(PacketSpeciesOpenScreen msg, PacketBuffer par1Buffer)
 	{
-		
+		par1Buffer.writeInt(msg.targetPower);
+		par1Buffer.writeBoolean(msg.randomise);
 	}
 	
 	public static void handle(PacketSpeciesOpenScreen msg, Supplier<NetworkEvent.Context> cxt)
@@ -31,7 +38,7 @@ public class PacketSpeciesOpenScreen
 		else
 		{
 			CommonProxy proxy = (CommonProxy)VariousOddities.proxy;
-			proxy.openSpeciesSelectScreen(proxy.getPlayerEntity(context));
+			proxy.openSpeciesSelectScreen(proxy.getPlayerEntity(context), msg.targetPower, msg.randomise);
 			context.setPacketHandled(true);
 		}
 	}

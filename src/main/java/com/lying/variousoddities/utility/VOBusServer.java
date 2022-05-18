@@ -127,10 +127,10 @@ public class VOBusServer
 			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), data));
 			data.getAbilities().markDirty();
 			
-			if(!data.hasSelectedSpecies() && ConfigVO.MOBS.selectSpeciesOnLogin.get())
+			if(!data.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
 			{
 				if(!player.getEntityWorld().isRemote)
-					PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen());
+					PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
 				player.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
 			}
 		}
@@ -170,6 +170,9 @@ public class VOBusServer
 		LivingData livingData = LivingData.forEntity(event.getPlayer());
 		if(livingData != null)
 			livingData.getAbilities().markDirty();
+		
+		if(ConfigVO.MOBS.newCharacterOnDeath.get())
+			livingData.setSelectedSpecies(false);
 		
 		if(AbilityRegistry.hasAbility(event.getPlayer(), AbilitySize.REGISTRY_NAME))
 			event.getPlayer().recalculateSize();

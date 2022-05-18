@@ -3,13 +3,7 @@ package com.lying.variousoddities.init;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lying.variousoddities.block.BlockDraftingTable;
-import com.lying.variousoddities.block.BlockEggBase;
-import com.lying.variousoddities.block.BlockEggKobold;
-import com.lying.variousoddities.block.BlockLayerScale;
-import com.lying.variousoddities.block.BlockMoss;
-import com.lying.variousoddities.block.BlockPhylactery;
-import com.lying.variousoddities.block.VOBlock;
+import com.lying.variousoddities.block.*;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.block.AbstractBlock;
@@ -37,7 +31,8 @@ public class VOBlocks
 	public static final Block EGG_KOBOLD		= register("kobold_egg", new BlockEggKobold(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.YELLOW_TERRACOTTA).hardnessAndResistance(0.8F).setRequiresTool().harvestTool(ToolType.PICKAXE).harvestLevel(2)));
 	public static final Block EGG_KOBOLD_INERT	= register("inert_kobold_egg", new BlockEggBase(BlockEggBase.SHAPE_SMALL, AbstractBlock.Properties.create(Material.ROCK, MaterialColor.YELLOW_TERRACOTTA).hardnessAndResistance(0.8F).setRequiresTool().harvestTool(ToolType.PICKAXE).harvestLevel(2)));
 	public static final Block LAYER_SCALE		= register("scale_layer", new BlockLayerScale(AbstractBlock.Properties.create(Material.SEA_GRASS, MaterialColor.YELLOW_TERRACOTTA).hardnessAndResistance(0.3F)));
-	public static final Block PHYLACTERY		= register("phylactery", new BlockPhylactery(AbstractBlock.Properties.create(Material.ROCK)));
+	public static final Block PHYLACTERY		= register("phylactery", new BlockPhylacteryLich(AbstractBlock.Properties.create(Material.ROCK)));
+	public static final Block PHYLACTERY_EMPTY	= register("empty_phylactery", new BlockPhylacteryBase(AbstractBlock.Properties.create(Material.ROCK)));
 	
 	public static Block register(String nameIn, Block blockIn)
 	{

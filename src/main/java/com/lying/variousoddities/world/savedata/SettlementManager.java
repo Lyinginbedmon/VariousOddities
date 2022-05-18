@@ -123,6 +123,7 @@ public abstract class SettlementManager extends WorldSavedData
 	}
 	
 	/** Creates a new settlement, with no rooms, from the given type name and storage NBT. */
+	@SuppressWarnings("deprecation")
 	public static Settlement createSettlementFromNBT(ResourceLocation nameIn, CompoundNBT compound)
 	{
 		if(CLASS_MAP.containsKey(nameIn))

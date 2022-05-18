@@ -94,6 +94,29 @@ public class MobEntityMixin extends LivingEntityMixin
 				}
 			}
 		}
+		
+//		LivingData livingData = LivingData.forEntity(entity);
+//		if(livingData == null || entity.getNavigator().noPath())
+//			return;
+//		
+//		Vector3d pos = entity.getPositionVec();
+//		Vector3d move = entity.getMotion();
+//		List<LivingEntity> aggressors = livingData.getMindControlled(Conditions.AFRAID, 8D);
+//		aggressors.removeIf((aggressor) -> { return aggressor.getDistance(entity) < Math.sqrt(aggressor.getDistanceSq(pos.add(entity.getMotion()))); });
+//		if(aggressors.isEmpty())
+//			return;
+//		
+//		for(LivingEntity aggressor : aggressors)
+//		{
+//			Vector3d direction = aggressor.getPositionVec().subtract(pos).normalize();
+//			if(Math.signum(direction.x)== Math.signum(move.x))
+//				move = new Vector3d(0, move.getY(), move.getZ());
+//			if(Math.signum(direction.z)== Math.signum(move.z))
+//				move = new Vector3d(move.getX(), move.getY(), 0D);
+//		}
+//		
+//		entity.setMotion(move);
+//		entity.getNavigator().clearPath();
 	}
 	
 	private void resetScentTimer(Random rand)

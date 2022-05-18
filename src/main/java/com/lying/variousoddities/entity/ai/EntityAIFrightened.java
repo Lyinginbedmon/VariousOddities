@@ -48,6 +48,7 @@ public class EntityAIFrightened extends Goal
 			return false;
 		
 		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID, this.avoidDistance);
+		terrorisers.removeIf((terroriser) -> { return terroriser.getDistance(entity) > avoidDistance || !entity.getEntitySenses().canSee(terroriser); });
 		if(terrorisers.isEmpty())
 			return false;
 		
@@ -55,7 +56,7 @@ public class EntityAIFrightened extends Goal
 		double closest = Double.MAX_VALUE;
 		for(LivingEntity terroriser : terrorisers)
 		{
-			double dist = terroriser.getDistance(entity);
+			double dist = terroriser.getDistanceSq(entity);
 			if(dist < closest)
 			{
 				closest = dist;

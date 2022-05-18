@@ -192,7 +192,10 @@ public class ConfigVO
 		public final TypeSettings typeSettings;
 		public final FactionSettings factionSettings;
 		
-		public final ForgeConfigSpec.BooleanValue selectSpeciesOnLogin;
+		public final ForgeConfigSpec.IntValue powerLevel;
+		public final ForgeConfigSpec.BooleanValue createCharacterOnLogin;
+		public final ForgeConfigSpec.BooleanValue randomCharacters;
+		public final ForgeConfigSpec.BooleanValue newCharacterOnDeath;
 		
 		public Mobs(ForgeConfigSpec.Builder builder)
 		{
@@ -204,7 +207,10 @@ public class ConfigVO
 			typeSettings = new TypeSettings(builder);
 			factionSettings = new FactionSettings(builder);
 			
-			selectSpeciesOnLogin = builder.comment("Open species select screen when players log-in").define("selectSpeciesOnLogin", true);
+			powerLevel = builder.comment("How powerful players can make their characters at creation").defineInRange("powerLevel", 3, 0, Integer.MAX_VALUE);
+			createCharacterOnLogin = builder.comment("Open character creation when players first log-in").define("selectCharacterOnLogin", true);
+			randomCharacters = builder.comment("Create a random character at character creation, instead of letting players choose").define("randomCharacter", false);
+			newCharacterOnDeath = builder.comment("Reopen character creation on respawn after death").define("newCharacterOnDeath", false);
 			
 			builder.pop();
 		}

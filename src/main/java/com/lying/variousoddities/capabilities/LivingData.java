@@ -285,6 +285,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
 		
+		this.conditions.clear();
 		if(nbt.contains("Conditions", 9))
 		{
 			ListNBT conditionList = nbt.getList("Conditions", 10);
@@ -547,7 +548,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	{
 		if(condition != null)
 		{
-			System.out.println("Added condition "+condition.condition().getRegistryName());
 			this.conditions.add(condition);
 			
 			condition.start(this.entity);
@@ -715,7 +715,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			markDirty();
 		}
 		
-		if(!ConfigVO.MOBS.selectSpeciesOnLogin.get())
+		if(!ConfigVO.MOBS.createCharacterOnLogin.get())
 			setSelectedSpecies(true);
 		
 		handleTypes(entity, world);

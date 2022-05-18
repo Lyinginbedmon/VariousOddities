@@ -20,7 +20,8 @@
 		"MobEntityMixin",
 		"EntityPredicateMixin",
 		"TargetGoalMixin",
-		"BeaconTileEntityMixin"
+		"BeaconTileEntityMixin",
+		"PathNavigatorMixin"
 	],
 	"client":
 	[

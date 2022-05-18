@@ -74,7 +74,8 @@ public abstract class AbilityGaze extends ActivatedAbility
 				Vector3d eyeVec = living.getEyePosition(1F);
 				AxisAlignedBB box = owner.getBoundingBox();
 				
-				return box.intersects(eyeVec, eyeVec.add(lookVec.mul(range, range, range)));
+				Vector3d lookEnd = eyeVec.add(lookVec.scale(range));
+				return box.intersects(Math.min(eyeVec.x, lookEnd.x), Math.min(eyeVec.y, lookEnd.y), Math.min(eyeVec.z, lookEnd.z), Math.max(eyeVec.x, lookEnd.x), Math.max(eyeVec.y, lookEnd.y), Math.max(eyeVec.z, lookEnd.z));
 			}
 		}
 		return false;

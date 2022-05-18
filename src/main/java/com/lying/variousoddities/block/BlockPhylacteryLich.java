@@ -5,8 +5,6 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 
 import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.LivingEntity;
@@ -15,40 +13,19 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.world.ForgeChunkManager;
 
 @SuppressWarnings("deprecation")
-public class BlockPhylactery extends VOBlock implements ITileEntityProvider
+public class BlockPhylacteryLich extends BlockPhylacteryBase implements ITileEntityProvider
 {
-	protected static final VoxelShape SHAPE = Block.makeCuboidShape(3.0D, 0.0D, 3.0D, 13.0D, 14.0D, 13.0D);
-	
-	public BlockPhylactery(AbstractBlock.Properties properties)
+	public BlockPhylacteryLich(AbstractBlock.Properties properties)
 	{
-		super(properties.notSolid().setOpaque(VOBlock::isntSolid));
-	}
-	
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context)
-	{
-		return SHAPE;
-	}
-	
-	public boolean isValidPosition(BlockState state, IWorldReader worldIn, BlockPos pos)
-	{
-		return hasEnoughSolidSide(worldIn, pos.down(), Direction.UP);
-	}
-	
-	public BlockRenderType getRenderType(BlockState state)
-	{
-		return BlockRenderType.MODEL;
+		super(properties);
 	}
 	
 	public TileEntity createNewTileEntity(IBlockReader reader)

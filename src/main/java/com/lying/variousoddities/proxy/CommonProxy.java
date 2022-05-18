@@ -12,5 +12,5 @@ public abstract class CommonProxy implements IProxy
 	
 	public void clearSettlements(){ }
 	
-	public void openSpeciesSelectScreen(PlayerEntity entity){ }
+	public void openSpeciesSelectScreen(PlayerEntity entity, int power, boolean randomise){ }
 }

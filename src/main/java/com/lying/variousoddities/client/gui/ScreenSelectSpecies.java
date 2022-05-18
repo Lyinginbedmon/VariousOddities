@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 
 import javax.annotation.Nullable;
 
@@ -71,21 +72,23 @@ public class ScreenSelectSpecies extends Screen
 	private Button selectButton;
 	private boolean keepTypes = false;
 	
-	// FIXME Replace arbitrary power value with server variable
-	private int targetPower = 6;
+	private int targetPower;
+	private boolean randomise;
 	
 	private AbilityList abilityList;
 	
-	public ScreenSelectSpecies(PlayerEntity playerIn)
+	public ScreenSelectSpecies(PlayerEntity playerIn, int power, boolean random)
 	{
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
+		this.targetPower = power;
+		this.randomise = random;
 		setCurrentSpecies(Species.HUMAN);
 	}
 	
-	public ScreenSelectSpecies(PlayerEntity playerIn, @Nullable Species initialIn)
+	public ScreenSelectSpecies(PlayerEntity playerIn, int power, boolean random, @Nullable Species initialIn)
 	{
-		this(playerIn);
+		this(playerIn, power, random);
 		setCurrentSpecies(initialIn);
 	}
 	
@@ -145,12 +148,28 @@ public class ScreenSelectSpecies extends Screen
 		Species currentSpecies = getCurrentSpecies();
 		if(currentSpecies != null && !currentSpecies.getAbilities().isEmpty() && this.abilityList.isEmpty())
 			populateAbilityList(currentSpecies.getFullAbilities());
+		
+		if(this.randomise && !this.selectableSpecies.isEmpty())
+		{
+			Species selected = Species.HUMAN;
+			Random rand = player.getRNG();
+			if(!this.selectableSpecies.isEmpty())
+				do
+				{
+					selected = this.selectableSpecies.get(rand.nextInt(this.selectableSpecies.size()));
+				}
+				while(selected.getPower() > this.targetPower);
+			
+			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, selected, EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+		}
 	}
 	
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		renderDirtBackground(0);
-    	this.speciesList.render(matrixStack, mouseX, mouseY, partialTicks);
+		if(!this.randomise)
+			this.speciesList.render(matrixStack, mouseX, mouseY, partialTicks);
+		
     	this.abilityList.render(matrixStack, mouseX, mouseY, partialTicks);
 		renderBackgroundLayer(matrixStack, partialTicks);
     	hideListEdge();
@@ -331,7 +350,8 @@ public class ScreenSelectSpecies extends Screen
         	initSpecies();
 		this.speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
 		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
-		this.children.add(this.speciesList);
+		if(!this.randomise)
+			this.children.add(this.speciesList);
 		
 		int listWidth = 165;
 		this.abilityList = new AbilityList(minecraft, (this.width - listWidth) / 2, listWidth, this.height, 20);
@@ -339,7 +359,7 @@ public class ScreenSelectSpecies extends Screen
     	
     	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
     		{
-    			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower));
+    			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
     		},
 				(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
     	
@@ -356,7 +376,7 @@ public class ScreenSelectSpecies extends Screen
     	}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui.varodd.species_select.exit"), x, y); }));
     	this.addButton(new Button(this.width - 23, 3, 20, 20, new StringTextComponent(">"), (button) -> 
     		{
-    			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower));
+    			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
     		},
     			(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
     }

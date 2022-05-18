@@ -29,7 +29,7 @@ public class AbilityFearAura extends AbilityGazeControl
 		List<LivingEntity> targets = entity.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(range, 4D, range), this::canAffect);
 		List<LivingEntity> realTargets = Lists.newArrayList();
 		for(LivingEntity target : targets)
-			if(target != entity && !entity.isRidingOrBeingRiddenBy(target) && isValidTarget(target, entity))
+			if(target != entity && !entity.isPassenger(target) && !target.isPassenger(entity) && isValidTarget(target, entity))
 				realTargets.add(target);
 		return realTargets;
 	}

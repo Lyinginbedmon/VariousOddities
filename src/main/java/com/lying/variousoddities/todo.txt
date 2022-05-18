@@ -1,11 +1,11 @@
 Bodies
-	Fix player binding to body (limit movement away according to binding status)
+	Fix player binding to body (limit movement away according to binding status, reuse terror code)
 	Fix mob body spawning unreliability
 Character Sheet
 	Background textures
+	Button icon
 Conditions
-	Frightened cannot voluntarily move closer to aggressor
-	Aura icon textures & multi-icon handling
+	Condition icon textures (Fear, Dominated)
 Warg
 	Saddle, carpet, armour textures
 	Refine held item rendering
@@ -14,10 +14,6 @@ AbstractGoblinWolf
 Misc
 	Adjust mob vision to widen loss-of-detection range from darkness
 	As many outstanding FIXMEs and TODOs as possible
-	Phylactery!
-		Textures
-		Area notification
-		Everything else: Next version w/ Companion function!
 
 Possession (moved to separate workspace)
 	Move players to body position w/out breaking motion controls

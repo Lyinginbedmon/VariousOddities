@@ -13,6 +13,7 @@ import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemMossBottle;
 import com.lying.variousoddities.item.ItemPhylactery;
 import com.lying.variousoddities.item.ItemSap;
+import com.lying.variousoddities.item.ItemScrollRemaking;
 import com.lying.variousoddities.item.ItemSpellContainer;
 import com.lying.variousoddities.item.VOItemGroup;
 import com.lying.variousoddities.reference.Reference;
@@ -48,13 +49,18 @@ public class VOItems
 	public static final Item SCALE_KOBOLD	= register("kobold_scale", new Item(new Item.Properties().group(VOItemGroup.LOOT)));
 	public static final Item MOSS_BOTTLE	= register("moss_bottle", new ItemMossBottle(new Item.Properties().group(VOItemGroup.LOOT)));
 	
+	// Consumables
+	public static final Item SCROLL_SPECIES	= register("remaking_scroll", new ItemScrollRemaking(false, new Item.Properties().group(VOItemGroup.LOOT)));
+	public static final Item SCROLL_RANDOM_SPECIES	= register("corrupted_remaking_scroll", new ItemScrollRemaking(true, new Item.Properties().group(VOItemGroup.LOOT)));
+	
 	// Block items
 	public static final BlockItem DRAFTING_TABLE	= registerBlock("drafting_table", VOBlocks.TABLE_DRAFTING, VOItemGroup.LOOT);
 	public static final BlockItem EGG_KOBOLD		= registerBlock("kobold_egg", VOBlocks.EGG_KOBOLD);
 	public static final BlockItem EGG_KOBOLD_INERT	= registerBlock("inert_kobold_egg", VOBlocks.EGG_KOBOLD_INERT);
 	public static final BlockItem MOSS_BLOCK		= registerBlock("moss_block", VOBlocks.MOSS_BLOCK);
 	public static final BlockItem LAYER_SCALE		= registerBlock("scale_layer", VOBlocks.LAYER_SCALE);
-	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", new ItemPhylactery(new Item.Properties().group(VOItemGroup.BLOCKS)));
+	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", new ItemPhylactery(new Item.Properties().group(VOItemGroup.BLOCKS).maxStackSize(1)));
+	public static final BlockItem PHYLACTERY_EMPTY	= registerBlock("empty_phylactery", new BlockItem(VOBlocks.PHYLACTERY_EMPTY, new Item.Properties().group(VOItemGroup.BLOCKS).maxStackSize(1)));
 	
 	// Containers
 	public static final ContainerType<ContainerWarg> CONTAINER_WARG	= registerContainer("warg_inventory", ContainerWarg::fromNetwork);

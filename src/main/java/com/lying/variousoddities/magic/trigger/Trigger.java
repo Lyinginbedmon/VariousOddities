@@ -89,6 +89,7 @@ public abstract class Trigger
 	}
 	
 	/** Constructs a trigger of the given type from the given NBT compound */
+	@SuppressWarnings("deprecation")
 	public static Trigger readTriggerFromNBT(String nameIn, CompoundNBT compound)
 	{
 		if(CLASS_MAP.containsKey(nameIn))
@@ -142,6 +143,7 @@ public abstract class Trigger
 		return compound;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private static void registerTrigger(Class<? extends Trigger> triggerClass)
 	{
 		Trigger instance = null;
