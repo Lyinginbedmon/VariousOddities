@@ -9,6 +9,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.PlayerData;
+import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.inventory.ContainerBody;
 import com.lying.variousoddities.utility.VOHelper;
@@ -41,16 +43,12 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 
 public abstract class AbstractBody extends LivingEntity implements IInventoryChangedListener
 {
-	public static final AxisAlignedBB ENTIRE_WORLD = new AxisAlignedBB(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
     protected static final DataParameter<CompoundNBT> ENTITY	= EntityDataManager.<CompoundNBT>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
     protected static final DataParameter<CompoundNBT> PROFILE	= EntityDataManager.<CompoundNBT>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
     protected static final DataParameter<CompoundNBT> EQUIPMENT	= EntityDataManager.<CompoundNBT>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
@@ -371,6 +369,12 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	@Nullable
 	public LivingEntity getBodyForRender()
 	{
+		if(isPlayer())
+		{
+			EntityDummyBiped dummy = VOEntities.DUMMY_BIPED.create(getEntityWorld());
+			dummy.setGameProfile(getGameProfile());
+			return dummy;
+		}
 		return getBody();
 	}
 	
@@ -385,26 +389,26 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		if(range < 0D || (body instanceof AbstractBody && ((AbstractBody)body).isPersistenceRequired() && !((AbstractBody)body).shouldBindIfPersistent()))
 			return;
 		
-		Vector3d pos = body.getPositionVec();
-		Vector3d dest = soul.getPositionVec();
-		double dist = pos.distanceTo(dest);
-		if(dist <= range)
-			return;
-		
-		range = Math.min(dist, range);
-		Vector3d toBody = dest.subtract(pos).normalize();
-		dest = pos.add(toBody.mul(range, range, range));
-		
-		// If range is greater than 0, rotate soul to face body
-		if(range > 0D)
-		{
-			Vector3d fromBody = pos.subtract(dest);
-			float yaw = (float)Math.toDegrees(MathHelper.atan2(fromBody.z, fromBody.x)) - 90.0F;
-			soul.setPositionAndRotation(dest.x, dest.y, dest.z, yaw, soul.rotationPitch);
-		}
-		// If range is zero, just reposition soul
-		else
-			soul.func_242281_f(dest.x, dest.y, dest.z);
+//		Vector3d pos = body.getPositionVec();
+//		Vector3d dest = soul.getPositionVec();
+//		double dist = pos.distanceTo(dest);
+//		if(dist <= range)
+//			return;
+//		
+//		range = Math.min(dist, range);
+//		Vector3d toBody = dest.subtract(pos).normalize();
+//		dest = pos.add(toBody.mul(range, range, range));
+//		
+//		// If range is greater than 0, rotate soul to face body
+//		if(range > 0D)
+//		{
+//			Vector3d fromBody = pos.subtract(dest);
+//			float yaw = (float)Math.toDegrees(MathHelper.atan2(fromBody.z, fromBody.x)) - 90.0F;
+//			soul.setPositionAndRotation(dest.x, dest.y, dest.z, yaw, soul.rotationPitch);
+//		}
+//		// If range is zero, just reposition soul
+//		else
+//			soul.func_242281_f(dest.x, dest.y, dest.z);
 	}
 	
 	protected final void updateSize()
@@ -496,6 +500,18 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public void tick()
 	{
 		super.tick();
+		
+		if(isPlayer())
+		{
+			PlayerEntity player = (PlayerEntity)getSoul();
+			if(player != null)
+			{
+				SoulCondition condition = PlayerData.forPlayer(player).getSoulCondition();
+				double dist = player.getDistance(this);
+				if(dist > condition.getWanderRange() && condition.getWanderRange() >= 0)
+					player.setPositionAndUpdate(getPosX(), getPosY(), getPosZ());
+			}
+		}
 		
 		if(getEntityWorld().isRemote)
 			return;

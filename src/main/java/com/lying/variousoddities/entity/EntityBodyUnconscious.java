@@ -74,7 +74,7 @@ public class EntityBodyUnconscious extends AbstractBody
 	public static EntityBodyUnconscious getBodyFromEntity(@Nonnull LivingEntity living)
 	{
 		World world = living.getEntityWorld();
-		for(EntityBodyUnconscious body : world.getEntitiesWithinAABB(EntityBodyUnconscious.class, AbstractBody.ENTIRE_WORLD))
+		for(EntityBodyUnconscious body : world.getEntitiesWithinAABB(EntityBodyUnconscious.class, living.getBoundingBox().grow(256D)))
 			if(body.getSoulUUID().equals(living.getUniqueID()))
 				return body;
 		return null;
@@ -118,7 +118,7 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	public LivingEntity getBody()
 	{
-		for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, ENTIRE_WORLD))
+		for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, getBoundingBox().grow(256D)))
 			if(living.getUniqueID() == this.getSoulUUID())
 				return living;
 		

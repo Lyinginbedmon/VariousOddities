@@ -27,6 +27,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -230,11 +231,28 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	@Nullable
 	public Entity getBody(@Nonnull World world)
 	{
-		if(world == null || getBodyCondition() == BodyCondition.ALIVE || getBodyUUID() == null)
+		if(world == null || getBodyCondition() == BodyCondition.ALIVE)
 			return null;
 		
-		List<Entity> candidates = world.getEntitiesWithinAABB(Entity.class, AbstractBody.ENTIRE_WORLD, this::isBody);
-		return candidates.isEmpty() ? null : candidates.get(0);
+		AxisAlignedBB bounds = player.getBoundingBox().grow(256D);
+		if(getBodyUUID() != null)
+		{
+			List<Entity> candidates = world.getEntitiesWithinAABB(Entity.class, bounds, this::isBody);
+			if(!candidates.isEmpty())
+				return candidates.get(0);
+		}
+		
+		List<AbstractBody> candidates = world.getEntitiesWithinAABB(AbstractBody.class, bounds, AbstractBody::isPlayer);
+		for(AbstractBody body : candidates)
+		{
+			if(body.isPlayer() && body.getGameProfile().getId().equals(player.getGameProfile().getId()))
+			{
+				setBodyUUID(body.getUniqueID());
+				return body;
+			}
+		}
+		
+		return null;
 	}
 	
 	public void tick(PlayerEntity player)

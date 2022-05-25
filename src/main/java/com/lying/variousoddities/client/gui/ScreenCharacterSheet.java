@@ -15,12 +15,15 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.Types;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tags.ITag;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
@@ -32,6 +35,7 @@ import net.minecraft.util.text.event.HoverEvent.Action;
 
 public class ScreenCharacterSheet extends Screen
 {
+	private static final ResourceLocation SHEET_GUI_TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/character_sheet.png");
 	private static final int ACTION_ICON_SIZE = 12;
 	private static final int ACTION_ICON_SEP = 4;
 	
@@ -115,7 +119,7 @@ public class ScreenCharacterSheet extends Screen
 		};
         
 		this.isDoubleList = !actives.isEmpty();
-		int listWidth = Math.max((int)(this.width * (actives.isEmpty() ? 0.6D : 0.3D)), 200);
+		int listWidth = MathHelper.clamp((int)(this.width * (actives.isEmpty() ? 0.6D : 0.3D)), 200, 250);
 		int listSep = (ACTION_ICON_SIZE + ACTION_ICON_SEP * 2) / 2;
 		this.listPassives = new AbilityList(minecraft, isDoubleList ? (this.width / 2) + listSep : (this.width - listWidth) / 2, listWidth, this.height, 20);
 		if(!passives.isEmpty())
@@ -139,9 +143,11 @@ public class ScreenCharacterSheet extends Screen
 		Style tooltipToRender = null;
 		
 		renderDirtBackground(0);
+		renderBackgroundTexture(matrixStack, this.isDoubleList);
 		if(this.isDoubleList)
 			this.listActives.render(matrixStack, mouseX, mouseY, partialTicks);
 		this.listPassives.render(matrixStack, mouseX, mouseY, partialTicks);
+		renderForegroundTexture(matrixStack, this.isDoubleList);
 		
 		int yPos = 2;
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
@@ -186,6 +192,51 @@ public class ScreenCharacterSheet extends Screen
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 		if(tooltipToRender != null)
 			renderComponentHoverEffect(matrixStack, tooltipToRender, mouseX, mouseY);
+	}
+	
+	@SuppressWarnings("deprecation")
+	private void renderBackgroundTexture(MatrixStack matrixStack, boolean isDouble)
+	{
+		RenderSystem.color4f(1F, 1F, 1F, 1F);
+		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
+		
+		int passivesRight = this.listPassives.getLeft() + this.listPassives.getWidth();
+		int sizeX = (isDouble ? passivesRight - this.listActives.getLeft() : this.listPassives.getWidth()) + 10;
+		
+		int startX = (this.width - sizeX) / 2;
+		if(!isDouble)
+		{
+			startX = this.listPassives.getLeft() - ACTION_ICON_SEP - ACTION_ICON_SIZE - 5;
+			passivesRight = ((this.width + this.listPassives.getWidth()) / 2) + 5;
+			sizeX = passivesRight - startX;
+		}
+		
+		int startY = 13;
+		int sizeY = this.height - 5 - startY;
+		
+		int segWidth = Math.min(240, sizeX / 2);
+		// Top Left
+		this.blit(matrixStack, startX, startY, 0, 0, segWidth, sizeY);
+		
+		// Top Right
+		// Texture min X offset to ensure far right of segment is displayed
+		this.blit(matrixStack, startX + segWidth, startY, 240 + (240 - segWidth), 0, segWidth, sizeY);
+		
+		// Bottom Left
+		// Bottom Right
+		// Header bar
+		
+//		this.blit(matrixStack, startX, startY, 0, 0, sizeX, sizeY);
+	}
+	
+	private void renderForegroundTexture(MatrixStack matrixStack, boolean isDouble)
+	{
+		// FIXME Render edge overlays of lists
+	}
+	
+	public void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight)
+	{
+		blit(matrixStack, x, y, getBlitOffset(), (float)uOffset, (float)vOffset, uWidth, vHeight, 512, 512);
 	}
 	
 	private void renderActionSet(MatrixStack matrixStack, int mouseX, int mouseY)

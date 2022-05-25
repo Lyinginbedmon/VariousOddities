@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.utility.VOHelper;
@@ -59,13 +58,10 @@ public class MovementInputMixin
 			handleTerror(player, input, ci);
 			
 			PlayerData data = PlayerData.forPlayer(player);
-			if(data != null && !PlayerData.isPlayerNormalFunction(player))
+			if(data != null && PlayerData.isPlayerSoulBound(player))
 			{
 				Entity body = data.getBody(player.getEntityWorld());
-				if(body == null)
-					return;
-				
-				if(data.getSoulCondition() != SoulCondition.ROAMING)
+				if(body != null && data.getSoulCondition().getWanderRange() >= 0D)
 					handleBound(player, body.getPositionVec(), data.getSoulCondition().getWanderRange(), input, ci);
 			}
 		}
@@ -121,6 +117,9 @@ public class MovementInputMixin
 		float slow = 1F;
 		for(LivingEntity terroriser : terrorisers)
 		{
+			if(terroriser.isInvisibleToPlayer(player))	// TODO Account for obstruction of vision
+				continue;
+			
 			double dist = terroriser.getDistanceSq(player);
 			// If movement would take us too close to terroriser, nullify or slow down
 			if(dist > terroriser.getDistanceSq(currentPos.add(move)))
@@ -143,29 +142,28 @@ public class MovementInputMixin
 	
 	private static void handleBound(PlayerEntity player, Vector3d boundPos, double maxDist, MovementInput input, final CallbackInfo ci)
 	{
-		double dist = Math.sqrt(player.getDistanceSq(boundPos));
-		
 		Vector3d currentPos = player.getPositionVec();
 		Vector3d move = getAbsoluteMotion(new Vector3d(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
-		double distB = player.getDistanceSq(currentPos.add(move));
 		
-		if(distB > dist)
-			if(distB >= maxDist)
-			{
-				clearMoveInputs(input);
-				ci.cancel();
-				return;
-			}
-			else if(distB > (maxDist * 0.5D))
-			{
-				maxDist *= 0.5D;
-				float slow = (float)((distB - maxDist) / maxDist);
-				
-				if(slow < 1F)
-				{
-					input.moveForward *= slow;
-					input.moveStrafe *= slow;
-				}
-			}
+		double dist = boundPos.distanceTo(player.getPositionVec());
+		double distB = boundPos.distanceTo(currentPos.add(move));
+		
+		if(distB >= maxDist)
+		{
+			clearMoveInputs(input);
+			input.jump = false;
+			ci.cancel();
+			return;
+		}
+		
+		maxDist *= 0.5D;
+		if(distB > dist && dist > maxDist)
+		{
+			distB -= maxDist;
+			
+			float slow = 1F - (float)(distB / maxDist);
+			input.moveForward *= slow;
+			input.moveStrafe *= slow;
+		}
 	}
 }

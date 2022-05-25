@@ -21,9 +21,21 @@ public class Conditions
 {
 	private static final List<Condition> conditions = Lists.newArrayList();
 	
-	public static final Condition AFRAID = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "afraid"), new ConditionMindAffecting(MagicSubType.FEAR));
+	public static final Condition AFRAID = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "afraid"), new ConditionMindAffecting(MagicSubType.FEAR)
+			{
+				public ResourceLocation getIconTexture(boolean affecting)
+				{
+					return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/condition/"+(affecting ? "afraid" : "afraid_cause")+".png");
+				}
+			});
 	public static final Condition CHARMED = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "charmed"), new ConditionMindAffecting(MagicSchool.ENCHANTMENT));
-	public static final Condition DOMINATED = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "dominated"), new ConditionMindAffecting(MagicSchool.ENCHANTMENT));
+	public static final Condition DOMINATED = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "dominated"), new ConditionMindAffecting(MagicSchool.ENCHANTMENT)
+			{
+				public ResourceLocation getIconTexture(boolean affecting)
+				{
+					return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/condition/"+(affecting ? "dominated" : "dominated_cause")+".png");
+				}
+			});
 	
 	private static Condition register(ResourceLocation nameIn, Condition conditionIn)
 	{

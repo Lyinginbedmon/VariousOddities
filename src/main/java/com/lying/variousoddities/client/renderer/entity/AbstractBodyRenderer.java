@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.EntityDummyBiped;
+import com.lying.variousoddities.init.VOEntities;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.Minecraft;
@@ -15,6 +16,7 @@ import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.vector.Vector3f;
 
@@ -73,15 +75,20 @@ public abstract class AbstractBodyRenderer extends LivingRenderer<AbstractBody, 
 				EntityRenderer<LivingEntity> renderer = (EntityRenderer<LivingEntity>)Minecraft.getInstance().getRenderManager().getRenderer(body);
 				if(entityIn.isPlayer())
 				{
-					EntityDummyBiped dummy = (EntityDummyBiped)body;
-					UUID playerID = entityIn.getGameProfile().getId();
-					NetworkPlayerInfo playerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(playerID);
-					String skinType = playerInfo == null ? DefaultPlayerSkin.getSkinType(playerID) : playerInfo.getSkinType();
-					
-					if(skinType.equalsIgnoreCase("slim"))
-						this.playerRendererThin.render(dummy, entityIn.rotationYaw, 0F, matrixStackIn, bufferIn, packedLightIn);
-					else
-						this.playerRendererThick.render(dummy, entityIn.rotationYaw, 0F, matrixStackIn, bufferIn, packedLightIn);
+					try
+					{
+						EntityDummyBiped dummy = (EntityDummyBiped)body;
+						dummy.setGameProfile(entityIn.getGameProfile());
+						UUID playerID = entityIn.getGameProfile().getId();
+						NetworkPlayerInfo playerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(playerID);
+						String skinType = playerInfo == null ? DefaultPlayerSkin.getSkinType(playerID) : playerInfo.getSkinType();
+						
+						if(skinType.equalsIgnoreCase("slim"))
+							this.playerRendererThin.render(dummy, entityIn.rotationYaw, 0F, matrixStackIn, bufferIn, packedLightIn);
+						else
+							this.playerRendererThick.render(dummy, entityIn.rotationYaw, 0F, matrixStackIn, bufferIn, packedLightIn);
+					}
+					catch(Exception e) { }
 				}
 				else if(renderer != null)
 					renderer.render(body, entityYaw, 0F, matrixStackIn, bufferIn, packedLightIn);

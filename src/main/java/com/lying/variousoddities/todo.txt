@@ -1,6 +1,6 @@
 Bodies
-	Fix player binding to body (limit movement away according to binding status, reuse terror code)
 	Fix mob body spawning unreliability
+	Fix player waking up & respawning
 Character Sheet
 	Background textures
 	Button icon

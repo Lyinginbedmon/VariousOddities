@@ -3,14 +3,11 @@ package com.lying.variousoddities.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityVision;
-import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -40,21 +37,6 @@ public class EntityMixinClient
 					ci.setReturnValue(true);
 					break;
 				}
-		}
-	}
-	
-	@Inject(method = "tick()V", at = @At("TAIL"))
-	public void tickTail(final CallbackInfo ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		PlayerEntity player = Minecraft.getInstance().player;
-		if(player == null)
-			return;
-		
-		if(ent != player && ent.isAlive())
-		{
-			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent) && !VOHelper.isCreativeOrSpectator(player))
-				AbstractBody.moveWithinRangeOf(ent, player, PlayerData.forPlayer(player).getSoulCondition().getWanderRange());
 		}
 	}
 }
