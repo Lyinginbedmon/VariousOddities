@@ -50,13 +50,13 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketAbilityRemove.class, PacketAbilityRemove::encode, PacketAbilityRemove::decode, PacketAbilityRemove::handle);
 		HANDLER.registerMessage(id++, PacketPetrifying.class, PacketPetrifying::encode, PacketPetrifying::decode, PacketPetrifying::handle);
 		HANDLER.registerMessage(id++, PacketMountGui.class, PacketMountGui::encode, PacketMountGui::decode, PacketMountGui::handle);
-		HANDLER.registerMessage(id++, PacketSyncBludgeoning.class, PacketSyncBludgeoning::encode, PacketSyncBludgeoning::decode, PacketSyncBludgeoning::handle);
 		HANDLER.registerMessage(id++, PacketSit.class, PacketSit::encode, PacketSit::decode, PacketSit::handle);
 		HANDLER.registerMessage(id++, PacketSyncScents.class, PacketSyncScents::encode, PacketSyncScents::decode, PacketSyncScents::handle);
 		HANDLER.registerMessage(id++, PacketAddScent.class, PacketAddScent::encode, PacketAddScent::decode, PacketAddScent::handle);
 		HANDLER.registerMessage(id++, PacketSyncPlayerData.class, PacketSyncPlayerData::encode, PacketSyncPlayerData::decode, PacketSyncPlayerData::handle);
 		HANDLER.registerMessage(id++, PacketDeadDeath.class, PacketDeadDeath::encode, PacketDeadDeath::decode, PacketDeadDeath::handle);
 		HANDLER.registerMessage(id++, PacketUnconsciousAwaken.class, PacketUnconsciousAwaken::encode, PacketUnconsciousAwaken::decode, PacketUnconsciousAwaken::handle);
+		HANDLER.registerMessage(id++, PacketBludgeoned.class, PacketBludgeoned::encode, PacketBludgeoned::decode, PacketBludgeoned::handle);
 	}
 	
 	/**

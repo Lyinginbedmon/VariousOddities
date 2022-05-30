@@ -78,12 +78,14 @@ public class MinecraftMixin
 					// Send respawn packet if delay completed
 					if(data.timeToRespawnable() == 0F)
 						PacketHandler.sendToServer(new PacketDeadDeath());
+					break;
 				case UNCONSCIOUS:
 					// Send wakeup packet if no longer unconscious
 					if(!LivingData.forEntity(player).isUnconscious() && data.getSoulCondition() == SoulCondition.ALIVE)
 						PacketHandler.sendToServer(new PacketUnconsciousAwaken());
+					break;
 				default:
-					;
+					break;
 			}
 		}
 		

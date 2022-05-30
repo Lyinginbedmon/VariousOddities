@@ -206,7 +206,7 @@ public class VOBusClient
 			return;
 		
 		double scale = Math.min(0.5D, mob.getWidth());
-		
+		// TODO Render higher if mob has visible nametag (esp. players)
 		Vector3d mobPos = mob.getPositionVec().add(0D, mob.getHeight() + (scale * 0.5D) + 0.1D, 0D);
 		Vector3d viewVec = mc.getRenderManager().info.getProjectedView();
 		Vector3d iconPos = mobPos.subtract(viewVec);

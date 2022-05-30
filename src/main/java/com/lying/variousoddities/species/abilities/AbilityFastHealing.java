@@ -68,7 +68,7 @@ public class AbilityFastHealing extends Ability
 				if(++ability.ticksSinceHeal >= Reference.Values.TICKS_PER_SECOND * 6)
 				{
 					if(data.getBludgeoning() > 0F)
-						data.setBludgeoning(data.getBludgeoning() - ability.rate);
+						data.addBludgeoning(-ability.rate);
 					else
 						entity.heal(ability.rate);
 					ability.ticksSinceHeal = 0;

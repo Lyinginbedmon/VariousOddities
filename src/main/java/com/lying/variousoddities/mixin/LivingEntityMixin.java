@@ -286,7 +286,7 @@ public class LivingEntityMixin extends EntityMixin
 		{
 			LivingData data = LivingData.forEntity((LivingEntity)(Object)this);
 			if(data != null && data.getBludgeoning() > 0)
-				data.setBludgeoning(Math.max(0F, data.getBludgeoning() - healAmount));
+				data.addBludgeoning(Math.min(0F, -healAmount));
 		}
 	}
 	

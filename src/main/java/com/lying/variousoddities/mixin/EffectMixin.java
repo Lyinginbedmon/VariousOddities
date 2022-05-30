@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VODamageSource;
 
 import net.minecraft.entity.LivingEntity;
@@ -17,6 +18,7 @@ public class EffectMixin
 	@Inject(method = "performEffect", at = @At("HEAD"), cancellable = true)
 	public void performEffect(LivingEntity living, int amplifier, final CallbackInfo ci)
 	{
+		LivingData data = LivingData.forEntity(living);
 		Effect effect = (Effect)(Object)this;
 		if(effect == Effects.POISON)
 		{
@@ -24,5 +26,7 @@ public class EffectMixin
 				living.attackEntityFrom(VODamageSource.POISON, 1.0F);
 			ci.cancel();
 		}
+		else if(effect == Effects.REGENERATION && data != null && data.getBludgeoning() > 0F && !living.getEntityWorld().isRemote)
+			data.addBludgeoning(-1F);
 	}
 }

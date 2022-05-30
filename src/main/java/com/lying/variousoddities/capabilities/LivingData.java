@@ -26,9 +26,9 @@ import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.init.VORegistries;
+import com.lying.variousoddities.network.PacketBludgeoned;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
-import com.lying.variousoddities.network.PacketSyncBludgeoning;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.network.PacketVisualPotion;
 import com.lying.variousoddities.reference.Reference;
@@ -72,6 +72,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -470,19 +471,19 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	}
 	
 	public float getBludgeoning(){ return this.bludgeoning; }
+	public void addBludgeoning(float bludgeonIn)
+	{
+		boolean knockedOutThen = this.bludgeoning >= (entity == null ? 20F : entity.getHealth());
+		setBludgeoning(this.bludgeoning + bludgeonIn);
+		boolean knockedOutNow = this.bludgeoning >= (entity == null ? 20F : entity.getHealth());
+		
+		if(bludgeonIn > 0F && entity != null && !entity.getEntityWorld().isRemote)
+			PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketBludgeoned(entity.getUniqueID(), knockedOutNow && !knockedOutThen));
+	}
 	public void setBludgeoning(float bludgeonIn)
 	{
-		float oldDamage = this.bludgeoning;
-		this.bludgeoning = Math.max(0F, Math.min(bludgeonIn, this.entity.getMaxHealth() + ConfigVO.GENERAL.bludgeoningCap()));
-		
-		if(oldDamage != this.bludgeoning)
-		{
-			this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
-			
-			if(this.entity != null && this.isPlayer && !this.entity.getEntityWorld().isRemote)
-				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketSyncBludgeoning(this.bludgeoning));
-			markDirty();
-		}
+		this.bludgeoning = MathHelper.clamp(bludgeonIn, 0F, this.entity.getMaxHealth() + ConfigVO.GENERAL.bludgeoningCap());
+		markDirty();
 	}
 	
 	/**
@@ -495,12 +496,17 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public boolean isUnconscious()
 	{
 		if(this.entity != null && this.entity.isAlive())
-		{
-			if(this.entity.getHealth() > 0 && getBludgeoning() > 0 && this.entity.getHealth() <= getBludgeoning())
-				return true;
-			else if(this.entity.getActivePotionEffect(VOPotions.SLEEP) != null && this.entity.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
-				return true;
-		}
+			return unconscious(entity);
+		return false;
+	}
+	
+	public static boolean unconscious(@Nonnull LivingEntity entity)
+	{
+		LivingData data = LivingData.forEntity(entity);
+		if(entity.getHealth() > 0 && data.getBludgeoning() > 0 && entity.getHealth() <= data.getBludgeoning())
+			return true;
+		else if(entity.getActivePotionEffect(VOPotions.SLEEP) != null && entity.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
+			return true;
 		return false;
 	}
 	
@@ -742,9 +748,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		handleAir(actions.breathes(), entity);
 		
-		if(this.bludgeoning > 0F)
+		if(this.bludgeoning > 0F && !world.isRemote)
 			if(--this.recoveryTimer <= 0)
-				setBludgeoning(this.bludgeoning - 1F);
+			{
+				addBludgeoning(-(this.isPlayer && ((PlayerEntity)entity).isPlayerFullyAsleep() ? 2F : 1F));
+				this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
+			}
 		
 		if(isUnconscious() != isActuallyUnconscious())
 		{
@@ -766,7 +775,6 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					((AbstractBody)body).setPocketInventory(getPocketInventory());
 					if(entity.isAddedToWorld())
 					{
-						// TODO Play crit attack noise when creature is knocked unconscious
 						if(!world.isRemote)
 						{
 							world.addEntity(body);

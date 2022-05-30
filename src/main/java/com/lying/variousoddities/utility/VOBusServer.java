@@ -32,8 +32,8 @@ import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.network.PacketSyncAir;
-import com.lying.variousoddities.network.PacketSyncBludgeoning;
 import com.lying.variousoddities.network.PacketSyncLivingData;
+import com.lying.variousoddities.network.PacketSyncPlayerData;
 import com.lying.variousoddities.network.PacketSyncSpecies;
 import com.lying.variousoddities.potion.PotionSleep;
 import com.lying.variousoddities.reference.Reference;
@@ -121,19 +121,23 @@ public class VOBusServer
 		PlayerEntity player = event.getPlayer();
 		PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncSpecies(VORegistries.SPECIES));
 		
-		LivingData data = LivingData.forEntity(player);
-		if(data != null)
+		LivingData livingData = LivingData.forEntity(player);
+		if(livingData != null)
 		{
-			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), data));
-			data.getAbilities().markDirty();
+			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), livingData));
+			livingData.getAbilities().markDirty();
 			
-			if(!data.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
+			if(!livingData.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
 			{
 				if(!player.getEntityWorld().isRemote)
 					PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
 				player.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
 			}
 		}
+		
+		PlayerData playerData = PlayerData.forPlayer(player);
+		if(playerData != null)
+			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncPlayerData(player.getUniqueID(), playerData));
 	}
 	
 	@SubscribeEvent
@@ -473,11 +477,7 @@ public class VOBusServer
 			LivingData data = LivingData.forEntity(hurtEntity);
 			
 			if(data != null)
-			{
-				data.setBludgeoning(data.getBludgeoning() + event.getAmount());
-				if(hurtEntity.getType() == EntityType.PLAYER && !hurtEntity.getEntityWorld().isRemote)
-					PacketHandler.sendTo((ServerPlayerEntity)hurtEntity, new PacketSyncBludgeoning(data.getBludgeoning()));
-			}
+				data.addBludgeoning(event.getAmount());
 			
 			event.setCanceled(true);
 		}

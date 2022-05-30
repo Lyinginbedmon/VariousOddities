@@ -25,7 +25,7 @@ public class Conditions
 			{
 				public ResourceLocation getIconTexture(boolean affecting)
 				{
-					return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/condition/"+(affecting ? "afraid" : "afraid_cause")+".png");
+					return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/condition/afraid"+(affecting ? "" : "_source")+".png");
 				}
 			});
 	public static final Condition CHARMED = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "charmed"), new ConditionMindAffecting(MagicSchool.ENCHANTMENT));
@@ -33,7 +33,7 @@ public class Conditions
 			{
 				public ResourceLocation getIconTexture(boolean affecting)
 				{
-					return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/condition/"+(affecting ? "dominated" : "dominated_cause")+".png");
+					return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/condition/dominated"+(affecting ? "" : "_source")+".png");
 				}
 			});
 	

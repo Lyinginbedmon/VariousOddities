@@ -1,6 +1,5 @@
 Bodies
 	Fix mob body spawning unreliability
-	Fix player waking up & respawning
 Character Sheet
 	Background textures
 	Button icon
