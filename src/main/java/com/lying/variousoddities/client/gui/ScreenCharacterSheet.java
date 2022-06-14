@@ -18,6 +18,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
@@ -35,7 +36,7 @@ import net.minecraft.util.text.event.HoverEvent.Action;
 
 public class ScreenCharacterSheet extends Screen
 {
-	private static final ResourceLocation SHEET_GUI_TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/character_sheet.png");
+	public static final ResourceLocation SHEET_GUI_TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/character_sheet.png");
 	private static final int ACTION_ICON_SIZE = 12;
 	private static final int ACTION_ICON_SEP = 4;
 	
@@ -149,6 +150,9 @@ public class ScreenCharacterSheet extends Screen
 		this.listPassives.render(matrixStack, mouseX, mouseY, partialTicks);
 		renderForegroundTexture(matrixStack, this.isDoubleList);
 		
+		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
+		this.blit(matrixStack, (this.width - 160) / 2, 16, 0, 212, 160, 40);
+		
 		int yPos = 2;
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
 		yPos += 17;
@@ -176,16 +180,16 @@ public class ScreenCharacterSheet extends Screen
 		
 		yPos += 12;
 		ScreenSelectSpecies.drawHealthAndArmour(matrixStack, this.font, this.width / 2, yPos + 2, (int)health, (int)armour);
-		yPos += this.font.FONT_HEIGHT + 2;
 		
+		this.listActives.setTop(67);
+		this.listPassives.setTop(67);
 		if(this.isDoubleList)
 		{
-			drawCenteredString(matrixStack, this.font, new TranslationTextComponent("gui.varodd.character_sheet.actives"), this.listActives.getLeft() + this.listActives.getWidth() / 2, yPos, 16777215);
-			drawCenteredString(matrixStack, this.font, new TranslationTextComponent("gui.varodd.character_sheet.passives"), this.listPassives.getLeft() + this.listPassives.getWidth() / 2, yPos, 16777215);
+			ITextComponent activesTitle = new TranslationTextComponent("gui.varodd.character_sheet.actives");
+			this.font.drawString(matrixStack, activesTitle.getString(), this.listActives.getLeft() + this.listActives.getWidth() / 2 - this.font.getStringWidth(activesTitle.getString()) / 2, this.listActives.getTop() - 1 - this.font.FONT_HEIGHT, 4210752);
 		}
-		
-		this.listActives.setTop(65);
-		this.listPassives.setTop(65);
+		ITextComponent passivesTitle = new TranslationTextComponent("gui.varodd.character_sheet.passives");
+		this.font.drawString(matrixStack, passivesTitle.getString(), this.listPassives.getLeft() + this.listPassives.getWidth() / 2 - this.font.getStringWidth(passivesTitle.getString()) / 2, this.listPassives.getTop() - 1 - this.font.FONT_HEIGHT, 4210752);
 		
 		renderActionSet(matrixStack, mouseX, mouseY);
 		
@@ -194,44 +198,81 @@ public class ScreenCharacterSheet extends Screen
 			renderComponentHoverEffect(matrixStack, tooltipToRender, mouseX, mouseY);
 	}
 	
-	@SuppressWarnings("deprecation")
 	private void renderBackgroundTexture(MatrixStack matrixStack, boolean isDouble)
+	{
+		// Fill
+		TextureArea area = getTextureArea();
+		renderFill(matrixStack, area.xMin + 6, area.yMin + 6, area.width() - 12, area.height() - 12);
+	}
+	
+	@SuppressWarnings("deprecation")
+	private void renderOuterEdges(MatrixStack matrixStack, boolean isDouble)
 	{
 		RenderSystem.color4f(1F, 1F, 1F, 1F);
 		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
 		
-		int passivesRight = this.listPassives.getLeft() + this.listPassives.getWidth();
-		int sizeX = (isDouble ? passivesRight - this.listActives.getLeft() : this.listPassives.getWidth()) + 10;
+		TextureArea area = getTextureArea();
 		
-		int startX = (this.width - sizeX) / 2;
-		if(!isDouble)
-		{
-			startX = this.listPassives.getLeft() - ACTION_ICON_SEP - ACTION_ICON_SIZE - 5;
-			passivesRight = ((this.width + this.listPassives.getWidth()) / 2) + 5;
-			sizeX = passivesRight - startX;
-		}
+		// Corners
+		this.blit(matrixStack, area.xMin, area.yMin, 0, 0, 6, 6);
+		this.blit(matrixStack, area.xMax - 6, area.yMin, 206, 0, 6, 6);
+		this.blit(matrixStack, area.xMin, area.yMax - 6, 0, 206, 6, 6);
+		this.blit(matrixStack, area.xMax - 6, area.yMax - 6, 206, 206, 6, 6);
 		
-		int startY = 13;
-		int sizeY = this.height - 5 - startY;
-		
-		int segWidth = Math.min(240, sizeX / 2);
-		// Top Left
-		this.blit(matrixStack, startX, startY, 0, 0, segWidth, sizeY);
-		
-		// Top Right
-		// Texture min X offset to ensure far right of segment is displayed
-		this.blit(matrixStack, startX + segWidth, startY, 240 + (240 - segWidth), 0, segWidth, sizeY);
-		
-		// Bottom Left
-		// Bottom Right
-		// Header bar
-		
-//		this.blit(matrixStack, startX, startY, 0, 0, sizeX, sizeY);
+		// Edges
+		int width = area.width() - 12;
+		int height = area.height() - 12;
+		AbstractGui.blit(matrixStack, area.xMin, area.yMin + 6, 6, height, 0, 6, 6, 200, 512, 512);
+		AbstractGui.blit(matrixStack, area.xMax - 6, area.yMin + 6, 6, height, 206, 6, 6, 200, 512, 512);
+		AbstractGui.blit(matrixStack, area.xMin + 6, area.yMin, width, 6, 6, 0, 200, 6, 512, 512);
+		AbstractGui.blit(matrixStack, area.xMin + 6, area.yMax - 6, width, 6, 6, 206, 200, 6, 512, 512);
+	}
+	
+	private void renderFill(MatrixStack matrixStack, int startX, int startY, int width, int height)
+	{
+		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
+		AbstractGui.blit(matrixStack, startX, startY, width, height, 6, 6, Math.min(200, width), Math.min(200, height), 512, 512);
 	}
 	
 	private void renderForegroundTexture(MatrixStack matrixStack, boolean isDouble)
 	{
 		// FIXME Render edge overlays of lists
+		renderOuterEdges(matrixStack, isDouble);
+		
+		hideList(matrixStack, this.listPassives);
+		if(isDouble)
+			hideList(matrixStack, this.listActives);
+	}
+	
+	private void hideList(MatrixStack matrixStack, AbilityList list)
+	{
+		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
+		
+		int xMin = list.getLeft() - 6;
+		int xMax = xMin + 6 + list.getWidth();
+		int yMin = list.getTop() - 6;
+		int yMax = list.getBottom() - 6;
+		
+		int width = xMax - (xMin + 6);
+		int height = yMax - (yMin + 6);
+		
+		// Fill
+		TextureArea area = getTextureArea();
+		renderFill(matrixStack, xMin, area.yMin + 6, list.getWidth() + 12, Math.abs(area.yMin + 6 - yMin));
+		renderFill(matrixStack, xMin, yMax + 6, list.getWidth() + 12, area.yMax - 6 - yMax);
+		renderOuterEdges(matrixStack, isDoubleList);
+		
+		// Corners
+		this.blit(matrixStack, xMin, yMin, 0, 252, 6, 6);
+		this.blit(matrixStack, xMax, yMin, 26, 252, 6, 6);
+		this.blit(matrixStack, xMin, yMax, 0, 278, 6, 6);
+		this.blit(matrixStack, xMax, yMax, 26, 278, 6, 6);
+		
+		// Edges
+		AbstractGui.blit(matrixStack, xMin, yMin + 6, 6, height, 0, 258, 6, 20, 512, 512);
+		AbstractGui.blit(matrixStack, xMax, yMin + 6, 6, height, 26, 258, 6, 20, 512, 512);
+		AbstractGui.blit(matrixStack, xMin + 6, yMin, width, 6, 6, 252, 20, 6, 512, 512);
+		AbstractGui.blit(matrixStack, xMin + 6, yMax, width, 6, 6, 278, 20, 6, 512, 512);
 	}
 	
 	public void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight)
@@ -245,6 +286,15 @@ public class ScreenCharacterSheet extends Screen
 		int count = EnumCreatureType.Action.values().length;
 		int iconX = this.listPassives.getLeft() - ACTION_ICON_SEP - ACTION_ICON_SIZE;
 		int iconY = (this.height - (count * ACTION_ICON_SIZE + count - 1 * ACTION_ICON_SEP)) / 2;
+		
+		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
+		int barY = iconY - (16 - ACTION_ICON_SIZE) / 2;
+		int barX = iconX - (16 - ACTION_ICON_SIZE) / 2;
+		this.blit(matrixStack, barX, barY - 8, 212, 16, 16, 8);
+		for(int i=0; i<count; i++)
+			this.blit(matrixStack, barX, barY + (16 * i), 212, 0, 16, 16);
+		this.blit(matrixStack, barX, barY + (count * 16), 212, 24, 16, 8);
+		
 		for(EnumCreatureType.Action action : EnumCreatureType.Action.values())
 		{
 			if(renderAction(matrixStack, iconX, iconY, mouseX, mouseY, action, this.actionSet.contains(action)))
@@ -284,5 +334,46 @@ public class ScreenCharacterSheet extends Screen
 		float colG = present ? 1F : 0F;
 		GuiHandler.drawIconAt(matrixStack, x, y, action.index(), 2, ACTION_ICON_SIZE, ACTION_ICON_SIZE, colR, colG, 0F, 1F);
 		return mouseX >= x && mouseX <= x + ACTION_ICON_SIZE && mouseY >= y && mouseY <= y + ACTION_ICON_SIZE;
+	}
+	
+	private TextureArea getTextureArea()
+	{
+		int passivesRight = this.listPassives.getLeft() + this.listPassives.getWidth();
+		int sizeX = (isDoubleList ? passivesRight - this.listActives.getLeft() : this.listPassives.getWidth()) + 10;
+		
+		int startX = (this.width - sizeX) / 2;
+		if(!isDoubleList)
+		{
+			startX = this.listPassives.getLeft() - ACTION_ICON_SEP - ACTION_ICON_SIZE - 5;
+			passivesRight = ((this.width + this.listPassives.getWidth()) / 2) + 5;
+			sizeX = passivesRight - startX - 5;
+		}
+		
+		int startY = this.listPassives.getTop() - this.font.FONT_HEIGHT - 10;
+		int sizeY = this.height - 5 - startY;
+		
+		int xMin = startX - 6;
+		int xMax = this.listPassives.getLeft() + this.listPassives.getWidth() + 10;
+		int yMin = startY;
+		int yMax = startY + sizeY;
+		
+		return new TextureArea(xMin, yMin, xMax, yMax);
+	}
+	
+	private static class TextureArea
+	{
+		public final int xMin, xMax;
+		public final int yMin, yMax;
+		
+		public TextureArea(int a, int b, int c, int d)
+		{
+			xMin = a;
+			xMax = c;
+			yMin = b;
+			yMax = d;
+		}
+		
+		public int width() { return xMax - xMin; }
+		public int height() { return yMax - yMin; }
 	}
 }

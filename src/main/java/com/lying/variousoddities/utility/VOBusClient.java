@@ -42,6 +42,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.play.client.CEntityActionPacket;
@@ -69,12 +70,14 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -206,8 +209,15 @@ public class VOBusClient
 			return;
 		
 		double scale = Math.min(0.5D, mob.getWidth());
-		// TODO Render higher if mob has visible nametag (esp. players)
+		
+		net.minecraftforge.client.event.RenderNameplateEvent renderNameplateEvent = new net.minecraftforge.client.event.RenderNameplateEvent(mob, mob.getDisplayName(), null, stack, null, 15, 1F);
+		MinecraftForge.EVENT_BUS.post(renderNameplateEvent);
+		
 		Vector3d mobPos = mob.getPositionVec().add(0D, mob.getHeight() + (scale * 0.5D) + 0.1D, 0D);
+		if(renderNameplateEvent.getResult() != Event.Result.DENY)
+			if(renderNameplateEvent.getResult() == Event.Result.ALLOW || (mob.getAlwaysRenderNameTagForRender() && mob.hasCustomName()) || mob.getType() == EntityType.PLAYER)
+				mobPos = mobPos.add(0D, 0.5D, 0D);
+		
 		Vector3d viewVec = mc.getRenderManager().info.getProjectedView();
 		Vector3d iconPos = mobPos.subtract(viewVec);
 		Vector3d direction = iconPos.normalize().mul(1D, 0D, 1D).rotateYaw((float)Math.toRadians(90D));

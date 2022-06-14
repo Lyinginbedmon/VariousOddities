@@ -1,12 +1,7 @@
 Bodies
 	Fix mob body spawning unreliability
-Character Sheet
-	Background textures
-	Button icon
-Conditions
-	Condition icon textures (Fear, Dominated)
 Warg
-	Saddle, carpet, armour textures
+	Armour textures
 	Refine held item rendering
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg->warg rider pipeline

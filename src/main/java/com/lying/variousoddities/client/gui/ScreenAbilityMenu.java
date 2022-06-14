@@ -26,6 +26,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -108,7 +109,16 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
     	this.addButton(new Button(this.width - 23, 3, 20, 20, new StringTextComponent(">"), (button) -> 
     		{
     			Minecraft.getInstance().displayGuiScreen(new ScreenCharacterSheet());
-    		}));
+    		})
+    			{
+    				@SuppressWarnings("deprecation")
+					public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+    				{
+    					Minecraft.getInstance().getTextureManager().bindTexture(ScreenCharacterSheet.SHEET_GUI_TEXTURES);
+    					RenderSystem.color4f(1F, 1F, 1F, 1F);
+    					AbstractGui.blit(matrixStack, this.x, this.y, 160, 212 + (this.isHovered() ? 20 : 0), this.width, this.height, 512, 512);
+    				}
+    			});
 	}
 	
 	public void tick()
