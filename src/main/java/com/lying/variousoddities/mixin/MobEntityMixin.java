@@ -9,13 +9,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.network.PacketHandler;
+import com.lying.variousoddities.network.PacketMobLoseTrack;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.abilities.AbilityVision;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
@@ -38,6 +43,8 @@ public class MobEntityMixin extends LivingEntityMixin
 			ci.cancel();
 	}
 	
+	private int ticksSinceLastSeen = 0;
+	
 	@Inject(method = "updateAITasks()V", at = @At("HEAD"), cancellable = true)
 	public void mobAIHalting(final CallbackInfo ci)
 	{
@@ -51,12 +58,26 @@ public class MobEntityMixin extends LivingEntityMixin
 		LivingEntity attackTarget = mob.getAttackTarget();
 		if(attackTarget != null)
 		{
-			// FIXME Extend range to target loss to make detection more dangerous
+			AbilityVision.ignoreForTargeted = false;
 			double visibility = attackTarget.getVisibilityMultiplier(mob);
-			if(visibility < 1D)
-				if(mob.getDistanceSq(attackTarget) > mob.getAttributeValue(Attributes.FOLLOW_RANGE) * visibility * 1.5D)
-					mob.setAttackTarget(null);
+			if(visibility < 1D && mob.getDistance(attackTarget) > mob.getAttributeValue(Attributes.FOLLOW_RANGE) * visibility)
+			{
+				if(ticksSinceLastSeen++ >= Reference.Values.TICKS_PER_SECOND * 10)
+					loseTrackOf(attackTarget, mob);
+			}
+			else
+				ticksSinceLastSeen = 0;
 		}
+		else
+			ticksSinceLastSeen = 0;
+	}
+	
+	private static void loseTrackOf(LivingEntity targetEntity, MobEntity mobEntity)
+	{
+		mobEntity.setAttackTarget(null);
+		mobEntity.getNavigator().clearPath();
+		if(targetEntity.getType() == EntityType.PLAYER && !mobEntity.getEntityWorld().isRemote)
+			PacketHandler.sendTo((ServerPlayerEntity)targetEntity, new PacketMobLoseTrack());
 	}
 	
 	private int scentTimer = -1;
@@ -94,29 +115,6 @@ public class MobEntityMixin extends LivingEntityMixin
 				}
 			}
 		}
-		
-//		LivingData livingData = LivingData.forEntity(entity);
-//		if(livingData == null || entity.getNavigator().noPath())
-//			return;
-//		
-//		Vector3d pos = entity.getPositionVec();
-//		Vector3d move = entity.getMotion();
-//		List<LivingEntity> aggressors = livingData.getMindControlled(Conditions.AFRAID, 8D);
-//		aggressors.removeIf((aggressor) -> { return aggressor.getDistance(entity) < Math.sqrt(aggressor.getDistanceSq(pos.add(entity.getMotion()))); });
-//		if(aggressors.isEmpty())
-//			return;
-//		
-//		for(LivingEntity aggressor : aggressors)
-//		{
-//			Vector3d direction = aggressor.getPositionVec().subtract(pos).normalize();
-//			if(Math.signum(direction.x)== Math.signum(move.x))
-//				move = new Vector3d(0, move.getY(), move.getZ());
-//			if(Math.signum(direction.z)== Math.signum(move.z))
-//				move = new Vector3d(move.getX(), move.getY(), 0D);
-//		}
-//		
-//		entity.setMotion(move);
-//		entity.getNavigator().clearPath();
 	}
 	
 	private void resetScentTimer(Random rand)

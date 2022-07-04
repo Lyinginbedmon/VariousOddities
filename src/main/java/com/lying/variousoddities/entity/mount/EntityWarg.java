@@ -54,6 +54,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	private static final DataParameter<Boolean> REARING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Boolean> SITTING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Boolean> CHEST	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
+	private static final DataParameter<Boolean> SADDLE	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Integer> CARPET	= EntityDataManager.<Integer>createKey(EntityWarg.class, DataSerializers.VARINT);
 	
 	private float jumpPower = 0F;
@@ -80,6 +81,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		getDataManager().register(REARING, false);
 		getDataManager().register(SITTING, false);
 		getDataManager().register(CHEST, false);
+		getDataManager().register(SADDLE, false);
 		getDataManager().register(CARPET, -1);
 	}
 	
@@ -263,7 +265,6 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		{
 			LivingEntity entity = (LivingEntity)getControllingPassenger();
 			
-			// TODO Determine values to base motion on in lieu of direct rider control
 			float forward = 0F;
 			float strafe = 0F;
 			
@@ -385,7 +386,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		playSound(SoundEvents.ENTITY_DONKEY_CHEST, 1F, (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1F);
 	}
 	
-	public boolean isSaddled(){ return this.wargChest != null && !this.wargChest.getStackInSlot(0).isEmpty(); }
+	public boolean isSaddled(){ return getDataManager().get(SADDLE).booleanValue(); }
 	
 	@Nullable
 	public Entity getControllingPassenger()
@@ -395,7 +396,8 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public boolean canBeSteered()
 	{
-		return getControllingPassenger() != null && getControllingPassenger().isAlive();
+		LivingEntity rider = (LivingEntity)getControllingPassenger();
+		return isSaddled() && rider != null && rider.isAlive() && (rider.moveForward != 0F || rider.moveStrafing != 0F);
 	}
 	
 	public void tick()
@@ -491,7 +493,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	private void updateSaddle()
 	{
 		if(!this.world.isRemote)
-			;
+			getDataManager().set(SADDLE, !this.wargChest.getStackInSlot(0).isEmpty());
 	}
 	
 	private void updateCarpet()

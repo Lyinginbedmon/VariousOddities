@@ -119,7 +119,7 @@ public class MovementInputMixin
 		float slow = 1F;
 		for(LivingEntity terroriser : terrorisers)
 		{
-			if(terroriser.isInvisibleToPlayer(player))	// TODO Account for obstruction of vision
+			if(terroriser.isInvisibleToPlayer(player) || !player.canEntityBeSeen(terroriser))
 				continue;
 			
 			double dist = terroriser.getDistanceSq(player);

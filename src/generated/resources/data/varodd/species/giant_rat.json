@@ -8,7 +8,7 @@
     "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Amount:1.0d},Name:\"varodd:natural_armour\"}",
     "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:climb\"}",
-    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"}",
+    "{Tag:{Active:0,Cooldown:10,IsActive:0b},Name:\"varodd:darkvision\"}",
     "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:scent\"}",
     "{Tag:{Size:\"small\",Amount:0.888888955116272d},Name:\"varodd:size\"}"
   ]

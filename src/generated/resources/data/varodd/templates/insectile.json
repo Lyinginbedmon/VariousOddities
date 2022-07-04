@@ -20,12 +20,12 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"},UnlessBetter:0b}"
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:10,IsActive:0b},Name:\"varodd:darkvision\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0,Min:0.0d,Max:16.0d,Cooldown:20,IsActive:1b},Name:\"varodd:tremorsense\"},UnlessBetter:1b}"
+      "Tag": "{Ability:{Tag:{Active:0,Min:0.0d,Max:16.0d,Cooldown:10,IsActive:1b},Name:\"varodd:tremorsense\"},UnlessBetter:1b}"
     }
   ],
   "Preconditions": [

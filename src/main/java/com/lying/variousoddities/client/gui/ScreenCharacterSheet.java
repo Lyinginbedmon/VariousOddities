@@ -236,7 +236,6 @@ public class ScreenCharacterSheet extends Screen
 	
 	private void renderForegroundTexture(MatrixStack matrixStack, boolean isDouble)
 	{
-		// FIXME Render edge overlays of lists
 		renderOuterEdges(matrixStack, isDouble);
 		
 		hideList(matrixStack, this.listPassives);

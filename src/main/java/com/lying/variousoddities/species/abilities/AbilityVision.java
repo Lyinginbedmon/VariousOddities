@@ -7,6 +7,7 @@ import com.lying.variousoddities.utility.VOHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
@@ -47,12 +48,17 @@ public abstract class AbilityVision extends ToggledAbility
 		bus.addListener(this::visionModifiers);
 	}
 	
+	public static boolean ignoreForTargeted = true;
+	
 	public void visionModifiers(LivingEvent.LivingVisibilityEvent event)
 	{
 		if(event.getLookingEntity() != null && event.getLookingEntity() instanceof LivingEntity)
 		{
 			LivingEntity mob = (LivingEntity)event.getLookingEntity();
 			LivingEntity entity = event.getEntityLiving();
+			
+			if(ignoreForTargeted && mob instanceof MobEntity && ((MobEntity)mob).getAttackTarget() == entity)
+				return;
 			
 			// Light level affects visibility IF the looking entity does not have Night Vision
 			if(!mob.isPotionActive(Effects.NIGHT_VISION))
@@ -72,6 +78,8 @@ public abstract class AbilityVision extends ToggledAbility
 			// Vision abilities confer guaranteed vision
 			if(entity.isPotionActive(Effects.GLOWING) || canMobSeeEntity(mob, entity))
 				event.modifyVisibility(1D / event.getVisibilityModifier());
+			
+			ignoreForTargeted = true;
 		}
 	}
 	

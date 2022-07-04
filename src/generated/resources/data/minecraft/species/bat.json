@@ -7,7 +7,7 @@
   "Abilities": [
     "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Speed:0.7d,Active:0,Cooldown:20,IsActive:0b,Quality:\"good\"},Name:\"varodd:flight\"}",
-    "{Tag:{Active:0,Min:0.0d,Max:6.0d,Cooldown:20,IsActive:1b},Name:\"varodd:blindsight\"}",
+    "{Tag:{Active:0,Min:0.0d,Max:6.0d,Cooldown:10,IsActive:1b},Name:\"varodd:blindsight\"}",
     "{Tag:{Size:\"diminutive\",Amount:0.1944444477558136d},Name:\"varodd:size\"}"
   ]
 }

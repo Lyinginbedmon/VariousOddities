@@ -80,7 +80,7 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onAttachCapabilityEvent(AttachCapabilitiesEvent<Entity> event)
 	{
-		if(event.getObject() instanceof LivingEntity)
+		if(event.getObject() instanceof LivingEntity && !(event.getObject() instanceof AbstractBody))
 		{
 			LivingData dataLiving = new LivingData();
 			dataLiving.getAbilities().markForRecache();

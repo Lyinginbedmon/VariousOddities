@@ -1,12 +1,6 @@
-Bodies
-	Fix mob body spawning unreliability
-Warg
-	Armour textures
-	Refine held item rendering
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg->warg rider pipeline
 Misc
-	Adjust mob vision to widen loss-of-detection range from darkness
 	As many outstanding FIXMEs and TODOs as possible
 
 Possession (moved to separate workspace)

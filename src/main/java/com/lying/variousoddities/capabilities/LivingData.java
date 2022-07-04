@@ -30,6 +30,7 @@ import com.lying.variousoddities.network.PacketBludgeoned;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncLivingData;
+import com.lying.variousoddities.network.PacketSyncVisualPotions;
 import com.lying.variousoddities.network.PacketVisualPotion;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Species;
@@ -147,7 +148,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	@Nullable
 	public static LivingData forEntity(LivingEntity entity)
 	{
-		if(entity == null)
+		if(entity == null || entity instanceof AbstractBody)
 			return null;
 		
 		LivingData data = null;
@@ -502,10 +503,16 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public static boolean unconscious(@Nonnull LivingEntity entity)
 	{
+		float health = entity.getHealth();
+		if(health <= 0F)
+			return false;
+		
 		LivingData data = LivingData.forEntity(entity);
-		if(entity.getHealth() > 0 && data.getBludgeoning() > 0 && entity.getHealth() <= data.getBludgeoning())
-			return true;
-		else if(entity.getActivePotionEffect(VOPotions.SLEEP) != null && entity.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
+		float bludgeoning = data.getBludgeoning();
+		if(bludgeoning <= 0F)
+			return false;
+		
+		if(health <= bludgeoning || entity.getActivePotionEffect(VOPotions.SLEEP) != null && entity.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
 			return true;
 		return false;
 	}
@@ -802,8 +809,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(world.isRemote && --this.potionSyncTimer <= 0)
 		{
 			this.potionSyncTimer = Reference.Values.TICKS_PER_MINUTE;
-			// TODO Ping server for visualPotion value
-			
+			PacketHandler.sendToServer(new PacketSyncVisualPotions(this.entity.getUniqueID()));
 		}
 	}
 	

@@ -6,13 +6,13 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.init.VOEntities;
+import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
@@ -100,16 +100,14 @@ public class EntityAIGoblinWorgTame extends Goal
 				else currentState = State.TAMING;
 				break;
 			case TAMING:
-//				targetWolf.addPotionEffect(new PotionEffect(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
-				targetWolf.addPotionEffect(new EffectInstance(Effects.SLOWNESS, Reference.Values.TICKS_PER_SECOND * 5, 10, false, false));
+				targetWolf.addPotionEffect(new EffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
 				if(--tamingTimer <= 0)
 				{
 					// TODO Ensure goblin arm swing during worg taming
 					theGoblin.swing(Hand.MAIN_HAND, true);
 					EntityWorg theWorg = VOEntities.WORG.create(theWorld);
 					theWorg.setHealth(targetWolf.getHealth());
-//					theWorg.addPotionEffect(new EffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
-					theWorg.addPotionEffect(new EffectInstance(Effects.SLOWNESS, Reference.Values.TICKS_PER_SECOND * 5, 10, false, false));
+					theWorg.addPotionEffect(new EffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
 					
 					if(targetWolf.hasCustomName())
 						theWorg.setCustomName(targetWolf.getCustomName());

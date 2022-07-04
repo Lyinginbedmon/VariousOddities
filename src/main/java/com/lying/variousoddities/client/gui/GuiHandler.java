@@ -48,6 +48,7 @@ public class GuiHandler
 {
 	public static final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
 	public static final ResourceLocation HUD_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/hud.png");
+	public static final ResourceLocation TRACKING_EYE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/tracking.png");
 	
 	public static Minecraft mc;
 	public static IProfiler profiler;
@@ -57,30 +58,61 @@ public class GuiHandler
 	private static final float TEX_SIZE = 128F;
 	private static final float ICON_TEX = 16F / TEX_SIZE;
 	
+	public static int trackingEyeTicks = 0;
+	
 	public static void renderAbilityOverlay(RenderGameOverlayEvent.Pre event)
 	{
 		mc = Minecraft.getInstance();
 		profiler = mc.getProfiler();
 		
-		if(event.getType() == ElementType.CROSSHAIRS && !ConfigVO.CLIENT.hideAbilities.get())
+		if(event.getType() == ElementType.CROSSHAIRS)
 		{
 			MatrixStack matrix = event.getMatrixStack();
 			float partialTicks = event.getPartialTicks();
 			
-			profiler.startSection("varodd-hud-abilities");
-				player = Minecraft.getInstance().player;
-				if(player != null)
-				{
-					if(!player.isSpectator() && player.isAlive() && !PlayerData.isPlayerSoulDetached(player))
+			if(trackingEyeTicks > 0 && --trackingEyeTicks > 0)
+			{
+				profiler.startSection("varodd-hud-tracking");
+				int right = mc.getMainWindow().getScaledWidth() / 2;
+				int top = (mc.getMainWindow().getScaledHeight() - 20) / 2;
+				
+				int index = 3 - (trackingEyeTicks / 5);
+				int size = 16;
+				
+				int texXMin = 0;
+				int texXMax = texXMin + size;
+				int texYMin = index * size;
+				int texYMax = texYMin + size;
+				
+				int startX = right - (size / 2);
+				int endX = startX + size;
+				int startY = top - (size / 2);
+				int endY = startY + size;
+				
+				matrix.push();
+					mc.getTextureManager().bindTexture(TRACKING_EYE);
+					blit(matrix.getLast().getMatrix(), (int)startX, (int)endX, (int)startY, (int)endY, 0, texXMin / 16F, texXMax / 16F, texYMin / 64F, texYMax / 64F, 1F, 1F, 1F, 1F);
+				matrix.pop();
+				profiler.endSection();
+			}
+			
+			if(!ConfigVO.CLIENT.hideAbilities.get())
+			{
+				profiler.startSection("varodd-hud-abilities");
+					player = Minecraft.getInstance().player;
+					if(player != null)
 					{
-						EnumCorner corner = ConfigVO.CLIENT.abilityCorner.get();
-						if(corner == null)
-							corner = EnumCorner.TOP_LEFT;
-						
-						drawFavouritedAbilities(matrix, event.getWindow(), partialTicks, corner);
+						if(!player.isSpectator() && player.isAlive() && !PlayerData.isPlayerSoulDetached(player))
+						{
+							EnumCorner corner = ConfigVO.CLIENT.abilityCorner.get();
+							if(corner == null)
+								corner = EnumCorner.TOP_LEFT;
+							
+							drawFavouritedAbilities(matrix, event.getWindow(), partialTicks, corner);
+						}
 					}
-				}
-			profiler.endSection();
+				profiler.endSection();
+			}
 		}
 	}
 	

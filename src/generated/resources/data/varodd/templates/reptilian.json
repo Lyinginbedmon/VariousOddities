@@ -26,7 +26,7 @@
     {
       "Action": "add",
       "Name": "varodd:ability",
-      "Tag": "{Ability:{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"},UnlessBetter:0b}"
+      "Tag": "{Ability:{Tag:{Active:0,Cooldown:10,IsActive:0b},Name:\"varodd:darkvision\"},UnlessBetter:0b}"
     },
     {
       "Action": "add",

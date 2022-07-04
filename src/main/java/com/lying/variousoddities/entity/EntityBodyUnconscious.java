@@ -169,21 +169,14 @@ public class EntityBodyUnconscious extends AbstractBody
 					if(data.getBodyCondition() != BodyCondition.UNCONSCIOUS)
 						this.onKillCommand();
 				}
-//				if(soul == null)
-//				{
-//					if(!isPlayer())
-//						onKillCommand();
-//				}
-//				else
-//					moveWithinRangeOf(this, soul, PlayerData.forPlayer((PlayerEntity)soul).getSoulCondition().getWanderRange());
 				
 				return;
 			}
-			else
+			else if(!this.world.isRemote)
 			{
 				LivingEntity body = getBody();
 				LivingData bodyData = LivingData.forEntity(body);
-				if(!body.isAlive() || !bodyData.isUnconscious())
+				if(!bodyData.isUnconscious())
 				{
 					respawnMob(body);
 					return;

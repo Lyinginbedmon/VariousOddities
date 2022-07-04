@@ -217,39 +217,15 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			
 			Random rand = living.getRNG();
 			boolean checkDrop = living instanceof MobEntity && withDropChance;
-			if(checkDrop)
-				if(!living.isChild() && living.getEntityWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT))
-					;
-				else
-					checkDrop = false;
+			if(checkDrop && (living.isChild() || !living.getEntityWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT)))
+				checkDrop = false;
 			
-			// FIXME Ensure equipment is preserved appropriately
 			float[] armorChances = new float[4];
 			float[] handChances = new float[2];
 			Arrays.fill(armorChances, 0F);
 			Arrays.fill(handChances, 0F);
-			if(checkDrop)
-			{
-				MobEntity mob = (MobEntity)living;
-				CompoundNBT mobData = new CompoundNBT();
-				mob.writeAdditional(mobData);
-				
-				if(mobData.contains("ArmorDropChances", 9))
-				{
-					ListNBT armorList = mobData.getList("ArmorDropChances", 5);
-					for(int i=0; i<armorList.size(); ++i)
-						armorChances[i] = armorList.getFloat(i);
-				}
-				
-				if(mobData.contains("HandDropChances", 5))
-				{
-					ListNBT handList = mobData.getList("HandDropChances", 5);
-					for(int i=0; i<handList.size(); ++i)
-						handChances[i] = handList.getFloat(i);
-				}
-			}
-			
-			if(stealsGear())
+			// Preserve equipment for mobs and player corpses
+			if(stealsGear() || living instanceof MobEntity)
 			{
 				int slot = 0;
 				for(ItemStack stack : living.getArmorInventoryList())
@@ -273,6 +249,28 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 					slot++;
 				}
 			}
+			// Preserve equipment if it passes a mob drop chance check
+			else if(checkDrop)
+			{
+				MobEntity mob = (MobEntity)living;
+				CompoundNBT mobData = new CompoundNBT();
+				mob.writeAdditional(mobData);
+				
+				if(mobData.contains("ArmorDropChances", 9))
+				{
+					ListNBT armorList = mobData.getList("ArmorDropChances", 5);
+					for(int i=0; i<armorList.size(); ++i)
+						armorChances[i] = armorList.getFloat(i);
+				}
+				
+				if(mobData.contains("HandDropChances", 5))
+				{
+					ListNBT handList = mobData.getList("HandDropChances", 5);
+					for(int i=0; i<handList.size(); ++i)
+						handChances[i] = handList.getFloat(i);
+				}
+			}
+			
 			
 			living.writeWithoutTypeId(data);
 			if(living.getType() == EntityType.PLAYER)
@@ -297,6 +295,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		onInventoryChanged(null);
 	}
 	
+	/** Returns true if this body should remove items from its associated entity */
 	public boolean stealsGear(){ return true; }
 	
 	public GameProfile getGameProfile()

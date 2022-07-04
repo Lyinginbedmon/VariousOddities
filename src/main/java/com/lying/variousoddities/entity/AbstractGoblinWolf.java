@@ -7,6 +7,7 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.config.ConfigVO;
+import com.lying.variousoddities.data.VOItemTags;
 import com.lying.variousoddities.entity.ai.EntityAIWargWander;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIWorgFollowGoblin;
 import com.lying.variousoddities.entity.ai.passive.EntityAIGoblinWolfBeg;
@@ -34,9 +35,7 @@ import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -69,18 +68,6 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 	public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
 	public static final DataParameter<Boolean>	BEGGING		= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
 	public static final DataParameter<Boolean>	JAW_OPEN	= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
-	
-    private static final List<Item> foodItems = new ArrayList<Item>();
-    static
-    {
-    	foodItems.add(Items.ROTTEN_FLESH);
-    	foodItems.add(Items.CHICKEN);
-    	foodItems.add(Items.MUTTON);
-    	foodItems.add(Items.BEEF);
-    	foodItems.add(Items.PORKCHOP);
-    	foodItems.add(Items.SALMON);
-    	foodItems.add(Items.TROPICAL_FISH);
-    }
 	
     private List<Tuple<Goal, Integer>> aggressiveBehaviours;
     
@@ -161,10 +148,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public boolean isFoodItem(ItemStack stack)
     {
-    	for(Item item : foodItems)
-    		if(item == stack.getItem())
-    			return true;
-    	return false;
+    	return VOItemTags.WORG_FOOD.contains(stack.getItem());
     }
     
     public int getColor(){ return getDataManager().get(COLOR).intValue(); }
@@ -424,15 +408,16 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public void setAttackTarget(@Nullable LivingEntity target)
     {
-    	// Ignore attacks from goblins whilst untamed
-    	if(!isTamed() && target != null && target.getType() == VOEntities.GOBLIN)
-    		return;
+    	if(!isTamed() && target != null)
+    	{
+        	if(target.getType() == VOEntities.GOBLIN)
+        		return;
+        	
+        	if(target.isAlive() && isSitting())
+        		func_233687_w_(false);
+    	}
     	
     	super.setAttackTarget(target);
-    	
-    	// Stop sitting when tamed
-    	if(isTamed() && target != null && target.isAlive() && isSitting())
-    		func_233687_w_(false);
     }
     
     protected void spawnDrops(DamageSource source)

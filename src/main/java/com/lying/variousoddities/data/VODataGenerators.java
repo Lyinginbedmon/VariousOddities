@@ -12,6 +12,7 @@ public class VODataGenerators
 		ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 		if(event.includeServer())
 		{
+			generator.addProvider(new VOItemTags(generator, existingFileHelper));
     		generator.addProvider(new VOBlockTags(generator, existingFileHelper));
     		generator.addProvider(new VOEntityTags(generator, existingFileHelper));
 			generator.addProvider(new VOSpeciesProvider(generator));

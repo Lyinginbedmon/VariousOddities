@@ -182,8 +182,10 @@ public class EntityAIKoboldMate extends Goal
 				for(Settlement nest : nests)
 					for(BoxRoom room : nest.getRoomsOfType(EnumRoomFunction.NEST))
 					{
-						// TODO Better distance calculation, include navigation check
 						BlockPos core = room.getCore();
+						if(theNavigator.getPathToPos(core, 64) == null)
+							continue;
+						
 						double dist = theKobold.getPosition().distanceSq(core);
 						if(dist < closestDist && dist < (32D * 32D))
 						{

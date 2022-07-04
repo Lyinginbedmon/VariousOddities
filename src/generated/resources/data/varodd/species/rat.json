@@ -7,7 +7,7 @@
   "Abilities": [
     "{Tag:{Size:\"medium\",Amount:1.0d},Name:\"varodd:size\"}",
     "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:climb\"}",
-    "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:darkvision\"}",
+    "{Tag:{Active:0,Cooldown:10,IsActive:0b},Name:\"varodd:darkvision\"}",
     "{Tag:{Active:0,Cooldown:20,IsActive:0b},Name:\"varodd:scent\"}",
     "{Tag:{Size:\"tiny\",Amount:0.5555555820465088d},Name:\"varodd:size\"}"
   ]

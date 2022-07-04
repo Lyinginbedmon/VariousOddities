@@ -120,7 +120,6 @@ public class EntityAIGoblinWorgBreed extends Goal
 				}
 				else
 				{
-					// TODO Ensure worg sitting during goblin breeding
 					worgA.func_233687_w_(true);
 					theNavigator.clearPath();
 					breedingTimer = Reference.Values.TICKS_PER_SECOND * 2;
@@ -134,6 +133,8 @@ public class EntityAIGoblinWorgBreed extends Goal
 					{
 						theGoblin.swingArm(Hand.MAIN_HAND);
 						worgA.setInLove(null);
+						worgA.func_233687_w_(false);
+						worgA.getNavigator().tryMoveToEntityLiving(worgB, 1D);
 						currentState = State.MOVING_TO_B;
 					}
 				}
@@ -165,6 +166,8 @@ public class EntityAIGoblinWorgBreed extends Goal
 					{
 						theGoblin.swingArm(Hand.MAIN_HAND);
 						worgB.setInLove(null);
+						worgB.func_233687_w_(false);
+						worgB.getNavigator().tryMoveToEntityLiving(worgA, 1D);
 						currentState = null;
 					}
 				}

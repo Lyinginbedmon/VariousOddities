@@ -57,6 +57,7 @@ public class PacketHandler
 		HANDLER.registerMessage(id++, PacketDeadDeath.class, PacketDeadDeath::encode, PacketDeadDeath::decode, PacketDeadDeath::handle);
 		HANDLER.registerMessage(id++, PacketUnconsciousAwaken.class, PacketUnconsciousAwaken::encode, PacketUnconsciousAwaken::decode, PacketUnconsciousAwaken::handle);
 		HANDLER.registerMessage(id++, PacketBludgeoned.class, PacketBludgeoned::encode, PacketBludgeoned::decode, PacketBludgeoned::handle);
+		HANDLER.registerMessage(id++, PacketMobLoseTrack.class, PacketMobLoseTrack::encode, PacketMobLoseTrack::decode, PacketMobLoseTrack::handle);
 	}
 	
 	/**

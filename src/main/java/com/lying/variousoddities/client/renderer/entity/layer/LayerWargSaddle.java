@@ -1,6 +1,7 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
 import com.lying.variousoddities.client.model.entity.ModelWarg;
+import com.lying.variousoddities.client.model.entity.ModelWargSaddle;
 import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -15,7 +16,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class LayerWargSaddle extends LayerRenderer<EntityWarg, ModelWarg>
 {
-	private final ModelWarg MODEL = new ModelWarg(0.3F);
+	private final ModelWargSaddle MODEL = new ModelWargSaddle(0.3F);
 	private static final ResourceLocation TEXTURE = new ResourceLocation(EntityWargRenderer.resourceBase+"saddle.png");
 	
 	public LayerWargSaddle(IEntityRenderer<EntityWarg, ModelWarg> entityRendererIn)
