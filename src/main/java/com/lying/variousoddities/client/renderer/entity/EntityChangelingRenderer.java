@@ -17,6 +17,7 @@ import net.minecraftforge.fml.client.registry.IRenderFactory;
 public class EntityChangelingRenderer extends LivingRenderer<EntityChangeling, ModelChangeling<EntityChangeling>>
 {
 //	private static final ModelChangelingElf changelingElfModel = new ModelChangelingElf();
+	@SuppressWarnings("unused")
 	private static final ModelChangeling<EntityChangeling> changelingModel = new ModelChangeling<EntityChangeling>();
 	
 	public static final ResourceLocation changelingTexture = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/changeling/changeling.png");

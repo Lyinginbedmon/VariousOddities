@@ -131,7 +131,7 @@ public class ModelMindFlayer extends BipedModel<EntityMindFlayer>
 				Vector3d entityEye = entity.getEyePosition(0F);
 				Vector3d squidEye = entityIn.getEyePosition(0F);
 				
-				// FIXME Limit eye rotation to +/- of body rotation
+				// TODO Limit eye rotation to +/- of body rotation
 				Vector3d offset = entityEye.subtract(squidEye).normalize();
 				this.rightEye.rotateAngleX = this.leftEye.rotateAngleX = (float)Math.asin(-offset.getY());
 				this.rightEye.rotateAngleY = this.rightEye.rotateAngleX = -(float)Math.atan2(offset.getX(), offset.getZ());

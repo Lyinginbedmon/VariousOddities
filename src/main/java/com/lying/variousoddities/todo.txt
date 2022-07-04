@@ -1,7 +1,5 @@
 AbstractGoblinWolf
 	Complete goblin->goblin tamer->worg->warg->warg rider pipeline
-Misc
-	As many outstanding FIXMEs and TODOs as possible
 
 Possession (moved to separate workspace)
 	Move players to body position w/out breaking motion controls

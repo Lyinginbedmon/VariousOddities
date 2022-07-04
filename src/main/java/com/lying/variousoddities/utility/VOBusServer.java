@@ -19,7 +19,6 @@ import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.entity.ai.EntityAIFrightened;
-import com.lying.variousoddities.entity.ai.EntityAISleep;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
 import com.lying.variousoddities.entity.passive.EntityGhastling;
@@ -211,12 +210,10 @@ public class VOBusServer
 				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRatGiant>(feline, EntityRatGiant.class, true));
 		}
 		
-		// Add sleep AI to mobs
+		// Add special AI to mobs
 		if(theEntity instanceof MobEntity)
 		{
 			MobEntity living = (MobEntity)theEntity;
-			living.goalSelector.addGoal(1, new EntityAISleep(living));
-			
 			if(living instanceof CreatureEntity)
 				living.goalSelector.addGoal(1, new EntityAIFrightened((CreatureEntity)living));
 		}
