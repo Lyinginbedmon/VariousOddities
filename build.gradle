@@ -106,6 +106,8 @@ minecraft {
 processResources {
 	// This will ensure that this task is redone when the versions change.
 	inputs.property 'version', project.version
+	
+	duplicatesStrategy = "WARN"
 
 	// Replace stuff in mods.toml, nothing else
 	from(sourceSets.main.resources.srcDirs) {
