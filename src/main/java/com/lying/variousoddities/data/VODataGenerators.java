@@ -18,6 +18,7 @@ public class VODataGenerators
 			generator.addProvider(new VOSpeciesProvider(generator));
 			generator.addProvider(new VOTemplatesProvider(generator));
 			generator.addProvider(new VOLootProvider(generator, existingFileHelper));
+			generator.addProvider(new VORecipeProvider(generator));
 		}
 		if(event.includeClient())
 		{

@@ -40,7 +40,6 @@ public class VOTemplatesProvider implements IDataProvider
 		
 		map.forEach((name, template) -> 
 			{
-//				System.out.println("Template ID for "+name+": "+template.uuid().toString());
 				Path filePath = getPath(path, name);
 				try
 				{

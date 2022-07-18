@@ -7,10 +7,17 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.EntityTypeTagsProvider;
+import net.minecraft.entity.EntityType;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.tags.ITag;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class VOEntityTags extends EntityTypeTagsProvider
 {
+    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_ID+".crabs");
+    public static final ITag.INamedTag<EntityType<?>> RATS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_ID+".rats");
+    public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_ID+".scorpions");
+    
 	public VOEntityTags(DataGenerator p_i50784_1_, ExistingFileHelper existingFileHelper)
 	{
 		super(p_i50784_1_, Reference.ModInfo.MOD_ID, existingFileHelper);
@@ -21,11 +28,11 @@ public class VOEntityTags extends EntityTypeTagsProvider
 	
 	protected void registerTags()
 	{
-		getOrCreateBuilder(VOEntities.CRABS)
+		getOrCreateBuilder(CRABS)
 			.add(VOEntities.CRAB, VOEntities.CRAB_GIANT);
-		getOrCreateBuilder(VOEntities.RATS)
+		getOrCreateBuilder(RATS)
 			.add(VOEntities.RAT, VOEntities.RAT_GIANT);
-		getOrCreateBuilder(VOEntities.SCORPIONS)
+		getOrCreateBuilder(SCORPIONS)
 			.add(VOEntities.SCORPION, VOEntities.SCORPION_GIANT);
 	}
 }

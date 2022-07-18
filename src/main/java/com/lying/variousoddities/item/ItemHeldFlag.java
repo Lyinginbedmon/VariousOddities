@@ -54,7 +54,7 @@ public class ItemHeldFlag extends VOItem
     public static ItemHeldFlag getItem(EnumPrideType color)
     {
         return PRIDE_TYPE_ITEM_MAP.get(color);
-     }
+    }
 	
 	public enum EnumPrideType
 	{

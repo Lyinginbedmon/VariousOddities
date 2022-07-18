@@ -1,0 +1,20 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "/C",
+        "/ "
+    ],
+    "key": {
+        "/": {
+            "item": "minecraft:stick"
+        },
+        "C": {
+            "tag": "minecraft:carpets"
+        }
+    },
+    "result": {
+        "item": "varodd:held_flag_gay",
+        "count": 1
+    },
+    "group": "pride_flag"
+}

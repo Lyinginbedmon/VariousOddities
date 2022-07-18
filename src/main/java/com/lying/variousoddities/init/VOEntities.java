@@ -12,11 +12,23 @@ import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
 import com.lying.variousoddities.entity.EntityDummyBiped;
 import com.lying.variousoddities.entity.EntitySpell;
-import com.lying.variousoddities.entity.hostile.*;
-import com.lying.variousoddities.entity.mount.*;
-import com.lying.variousoddities.entity.passive.*;
-import com.lying.variousoddities.entity.projectile.*;
-import com.lying.variousoddities.entity.wip.*;
+import com.lying.variousoddities.entity.hostile.EntityCrabGiant;
+import com.lying.variousoddities.entity.hostile.EntityGoblin;
+import com.lying.variousoddities.entity.hostile.EntityMindFlayer;
+import com.lying.variousoddities.entity.hostile.EntityRatGiant;
+import com.lying.variousoddities.entity.hostile.EntityScorpionGiant;
+import com.lying.variousoddities.entity.mount.EntityWarg;
+import com.lying.variousoddities.entity.passive.EntityCrab;
+import com.lying.variousoddities.entity.passive.EntityGhastling;
+import com.lying.variousoddities.entity.passive.EntityKobold;
+import com.lying.variousoddities.entity.passive.EntityMarimo;
+import com.lying.variousoddities.entity.passive.EntityRat;
+import com.lying.variousoddities.entity.passive.EntityScorpion;
+import com.lying.variousoddities.entity.passive.EntityWorg;
+import com.lying.variousoddities.entity.projectile.EntityFireballGhastling;
+import com.lying.variousoddities.entity.wip.EntityChangeling;
+import com.lying.variousoddities.entity.wip.EntityPatronKirin;
+import com.lying.variousoddities.entity.wip.EntityPatronWitch;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
@@ -29,8 +41,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.item.Item;
-import net.minecraft.tags.EntityTypeTags;
-import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IServerWorld;
@@ -50,10 +60,6 @@ public class VOEntities
     public static final List<EntityType<?>> ENTITIES = Lists.newArrayList();
     public static final List<EntityType<?>> ENTITIES_AI = Lists.newArrayList();
     public static final Map<EntityType<?>, Item> SPAWN_EGGS = new HashMap<>();
-    
-    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"crabs");
-    public static final ITag.INamedTag<EntityType<?>> RATS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"rats");
-    public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_PREFIX+"scorpions");
 	
     public static final EntityType<EntitySpell> SPELL			= register("spell", EntitySpell::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntitySpell::canSpawnAt);
     public static final EntityType<EntityBodyCorpse> CORPSE		= register("corpse", EntityBodyCorpse::new, EntityClassification.MISC, 0.75F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityBodyCorpse::canSpawnAt);

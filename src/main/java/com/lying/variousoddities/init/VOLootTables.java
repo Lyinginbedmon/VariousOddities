@@ -28,6 +28,8 @@ public class VOLootTables
 	public static final ResourceLocation WORG			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/worg");
 	public static final ResourceLocation WARG			= new ResourceLocation(Reference.ModInfo.MOD_ID, "entities/warg");
 	
+	public static final ResourceLocation SCALE_LAYER	= new ResourceLocation(Reference.ModInfo.MOD_ID, "blocks/scale_layer");
+	
 	public static void onLootLoadEvent(LootTableLoadEvent event)
 	{
 		if(event.getName().getNamespace().equals("minecraft"))

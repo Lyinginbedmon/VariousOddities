@@ -26,6 +26,6 @@ public class VOBlockTags extends BlockTagsProvider
 			.add(
 					Blocks.BEDROCK, Blocks.BARRIER,
 					Blocks.COMMAND_BLOCK, Blocks.CHAIN_COMMAND_BLOCK, Blocks.REPEATING_COMMAND_BLOCK,
-					Blocks.NETHER_PORTAL, Blocks.END_PORTAL, Blocks.END_GATEWAY);
+					Blocks.NETHER_PORTAL, Blocks.END_PORTAL_FRAME, Blocks.END_PORTAL, Blocks.END_GATEWAY);
 	}
 }

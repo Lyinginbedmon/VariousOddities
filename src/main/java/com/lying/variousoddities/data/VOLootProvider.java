@@ -55,9 +55,19 @@ public class VOLootProvider extends LootTableProvider
     protected List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootParameterSet>> getTables()
     {
         tables.clear();
+        addBlockLootTables();
         addEntityLootTables();
         addChestLootTables();
         return tables;
+    }
+    
+    private void addBlockLootTables()
+    {
+    	addBlockLootTable(VOLootTables.SCALE_LAYER.getPath(), LootTable.builder().addLootPool(
+    			LootPool.builder()
+    					.name("main")
+    					.rolls(ConstantRange.of(1))
+    					.addEntry(itemEntry(VOItems.SCALE_KOBOLD, 1).acceptFunction(SetCount.builder(RandomValueRange.of(1.0F, 2.0F))))));
     }
     
     private void addEntityLootTables()
@@ -130,8 +140,14 @@ public class VOLootProvider extends LootTableProvider
         return ItemLootEntry.builder(item).weight(weight);
     }
     
+	private void addBlockLootTable(String location, LootTable.Builder lootTable)
+	{
+		addLootTable(location, lootTable, LootParameterSets.BLOCK);
+	}
+	
     @SuppressWarnings("unused")
-	private void addChestLootTable(String location, LootTable.Builder lootTable) {
+	private void addChestLootTable(String location, LootTable.Builder lootTable)
+    {
         addLootTable(location, lootTable, LootParameterSets.CHEST);
     }
     

@@ -55,13 +55,13 @@ public class ScreenCharacterSheet extends Screen
 		PlayerEntity player = Minecraft.getInstance().player;
 		LivingData data = LivingData.forEntity(player);
 		
-		this.speciesHeader = new StringTextComponent("");
-		
 		// Species name and actions
+		this.speciesHeader = new StringTextComponent("");
+		if(data.hasSpecies())
+			speciesHeader.append(((IFormattableTextComponent)data.getSpecies().getDisplayName().copyRaw()));
+		
 		actionSet = ActionSet.fromTypes(player, EnumCreatureType.getTypes(player).asSet());
 		fluids = data.getBreathableFluids(player);
-		
-		speciesHeader.append(((IFormattableTextComponent)data.getSpecies().getDisplayName().copyRaw()));
 		
 		// Templates (if any)
 		List<Template> templates = Lists.newArrayList();

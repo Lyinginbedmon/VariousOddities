@@ -22,7 +22,7 @@ public class TargetGoalMixin
 	@Shadow
 	protected LivingEntity target;
 	
-	@Inject(method = "isSuitableTarget(Lnet/minecraft/entity/LivingEntity;Ljava/lang/Class;Lnet/minecraft/entity/EntityPredicate;)Z", at = @At("RETURN"), cancellable = true)
+	@Inject(method = "isSuitableTarget(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/EntityPredicate;)Z", at = @At("RETURN"), cancellable = true)
 	public void isSuitableTarget(LivingEntity living, EntityPredicate predicate, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingData mobData = LivingData.forEntity(goalOwner);

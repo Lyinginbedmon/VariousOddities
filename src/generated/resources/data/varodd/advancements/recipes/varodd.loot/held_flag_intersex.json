@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "varodd:held_flag_intersex"
+    ]
+  },
+  "criteria": {
+    "has_flag": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "varodd:held_flag_gay"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "varodd:held_flag_intersex"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_flag",
+      "has_the_recipe"
+    ]
+  ]
+}

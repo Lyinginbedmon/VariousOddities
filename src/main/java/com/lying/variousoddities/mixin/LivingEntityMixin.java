@@ -28,6 +28,7 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -299,8 +300,8 @@ public class LivingEntityMixin extends EntityMixin
 			ci.setReturnValue(true);
 	}
 	
-	@Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
-	public void canTarget(LivingEntity living, final CallbackInfoReturnable<Boolean> ci)
+	@Inject(method = "canAttack(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/EntityPredicate;)Z", at = @At("HEAD"), cancellable = true)
+	public void canTarget(LivingEntity living, EntityPredicate predicate, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		LivingData data = LivingData.forEntity(entity);

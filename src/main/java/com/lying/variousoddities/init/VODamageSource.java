@@ -134,7 +134,7 @@ public class VODamageSource extends DamageSource
 		}
 		else if(source == SONIC)
 		{
-			// Occasionally deafen
+			// TODO Sonic damage occasionally deafens
 		}
 	}
 	
