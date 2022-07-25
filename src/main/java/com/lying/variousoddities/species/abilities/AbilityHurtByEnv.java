@@ -4,16 +4,15 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityHurtByEnv extends Ability
@@ -39,42 +38,42 @@ public class AbilityHurtByEnv extends Ability
 		bus.addListener(this::onLivingUpdate);
 	}
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability.varodd.hurt_by_env", this.type.translated());
+		return Component.translatable("ability.varodd.hurt_by_env", this.type.translated());
 	}
 	
-	public void onLivingUpdate(LivingUpdateEvent event)
+	public void onLivingUpdate(LivingTickEvent event)
 	{
-		LivingEntity living = event.getEntityLiving();
-		if(!living.world.isRemote)
+		LivingEntity living = event.getEntity();
+		if(!living.level.isClientSide)
 			for(AbilityHurtByEnv env : AbilityRegistry.getAbilitiesOfType(living, this.getClass()))
 				if(env.type != EnvType.WATER)
 					if(type.shouldDamage(living))
 						type.damageEntity(living);
 	}
 	
-	public static enum EnvType implements IStringSerializable
+	public static enum EnvType implements StringRepresentable
 	{
-		WATER(LivingEntity::isInWaterRainOrBubbleColumn, DamageSource.DROWN),
+		WATER(LivingEntity::isInWaterRainOrBubble, DamageSource.DROWN),
 		HOT(new Predicate<LivingEntity>()
 		{
 			public boolean apply(LivingEntity input)
 			{
-				int i = MathHelper.floor(input.getPosX());
-				int j = MathHelper.floor(input.getPosY());
-				int k = MathHelper.floor(input.getPosZ());
-				return input.world.getBiome(new BlockPos(i, 0, k)).getTemperature(new BlockPos(i, j, k)) > 1.0F;
+				int i = Mth.floor(input.getX());
+				int j = Mth.floor(input.getY());
+				int k = Mth.floor(input.getZ());
+				return input.level.getBiome(new BlockPos(i, 0, k)).get().shouldSnowGolemBurn(new BlockPos(i, j, k));
 			}
 		}, DamageSource.ON_FIRE),
 		COLD(new Predicate<LivingEntity>()
 		{
 			public boolean apply(LivingEntity input)
 			{
-				int i = MathHelper.floor(input.getPosX());
-				int j = MathHelper.floor(input.getPosY());
-				int k = MathHelper.floor(input.getPosZ());
-				return input.world.getBiome(new BlockPos(i, 0, k)).getTemperature(new BlockPos(i, j, k)) < 0.15F;
+				int i = Mth.floor(input.getX());
+				int j = Mth.floor(input.getY());
+				int k = Mth.floor(input.getZ());
+				return input.level.getBiome(new BlockPos(i, 0, k)).get().coldEnoughToSnow(new BlockPos(i, j, k));
 			}
 		}, VODamageSource.COLD);
 		
@@ -87,14 +86,14 @@ public class AbilityHurtByEnv extends Ability
 			this.source = damageIn;
 		}
 		
-		public ITextComponent translated(){ return new TranslationTextComponent("enum.varodd.env_type."+getString()); }
+		public Component translated(){ return Component.translatable("enum.varodd.env_type."+getSerializedName()); }
 		
-		public String getString(){ return name().toLowerCase(); }
+		public String getSerializedName(){ return name().toLowerCase(); }
 		
 		public static EnvType fromString(String nameIn)
 		{
 			for(EnvType type : values())
-				if(type.getString().equalsIgnoreCase(nameIn))
+				if(type.getSerializedName().equalsIgnoreCase(nameIn))
 					return type;
 			return WATER;
 		}
@@ -102,7 +101,7 @@ public class AbilityHurtByEnv extends Ability
 		public boolean shouldDamage(LivingEntity living){ return test.apply(living); }
 		public void damageEntity(LivingEntity living)
 		{
-			living.attackEntityFrom(source, 1.0F);
+			living.hurt(source, 1.0F);
 		}
 	}
 	
@@ -110,7 +109,7 @@ public class AbilityHurtByEnv extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityHurtByEnv(EnvType.fromString(compound.getString("Type")));
 		}

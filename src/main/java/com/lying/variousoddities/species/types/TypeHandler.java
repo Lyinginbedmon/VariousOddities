@@ -1,6 +1,5 @@
 package com.lying.variousoddities.species.types;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -14,15 +13,11 @@ import com.lying.variousoddities.species.abilities.AbilityBreatheFluid;
 import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.EnumCreatureType.Action;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemTier;
-import net.minecraft.potion.Effect;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * A handler class that applies and defines the properties of different creature types
@@ -67,19 +62,19 @@ public class TypeHandler
 		this.abilities.forEach((ability) -> { abilityMap.put(ability.getMapName(), ability); });
 	}
 	
-	public ITextComponent getDetails()
+	public Component getDetails()
 	{
 		if(abilities.isEmpty())
-			return new StringTextComponent("");
+			return Component.literal("");
 		
 		Collections.sort(abilities, Ability.SORT_ABILITY);
-		IFormattableTextComponent details = new StringTextComponent("\n");
+		MutableComponent details = Component.literal("\n");
 		for(int i=0; i<abilities.size(); i++)
 		{
 			Ability ability = abilities.get(i);
-			details.append(new StringTextComponent("  ").append(ability.getDisplayName()));
+			details.append(Component.literal("  ").append(ability.getDisplayName()));
 			if(i < abilities.size() - 1)
-				details.append(new StringTextComponent("\n"));
+				details.append(Component.literal("\n"));
 		}
 		return details;
 	}
@@ -90,7 +85,7 @@ public class TypeHandler
 	/** Used in commands to determine if a given type can be added to an existing set */
 	public  boolean canApplyTo(Collection<EnumCreatureType> types){ return true; }
 	
-	public static enum DamageResist implements IStringSerializable
+	public static enum DamageResist implements StringRepresentable
 	{
 		NORMAL(0F),
 		VULNERABLE(0.5F),
@@ -117,33 +112,19 @@ public class TypeHandler
 		
 		public float val(){ return mult; }
 		
-		public String getString(){ return name().toLowerCase(); }
+		public String getSerializedName(){ return name().toLowerCase(); }
 		
-		public ITextComponent getTranslated(DamageType typeIn)
+		public Component getTranslated(DamageType typeIn)
 		{
-			return new TranslationTextComponent("enum.varodd.damage_resist."+getString(), typeIn.getTranslated());
+			return Component.translatable("enum.varodd.damage_resist."+getSerializedName(), typeIn.getTranslated());
 		}
 		
 		public static DamageResist fromString(String str)
 		{
 	    	for(DamageResist val : values())
-	    		if(val.getString().equalsIgnoreCase(str))
+	    		if(val.getSerializedName().equalsIgnoreCase(str))
 	    			return val;
 	    	return null;
-		}
-	}
-	
-	/** Common operations between types */
-	public static class TypeUtils
-	{
-		public static final List<Effect> EMPTY_POTIONS = new ArrayList<Effect>();
-		
-		public static ItemTier getMaterial(String name)
-		{
-			for(ItemTier material : ItemTier.values())
-				if(material.name().equals(name))
-					return material;
-			return null;
 		}
 	}
 }

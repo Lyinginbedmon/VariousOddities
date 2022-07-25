@@ -1,13 +1,12 @@
 package com.lying.variousoddities.species.abilities;
 
-import java.util.Random;
-
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -30,7 +29,7 @@ public class AbilityHeat extends Ability
 	
 	public Type getType(){ return Ability.Type.ATTACK; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putFloat("DmgMin", this.minDmg);
 		compound.putFloat("DmgMax", this.maxDmg);
@@ -46,33 +45,33 @@ public class AbilityHeat extends Ability
 	public void onLivingAttack(LivingAttackEvent event)
 	{
 		DamageSource source = event.getSource();
-		LivingEntity victim = event.getEntityLiving();
-		if(source.getImmediateSource() != null && source.getImmediateSource() instanceof LivingEntity && source.getImmediateSource().isAlive())
+		LivingEntity victim = event.getEntity();
+		if(source.getDirectEntity() != null && source.getDirectEntity() instanceof LivingEntity && source.getDirectEntity().isAlive())
 		{
-			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
+			LivingEntity attacker = (LivingEntity)source.getDirectEntity();
 			if(attacker != null)
 			{
 				if(AbilityRegistry.hasAbility(attacker, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME).canAbilityAffectEntity(victim, attacker))
-					applyHeatTo(victim, (AbilityHeat)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME), attacker.getRNG());
+					applyHeatTo(victim, (AbilityHeat)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME), attacker.getRandom());
 				
 				if(AbilityRegistry.hasAbility(victim, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME).canAbilityAffectEntity(attacker, victim))
-					applyHeatTo(attacker, (AbilityHeat)AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME), victim.getRNG());
+					applyHeatTo(attacker, (AbilityHeat)AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME), victim.getRandom());
 			}
 		}
 	}
 	
-	private void applyHeatTo(LivingEntity target, AbilityHeat ability, Random rand)
+	private void applyHeatTo(LivingEntity target, AbilityHeat ability, RandomSource rand)
 	{
-		target.attackEntityFrom(DamageSource.IN_FIRE, ability.minDmg + rand.nextFloat() * (ability.maxDmg - ability.minDmg));
+		target.hurt(DamageSource.IN_FIRE, ability.minDmg + rand.nextFloat() * (ability.maxDmg - ability.minDmg));
 		if(ability.ignite && rand.nextInt(6) == 0)
-			target.setFire(5);
+			target.setSecondsOnFire(5);
 	}
 	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			float dmgA = compound.contains("DmgMin", 5) ? compound.getFloat("DmgMin") : 0F;
 			float dmgB = compound.contains("DmgMax", 5) ? compound.getFloat("DmgMax") : 2F;

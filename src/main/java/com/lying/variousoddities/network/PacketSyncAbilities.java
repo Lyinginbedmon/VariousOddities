@@ -9,24 +9,23 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSyncAbilities
 {
 	private final UUID uuid;
-	private CompoundNBT abilitiesData = new CompoundNBT();
+	private CompoundTag abilitiesData = new CompoundTag();
 	
 	public PacketSyncAbilities(UUID entityUUID)
 	{
 		this.uuid = entityUUID;
 	}
-	public PacketSyncAbilities(UUID entityUUID, CompoundNBT abilitiesIn)
+	public PacketSyncAbilities(UUID entityUUID, CompoundTag abilitiesIn)
 	{
 		this(entityUUID);
 		abilitiesData = abilitiesIn;
@@ -50,15 +49,15 @@ public class PacketSyncAbilities
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isClient())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(player != null)
 			{
-				World world = player.getEntityWorld();
+				Level world = player.getLevel();
 				if(world != null)
 				{
 					LivingEntity entity = null;
 					for(LivingEntity living : world.getEntitiesWithinAABB(LivingEntity.class, Minecraft.getInstance().player.getBoundingBox().grow(64D)))
-						if(living.getUniqueID().equals(msg.uuid))
+						if(living.getUUID().equals(msg.uuid))
 						{
 							entity = living;
 							break;
@@ -74,13 +73,13 @@ public class PacketSyncAbilities
 		}
 		else
 		{
-			ServerPlayerEntity sender = context.getSender();
+			ServerPlayer sender = context.getSender();
 			if(sender != null)
 			{
 				Abilities abilities = LivingData.forEntity(sender).getAbilities();
 				abilities.forceRecache();
-				CompoundNBT data = abilities.serializeNBT();
-				PacketHandler.sendToNearby(sender.getEntityWorld(), sender, new PacketSyncAbilities(sender.getUniqueID(), data));
+				CompoundTag data = abilities.serializeNBT();
+				PacketHandler.sendToNearby(sender.getLevel(), sender, new PacketSyncAbilities(sender.getUUID(), data));
 			}
 		}
 		context.setPacketHandled(true);

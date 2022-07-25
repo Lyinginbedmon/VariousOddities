@@ -9,13 +9,13 @@ import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.api.world.settlement.SettlementRoomBehaviour;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A simple inert settlement type that notifies players of its name and that of any rooms they enter within it.
@@ -32,21 +32,21 @@ public class SettlementDummy implements Settlement
 	private boolean invulnerable = false;
 	
 	private String customName = "";
-	private ITextComponent title = null;
+	private Component title = null;
 	private int range = 5;
 	
 	@SuppressWarnings("unused")
-	private World world = null;
+	private Level world = null;
 	
 	public SettlementDummy(){ }
-	public SettlementDummy(World worldIn)
+	public SettlementDummy(Level worldIn)
 	{
 		setWorld(worldIn);
 	}
 	
 	public ResourceLocation typeName(){ return TYPE_NAME; }
 	
-	public void setWorld(World worldIn)
+	public void setWorld(Level worldIn)
 	{
 		this.world = worldIn;
 	}
@@ -133,17 +133,17 @@ public class SettlementDummy implements Settlement
 	public boolean containsPosition(BlockPos pos)
 	{
 		for(BoxRoom room : rooms)
-			if(room.getBounds().grow(5D).contains(new Vector3d(pos.getX(), pos.getY(), pos.getZ())))
+			if(room.getBounds().inflate(5D).contains(new Vec3(pos.getX(), pos.getY(), pos.getZ())))
 				return true;
 		return false;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		
 	}
@@ -158,9 +158,9 @@ public class SettlementDummy implements Settlement
 		return this.customName;
 	}
 	
-	public ITextComponent getTitle(){ return this.title; }
+	public Component getTitle(){ return this.title; }
 	
-	public void setTitle(ITextComponent textComponent){ this.title = textComponent; }
+	public void setTitle(Component textComponent){ this.title = textComponent; }
 	
 	public int getTitleRange(){ return this.range; }
 	

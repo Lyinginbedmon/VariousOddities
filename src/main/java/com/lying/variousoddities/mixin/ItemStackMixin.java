@@ -9,17 +9,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.lying.variousoddities.enchantment.TemporaryEnchantment;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin
 {
 	@Inject(method = "inventoryTick(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;IZ)V", at = @At("HEAD"))
-	public void inventoryTick(World worldIn, Entity entityIn, int itemSlot, boolean isSelected, CallbackInfo ci)
+	public void inventoryTick(Level worldIn, Entity entityIn, int itemSlot, boolean isSelected, CallbackInfo ci)
 	{
 		ItemStack stack = (ItemStack)(Object)this;
 		if(stack.isEnchanted())

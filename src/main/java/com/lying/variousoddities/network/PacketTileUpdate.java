@@ -2,23 +2,23 @@ package com.lying.variousoddities.network;
 
 import java.util.function.Supplier;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketTileUpdate
 {
 	private BlockPos pos = BlockPos.ZERO;
-	private CompoundNBT data = new CompoundNBT();
+	private CompoundTag data = new CompoundTag();
 	
 	public PacketTileUpdate(){ }
-	public PacketTileUpdate(TileEntity tile)
+	public PacketTileUpdate(BlockEntity tile)
 	{
-		pos = tile.getPos();
-		data = tile.write(new CompoundNBT());
+		pos = tile.getBlockPos();
+		data = tile.saveWithFullMetadata();
 	}
 	
 	public static PacketTileUpdate decode(PacketBuffer par1Buffer)
@@ -39,14 +39,14 @@ public class PacketTileUpdate
 	{
 		NetworkEvent.Context context = cxt.get();
 		
-		World world = null;
-		try{ world = context.getSender().getEntityWorld(); }
+		Level world = null;
+		try{ world = context.getSender().getLevel(); }
 		catch(Exception e){ }
 		if(world != null)
 		{
-			TileEntity tile = world.getTileEntity(msg.pos);
+			BlockEntity tile = world.getBlockEntity(msg.pos);
 			if(tile != null)
-				tile.read(world.getBlockState(msg.pos), msg.data);
+				tile.load(msg.data);
 		}
 		
 		context.setPacketHandled(true);

@@ -1,12 +1,10 @@
 package com.lying.variousoddities.init;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.potion.IVisualPotion;
 import com.lying.variousoddities.potion.PotionDazed;
@@ -22,64 +20,62 @@ import com.lying.variousoddities.potion.PotionTempHP;
 import com.lying.variousoddities.potion.PotionVO;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.EffectType;
-import net.minecraft.potion.Effects;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.registries.ForgeRegistries;
 
-@Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class VOPotions
 {
-	private static final List<Effect> EFFECTS = Lists.newArrayList();
-	public static final Map<Effect, Integer> VISUALS = new HashMap<>();
+	private static final Map<ResourceLocation, MobEffect> EFFECTS = new HashMap<>();
+	public static final Map<MobEffect, Integer> VISUALS = new HashMap<>();
 	
 	public static boolean isRegistered = false;
 	
-	public static final Effect SLEEP				= addPotion(new PotionSleep(3973574));
-	public static final Effect PARALYSIS			= addPotion(new PotionParalysis(-1));
-	public static final Effect DAZZLED				= addPotion(new PotionDazzled(-1));
-	public static final Effect DAZED				= addPotion(new PotionDazed(-1));
-	public static final Effect ARCANE_SIGHT			= addPotion(new PotionVO("arcane_sight", EffectType.BENEFICIAL, 10289404));
-	public static final Effect DEAFENED				= addPotion(new PotionVO("deafened", EffectType.HARMFUL, 7815));
-	public static final Effect SILENCED				= addPotion(new PotionVO("silenced", EffectType.HARMFUL, 7815));
-	public static final Effect PETRIFIED			= addPotion(new PotionPetrified(9408399));
-	public static final Effect PETRIFYING			= addPotion(new PotionPetrifying(9408399));
-	public static final Effect ENTANGLED			= addPotion(new PotionEntangled(9953313));
-	public static final Effect ANCHORED				= addPotion(new PotionVO("anchored", EffectType.HARMFUL, 1400709));
-	public static final Effect NEEDLED				= addPotion(new PotionVO("needled", EffectType.NEUTRAL, -1));
-	public static final Effect TEMP_HP				= addPotion(new PotionTempHP());
-	public static final Effect HEALTH_DAMAGE		= addPotion(new PotionHealthDamage());
-	public static final Effect HEALTH_DRAIN			= addPotion(new PotionHealthDrain());
+	public static final MobEffect SLEEP				= addPotion("sleep", new PotionSleep(3973574));
+	public static final MobEffect PARALYSIS			= addPotion("paralysis", new PotionParalysis(-1));
+	public static final MobEffect DAZZLED			= addPotion("dazzled", new PotionDazzled(-1));
+	public static final MobEffect DAZED				= addPotion("dazed", new PotionDazed(-1));
+	public static final MobEffect ARCANE_SIGHT		= addPotion("arcane_sight", new PotionVO(MobEffectCategory.BENEFICIAL, 10289404));
+	public static final MobEffect DEAFENED			= addPotion("deafened", new PotionVO(MobEffectCategory.HARMFUL, 7815));
+	public static final MobEffect SILENCED			= addPotion("silenced", new PotionVO(MobEffectCategory.HARMFUL, 7815));
+	public static final MobEffect PETRIFIED			= addPotion("petrified", new PotionPetrified(9408399));
+	public static final MobEffect PETRIFYING		= addPotion("petrifying", new PotionPetrifying(9408399));
+	public static final MobEffect ENTANGLED			= addPotion("entangled", new PotionEntangled(9953313));
+	public static final MobEffect ANCHORED			= addPotion("anchored", new PotionVO(MobEffectCategory.HARMFUL, 1400709));
+	public static final MobEffect NEEDLED			= addPotion("needled", new PotionVO(MobEffectCategory.NEUTRAL, -1));
+	public static final MobEffect TEMP_HP			= addPotion("temp_health", new PotionTempHP());
+	public static final MobEffect HEALTH_DAMAGE		= addPotion("health_damage", new PotionHealthDamage());
+	public static final MobEffect HEALTH_DRAIN		= addPotion("health_drain", new PotionHealthDrain());
 	
-	public static final Map<Effect, Predicate<EffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
-	public static final Map<Effect, Predicate<EffectInstance>> SILENCE_EFFECTS = new HashMap<>();
+	public static final Map<MobEffect, Predicate<MobEffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
+	public static final Map<MobEffect, Predicate<MobEffectInstance>> SILENCE_EFFECTS = new HashMap<>();
 	
-	private static Effect addPotion(Effect potionIn)
+	private static MobEffect addPotion(String nameIn, MobEffect potionIn) { return addPotion(new ResourceLocation(Reference.ModInfo.MOD_ID, nameIn), potionIn); }
+	
+	private static MobEffect addPotion(ResourceLocation registryName, MobEffect potionIn)
 	{
-		EFFECTS.add(potionIn);
+		EFFECTS.put(registryName, potionIn);
 		if(potionIn instanceof IVisualPotion)
 			VISUALS.put(potionIn, VISUALS.size());
 		return potionIn;
 	}
 	
-	public static int getVisualPotionIndex(Effect potionIn)
+	public static int getVisualPotionIndex(MobEffect potionIn)
 	{
 		if(VISUALS.containsKey(potionIn))
 			return VISUALS.get(potionIn);
 		return -1;
 	}
 	
-	@SubscribeEvent
-	public static void registerPotions(RegistryEvent.Register<Effect> event)
+	public static void init()
 	{
-		for(Effect potion : EFFECTS)
-			event.getRegistry().register(potion);
+		for(ResourceLocation potion : EFFECTS.keySet())
+			ForgeRegistries.MOB_EFFECTS.register(potion, EFFECTS.get(potion));
 		
 		isRegistered = true;
 	}
@@ -89,12 +85,12 @@ public class VOPotions
 	 * @param entity
 	 * @param potion
 	 */
-	public static boolean isPotionActive(LivingEntity entity, Effect potion)
+	public static boolean isPotionActive(LivingEntity entity, MobEffect potion)
 	{
-		return entity.isPotionActive(potion) || entity.getActivePotionEffect(potion) != null && entity.getActivePotionEffect(potion).getDuration() > 0;
+		return entity.hasEffect(potion) || entity.getEffect(potion) != null && entity.getEffect(potion).getDuration() > 0;
 	}
 	
-	public static boolean isPotionVisible(LivingEntity entity, Effect potion)
+	public static boolean isPotionVisible(LivingEntity entity, MobEffect potion)
 	{
 		LivingData data = LivingData.forEntity(entity);
 		return data != null && potion instanceof IVisualPotion && data.getVisualPotion(potion);
@@ -108,33 +104,33 @@ public class VOPotions
 	/** Returns true if the creature is paralysed by known potion effects */
 	public static boolean paralysedByPotions(LivingEntity entity)
 	{
-		for(Effect effect : PARALYSIS_EFFECTS.keySet())
-			if(entity.isPotionActive(effect) && PARALYSIS_EFFECTS.get(effect).apply(entity.getActivePotionEffect(effect)))
+		for(MobEffect effect : PARALYSIS_EFFECTS.keySet())
+			if(entity.hasEffect(effect) && PARALYSIS_EFFECTS.get(effect).apply(entity.getEffect(effect)))
 				return true;
 		return false;
 	}
 	
-	public static boolean isParalysisEffect(EffectInstance instance)
+	public static boolean isParalysisEffect(MobEffectInstance instance)
 	{
-		for(Effect effect : PARALYSIS_EFFECTS.keySet())
-			if(effect == instance.getPotion() && PARALYSIS_EFFECTS.get(effect).apply(instance))
+		for(MobEffect effect : PARALYSIS_EFFECTS.keySet())
+			if(effect == instance.getEffect() && PARALYSIS_EFFECTS.get(effect).apply(instance))
 				return true;
 		return false;
 	}
 	
 	public static boolean isSilenced(LivingEntity entity)
 	{
-		for(Effect effect : SILENCE_EFFECTS.keySet())
-			if(entity.isPotionActive(effect) && SILENCE_EFFECTS.get(effect).apply(entity.getActivePotionEffect(effect)))
+		for(MobEffect effect : SILENCE_EFFECTS.keySet())
+			if(entity.hasEffect(effect) && SILENCE_EFFECTS.get(effect).apply(entity.getEffect(effect)))
 				return true;
 		return false;
 	}
 	
 	static
 	{
-		PARALYSIS_EFFECTS.put(Effects.SLOWNESS, new Predicate<EffectInstance>()
+		PARALYSIS_EFFECTS.put(MobEffects.MOVEMENT_SLOWDOWN, new Predicate<MobEffectInstance>()
 		{
-			public boolean apply(EffectInstance input)
+			public boolean apply(MobEffectInstance input)
 			{
 				return input.getAmplifier() >= 4;
 			}

@@ -1,25 +1,20 @@
 package com.lying.variousoddities.condition;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.collect.Lists;
-import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraft.resources.ResourceLocation;
 
 public class Conditions
 {
-	private static final List<Condition> conditions = Lists.newArrayList();
+	private static final Map<ResourceLocation, Condition> CONDITION_MAP = new HashMap<>();
 	
 	public static final Condition AFRAID = register(new ResourceLocation(Reference.ModInfo.MOD_ID, "afraid"), new ConditionMindAffecting(MagicSubType.FEAR)
 			{
@@ -39,27 +34,15 @@ public class Conditions
 	
 	private static Condition register(ResourceLocation nameIn, Condition conditionIn)
 	{
-		conditionIn.setRegistryName(nameIn);
-		conditions.add(conditionIn);
+		VORegistries.CONDITIONS.register(nameIn.toString(), () -> conditionIn);
+		CONDITION_MAP.put(nameIn, conditionIn);
 		return conditionIn;
 	}
 	
-	public static void onRegisterConditions(RegistryEvent.Register<Condition> event)
-	{
-		IForgeRegistry<Condition> registry = event.getRegistry();
-		
-		conditions.forEach((condition) -> { registry.register(condition); });
-		
-		VariousOddities.log.info("Initialised "+registry.getEntries().size()+" conditions");
-		if(ConfigVO.GENERAL.verboseLogs())
-			for(ResourceLocation name : registry.getKeys())
-				VariousOddities.log.info("#   "+name.toString());
-	}
+	public static void init() { }
 	
 	public static Condition getByRegistryName(@Nonnull ResourceLocation registryName)
 	{
-		return VORegistries.CONDITIONS.containsKey(registryName) ? VORegistries.CONDITIONS.getValue(registryName) : null;
+		return CONDITION_MAP.containsKey(registryName) ? CONDITION_MAP.get(registryName) : null;
 	}
-	
-	public static Collection<Condition> getAllConditions(){ return VORegistries.CONDITIONS.getValues(); }
 }

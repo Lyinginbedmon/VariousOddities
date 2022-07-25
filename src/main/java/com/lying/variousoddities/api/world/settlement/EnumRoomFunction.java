@@ -2,13 +2,13 @@ package com.lying.variousoddities.api.world.settlement;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.util.text.event.HoverEvent;
-import net.minecraft.util.text.event.HoverEvent.Action;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.HoverEvent.Action;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.StringRepresentable;
 
-public enum EnumRoomFunction implements IStringSerializable
+public enum EnumRoomFunction implements StringRepresentable
 {
 	BARN,
 	BARRACKS,
@@ -32,12 +32,12 @@ public enum EnumRoomFunction implements IStringSerializable
 	TOMB,
 	WORKSHOP;
 	
-	public ITextComponent getName()
+	public MutableComponent getName()
 	{
-		return new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".room_function."+this.name().toLowerCase()).modifyStyle((style) -> { return style.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".room_function."+this.name().toLowerCase()+".definition"))); });
+		return Component.translatable("enum."+Reference.ModInfo.MOD_ID+".room_function."+this.getSerializedName()).withStyle((style) -> { return style.withHoverEvent(new HoverEvent(Action.SHOW_TEXT, Component.translatable("enum."+Reference.ModInfo.MOD_ID+".room_function."+this.getSerializedName()+".definition"))); });
 	}
 	
-	public String getString()
+	public String getSerializedName()
 	{
 		return name().toLowerCase();
 	}

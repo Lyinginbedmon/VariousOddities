@@ -6,12 +6,12 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketAbilityCooldown
 {
@@ -33,12 +33,12 @@ public class PacketAbilityCooldown
 		
 		if(context.getDirection().getReceptionSide().isClient())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(player != null)
 			{
-				World world = player.getEntityWorld();
+				Level world = player.getLevel();
 				if(world != null && ConfigVO.CLIENT.announceCools.get())
-					world.playSound(player, player.getPosition(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.25f, 0.1f + player.getRNG().nextFloat() * 0.9F);
+					world.playSound(player, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.25f, 0.1f + player.getRandom().nextFloat() * 0.9F);
 			}
 		}
 		

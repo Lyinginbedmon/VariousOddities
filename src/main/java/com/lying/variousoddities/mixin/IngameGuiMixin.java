@@ -1,5 +1,7 @@
 package com.lying.variousoddities.mixin;
 
+import javax.swing.text.JTextComponent.KeyBinding;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,10 +20,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -43,7 +43,7 @@ public class IngameGuiMixin
 	public void func_238454_b_(MatrixStack matrixStack, int xPos, final CallbackInfo ci)
 	{
 		Minecraft mc = Minecraft.getInstance();
-		PlayerEntity player = mc.player;
+		Player player = mc.player;
 		if(player == null)
 			return;
 		
@@ -52,7 +52,7 @@ public class IngameGuiMixin
 			return;
 		ci.cancel();
 		AbstractGui gui = (AbstractGui)(Object)this;
-		ITextComponent displayText = null;
+		Component displayText = null;
 		switch(data.getBodyCondition())
 		{
 			case DEAD:
@@ -69,7 +69,7 @@ public class IngameGuiMixin
 				if(progress >= 1F)
 				{
 					KeyBinding inv = mc.gameSettings.keyBindInventory;
-					displayText = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".dead_player_respawn", inv.func_238171_j_().getString().toUpperCase());
+					displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".dead_player_respawn", inv.func_238171_j_().getSerializedName().toUpperCase());
 				}
 				break;
 			case UNCONSCIOUS:
@@ -77,15 +77,15 @@ public class IngameGuiMixin
 					if(!LivingData.unconscious(player))
 					{
 						KeyBinding inv = mc.gameSettings.keyBindInventory;
-						displayText = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.awaken", inv.func_238171_j_().getString().toUpperCase());
+						displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.awaken", inv.func_238171_j_().getSerializedName().toUpperCase());
 					}
 					else
 					{
 						if(player.getActivePotionEffect(VOPotions.SLEEP) != null && player.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
-							displayText = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.sleep");
+							displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.sleep");
 						else
 						{
-							displayText = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.bludgeoning");
+							displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.bludgeoning");
 							float bludgeoning = LivingData.forEntity(player).getBludgeoning();
 							int healthToWaking = (int)(bludgeoning - player.getHealth()) + 1;
 							
@@ -113,7 +113,7 @@ public class IngameGuiMixin
 		
 		if(displayText != null)
 		{
-			String s = displayText.getString();
+			String s = displayText.getSerializedName();
 			int textX = (scaledWidth - getFontRenderer().getStringWidth(s)) / 2;
 			int textY = this.scaledHeight - 31 - 7;
 			FontRenderer fontRenderer = getFontRenderer();

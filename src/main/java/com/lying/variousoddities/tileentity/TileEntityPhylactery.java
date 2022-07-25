@@ -7,27 +7,27 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.init.VOTileEntities;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockVoxelShape;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class TileEntityPhylactery extends TileEntity implements ITickableTileEntity
+public class TileEntityPhylactery extends BlockEntity implements ITickableTileEntity
 {
 	private static int HEAL_RATE = Reference.Values.TICKS_PER_SECOND * 15;
 	
-	private ITextComponent ownerName = null;
+	private Component ownerName = null;
 	private UUID ownerUUID = null;
 	
 	private LivingEntity owner = null;
@@ -45,15 +45,15 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 		super(VOTileEntities.PHYLACTERY);
 	}
 	
-	public CompoundNBT write(CompoundNBT compound)
+	public CompoundTag write(CompoundTag compound)
 	{
 		super.write(compound);
 		
 		if(this.ownerName != null)
-			compound.putString("OwnerName", ITextComponent.Serializer.toJson(this.ownerName));
+			compound.putString("OwnerName", Component.Serializer.toJson(this.ownerName));
 		
 		if(this.ownerUUID != null)
-			compound.putUniqueId("OwnerUUID", this.ownerUUID);
+			compound.putUUID("OwnerUUID", this.ownerUUID);
 		
 		compound.putBoolean("IsPlayer", this.isPlayer);
 		compound.putInt("TimeSincePlaced", this.timeSincePlaced);
@@ -64,14 +64,14 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 		return compound;
 	}
 	
-	public void read(BlockState state, CompoundNBT nbt)
+	public void read(BlockState state, CompoundTag nbt)
 	{
 		super.read(state, nbt);
 		if(nbt.contains("OwnerName", 8))
-			this.ownerName = ITextComponent.Serializer.getComponentFromJson(nbt.getString("OwnerName"));
+			this.ownerName = Component.Serializer.getComponentFromJson(nbt.getString("OwnerName"));
 		
 		if(nbt.contains("OwnerUUID", 11))
-			this.ownerUUID = nbt.getUniqueId("OwnerUUID");
+			this.ownerUUID = nbt.getUUID("OwnerUUID");
 		
 		this.isPlayer = nbt.getBoolean("IsPlayer");
 		this.timeSincePlaced = nbt.getInt("TimeSincePlaced");
@@ -83,7 +83,7 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 	
 	public void tick()
 	{
-		World world = this.getWorld();
+		Level world = this.getLevel();
 		double mistRadius = getMistRadius();
 		++this.timeSincePlaced;
 		if(getMistRadius() != mistRadius)
@@ -93,7 +93,7 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 		if(owner == null)
 		{
 			if(isPlayer)
-				this.owner = world.getPlayerByUuid(ownerUUID);
+				this.owner = world.getPlayerByUUID(ownerUUID);
 			else
 			{
 				// Mob phylactery handling currently not implemented
@@ -113,15 +113,15 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 		
 		// Players respawn near their phylactery
 		if(isPlayer)
-			if(!world.isRemote)
+			if(!world.isClientSide)
 			{
-				ServerPlayerEntity player = (ServerPlayerEntity)this.owner;
-				if(player.func_241140_K_().distanceSq(getPos()) > 0)
-					player.func_242111_a(world.getDimensionKey(), getPos(), 0F, true, false);
+				ServerPlayer player = (ServerPlayer)this.owner;
+				if(player.getRespawnPosition().distSqr(getBlockPos()) > 0)
+					player.setRespawnPosition(world.dimension(), getBlockPos(), 0F, true, false);
 			}
 		
 		// Lich is healed whilst in dungeon mist
-		if(!world.isRemote)
+		if(!world.isClientSide)
 		{
 			boolean ownerInMist = isInsideMist(this.owner);
 			if(this.owner.getHealth() < this.lastKnownHealth)
@@ -135,50 +135,50 @@ public class TileEntityPhylactery extends TileEntity implements ITickableTileEnt
 			this.lastKnownHealth = this.owner.getHealth();
 			
 			if(ownerInMist && this.timeSincePlaced % 80 == 0)
-				this.owner.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_SECOND * 12, 0, true, true));
+				this.owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_SECOND * 12, 0, true, true));
 		}
 	}
 	
 	public void markDirty()
 	{
-		if(getWorld() == null || getWorld().isRemote)
+		if(getLevel() == null || getLevel().isClientSide)
 			return;
 		
-		ServerWorld world = (ServerWorld)getWorld();
-		world.markAndNotifyBlock(getPos(), world.getChunkAt(getPos()), getBlockState(), getBlockState(), 0, 0);
+		ServerLevel world = (ServerLevel)getLevel();
+		world.markAndNotifyBlock(getBlockPos(), world.getChunkAt(getBlockPos()), getBlockState(), getBlockState(), 0, 0);
 	}
 	
 	@Nullable
 	public LivingEntity getOwner() { return this.owner; }
 	
-	public boolean isOwner(LivingEntity entity) { return entity.getUniqueID().equals(ownerUUID); }
+	public boolean isOwner(LivingEntity entity) { return entity.getUUID().equals(ownerUUID); }
 	
 	public double getMistRadius() { return Math.min(this.maxSize, Math.floorDiv(this.timeSincePlaced, Reference.Values.TICKS_PER_MINUTE * 5) * 3D); }
 	
 	public boolean isInsideMist(LivingEntity entity)
 	{
-		return isInsideMist(entity.getPosition());
+		return isInsideMist(entity.blockPosition());
 	}
 	
 	public boolean isInsideMist(BlockPos pos)
 	{
-		return Math.sqrt(pos.distanceSq(getPos())) <= getMistRadius();
+		return Math.sqrt(pos.distSqr(getBlockPos())) <= getMistRadius();
 	}
 	
-	public static boolean isValidForMist(BlockPos pos, World world)
+	public static boolean isValidForMist(BlockPos pos, Level world)
 	{
 		BlockState state = world.getBlockState(pos);
-		if(state.isSolid() || !state.getFluidState().isEmpty())
+		if(state.isCollisionShapeFullBlock(world, pos) || !state.getFluidState().isEmpty())
 			return false;
 		
-		BlockState down = world.getBlockState(pos.down());
+		BlockState down = world.getBlockState(pos.below());
 		return !down.getFluidState().isEmpty() || down.func_242698_a(world, pos, Direction.UP, BlockVoxelShape.CENTER);
 	}
 	
-	public CompoundNBT getUpdateTag() { return this.write(new CompoundNBT()); }
+	public CompoundTag getUpdateTag() { return this.write(new CompoundTag()); }
 	
 	@Nullable
-	public SUpdateTileEntityPacket getUpdatePacket() { return new SUpdateTileEntityPacket(this.getPos(), -1, this.getUpdateTag()); }
+	public SUpdateTileEntityPacket getUpdatePacket() { return new SUpdateTileEntityPacket(this.getBlockPos(), -1, this.getUpdateTag()); }
 	
 	public void onDataPacket(net.minecraft.network.NetworkManager net, net.minecraft.network.play.server.SUpdateTileEntityPacket pkt) { this.read(this.getBlockState(), pkt.getNbtCompound()); }
 }

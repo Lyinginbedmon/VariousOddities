@@ -4,8 +4,8 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.GetTypeActionsEvent
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType.Action;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityNaturalRegen extends Ability
@@ -25,7 +25,7 @@ public class AbilityNaturalRegen extends Ability
 	
 	public void addNaturalRegen(GetTypeActionsEvent event)
 	{
-		if(AbilityRegistry.hasAbility(event.getEntityLiving(), getMapName()))
+		if(AbilityRegistry.hasAbility(event.getEntity(), getMapName()))
 			event.add(Action.REGENERATE);
 	}
 	
@@ -33,7 +33,7 @@ public class AbilityNaturalRegen extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityNaturalRegen();
 		}

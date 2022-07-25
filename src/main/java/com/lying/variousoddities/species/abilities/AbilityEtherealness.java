@@ -2,11 +2,11 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 
 public class AbilityEtherealness extends AbilityPhasing
 {
@@ -21,16 +21,16 @@ public class AbilityEtherealness extends AbilityPhasing
 	
 	public boolean ignoresNonMagicDamage(){ return true; }
 	
-	public boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(Level worldIn, BlockPos pos, LivingEntity entity)
 	{
-		return entity.getPosition().getY() <= pos.getY() || entity.isSneaking();
+		return entity.blockPosition().getY() <= pos.getY() || entity.isCrouching();
 	}
 	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityEtherealness();
 		}

@@ -2,12 +2,12 @@ package com.lying.variousoddities.client;
 
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 
-public class ClientPlayerDummy extends AbstractClientPlayerEntity
+public class ClientPlayerDummy extends LocalPlayer
 {
-	public ClientPlayerDummy(ClientWorld world, GameProfile profile)
+	public ClientPlayerDummy(ClientLevel world, GameProfile profile)
 	{
 		super(world, profile);
 	}

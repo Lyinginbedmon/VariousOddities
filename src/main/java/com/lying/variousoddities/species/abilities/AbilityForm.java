@@ -3,9 +3,9 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -69,7 +69,7 @@ public abstract class AbilityForm extends ToggledAbility
 		{
 			public Builder(){ super(REGISTRY_NAME); }
 			
-			public Ability create(CompoundNBT compound)
+			public Ability create(CompoundTag compound)
 			{
 				AbilityForm.Mist ability = new AbilityForm.Mist();
 				ability.readFromNBT(compound);
@@ -90,7 +90,7 @@ public abstract class AbilityForm extends ToggledAbility
 		{
 			public Builder(){ super(REGISTRY_NAME); }
 			
-			public Ability create(CompoundNBT compound)
+			public Ability create(CompoundTag compound)
 			{
 				AbilityForm.Ghost ability = new AbilityForm.Ghost();
 				ability.readFromNBT(compound);

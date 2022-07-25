@@ -7,8 +7,8 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
 
 public interface IDefaultSpecies
 {

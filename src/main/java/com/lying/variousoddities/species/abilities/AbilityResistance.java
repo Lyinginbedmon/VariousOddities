@@ -2,11 +2,10 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -26,17 +25,17 @@ public class AbilityResistance extends Ability
 	
 	public ResourceLocation getMapName()
 	{
-		return new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_"+damage.getString());
+		return new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_"+damage.getSerializedName());
 	}
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability.varodd.resistance", damage.getTranslated(), amount);
+		return Component.translatable("ability.varodd.resistance", damage.getTranslated(), amount);
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability.varodd:resistance.desc", damage.getTranslated(), amount);
+		return Component.translatable("ability.varodd:resistance.desc", damage.getTranslated(), amount);
 	}
 	
 	public int compare(Ability abilityIn)
@@ -53,14 +52,14 @@ public class AbilityResistance extends Ability
 	
 	public int getAmount(){ return Math.max(4, amount); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putInt("Amount", this.amount);
-		compound.putString("Type", damage.getString());
+		compound.putString("Type", damage.getSerializedName());
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.amount = compound.getInt("Amount");
 		this.damage = DamageType.fromString(compound.getString("Type"));
@@ -74,7 +73,7 @@ public class AbilityResistance extends Ability
 	public void applyResistance(LivingHurtEvent event)
 	{
 		DamageSource source = event.getSource();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntityLiving(), REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), REGISTRY_NAME))
 		{
 			AbilityResistance reduction = (AbilityResistance)ability;
 			if(reduction.applysTo(source))
@@ -94,7 +93,7 @@ public class AbilityResistance extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			int amount = compound.getInt("Amount");
 			DamageType damage = DamageType.fromString(compound.getString("Type"));

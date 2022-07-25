@@ -7,23 +7,24 @@ import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.item.Items;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.Goal.Flag;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 
 public class EntityAIGoblinWorgHeal extends Goal
 {
 	private final EntityGoblin theGoblin;
-	private final World theWorld;
-	private final PathNavigator theNavigator;
+	private final Level theWorld;
+	private final PathNavigation theNavigator;
 	
 	private Predicate<EntityWorg> searchPredicate = new Predicate<EntityWorg>()
 			{
 				public boolean apply(EntityWorg input)
 				{
-					return !input.isTamed() && input.getHealth() < input.getMaxHealth() && input.getAttackTarget() == null;
+					return !input.isTame() && input.getHealth() < input.getMaxHealth() && input.getTarget() == null;
 				}
 			};
 	private EntityWorg theWorg;
@@ -34,14 +35,14 @@ public class EntityAIGoblinWorgHeal extends Goal
 	public EntityAIGoblinWorgHeal(EntityGoblin goblinIn)
 	{
 		theGoblin = goblinIn;
-		theWorld = goblinIn.getEntityWorld();
-		theNavigator = goblinIn.getNavigator();
+		theWorld = goblinIn.getLevel();
+		theNavigator = goblinIn.getNavigation();
 		setMutexFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theGoblin.getAttackTarget() != null) return false;
+		if(theGoblin.getTarget() != null) return false;
 		
 		double minDist = Double.MAX_VALUE;
 		for(EntityWorg worg : theWorld.getEntitiesWithinAABB(EntityWorg.class, theGoblin.getBoundingBox().grow(8), searchPredicate))
@@ -107,7 +108,7 @@ public class EntityAIGoblinWorgHeal extends Goal
 				{
 					if(--healTimer <= 0)
 					{
-						theGoblin.swingArm(Hand.MAIN_HAND);
+						theGoblin.swingArm(InteractionHand.MAIN_HAND);
 						theWorg.heal(Items.ROTTEN_FLESH.getFood().getHealing());
 						theWorld.setEntityState(theWorg, (byte)7);
 						currentState = null;

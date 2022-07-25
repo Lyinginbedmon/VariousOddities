@@ -14,10 +14,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.command.arguments.IArgumentSerializer;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 /**
  * Band-aid solution to a Forge issue in command argument parsing that leads to empty strings in enum arguments.<br>
@@ -37,7 +35,7 @@ public class EnumArgumentChecked<T extends Enum<T>> implements ArgumentType<T>
     protected EnumArgumentChecked(final Class<T> enumClass, String enumName)
     {
         this.enumClass = enumClass;
-        ENUM_NOT_FOUND = new SimpleCommandExceptionType(new TranslationTextComponent("argument."+enumName.toLowerCase()+".notfound"));
+        ENUM_NOT_FOUND = new SimpleCommandExceptionType(Component.translatable("argument."+enumName.toLowerCase()+".notfound"));
     }
     
     public T parse(final StringReader reader) throws CommandSyntaxException
@@ -55,7 +53,7 @@ public class EnumArgumentChecked<T extends Enum<T>> implements ArgumentType<T>
     
     public <S> CompletableFuture<Suggestions> listSuggestions(final CommandContext<S> context, final SuggestionsBuilder builder)
     {
-        return ISuggestionProvider.suggest(Stream.of(enumClass.getEnumConstants()).map(Object::toString), builder);
+        return SharedSuggestionProvider.suggest(Stream.of(enumClass.getEnumConstants()).map(Object::toString), builder);
     }
     
     public Collection<String> getExamples()

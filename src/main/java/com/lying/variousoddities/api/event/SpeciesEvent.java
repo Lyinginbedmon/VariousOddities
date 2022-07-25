@@ -8,9 +8,9 @@ import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.Template;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingEvent;
 
 public abstract class SpeciesEvent extends LivingEvent
@@ -25,7 +25,7 @@ public abstract class SpeciesEvent extends LivingEvent
 		private final ResourceLocation species;
 		private final ResourceLocation[] templates;
 		
-		public SpeciesSelected(PlayerEntity player, ResourceLocation speciesIn, ResourceLocation... templatesIn)
+		public SpeciesSelected(Player player, ResourceLocation speciesIn, ResourceLocation... templatesIn)
 		{
 			super(player);
 			this.species = speciesIn;
@@ -50,7 +50,7 @@ public abstract class SpeciesEvent extends LivingEvent
 	{
 		private final ResourceLocation template;
 		
-		public TemplateApplied(PlayerEntity player, ResourceLocation templateIn)
+		public TemplateApplied(Player player, ResourceLocation templateIn)
 		{
 			super(player);
 			this.template = templateIn;

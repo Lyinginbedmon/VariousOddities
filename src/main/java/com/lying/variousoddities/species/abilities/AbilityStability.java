@@ -4,14 +4,14 @@ import java.util.UUID;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 
 public class AbilityStability extends AbilityModifier
 {
@@ -27,10 +27,10 @@ public class AbilityStability extends AbilityModifier
 	
 	public Type getType(){ return Type.DEFENSE; }
 	
-	public void applyModifier(LivingUpdateEvent event)
+	public void applyModifier(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
-		ModifiableAttributeInstance attribute = entity.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+		LivingEntity entity = event.getEntity();
+		AttributeInstance attribute = entity.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
 		if(attribute == null)
 			return;
 		
@@ -49,7 +49,7 @@ public class AbilityStability extends AbilityModifier
 			if(modifier == null)
 			{
 				modifier = new AttributeModifier(STABILITY_UUID, "stability", amount, Operation.ADDITION);
-				attribute.applyPersistentModifier(modifier);
+				attribute.addPermanentModifier(modifier);
 			}
 		}
 		else if(attribute.getModifier(STABILITY_UUID) != null)
@@ -60,7 +60,7 @@ public class AbilityStability extends AbilityModifier
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityStability();
 		}

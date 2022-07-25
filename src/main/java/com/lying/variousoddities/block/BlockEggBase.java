@@ -1,12 +1,10 @@
 package com.lying.variousoddities.block;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BlockEggBase extends VOFallingBlock
 {
@@ -20,7 +18,7 @@ public class BlockEggBase extends VOFallingBlock
 		this.shape = shapeIn;
 	}
 	
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context)
+	public VoxelShape getShape(BlockState state, Level worldIn, BlockPos pos, ISelectionContext context)
 	{
 		return this.shape;
 	}
@@ -37,7 +35,7 @@ public class BlockEggBase extends VOFallingBlock
 	
 	public boolean isTransparent(BlockState blockState){ return true; }
 	
-	public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos)
+	public boolean propagatesSkylightDown(BlockState state, Level reader, BlockPos pos)
 	{
 		return true;
 	}

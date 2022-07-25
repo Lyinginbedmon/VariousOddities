@@ -3,7 +3,7 @@ package com.lying.variousoddities.api.event;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.Event;
 
 /**

@@ -34,20 +34,18 @@ import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.common.MinecraftForge;
 
-public enum EnumCreatureType implements IStringSerializable
+public enum EnumCreatureType implements StringRepresentable
 {
-	ABERRATION(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("2145fe0a-c00c-405c-9ecf-a5d3e636834c"))
+	ABERRATION(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("2145fe0a-c00c-405c-9ecf-a5d3e636834c"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
 	AIR(null, new TypeHandler(UUID.fromString("6c8fc47e-8485-465a-a1a9-c79f125c9286"))
 		.addAbility(new AbilityFlight(Grade.PERFECT, 0.7D))),
@@ -55,13 +53,13 @@ public enum EnumCreatureType implements IStringSerializable
 		{
 			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(AQUATIC); }
 		}.addAbility(new AbilityAmphibious())),
-	ANIMAL(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("af347e37-0c1b-4e89-aaaf-de9f62ee1db2")), Action.STANDARD, 8),
+	ANIMAL(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("af347e37-0c1b-4e89-aaaf-de9f62ee1db2")), Action.STANDARD, 8),
 	AQUATIC(null, new TypeHandlerAquatic(UUID.fromString("be78378d-5aeb-43ea-bce7-f1ade0dea14b"), false)),
 	AUGMENTED(UUID.fromString("a7d80091-f713-470f-9878-7d2479cf7a2a")),
 	COLD(null, new TypeHandler(UUID.fromString("9bef87fa-7f6e-47f0-b227-a9d3a7b7fed1"))
 		.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))),
-	CONSTRUCT(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("423958a4-5b86-4389-990c-f1899925f47a"))
+	CONSTRUCT(MobType.UNDEFINED, new TypeHandler(UUID.fromString("423958a4-5b86-4389-990c-f1899925f47a"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.NONLETHAL, DamageResist.IMMUNE))
@@ -71,12 +69,12 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 10),
-	DRAGON(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e"))
+	DRAGON(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("cb4c0178-0fa0-44c0-b891-341b7874707e"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityStatusImmunity.Paralysis()), Action.STANDARD, 12),
 	EARTH(null, new TypeHandler(UUID.fromString("c1f5d866-365d-495c-9aa6-c5adaef000de"))
 		.addAbility(new AbilityBurrow(true, false))),
-	ELEMENTAL(CreatureAttribute.UNDEFINED, new TypeHandler(UUID.fromString("b0047670-88a2-41a0-aaae-7c9da5a79a4b"))
+	ELEMENTAL(MobType.UNDEFINED, new TypeHandler(UUID.fromString("b0047670-88a2-41a0-aaae-7c9da5a79a4b"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
@@ -85,32 +83,32 @@ public enum EnumCreatureType implements IStringSerializable
 	EVIL(null, new TypeHandler(UUID.fromString("c03386d7-96e2-487c-905d-974777a889ea"))
 		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))),
-	FEY(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("07c3a904-0cc5-43a5-b801-d67445175d4d"))
+	FEY(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("07c3a904-0cc5-43a5-b801-d67445175d4d"))
 		.addAbility(new AbilityDamageReduction(4, DamageType.SILVER)), Action.STANDARD, 6),
 	FIRE(null, new TypeHandler(UUID.fromString("3c798e03-0af6-4a02-8297-d70eb012427d"))
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.COLD, DamageResist.VULNERABLE))),
-	GIANT(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("1278a0dc-ba70-4641-b6af-24ba2a815cab")), Action.STANDARD, 8),
+	GIANT(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("1278a0dc-ba70-4641-b6af-24ba2a815cab")), Action.STANDARD, 8),
 	GOBLIN(UUID.fromString("6bc4dbf3-fc00-4419-8a91-5ff4f9a59703")),
 	HOLY(null, new TypeHandler(UUID.fromString("7096bdb3-2ab4-4094-9c66-3367d13b9065"))
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.IMMUNE))
 		.addAbility(new AbilityDamageResistance(DamageType.EVIL, DamageResist.VULNERABLE))),
-	HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("77bc6296-eab6-4ccd-963a-84caeb703e4c")), Action.STANDARD, 8),
+	HUMANOID(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("77bc6296-eab6-4ccd-963a-84caeb703e4c")), Action.STANDARD, 8),
 	INCORPOREAL(null, new TypeHandler(UUID.fromString("aba0ffd1-cf26-4363-85bd-0866a5fdea10"))
 		.addAbility(new AbilityIncorporeality())
 		.addAbility(new AbilityDamageResistance(DamageType.FALLING, DamageResist.IMMUNE))),
-	MAGICAL_BEAST(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("4e2f8461-9965-43db-ab1b-8de4ce8dcd30"))
+	MAGICAL_BEAST(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("4e2f8461-9965-43db-ab1b-8de4ce8dcd30"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 10),
-	MONSTROUS_HUMANOID(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("6f5802ec-231c-48f4-a535-08c64e5aaf0f"))
+	MONSTROUS_HUMANOID(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("6f5802ec-231c-48f4-a535-08c64e5aaf0f"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
-	OUTSIDER(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("b71f6adc-179b-4f13-b1fd-d7f2372f7ad0"))
+	OUTSIDER(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("b71f6adc-179b-4f13-b1fd-d7f2372f7ad0"))
 		.addAbility(new AbilityDarkvision()), EnumSet.of(Action.BREATHES, Action.REGENERATE), 8),
 	NATIVE(null, new TypeHandler(UUID.fromString("d7dc8434-e8f3-454d-b51c-2f6c9a24589b"))
 		{
 			public EnumSet<Action> applyActions(EnumSet<Action> actions, Collection<EnumCreatureType> types){ actions.addAll(Arrays.asList(Action.SLEEP, Action.EAT)); return actions; }
 			public boolean canApplyTo(Collection<EnumCreatureType> types){ return types.contains(OUTSIDER); }
 		}),
-	PLANT(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("a696c570-84ce-46aa-859b-46c4b2c1fa85"))
+	PLANT(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("a696c570-84ce-46aa-859b-46c4b2c1fa85"))
 		.addAbility(new AbilityDamageResistance(DamageType.FIRE, DamageResist.VULNERABLE))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.ENCHANTMENT))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
@@ -119,14 +117,14 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.EAT, Action.REGENERATE), 8),
 	REPTILE(UUID.fromString("b7b6e1bc-d1c5-4c6c-af9d-994b73bf73d8")),
 	SHAPECHANGER(UUID.fromString("b9956455-2bd2-456d-8e3e-976864fb23e6")),
-	OOZE(CreatureAttribute.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("38debdac-03a3-432f-8f77-66a09417e44b"))
+	OOZE(MobType.UNDEFINED, TypeHandler.getBreathesAir(UUID.fromString("38debdac-03a3-432f-8f77-66a09417e44b"))
 		.addAbility(new AbilityResistanceSpell(MagicSchool.TRANSMUTATION))
 		.addAbility(new AbilityBlind())
 		.addAbility(new AbilityBlindsight(16D))
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), EnumSet.of(Action.EAT, Action.BREATHES, Action.REGENERATE), 10),
-	UNDEAD(CreatureAttribute.UNDEAD, new TypeHandler(UUID.fromString("1e5ae3b8-b509-447f-b790-51ed71d090b7"))
+	UNDEAD(MobType.UNDEAD, new TypeHandler(UUID.fromString("1e5ae3b8-b509-447f-b790-51ed71d090b7"))
 		.addAbility(new AbilityDarkvision())
 		.addAbility(new AbilityDamageResistance(DamageType.HOLY, DamageResist.VULNERABLE))
 		.addAbility(new AbilityDamageResistance(DamageType.NONLETHAL, DamageResist.IMMUNE))
@@ -136,9 +134,9 @@ public enum EnumCreatureType implements IStringSerializable
 		.addAbility(new AbilityStatusImmunity.Poison())
 		.addAbility(new AbilityStatusImmunity.Paralysis())
 		.addAbility(new AbilityImmunityCrits()), Action.NONE, 12),
-	VERMIN(CreatureAttribute.ARTHROPOD, TypeHandler.getBreathesAir(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef"))
+	VERMIN(MobType.ARTHROPOD, TypeHandler.getBreathesAir(UUID.fromString("fb82a222-6b50-4d48-b6aa-5ea1875008ef"))
 		.addAbility(new AbilityDarkvision()), Action.STANDARD, 8),
-	WATER(CreatureAttribute.WATER, new TypeHandlerAquatic(UUID.fromString("98c06c81-ed84-4974-bb47-e5d728ce83b8"), true));
+	WATER(MobType.WATER, new TypeHandlerAquatic(UUID.fromString("98c06c81-ed84-4974-bb47-e5d728ce83b8"), true));
 	
 	public static final Predicate<EnumCreatureType> IS_SUPERTYPE = new Predicate<EnumCreatureType>()
 		{
@@ -153,13 +151,13 @@ public enum EnumCreatureType implements IStringSerializable
 	public static final EnumSet<EnumCreatureType> SUBTYPES = EnumSet.complementOf(SUPERTYPES);
 	
 	public static final String translationBase = "enum.varodd.creature_type.";
-	private final CreatureAttribute parentAttribute;
+	private final MobType parentAttribute;
 	private final boolean supertype;
 	private final TypeHandler handler;
 	private final EnumSet<Action> actions;
 	private final int hitDie;
 	
-	private EnumCreatureType(CreatureAttribute attribute, TypeHandler handlerIn, EnumSet<Action> actionsIn, int hitDieIn)
+	private EnumCreatureType(MobType attribute, TypeHandler handlerIn, EnumSet<Action> actionsIn, int hitDieIn)
 	{
 		parentAttribute = attribute;
 		supertype = true;
@@ -173,7 +171,7 @@ public enum EnumCreatureType implements IStringSerializable
 		this(null, TypeHandler.get(idIn));
 	}
 	
-	private EnumCreatureType(CreatureAttribute attribute, TypeHandler handlerIn)
+	private EnumCreatureType(MobType attribute, TypeHandler handlerIn)
 	{
 		parentAttribute = attribute;
 		supertype = false;
@@ -186,7 +184,7 @@ public enum EnumCreatureType implements IStringSerializable
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : SUPERTYPES)
-			names.add(type.getString());
+			names.add(type.getSerializedName());
 		return names;
 	}
 	
@@ -194,7 +192,7 @@ public enum EnumCreatureType implements IStringSerializable
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : SUBTYPES)
-			names.add(type.getString());
+			names.add(type.getSerializedName());
 		return names;
 	}
 	
@@ -202,17 +200,17 @@ public enum EnumCreatureType implements IStringSerializable
 	{
 		List<String> names = new ArrayList<>();
 		for(EnumCreatureType type : values())
-			names.add(type.getString());
+			names.add(type.getSerializedName());
 		return names;
 	}
 	
 	public boolean hasParentAttribute(){ return parentAttribute != null; }
-	public CreatureAttribute getParentAttribute(){ return parentAttribute; }
+	public MobType getParentAttribute(){ return parentAttribute; }
 	
-	public String getName(){ return translationBase+getString(); }
-	public String getString(){ return this.name().toLowerCase(); }
-	public String getDefinition(){ return translationBase+getString()+".definition"; }
-	public String getProperties(){ return translationBase+getString()+".properties"; }
+	public String getName(){ return translationBase+getSerializedName(); }
+	public String getSerializedName(){ return this.name().toLowerCase(); }
+	public String getDefinition(){ return translationBase+getSerializedName()+".definition"; }
+	public String getProperties(){ return translationBase+getSerializedName()+".properties"; }
 	public String getType(){ return translationBase + (supertype ? "supertype" : "subtype"); }
 	public boolean canApplyTo(Collection<EnumCreatureType> types){ return getHandler().canApplyTo(types); }
 	public TypeHandler getHandler(){ return this.handler; }
@@ -228,22 +226,22 @@ public enum EnumCreatureType implements IStringSerializable
 	public int getHitDie(){ return hitDie; }
 	
 	/** Returns the translated name of the given creature type, with a hover event displaying its definition and optionally its abilities */
-	public IFormattableTextComponent getTranslated(boolean details)
+	public MutableComponent getTranslated(boolean details)
 	{
-		IFormattableTextComponent displayText = new TranslationTextComponent(getDefinition());
+		MutableComponent displayText = Component.translatable(getDefinition());
 		if(details)
 			displayText.append(this.handler.getDetails());
 		
-		return new TranslationTextComponent(getName()).modifyStyle((style) -> 
+		return Component.translatable(getName()).withStyle((style) -> 
 		{
-			return style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, displayText));
+			return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, displayText));
 		});
 	}
 	
 	public static EnumCreatureType fromName(String nameIn)
 	{
 		for(EnumCreatureType type : EnumCreatureType.values())
-			if(type.getString().equalsIgnoreCase(nameIn))
+			if(type.getSerializedName().equalsIgnoreCase(nameIn))
 				return type;
 		return null;
 	}
@@ -284,27 +282,27 @@ public enum EnumCreatureType implements IStringSerializable
 		if(types.isEmpty())
 		{
 			// Otherwise, default to world settings
-			TypesManager manager = TypesManager.get(entity.getEntityWorld());
+			TypesManager manager = TypesManager.get(entity.getLevel());
 			if(manager != null)
 				types.addAll(manager.getMobTypes(entity.getType()));
 			
 			if(types.isEmpty())
 			{
-				CreatureAttribute attribute = entity.getCreatureAttribute();
-				if(attribute == CreatureAttribute.UNDEAD)
+				MobType attribute = entity.getMobType();
+				if(attribute == MobType.UNDEAD)
 					types.add(EnumCreatureType.UNDEAD);
-				else if(attribute == CreatureAttribute.ARTHROPOD)
+				else if(attribute == MobType.ARTHROPOD)
 					types.add(EnumCreatureType.VERMIN);
 				else
 					types.add(EnumCreatureType.HUMANOID);
 				
-				if(attribute == CreatureAttribute.WATER)
+				if(attribute == MobType.WATER)
 					types.add(EnumCreatureType.AQUATIC);
 			}
 		}
 		
 		// Apply contextual type effects, eg. native vs extraplanar
-		GetEntityTypesEvent event = new GetEntityTypesEvent(entity.getEntityWorld(), entity, types);
+		GetEntityTypesEvent event = new GetEntityTypesEvent(entity.getLevel(), entity, types);
 		MinecraftForge.EVENT_BUS.post(event);
 		
 		// Final QA: Ensure each entry is unique (usually true, but sometimes broken through GetEntityTypesEvent.set etc.)
@@ -354,20 +352,20 @@ public enum EnumCreatureType implements IStringSerializable
 		public String toString(){ return actions.toString(); }
 		
 		@Nullable
-		public ITextComponent translated()
+		public Component translated()
 		{
-			IFormattableTextComponent translated = null;
+			MutableComponent translated = null;
 			if(!actions.isEmpty())
-				translated = new TranslationTextComponent("enum.varodd.type_action.does", actionsToList(actions));
+				translated = Component.translatable("enum.varodd.type_action.does", actionsToList(actions));
 			
 			if(EnumSet.complementOf(actions).size() > 0)
 			{
-				IFormattableTextComponent doesnt = new TranslationTextComponent("enum.varodd.type_action.doesnt", actionsToList(EnumSet.complementOf(actions)));
+				MutableComponent doesnt = Component.translatable("enum.varodd.type_action.doesnt", actionsToList(EnumSet.complementOf(actions)));
 				if(translated == null)
 					translated = doesnt;
 				else
 				{
-					translated.appendString("\n");
+					translated.append("\n");
 					translated.append(doesnt);
 				}
 			}
@@ -376,16 +374,16 @@ public enum EnumCreatureType implements IStringSerializable
 		}
 		
 		@Nullable
-		private static ITextComponent actionsToList(EnumSet<Action> actions)
+		private static Component actionsToList(EnumSet<Action> actions)
 		{
-			IFormattableTextComponent actionSet = null;
+			MutableComponent actionSet = null;
 			for(Action action : actions)
 			{
-				IFormattableTextComponent name = new StringTextComponent(action.translated().getString().toLowerCase());
+				MutableComponent name = Component.literal(action.translated().getString().toLowerCase());
 				if(actionSet != null)
-					actionSet.appendString(", ");
+					actionSet.append(", ");
 				else
-					actionSet = new StringTextComponent("");
+					actionSet = Component.literal("");
 				actionSet.append(name);
 			}
 			return actionSet;
@@ -505,7 +503,7 @@ public enum EnumCreatureType implements IStringSerializable
 		public static final EnumSet<Action> NONE = EnumSet.noneOf(Action.class);
 		public static final EnumSet<Action> ALL = EnumSet.allOf(Action.class);
 		
-		public ITextComponent translated() { return new TranslationTextComponent("enum.varodd.type_action."+name().toLowerCase()); }
+		public Component translated() { return Component.translatable("enum.varodd.type_action."+name().toLowerCase()); }
 		
 		public int index(){ return this.iconIndex; }
 	}

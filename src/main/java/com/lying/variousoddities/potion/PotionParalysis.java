@@ -3,10 +3,10 @@ package com.lying.variousoddities.potion;
 import com.lying.variousoddities.client.gui.ScreenParalysed;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.potion.EffectType;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -14,13 +14,13 @@ public class PotionParalysis extends PotionImmobility
 {
 	public PotionParalysis(int colorIn)
 	{
-		super("paralysis", EffectType.HARMFUL, colorIn);
+		super(MobEffectCategory.HARMFUL, colorIn);
 	}
     
-    public void performEffect(LivingEntity livingEntity, int amplifier)
+    public void applyEffectTick(LivingEntity livingEntity, int amplifier)
     {
     	if(livingEntity.getType() == EntityType.PLAYER && livingEntity.isAlive())
-    		if(livingEntity.getEntityWorld().isRemote)
+    		if(livingEntity.getLevel().isClientSide)
     			openParalysisScreen();
     }
     
@@ -28,12 +28,12 @@ public class PotionParalysis extends PotionImmobility
     private void openParalysisScreen()
     {
     	Minecraft mc = Minecraft.getInstance();
-    	Screen currentScreen = mc.currentScreen;
+    	Screen currentScreen = mc.screen;
     	if(currentScreen == null)
-    		mc.displayGuiScreen(new ScreenParalysed(mc.player));
+    		mc.setScreen(new ScreenParalysed(mc.player));
     	else if(!(currentScreen instanceof ScreenParalysed))
     	{
-    		currentScreen.closeScreen();
+    		currentScreen.onClose();
     		openParalysisScreen();
     	}
     }

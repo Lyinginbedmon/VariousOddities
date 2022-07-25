@@ -6,7 +6,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSpeciesOpenScreen
 {

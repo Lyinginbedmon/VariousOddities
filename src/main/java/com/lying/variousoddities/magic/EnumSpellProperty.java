@@ -6,14 +6,14 @@ import java.util.List;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.item.DyeColor;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.DyeColor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public enum EnumSpellProperty implements IStringSerializable
+public enum EnumSpellProperty implements StringRepresentable
 {
 	ABJURE		(DyeColor.BLUE, 8),
 	ARROW		(DyeColor.BLUE, 5),
@@ -109,12 +109,12 @@ public enum EnumSpellProperty implements IStringSerializable
 		return spells;
 	}
 	
-	public String getString()
+	public String getSerializedName()
 	{
 		return "enum."+Reference.ModInfo.MOD_PREFIX+"spell_property."+name().toLowerCase()+".name";
 	}
 	
-	public String getTranslatedName(){ return new TranslationTextComponent(getString()).getUnformattedComponentText(); }
+	public String getTranslatedName(){ return Component.translatable(getSerializedName()).getString(); }
 	
 	@OnlyIn(Dist.CLIENT)
 	public ResourceLocation getTexture()

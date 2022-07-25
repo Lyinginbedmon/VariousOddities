@@ -2,14 +2,13 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 
 public class AbilityDarkvision extends ToggledAbility
 {
@@ -22,13 +21,13 @@ public class AbilityDarkvision extends ToggledAbility
 	
 	public ResourceLocation getMapName(){ return getRegistryName(); }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
+	public Component translatedName(){ return Component.translatable("ability."+getMapName()); }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Type.UTILITY; }
 	
-	public static EffectInstance getEffect(){ return new EffectInstance(Effects.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false); }
+	public static MobEffectInstance getEffect(){ return new MobEffectInstance(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false); }
 	
 	public static boolean isDarkvisionActive(LivingEntity entity)
 	{
@@ -39,7 +38,7 @@ public class AbilityDarkvision extends ToggledAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public ToggledAbility createAbility(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundTag compound)
 		{
 			return new AbilityDarkvision();
 		}

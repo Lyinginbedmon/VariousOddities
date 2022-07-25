@@ -4,14 +4,14 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityLightSensitivity extends Ability
@@ -35,13 +35,13 @@ public class AbilityLightSensitivity extends Ability
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putInt("Light", this.lightLimit);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.lightLimit = compound.contains("Light") ? compound.getInt("Light") : 8;
 	}
@@ -51,19 +51,19 @@ public class AbilityLightSensitivity extends Ability
 		bus.addListener(this::applySensitivity);
 	}
 	
-	public void applySensitivity(LivingUpdateEvent event)
+	public void applySensitivity(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		if(AbilityRegistry.hasAbility(entity, REGISTRY_NAME))
 		{
-			World world = entity.getEntityWorld();
-			BlockPos eyePos = entity.getPosition().add(0D, entity.getEyeHeight(), 0D);
-			int block = world.getLightFor(LightType.BLOCK, eyePos);
+			Level world = entity.getLevel();
+			BlockPos eyePos = entity.blockPosition().offset(0D, entity.getEyeHeight(), 0D);
+			int block = world.getBrightness(LightLayer.BLOCK, eyePos);
 			int sky = VOHelper.getSkyLight(eyePos, world);
 			
 			int light = Math.max(block, sky);
 			if(light > ((AbilityLightSensitivity)AbilityRegistry.getAbilityByName(entity, REGISTRY_NAME)).lightLimit)
-				entity.addPotionEffect(new EffectInstance(VOPotions.DAZZLED, Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
+				entity.addEffect(new MobEffectInstance(VOPotions.DAZZLED, Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
 		}
 	}
 	
@@ -71,7 +71,7 @@ public class AbilityLightSensitivity extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return compound.contains("Light") ? new AbilityLightSensitivity(compound.getInt("Light")) : new AbilityLightSensitivity();
 		}

@@ -7,7 +7,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.init.VOEntities;
 
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
 
 public class CreatureTypeDefaults
 {
@@ -43,7 +43,7 @@ public class CreatureTypeDefaults
 	
 	public static void addMobToTypeDefaults(EntityType<?> classIn, EnumCreatureType... groups)
 	{
-		String className = classIn.getRegistryName().toString();
+		String className = EntityType.getKey(classIn).toString();
 		for(EnumCreatureType type : groups)
 		{
 			String entry = typeToMobDefaults.containsKey(type) ? typeToMobDefaults.get(type) : "";
@@ -109,7 +109,7 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(EntityType.VINDICATOR,			EnumCreatureType.HUMANOID);
 		addMobToTypeDefaults(EntityType.EVOKER,				EnumCreatureType.HUMANOID);
 		addMobToTypeDefaults(EntityType.PIGLIN,				EnumCreatureType.HUMANOID, EnumCreatureType.EXTRAPLANAR);
-		addMobToTypeDefaults(EntityType.field_242287_aj,	EnumCreatureType.HUMANOID, EnumCreatureType.EXTRAPLANAR);
+		addMobToTypeDefaults(EntityType.PIGLIN_BRUTE,		EnumCreatureType.HUMANOID, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.RAVAGER,			EnumCreatureType.MAGICAL_BEAST);
 		addMobToTypeDefaults(EntityType.SQUID,				EnumCreatureType.ANIMAL,EnumCreatureType.AQUATIC);
 		addMobToTypeDefaults(EntityType.COW,				EnumCreatureType.ANIMAL);

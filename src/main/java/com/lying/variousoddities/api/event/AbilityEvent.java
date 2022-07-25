@@ -9,10 +9,10 @@ import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.species.abilities.Ability;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.tags.ITag;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 
@@ -82,7 +82,7 @@ public class AbilityEvent extends LivingEvent
 	
 	public static class AbilityGetBreathableFluidEvent extends AbilityEvent
 	{
-		protected List<ITag.INamedTag<Fluid>> breathables = Lists.newArrayList();
+		protected List<TagKey<Fluid>> breathables = Lists.newArrayList();
 		
 		protected AbilityGetBreathableFluidEvent(LivingEntity entity)
 		{
@@ -98,15 +98,15 @@ public class AbilityEvent extends LivingEvent
 		 * Adds the given fluid as breathable for this entity.<br>
 		 * Note that NULL is treated as AIR.
 		 */
-		public void add(@Nullable ITag.INamedTag<Fluid> fluid)
+		public void add(@Nullable TagKey<Fluid> fluid)
 		{
 			if(!breathables.contains(fluid))
 				breathables.add(fluid);
 		}
 		
-		public boolean includes(ITag.INamedTag<Fluid> fluid) { return this.breathables.contains(fluid); }
+		public boolean includes(TagKey<Fluid> fluid) { return this.breathables.contains(fluid); }
 		
-		public List<ITag.INamedTag<Fluid>> getFluids(){ return this.breathables; }
+		public List<TagKey<Fluid>> getFluids(){ return this.breathables; }
 		
 		public static class Add extends AbilityGetBreathableFluidEvent
 		{
@@ -133,7 +133,7 @@ public class AbilityEvent extends LivingEvent
 				super(entity, abilitiesIn);
 			}
 			
-			public void remove(ITag.INamedTag<Fluid> fluid) { this.breathables.remove(fluid); }
+			public void remove(TagKey<Fluid> fluid) { this.breathables.remove(fluid); }
 		}
 	}
 }

@@ -8,11 +8,10 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.species.abilities.Ability;
 
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.MobType;
 
 /**
  * Convenient holder object for accessing information about a creature's types
@@ -41,9 +40,9 @@ public class Types
 	
 	public boolean hasCustomAttributes(){ return !getAttributes().isEmpty(); }
 	
-	public List<CreatureAttribute> getAttributes()
+	public List<MobType> getAttributes()
 	{
-		List<CreatureAttribute> attributes = Lists.newArrayList();
+		List<MobType> attributes = Lists.newArrayList();
 		this.types.forEach((type) -> { if(type.hasParentAttribute() && !attributes.contains(type.getParentAttribute())) attributes.add(type.getParentAttribute()); });
 		return attributes;
 	}
@@ -96,33 +95,33 @@ public class Types
 	}
 	
 	/** Converts a list of assorted creature types into a type entry, as in a stat block. */
-	public ITextComponent toHeader()
+	public Component toHeader()
 	{
 		EnumSet<EnumCreatureType> supertypes = supertypes();
 		EnumSet<EnumCreatureType> subtypes = subtypes();
 		
-		StringTextComponent supertype = new StringTextComponent("");
+		MutableComponent supertype = Component.literal("");
 		if(supertypes.isEmpty())
-			supertype.append(new TranslationTextComponent(EnumCreatureType.translationBase+"no_supertype"));
+			supertype.append(Component.translatable(EnumCreatureType.translationBase+"no_supertype"));
 		else
 			for(EnumCreatureType sup : supertypes)
 			{
 				if(supertype.getSiblings().size() > 0)
-					supertype.append(new StringTextComponent(" "));
+					supertype.append(Component.literal(" "));
 				supertype.append(sup.getTranslated(true));
 			}
 		
-		StringTextComponent subtype = new StringTextComponent("");
+		MutableComponent subtype = Component.literal("");
 		if(!subtypes.isEmpty())
 		{
-			subtype = new StringTextComponent(" (");
+			subtype = Component.literal(" (");
 			for(EnumCreatureType sup : subtypes)
 			{
 				if(subtype.getSiblings().size() > 0)
-					subtype.append(new StringTextComponent(", "));
+					subtype.append(Component.literal(", "));
 				subtype.append(sup.getTranslated(true));
 			}
-			subtype.append(new StringTextComponent(")"));
+			subtype.append(Component.literal(")"));
 		}
 		
 		return supertype.append(subtype);

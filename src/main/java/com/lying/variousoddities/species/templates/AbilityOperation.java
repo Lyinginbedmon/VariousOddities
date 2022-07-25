@@ -12,13 +12,12 @@ import com.lying.variousoddities.species.abilities.Ability.Nature;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 
 public class AbilityOperation extends TemplateOperation
 {
@@ -46,13 +45,13 @@ public class AbilityOperation extends TemplateOperation
 		this.unlessBetter = unlessBetterIn;
 	}
 	
-	public static AbilityOperation loseCon(){ return (AbilityOperation)new AbilityOperation(Operation.REMOVE, new AbilityModifierCon(1D)).setCustomDisplay(new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+".ability.remove_constitution")); }
+	public static AbilityOperation loseCon(){ return (AbilityOperation)new AbilityOperation(Operation.REMOVE, new AbilityModifierCon(1D)).setCustomDisplay(Component.translatable("operation."+Reference.ModInfo.MOD_ID+".ability.remove_constitution")); }
 	public static AbilityOperation add(Ability abilityIn){ return add(false, abilityIn); }
 	public static AbilityOperation add(boolean unlessBetter, Ability abilityIn){ return new AbilityOperation(Operation.ADD, unlessBetter, abilityIn); }
 	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
 	
-	public ITextComponent translate()
+	public Component translate()
 	{
 		if(hasCustomDisplay())
 			return getCustomDisplay();
@@ -62,11 +61,11 @@ public class AbilityOperation extends TemplateOperation
 		{
 			case SET:
 			case ADD:
-				return new TranslationTextComponent(translationBase+"add", ability == null ? "??" : ability.getDisplayName());
+				return Component.translatable(translationBase+"add", ability == null ? "??" : ability.getDisplayName());
 			case REMOVE:
-				return new TranslationTextComponent(translationBase+"remove", ability == null ? "??" : ability.getDisplayName());
+				return Component.translatable(translationBase+"remove", ability == null ? "??" : ability.getDisplayName());
 			case REMOVE_ALL:
-				return new TranslationTextComponent(translationBase+"remove_all", naturesToString());
+				return Component.translatable(translationBase+"remove_all", naturesToString());
 			default:
 				return super.translate();
 		}
@@ -74,9 +73,9 @@ public class AbilityOperation extends TemplateOperation
 	
 	public boolean canStackWith(TemplateOperation operationB){ return operationB.getRegistryName().equals(getRegistryName()) && this.action == operationB.action(); }
 	
-	public List<ITextComponent> stackAsList(List<TemplateOperation> operations)
+	public List<Component> stackAsList(List<TemplateOperation> operations)
 	{
-		List<ITextComponent> list = Lists.newArrayList();
+		List<Component> list = Lists.newArrayList();
 		String stackName = "operation."+Reference.ModInfo.MOD_ID+".ability.";
 		switch(this.action)
 		{
@@ -89,57 +88,57 @@ public class AbilityOperation extends TemplateOperation
 				return list;
 		}
 		stackName += ".stack";
-		list.add(new TranslationTextComponent(stackName));
+		list.add(Component.translatable(stackName));
 		
 		List<Ability> subList = Lists.newArrayList();
 		for(TemplateOperation operation : operations)
 			if(operation.getRegistryName().equals(getRegistryName()))
 				subList.add(((AbilityOperation)operation).ability);
 		Collections.sort(subList, Ability.SORT_ABILITY);
-		subList.forEach((ability) -> { list.add(new StringTextComponent(" * ").append(ability.getDisplayName())); });
+		subList.forEach((ability) -> { list.add(Component.literal(" * ").append(ability.getDisplayName())); });
 		return list;
 	}
 	
-	private StringTextComponent naturesToString()
+	private MutableComponent naturesToString()
 	{
-		StringTextComponent text = new StringTextComponent("[");
+		MutableComponent text = Component.literal("[");
 		for(int i=0; i<natures.length; i++)
 		{
 			text.append(natures[i].translated());
 			if(i < natures.length - 1)
-				text.append(new StringTextComponent(", "));
+				text.append(Component.literal(", "));
 		}
-		text.append(new StringTextComponent("]"));
+		text.append(Component.literal("]"));
 		return text;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(hasCustomDisplay())
-			compound.putString("CustomDisplay", ITextComponent.Serializer.toJson(this.getCustomDisplay()));
+			compound.putString("CustomDisplay", Component.Serializer.toJson(this.getCustomDisplay()));
 		if(this.ability != null)
 		{
-			compound.put("Ability", this.ability.writeAtomically(new CompoundNBT()));
+			compound.put("Ability", this.ability.writeAtomically(new CompoundTag()));
 			compound.putBoolean("UnlessBetter", this.unlessBetter);
 		}
 		else if(this.natures != null)
 		{
-			ListNBT natureList = new ListNBT();
+			ListTag natureList = new ListTag();
 			for(Nature nature : natures)
-				natureList.add(StringNBT.valueOf(nature.getString()));
+				natureList.add(StringTag.valueOf(nature.getSerializedName()));
 			compound.put("Nature", natureList);
 		}
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("CustomDisplay"))
 		{
 			String s = compound.getString("CustomDisplay");
 			try
 			{
-				setCustomDisplay(ITextComponent.Serializer.getComponentFromJson(s));
+				setCustomDisplay(Component.Serializer.fromJson(s));
 			}
 			catch (Exception exception)
 			{
@@ -157,7 +156,7 @@ public class AbilityOperation extends TemplateOperation
 		}
 		else if(compound.contains("Nature", 9))
 		{
-			ListNBT typeList = compound.getList("Nature", 8);
+			ListTag typeList = compound.getList("Nature", 8);
 			this.natures = new Nature[typeList.size()];
 			for(int i=0; i<typeList.size(); i++)
 			{

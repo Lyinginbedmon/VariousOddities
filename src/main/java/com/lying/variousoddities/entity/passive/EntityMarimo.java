@@ -8,34 +8,23 @@ import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
+import com.mojang.math.Vector3d;
 
-import net.minecraft.block.FlowingFluidBlock;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.DyeColor;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.potion.PotionUtils;
-import net.minecraft.potion.Potions;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.util.HandSide;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.level.Level;
 
 public class EntityMarimo extends EntityOddity implements IMysticSource
 {
@@ -47,15 +36,15 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     
 	private Random random;
 	
-	public EntityMarimo(EntityType<? extends EntityMarimo> type, World worldIn)
+	public EntityMarimo(EntityType<? extends EntityMarimo> type, Level worldIn)
 	{
 		super(type, worldIn);
 		random = new Random(this.getUniqueID().getLeastSignificantBits());
 	}
 	
 	public Iterable<ItemStack> getArmorInventoryList() { return Collections.emptyList(); }
-	public ItemStack getItemStackFromSlot(EquipmentSlotType slotIn) { return ItemStack.EMPTY; }
-	public void setItemStackToSlot(EquipmentSlotType slotIn, ItemStack stack){ }
+	public ItemStack getItemStackFromSlot(EquipmentSlot slotIn) { return ItemStack.EMPTY; }
+	public void setItemStackToSlot(EquipmentSlot slotIn, ItemStack stack){ }
 	public HandSide getPrimaryHand() { return HandSide.RIGHT; }
 	
 	protected void registerData()
@@ -73,7 +62,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
         return MobEntity.func_233666_p_().createMutableAttribute(Attributes.MAX_HEALTH, 5.0D);
     }
     
-    public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<?> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
     {
         return world.getBlockState(pos).getBlock() instanceof FlowingFluidBlock;
     }
@@ -81,14 +70,14 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     /**
      * (abstract) Protected helper method to write subclass entity data to NBT.
      */
-    public void writeAdditional(CompoundNBT compound)
+    public void writeAdditional(CompoundTag compound)
     {
         super.writeAdditional(compound);
         compound.putInt("Color", getColor().getId());
         compound.putBoolean("Mystic", isMagical());
     }
     
-    public void readAdditional(CompoundNBT compound)
+    public void readAdditional(CompoundTag compound)
     {
         super.readAdditional(compound);
         setColor(compound.getInt("Color"));
@@ -97,7 +86,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     
     public boolean isNoDespawnRequired(){ return true; }
 	
-    public ActionResultType applyPlayerInteraction(PlayerEntity player, Hand hand)
+    public ActionResultType applyPlayerInteraction(Player player, InteractionHand hand)
     {
         ItemStack itemstack = player.getHeldItem(hand);
         if(itemstack.getItem() == Items.POTION && PotionUtils.getPotionFromItem(itemstack) == Potions.WATER)
@@ -115,7 +104,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     {
     	ItemStack bottle = VOItems.MOSS_BOTTLE.getDefaultInstance();
     	if(this.hasCustomName()) bottle.setDisplayName(getCustomName());
-    	CompoundNBT stackData = bottle.hasTag() ? bottle.getTag() : new CompoundNBT();
+    	CompoundTag stackData = bottle.hasTag() ? bottle.getTag() : new CompoundTag();
     	stackData.putInt("Color", getColor().getId());
     	stackData.putBoolean("Mystic", isMagical());
     	bottle.setTag(stackData);

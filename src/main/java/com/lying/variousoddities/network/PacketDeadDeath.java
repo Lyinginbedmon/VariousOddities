@@ -8,11 +8,11 @@ import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketDeadDeath
 {
@@ -33,11 +33,11 @@ public class PacketDeadDeath
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity sender = context.getSender();
+			Player sender = context.getSender();
 			if(sender != null)
 			{
 				handleForPlayer(sender);
-				PacketHandler.sendTo((ServerPlayerEntity)sender, msg);
+				PacketHandler.sendTo((ServerPlayer)sender, msg);
 			}
 		}
 		else
@@ -46,16 +46,16 @@ public class PacketDeadDeath
 		context.setPacketHandled(true);
 	}
 	
-	private static void handleForPlayer(PlayerEntity player)
+	private static void handleForPlayer(Player player)
 	{
 		if(player == null || !PlayerData.isPlayerBodyDead(player))
 			return;
 		
 		PlayerData.forPlayer(player).setSoulCondition(SoulCondition.ROAMING);
 		
-		if(!player.getEntityWorld().isRemote)
+		if(!player.getLevel().isClientSide)
 		{
-			Entity body = PlayerData.forPlayer(player).getBody(player.getEntityWorld());
+			Entity body = PlayerData.forPlayer(player).getBody(player.getLevel());
 			if(body != null && body.getType() == VOEntities.BODY)
 				body.onKillCommand();
 			else if(body == null)

@@ -10,37 +10,25 @@ import com.lying.variousoddities.entity.ai.hostile.EntityAIRatGnawing;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIRatStand;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.renderer.EffectInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
-public abstract class AbstractRat extends CreatureEntity
+public abstract class AbstractRat extends Mob
 {
 	public static final DataParameter<Byte>		EYES		= EntityDataManager.<Byte>createKey(AbstractRat.class, DataSerializers.BYTE);
 	public static final DataParameter<Integer>	STAND_TIME	= EntityDataManager.<Integer>createKey(AbstractRat.class, DataSerializers.VARINT);
@@ -51,7 +39,7 @@ public abstract class AbstractRat extends CreatureEntity
 	
 	private final int size;
 	
-	protected AbstractRat(EntityType<? extends AbstractRat> type, World worldIn, int sizeIn)
+	protected AbstractRat(EntityType<? extends AbstractRat> type, Level worldIn, int sizeIn)
 	{
 		super(type, worldIn);
 		setPose(Pose.CROUCHING);
@@ -71,7 +59,7 @@ public abstract class AbstractRat extends CreatureEntity
 		this.goalSelector.addGoal(3, new EntityAIRatStand(this));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
 		this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
 		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
 		
 	    if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
@@ -112,9 +100,9 @@ public abstract class AbstractRat extends CreatureEntity
 	{
 		if(getStandingHeight() > 1F)
 		{
-			BlockPos blockUp = getPosition().offset(Direction.UP);
-			World theWorld = this.getEntityWorld();
-			if(theWorld == null || !theWorld.isAirBlock(blockUp)) return false;
+			BlockPos blockUp = blockPosition().relative(Direction.UP);
+			Level theWorld = this.getLevel();
+			if(theWorld == null || !theWorld.isEmptyBlock(blockUp)) return false;
 		}
 		return getPose() == Pose.STANDING;
 	}
@@ -144,33 +132,33 @@ public abstract class AbstractRat extends CreatureEntity
 	
 	public abstract int getRandomBreed();
 	
-    public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<? extends Mob> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
     {
         return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
     }
     
-    public void writeAdditional(CompoundNBT compound)
+    public void writeAdditional(CompoundTag compound)
     {
     	super.writeAdditional(compound);
-    	CompoundNBT display = new CompoundNBT();
+    	CompoundTag display = new CompoundTag();
 	    	display.putBoolean("Eyes", getEyesGlow());
 	        display.putInt("Breed", getBreed());
         compound.put("Display", display);
         
-        CompoundNBT standing = new CompoundNBT();
+        CompoundTag standing = new CompoundTag();
 	        standing.putInt("StandTime", getStandTime());
 	        standing.putInt("StandTimer", this.standTimer);
         compound.put("Standing", standing);
     }
     
-    public void readAdditional(CompoundNBT compound)
+    public void readAdditional(CompoundTag compound)
     {
-    	super.readAdditional(compound);
-    	CompoundNBT display = compound.getCompound("Display");
+    	super.readAdditionalSaveData(compound);
+    	CompoundTag display = compound.getCompound("Display");
 	    	setEyesGlow(display.getBoolean("Eyes"));
 	    	setBreed(display.getInt("Breed"));
 	    
-	    CompoundNBT standing = new CompoundNBT();
+	    CompoundTag standing = new CompoundTag();
 		    setStandTime(standing.getInt("StandTime"));
 		    this.standTimer = standing.getInt("StandTimer");
     }
@@ -210,21 +198,21 @@ public abstract class AbstractRat extends CreatureEntity
 	
     protected SoundEvent getAmbientSound()
     {
-        return SoundEvents.ENTITY_SILVERFISH_AMBIENT;
+        return SoundEvents.SILVERFISH_AMBIENT;
     }
     
     protected SoundEvent getHurtSound(DamageSource damageSourceIn)
     {
-        return SoundEvents.ENTITY_SILVERFISH_HURT;
+        return SoundEvents.SILVERFISH_HURT;
     }
     
     protected SoundEvent getDeathSound()
     {
-        return SoundEvents.ENTITY_SILVERFISH_DEATH;
+        return SoundEvents.SILVERFISH_DEATH;
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	int random = getRandomBreed();
 		setBreed(random);

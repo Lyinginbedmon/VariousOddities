@@ -12,58 +12,45 @@ import com.lying.variousoddities.entity.ai.passive.EntityAIGhastlingWander;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MoverType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.LandOnOwnersShoulderGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.OwnerHurtByTargetGoal;
-import net.minecraft.entity.ai.goal.OwnerHurtTargetGoal;
-import net.minecraft.entity.ai.goal.SitGoal;
-import net.minecraft.entity.monster.CreeperEntity;
-import net.minecraft.entity.monster.GhastEntity;
-import net.minecraft.entity.passive.IFlyingAnimal;
-import net.minecraft.entity.passive.ShoulderRidingEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.LandOnOwnersShoulderGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
+import net.minecraft.world.entity.animal.FlyingAnimal;
+import net.minecraft.world.entity.animal.ShoulderRidingEntity;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Ghast;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnimal
+public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnimal
 {
 	private static final DataParameter<Integer> EMOTION = EntityDataManager.<Integer>createKey(EntityGhastling.class, DataSerializers.VARINT);
 	private static final Set<Item> TAME_ITEMS = Sets.newHashSet(Items.SUGAR, Items.COOKIE, Items.HONEYCOMB, Items.HONEY_BOTTLE, Items.SWEET_BERRIES);
 	
-	public EntityGhastling(EntityType<? extends EntityGhastling> type, World worldIn)
+	public EntityGhastling(EntityType<? extends EntityGhastling> type, Level worldIn)
 	{
 		super(type, worldIn);
 		this.moveController = new MovementControllerGhastling(this);
@@ -83,7 +70,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 		this.goalSelector.addGoal(5, new EntityAIGhastlingFireball(this));
 		this.goalSelector.addGoal(7, new LandOnOwnersShoulderGoal(this));
 		this.goalSelector.addGoal(8, new EntityAIGhastlingWander(this, 0.1F));
-		this.goalSelector.addGoal(10, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+		this.goalSelector.addGoal(10, new LookAtGoal(this, Player.class, 8.0F));
 		this.goalSelector.addGoal(10, new LookRandomlyGoal(this));
 		
 		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.GHASTLING))
@@ -102,21 +89,21 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
         		.createMutableAttribute(Attributes.FLYING_SPEED, (double)0.25F);
     }
 	
-	public static boolean canSpawnAt(EntityType<EntityGhastling> type, IWorld world, SpawnReason reason, BlockPos pos, Random rand)
+	public static boolean canSpawnAt(EntityType<EntityGhastling> type, Level level, SpawnReason reason, BlockPos pos, Random rand)
 	{
-		return reason == SpawnReason.SPAWNER || rand.nextInt(20) == 0 && canSpawnOn(type, world, reason, pos, rand);
+		return reason == SpawnReason.SPAWNER || rand.nextInt(20) == 0 && canSpawnOn(type, level, reason, pos, rand);
 	}
 	
-	public boolean isNoDespawnRequired(){ return this.isTamed() || super.isNoDespawnRequired(); }
+	public boolean isPersistenceRequired(){ return this.isTame() || super.isPersistenceRequired(); }
 	
 	public SoundCategory getSoundCategory()
 	{
 		return SoundCategory.NEUTRAL;
 	}
 	
-	public SoundEvent getAmbientSound(){ return SoundEvents.ENTITY_GHAST_AMBIENT; }
-	public SoundEvent getHurtSound(DamageSource damageSourceIn){ return SoundEvents.ENTITY_GHAST_HURT; }
-	public SoundEvent getDeathSound(){ return SoundEvents.ENTITY_GHAST_DEATH; }
+	public SoundEvent getAmbientSound(){ return SoundEvents.GHAST_AMBIENT; }
+	public SoundEvent getHurtSound(DamageSource damageSourceIn){ return SoundEvents.GHAST_HURT; }
+	public SoundEvent getDeathSound(){ return SoundEvents.GHAST_DEATH; }
 	
 	public float getSoundVolume(){ return 0.25F; }
 	
@@ -129,79 +116,79 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 	
 	public boolean attackEntityFrom(DamageSource source, float amount)
 	{
-		if(source.isFireDamage() || source.isExplosion())
+		if(source.isFire() || source.isExplosion())
 			return false;
 		return super.attackEntityFrom(source, amount);
 	}
 	
-	public ActionResultType func_230254_b_(PlayerEntity player, Hand hand)
+	public ActionResultType func_230254_b_(Player player, Hand hand)
 	{
 		ItemStack heldStack = player.getHeldItem(hand);
-		if(!this.isTamed())
+		if(!this.isTame())
 		{
 			if(TAME_ITEMS.contains(heldStack.getItem()))
 			{
-				if(!player.abilities.isCreativeMode)
+				if(!player.isCreative())
 					heldStack.shrink(1);
 				
-				if(!this.getEntityWorld().isRemote)
+				if(!this.getLevel().isClientSide)
 				{
-					if(this.getRNG().nextInt(10) == 0 && !net.minecraftforge.event.ForgeEventFactory.onAnimalTame(this, player))
+					if(this.getRandom().nextInt(10) == 0 && !net.minecraftforge.event.ForgeEventFactory.onAnimalTame(this, player))
 					{
-						this.setTamedBy(player);
-						this.getEntityWorld().setEntityState(this, (byte)7);
+						this.tame(player);
+						this.getLevel().setEntityState(this, (byte)7);
 						this.setEmotion(Emotion.HAPPY);
 					}
 					else
-						this.getEntityWorld().setEntityState(this, (byte)6);
+						this.getLevel().setEntityState(this, (byte)6);
 				}
-				return ActionResultType.func_233537_a_(this.getEntityWorld().isRemote);
+				return ActionResultType.func_233537_a_(this.getLevel().isClientSide);
 			}
 		}
-		else if(this.isTamed())
+		else if(this.isTame())
 		{
 			if(getHealth() < getMaxHealth() && TAME_ITEMS.contains(heldStack.getItem()))
 			{
-				if(!player.abilities.isCreativeMode)
+				if(!player.isCreative())
 					heldStack.shrink(1);
 				
-				this.heal(1F + getRNG().nextFloat() * 3F);
+				this.heal(1F + getRandom().nextFloat() * 3F);
 				this.setEmotion(Emotion.HAPPY);
-				this.getEntityWorld().setEntityState(this, (byte)7);
+				this.getLevel().setEntityState(this, (byte)7);
 			}
-			else if(this.isOwner(player))
+			else if(this.isOwnedBy(player))
 			{
-				if(!this.getEntityWorld().isRemote)
-					this.func_233687_w_(!this.isSitting());
-				return ActionResultType.func_233537_a_(this.getEntityWorld().isRemote);
+				if(!this.getLevel().isClientSide)
+					this.setOrderedToSit(!this.isOrderedToSit());
+				return ActionResultType.func_233537_a_(this.getLevel().isClientSide);
 			}
 		}
 		
 		return super.func_230254_b_(player, hand);
 	}
 	
-	public AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_)
+	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
 	{
 		return null;
 	}
 	
 	public boolean shouldAttackEntity(LivingEntity target, LivingEntity owner)
 	{
-		if(isTamed() && target == owner)
+		if(isTame() && target == owner)
 			return false;
 		
-		if(!(target instanceof CreeperEntity) && !(target instanceof GhastEntity))
-			if(target instanceof WolfEntity)
+		if(!(target instanceof Creeper) && !(target instanceof Ghast))
+			if(target instanceof Wolf)
 			{
-				WolfEntity wolfentity = (WolfEntity)target;
-				return !wolfentity.isTamed() || wolfentity.getOwner() != owner;
+				Wolf wolfentity = (Wolf)target;
+				return !wolfentity.isTame() || wolfentity.getOwner() != owner;
 			}
-			else if(target instanceof PlayerEntity && owner instanceof PlayerEntity && !((PlayerEntity)owner).canAttackPlayer((PlayerEntity)target))
+			else if(target instanceof Player && owner instanceof Player && !((Player)owner).canAttack((Player)target))
 				return false;
-			else if (target instanceof AbstractHorseEntity && ((AbstractHorseEntity)target).isTame())
+			else if (target instanceof AbstractHorse && ((AbstractHorse)target).isTamed())
 				return false;
 			else
-				return !(target instanceof TameableEntity) || !((TameableEntity)target).isTamed();
+				return !(target instanceof TamableAnimal) || !((TamableAnimal)target).isTame();
 		return false;
 	}
 	
@@ -222,15 +209,15 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 		switch(getEmotion())
 		{
 			case HAPPY:	// Be happy for roughly 3 seconds for each happiness-inducing event
-				if(getRNG().nextInt(60) == 0)
+				if(getRandom().nextInt(60) == 0)
 					setEmotion(Emotion.NEUTRAL);
 				break;
 			case NEUTRAL:	// Main default emotion
-				if(this.isSitting())
+				if(this.isOrderedToSit())
 					setEmotion(Emotion.SLEEP);
 				else if(getHealth() < getMaxHealth() * 0.3F)
 					setEmotion(Emotion.SAD);
-				else if(getHealth() > getMaxHealth() * 0.75F && getRNG().nextInt(600) == 0)
+				else if(getHealth() > getMaxHealth() * 0.75F && getRandom().nextInt(600) == 0)
 					setEmotion(Emotion.HAPPY);
 				break;
 			case SAD:	// Be sad when health is below 1/3rd of max
@@ -238,14 +225,14 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 					setEmotion(Emotion.NEUTRAL);
 				break;
 			case SLEEP:
-				if(!isSitting())
+				if(!isOrderedToSit())
 					setEmotion(Emotion.NEUTRAL);
 			default:
 				break;
 		}
 	}
 	
-	public void travel(Vector3d travelVector)
+	public void travel(Vec3 travelVector)
 	{
 		if(this.isInWater())
 		{
@@ -264,12 +251,12 @@ public class EntityGhastling extends ShoulderRidingEntity implements IFlyingAnim
 			BlockPos ground = new BlockPos(this.getPosX(), this.getPosY() - 1.0D, this.getPosZ());
 			float f = 0.91F;
 			if (this.onGround)
-			f = this.world.getBlockState(ground).getSlipperiness(this.world, ground, this) * 0.91F;
+			f = this.level.getBlockState(ground).getSlipperiness(this.level, ground, this) * 0.91F;
 			
 			float f1 = 0.16277137F / (f * f * f);
 			f = 0.91F;
 			if (this.onGround)
-				f = this.world.getBlockState(ground).getSlipperiness(this.world, ground, this) * 0.91F;
+				f = this.level.getBlockState(ground).getSlipperiness(this.level, ground, this) * 0.91F;
 			
 			this.moveRelative(this.onGround ? 0.1F * f1 : 0.02F, travelVector);
 			this.move(MoverType.SELF, this.getMotion());

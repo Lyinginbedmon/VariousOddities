@@ -6,48 +6,34 @@ import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.inventory.ContainerWarg;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CarpetBlock;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.IJumpingMount;
-import net.minecraft.entity.IRideable;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.entity.passive.PigEntity;
-import net.minecraft.entity.passive.SheepEntity;
-import net.minecraft.entity.passive.horse.LlamaEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.IInventoryChangedListener;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.DyeColor;
-import net.minecraft.item.HorseArmorItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.Effects;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.horse.Llama;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.HorseArmorItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CarpetBlock;
 
 public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount, IMountInventory, IInventoryChangedListener
 {
@@ -68,7 +54,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public Inventory wargChest;
 	
-	public EntityWarg(EntityType<? extends EntityWarg> type, World worldIn)
+	public EntityWarg(EntityType<? extends EntityWarg> type, Level worldIn)
 	{
 		super(type, worldIn);
 	    this.stepHeight = 1.0F;
@@ -87,7 +73,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
     {
-        return MobEntity.func_233666_p_()
+        return Monster.func_233666_p_()
         		.createMutableAttribute(Attributes.MAX_HEALTH, 40.0D)
         		.createMutableAttribute(Attributes.ARMOR, 7.0D)
         		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.3002F)
@@ -96,13 +82,13 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public void getAggressiveBehaviours()
 	{
-		this.addGeneticAI(3, new NearestAttackableTargetGoal<CowEntity>(this, CowEntity.class, true));
-		this.addGeneticAI(3, new NearestAttackableTargetGoal<PigEntity>(this, PigEntity.class, true));
-		this.addGeneticAI(3, new NearestAttackableTargetGoal<LlamaEntity>(this, LlamaEntity.class, true));
-		this.addGeneticAI(3, new NearestAttackableTargetGoal<SheepEntity>(this, SheepEntity.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<Cow>(this, Cow.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<Pig>(this, Pig.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<Llama>(this, Llama.class, true));
+		this.addGeneticAI(3, new NearestAttackableTargetGoal<Sheep>(this, Sheep.class, true));
 	}
 	
-	public AgeableEntity func_241840_a(ServerWorld arg0, AgeableEntity arg1)
+	public AgeableMob getBreedOffspring(ServerLevel arg0, AgeableMob arg1)
 	{
 		return null;
 	}
@@ -126,20 +112,20 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		this.wargChest.addListener(this);
 	}
     
-    public void writeAdditional(CompoundNBT compound)
+    public void writeAdditional(CompoundTag compound)
     {
     	super.writeAdditional(compound);
     	
-    	compound.putBoolean("Sitting", isSitting());
+    	compound.putBoolean("Sitting", isOrderedToSit());
     	compound.putBoolean("Chest", hasChest());
     	
-		ListNBT inventory = new ListNBT();
+		ListTag inventory = new ListTag();
 		for(int i=0; i<this.wargChest.getSizeInventory(); ++i)
 		{
 			ItemStack stack = this.wargChest.getStackInSlot(i);
 			if(!stack.isEmpty())
 			{
-				CompoundNBT stackData = new CompoundNBT();
+				CompoundTag stackData = new CompoundTag();
 				stackData.putByte("Slot", (byte)i);
 				stack.write(stackData);
 				inventory.add(stackData);
@@ -148,19 +134,19 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		compound.put("Inventory", inventory);
     }
     
-    public void readAdditional(CompoundNBT compound)
+    public void readAdditional(CompoundTag compound)
     {
     	super.readAdditional(compound);
     	
-    	func_233687_w_(compound.getBoolean("Sitting"));
-    	setSleeping(isSitting());
+    	setOrderedToSit(compound.getBoolean("Sitting"));
+    	setSleeping(isOrderedToSit());
     	
     	setChested(compound.getBoolean("Chest"));
 		initWargChest();
-		ListNBT inventory = compound.getList("Inventory", 10);
+		ListTag inventory = compound.getList("Inventory", 10);
 		for(int i=0; i<inventory.size(); ++i)
 		{
-			CompoundNBT stackData = inventory.getCompound(i);
+			CompoundTag stackData = inventory.getCompound(i);
 			int slot = stackData.getByte("Slot") & 255;
 			if(slot >= 0 && slot < this.wargChest.getSizeInventory())
 				this.wargChest.setInventorySlotContents(slot, ItemStack.read(stackData));
@@ -223,7 +209,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return false;
 	}
 	
-	public void travelTowards(Vector3d travelVec)
+	public void travelTowards(Vec3d travelVec)
 	{
 		super.travel(travelVec);
 	}
@@ -237,17 +223,17 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	public void setCarpetColor(DyeColor colorIn){ getDataManager().set(CARPET, colorIn == null ? -1 : colorIn.getId()); }
 	
 	@Override
-	public boolean isSitting(){ return getDataManager().get(SITTING).booleanValue(); }
+	public boolean isOrderedToSit(){ return getDataManager().get(SITTING).booleanValue(); }
 	
 	@Override
-	public void func_233687_w_(boolean sitting){ getDataManager().set(SITTING, sitting); }
+	public void setOrderedToSit(boolean sitting){ getDataManager().set(SITTING, sitting); }
 	
 	@Override
-	public boolean isEntitySleeping() { return isSitting(); }
+	public boolean isSleeping() { return isOrderedToSit(); }
 	
 	public boolean isRiderControlling()
 	{
-		if(isSitting()) return false;
+		if(isOrderedToSit()) return false;
 		if(getControllingPassenger() != null)
 		{
 			LivingEntity rider = (LivingEntity)getControllingPassenger();
@@ -256,7 +242,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return false;
 	}
 	
-	public void travel(Vector3d travelVector)
+	public void travel(Vec3d travelVector)
 	{
 		if(!this.isAlive())
 			return;
@@ -293,7 +279,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 				else
 					boost = jump;
 				
-				Vector3d motion = this.getMotion();
+				Vec3d motion = this.getMotion();
 				this.setMotion(motion.x, boost, motion.z);
 				this.setJumping(true);
 				this.isAirBorne = true;
@@ -312,7 +298,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 			if(canPassengerSteer())
 			{
 				this.setAIMoveSpeed((float)this.getAttributeValue(Attributes.MOVEMENT_SPEED));
-				super.travel(new Vector3d(strafe, travelVector.y, forward));
+				super.travel(new Vec3d(strafe, travelVector.y, forward));
 			}
 			
 			if(this.onGround)
@@ -333,7 +319,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return (float)getAttributeValue(Attributes.MOVEMENT_SPEED) * 0.225F;
 	}
 	
-	public ActionResultType func_230254_b_(PlayerEntity player, Hand hand)
+	public ActionResultType func_230254_b_(Player player, Hand hand)
 	{
 		ItemStack heldStack = player.getHeldItem(hand);
 		
@@ -341,7 +327,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 			if(this.wargChest != null && this.wargChest.getStackInSlot(1).isEmpty())
 			{
 				this.wargChest.setInventorySlotContents(1, heldStack.split(1));
-				return ActionResultType.func_233537_a_(this.world.isRemote);
+				return ActionResultType.func_233537_a_(this.level.isClientSide);
 			}
 		
 		if(!isChild())
@@ -349,14 +335,14 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 			if(!isSaddled() && heldStack.getItem() == Items.SADDLE)
 			{
 				this.wargChest.setInventorySlotContents(0, heldStack.split(1));
-				return ActionResultType.func_233537_a_(this.world.isRemote);
+				return ActionResultType.func_233537_a_(this.level.isClientSide);
 			}
 			
 			if(heldStack.getItem() instanceof HorseArmorItem)
 				if(this.wargChest != null && this.wargChest.getStackInSlot(2).isEmpty())
 				{
 					this.wargChest.setInventorySlotContents(2, heldStack.split(1));
-					return ActionResultType.func_233537_a_(this.world.isRemote);
+					return ActionResultType.func_233537_a_(this.level.isClientSide);
 				}
 			
 			if(!hasChest() && Block.getBlockFromItem(heldStack.getItem()) == Blocks.CHEST)
@@ -367,14 +353,14 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 					heldStack.shrink(1);
 				
 				initWargChest();
-				return ActionResultType.func_233537_a_(this.world.isRemote);
+				return ActionResultType.func_233537_a_(this.level.isClientSide);
 			}
 			
 			if(!isBeingRidden() && !player.isSecondaryUseActive())
 			{
-				if(!this.getEntityWorld().isRemote && (isTamed() || player.isCreative()))
+				if(!this.getEntityWorld().isClientSide && (isTamed() || player.isCreative()))
 					player.startRiding(this);
-				return ActionResultType.func_233537_a_(this.getEntityWorld().isRemote);
+				return ActionResultType.func_233537_a_(this.getEntityWorld().isClientSide);
 			}
 		}
 		
@@ -461,16 +447,16 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		
 	}
 	
-	public void openContainer(PlayerEntity playerIn)
+	public void openContainer(Player playerIn)
 	{
 		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerWarg(window, player, this.wargChest, this), this.getDisplayName()));
 	}
 	
 	public void onInventoryChanged(IInventory invBasic)
 	{
-		ItemStack armour = this.getItemStackFromSlot(EquipmentSlotType.CHEST);
+		ItemStack armour = this.getItemStackFromSlot(EquipmentSlot.CHEST);
 		updateArmour();
-		if(this.ticksExisted > 20 && !getItemStackFromSlot(EquipmentSlotType.CHEST).isEmpty() && armour.getItem() != getItemStackFromSlot(EquipmentSlotType.CHEST).getItem())
+		if(this.ticksExisted > 20 && !getItemStackFromSlot(EquipmentSlot.CHEST).isEmpty() && armour.getItem() != getItemStackFromSlot(EquipmentSlot.CHEST).getItem())
 			playSound(SoundEvents.ENTITY_HORSE_ARMOR, 0.5F, 1.0F);
 		
 		boolean saddled = isSaddled();
@@ -486,19 +472,19 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	private void updateArmour()
 	{
-		if(!this.world.isRemote)
-			this.setItemStackToSlot(EquipmentSlotType.CHEST, this.wargChest.getStackInSlot(2).copy());
+		if(!this.level.isClientSide)
+			this.setItemStackToSlot(EquipmentSlot.CHEST, this.wargChest.getStackInSlot(2).copy());
 	}
 	
 	private void updateSaddle()
 	{
-		if(!this.world.isRemote)
+		if(!this.level.isClientSide)
 			getDataManager().set(SADDLE, !this.wargChest.getStackInSlot(0).isEmpty());
 	}
 	
 	private void updateCarpet()
 	{
-		if(!this.world.isRemote)
+		if(!this.level.isClientSide)
 		{
 			ItemStack carpet = this.wargChest.getStackInSlot(1);
 			int color = carpet.isEmpty() ? -1 : ((CarpetBlock)Block.getBlockFromItem(carpet.getItem())).getColor().getId(); 

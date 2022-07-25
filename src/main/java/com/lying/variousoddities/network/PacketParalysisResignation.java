@@ -5,9 +5,9 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.init.VOPotions;
 
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketParalysisResignation
 {
@@ -28,9 +28,9 @@ public class PacketParalysisResignation
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity sender = context.getSender();
+			Player sender = context.getSender();
 			if(sender != null && VOPotions.isParalysed(sender))
-				sender.attackEntityFrom(VODamageSource.PARALYSIS, Float.MAX_VALUE);
+				sender.hurt(VODamageSource.PARALYSIS, Float.MAX_VALUE);
 		}
 		context.setPacketHandled(true);
 	}

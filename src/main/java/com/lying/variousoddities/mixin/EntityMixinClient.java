@@ -10,8 +10,8 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilityVision;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -24,13 +24,13 @@ public class EntityMixinClient
 	{
 		Entity ent = (Entity)(Object)this;
 		
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		if(player != null && ent != player)
 		{
 			if(PlayerData.isPlayerSoulBound(player) && PlayerData.isPlayerBody(player, ent))
 				ci.setReturnValue(true);
 			
-			double dist = Math.sqrt(player.getDistanceSq(ent));
+			double dist = Math.sqrt(player.distanceToSqr(ent));
 			for(AbilityVision vision : AbilityRegistry.getAbilitiesOfType(player, AbilityVision.class))
 				if(vision != null && vision.isInRange(dist) && vision.testEntity(ent, player))
 				{

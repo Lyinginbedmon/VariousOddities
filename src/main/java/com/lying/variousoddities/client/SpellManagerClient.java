@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lying.variousoddities.world.savedata.SpellManager;
+import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -24,12 +25,12 @@ public class SpellManagerClient extends SpellManager
 		super(name);
 	}
 	
-	public CompoundNBT write(CompoundNBT compound)
+	public CompoundTag write(CompoundTag compound)
 	{
 		return compound;
 	}
 	
-	public void read(CompoundNBT compound)
+	public void read(CompoundTag compound)
 	{
 		
 	}
@@ -61,11 +62,11 @@ public class SpellManagerClient extends SpellManager
 	 * @param spell
 	 * @return
 	 */
-	public int registerNewSpell(SpellData spell, World world)
+	public int registerNewSpell(SpellData spell, Level world)
 	{
 		spell.setID(nextID);
 		
-		ResourceLocation dim = world.getDimensionKey().getRegistryName();
+		ResourceLocation dim = world.dimension().location();
 		spell.setDim(dim);
 		List<SpellData> spells = DIM_TO_SPELLS.containsKey(dim) ? DIM_TO_SPELLS.get(dim) : new ArrayList<SpellData>();
 		spells.add(spell);

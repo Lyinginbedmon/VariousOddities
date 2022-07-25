@@ -1,7 +1,7 @@
 package com.lying.variousoddities.species.abilities;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 
 public interface IBonusJumpAbility
 {
@@ -9,7 +9,7 @@ public interface IBonusJumpAbility
 	public int getRate();
 	
 	/** Returns true if this ability could provide bonus jumps in this context */
-	public boolean isValid(LivingEntity entity, World world);
+	public boolean isValid(LivingEntity entity, Level world);
 	
 	/**
 	 * Returns the specific type of jump this ability provides.<br>

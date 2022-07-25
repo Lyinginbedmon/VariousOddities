@@ -3,11 +3,11 @@ package com.lying.variousoddities.item;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,7 +17,7 @@ public class ItemSpellList extends ItemSpellContainer
 {
 	public ItemSpellList(Item.Properties properties)
 	{
-		super(properties.maxStackSize(1));
+		super(properties.stacksTo(1));
 	}
     
 //	public String getItemStackDisplayName(ItemStack stack)
@@ -85,7 +85,7 @@ public class ItemSpellList extends ItemSpellContainer
 //    		VOPlayerData playerData = VOPlayerData.getPlayerData((PlayerEntity)entityIn);
 //    		setCurrentSpell(playerData.getCurrentSpell(), stack);
 //    		
-//			CompoundNBT stackData = stack.getTag();
+//			CompoundTag stackData = stack.getTag();
 //    		if(stackData.contains("Contents"))
 //    		{
 //    			NBTTagList contents = stackData.getTagList("Contents", 8);
@@ -113,7 +113,7 @@ public class ItemSpellList extends ItemSpellContainer
     
     public static ItemStack setCurrentSpell(IMagicEffect effect, ItemStack stack)
     {
-    	CompoundNBT compound = stack.hasTag() ? stack.getTag() : new CompoundNBT();
+    	CompoundTag compound = stack.hasTag() ? stack.getTag() : new CompoundTag();
     	if(effect == null)
     	{
     		if(compound.contains("CurrentSpell"))
@@ -144,7 +144,7 @@ public class ItemSpellList extends ItemSpellContainer
     
     public void onSpellCast(String spellID, ItemStack stack, LivingEntity caster)
     {
-    	if(caster instanceof PlayerEntity)
+    	if(caster instanceof Player)
     	{
 //    		PlayerEntity player = (PlayerEntity)caster;
 //    		handlePlayerStats(player, MagicEffects.getSpellFromName(spellID));

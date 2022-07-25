@@ -48,13 +48,10 @@ import com.lying.variousoddities.species.abilities.DamageType;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
-import net.minecraft.client.resources.JsonReloadListener;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public class SpeciesRegistry extends JsonReloadListener
 {
@@ -164,7 +161,7 @@ public class SpeciesRegistry extends JsonReloadListener
 		 */
 		
 		addSpecies(new Species(SPECIES_AASIMAR)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".aasimar"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".aasimar"))
 				.setPower(1)
 				.addType(EnumCreatureType.OUTSIDER, EnumCreatureType.NATIVE)
 				.addAbility(new AbilityDarkvision())
@@ -172,7 +169,7 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityResistance(2, DamageType.COLD))
 				.addAbility(new AbilityResistance(2, DamageType.LIGHTNING)));
 		addSpecies(new Species(SPECIES_ARCHFEY)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".archfey"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".archfey"))
 				.setPower(10)
 				.addType(EnumCreatureType.FEY, EnumCreatureType.HOLY)
 				.addAbility(new AbilityNaturalArmour(5D))
@@ -183,19 +180,19 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityTeleportToPos(16D))
 				.addAbility(new AbilityTeleportToHome()));
 		addSpecies(new Species(SPECIES_CREEPER)
-				.setDisplayName(new TranslationTextComponent("entity.minecraft.creeper"))
+				.setDisplayName(Component.translatable("entity.minecraft.creeper"))
 				.addType(EnumCreatureType.PLANT)
 				.addAbility(new AbilityModifierStr(-4D))
 				.addAbility(new AbilityExplode()));
 		addSpecies(new Species(SPECIES_DWARF)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".dwarf"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".dwarf"))
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilitySize(Size.MEDIUM, 0.2F))
 				.addAbility(new AbilityModifierCon(2D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityStability()));
 		addSpecies(new Species(SPECIES_DRAGON_GREEN)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".dragon_green"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".dragon_green"))
 				.setPower(5)
 				.addType(EnumCreatureType.DRAGON, EnumCreatureType.AIR)
 				.addAbility(new AbilitySize(Size.MEDIUM, 0.7F))
@@ -207,28 +204,28 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityFlight(Grade.POOR))
 				.addAbility(new AbilityBreathWeapon(DamageType.ACID, BreathType.CONE, 9D, 4F, 24F).setParticle(ParticleTypes.DRAGON_BREATH)));
 		addSpecies(new Species(SPECIES_GOBLIN)
-				.setDisplayName(new TranslationTextComponent("entity."+Reference.ModInfo.MOD_ID+".goblin"))
+				.setDisplayName(Component.translatable("entity."+Reference.ModInfo.MOD_ID+".goblin"))
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN)
 				.addAbility(new AbilitySize(Size.SMALL))
 				.addAbility(new AbilityModifierStr(-1D))
 				.addAbility(new AbilityDarkvision()));
 		addSpecies(new Species(SPECIES_GNOME)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".gnome"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".gnome"))
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilityModifierCon(2D))
 				.addAbility(new AbilitySize(Size.SMALL, 0.4F)));
 		addSpecies(new Species(SPECIES_HALFLING)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".halfling"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".halfling"))
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilitySize(Size.SMALL, 0.1F)));
 		addSpecies(new Species(SPECIES_HALF_ORC)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".half_orc"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".half_orc"))
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilitySize(Size.MEDIUM, 0.6F))
 				.addAbility(new AbilityModifierStr(1D))
 				.addAbility(new AbilityDarkvision()));
 		addSpecies(new Species(SPECIES_KOBOLD)
-				.setDisplayName(new TranslationTextComponent("entity."+Reference.ModInfo.MOD_ID+".kobold"))
+				.setDisplayName(Component.translatable("entity."+Reference.ModInfo.MOD_ID+".kobold"))
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
 				.addAbility(new AbilitySize(Size.SMALL))
 				.addAbility(new AbilityModifierStr(-2D))
@@ -237,7 +234,7 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityNaturalArmour(1D))
 				.addAbility(new AbilityLightSensitivity()));
 		addSpecies(new Species(SPECIES_LIZARDFOLK)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".lizardfolk"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".lizardfolk"))
 				.setPower(1)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
 				.addAbility(new AbilityModifierStr(1D))
@@ -245,20 +242,20 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityNaturalArmour(5D))
 				.addAbility(new AbilityHoldBreath()));
 		addSpecies(new Species(SPECIES_MERFOLK)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".merfolk"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".merfolk"))
 				.setPower(1)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.AQUATIC)
 				.addAbility(new AbilitySwim())
 				.addAbility(new AbilityNaturalArmour(3D)));
 		addSpecies(new Species(SPECIES_ORC)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".orc"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".orc"))
 				.addType(EnumCreatureType.HUMANOID)
 				.addAbility(new AbilitySize(Size.MEDIUM, 0.7F))
 				.addAbility(new AbilityModifierStr(2D))
 				.addAbility(new AbilityDarkvision())
 				.addAbility(new AbilityLightSensitivity()));
 		addSpecies(new Species(SPECIES_TIEFLING)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".tiefling"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".tiefling"))
 				.setPower(1)
 				.addType(EnumCreatureType.OUTSIDER, EnumCreatureType.NATIVE)
 				.addAbility(new AbilityDarkvision())
@@ -266,7 +263,7 @@ public class SpeciesRegistry extends JsonReloadListener
 				.addAbility(new AbilityResistance(2, DamageType.FIRE))
 				.addAbility(new AbilityResistance(2, DamageType.LIGHTNING)));
 		addSpecies(new Species(SPECIES_TROGLODYTE)
-				.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".troglodyte"))
+				.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".troglodyte"))
 				.setPower(2)
 				.addType(EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE)
 				.addAbility(new AbilityModifierCon(4D))
@@ -384,7 +381,7 @@ public class SpeciesRegistry extends JsonReloadListener
 	}
 	
 	@Nullable
-	public static SpeciesInstance instanceFromNBT(CompoundNBT compound)
+	public static SpeciesInstance instanceFromNBT(CompoundTag compound)
 	{
 		ResourceLocation name = new ResourceLocation(compound.getString("Name"));
 		Species species = getSpecies(name);

@@ -4,28 +4,27 @@ import java.util.Random;
 
 import com.lying.variousoddities.init.VOItems;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.PushReaction;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BlockLayerScale extends VOBlock 
 {
-	protected static final VoxelShape SHAPE = Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 1.0D, 16.0D);
+	protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 1.0D, 16.0D);
 	
-	public BlockLayerScale(AbstractBlock.Properties properties)
+	public BlockLayerScale(BlockBehaviour.Properties properties)
 	{
-		super(properties.hardnessAndResistance(0.5F).sound(SoundType.PLANT).notSolid().setOpaque(VOBlock::isntSolid));
+		super(properties.strength(0.5F).sound(SoundType.GRASS).noCollission().noOcclusion());
 	}
 	
     public Item getItemDropped(BlockState state, Random rand, int fortune)
@@ -38,12 +37,12 @@ public class BlockLayerScale extends VOBlock
         return 1 + random.nextInt(2);
     }
     
-    public boolean canSilkHarvest(World world, BlockPos pos, BlockState state, PlayerEntity player)
+    public boolean canSilkHarvest(Level world, BlockPos pos, BlockState state, Player player)
     {
     	return true;
     }
 	
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context)
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context)
     {
         return SHAPE;
     }
@@ -62,7 +61,7 @@ public class BlockLayerScale extends VOBlock
     	return PushReaction.DESTROY;
     }
 	
-//    public boolean canPlaceBlockAt(World worldIn, BlockPos pos)
+//    public boolean canPlaceBlockAt(Level worldIn, BlockPos pos)
 //    {
 //        return super.canPlaceBlockAt(worldIn, pos) && worldIn.getBlockState(pos.down()).isSideSolid(worldIn, pos.down(), EnumFacing.UP);
 //    }
@@ -73,20 +72,20 @@ public class BlockLayerScale extends VOBlock
      * block, etc.
      */
 //    @SuppressWarnings("deprecation")
-//	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos)
+//	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos)
 //    {
 //        super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
 //        this.checkAndDropBlock(worldIn, pos, state);
 //    }
     
-//    protected void checkAndDropBlock(World worldIn, BlockPos pos, BlockState state)
+//    protected void checkAndDropBlock(Level worldIn, BlockPos pos, BlockState state)
 //    {
 //        if(!this.canBlockStay(worldIn, pos, state))
 //            worldIn.destroyBlock(pos, true);
 //    }
     
-    public boolean canBlockStay(IWorld worldIn, BlockPos pos, BlockState state)
+    public boolean canBlockStay(Level worldIn, BlockPos pos, BlockState state)
     {
-        return worldIn.getBlockState(pos.down()).isTopSolid(worldIn, pos, null, Direction.UP);
+        return worldIn.getBlockState(pos.below()).isFaceSturdy(worldIn, pos, Direction.UP);
     }
 }

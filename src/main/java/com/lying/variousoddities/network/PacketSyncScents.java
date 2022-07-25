@@ -6,19 +6,19 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSyncScents
 {
-	private CompoundNBT scentData;
+	private CompoundTag scentData;
 	
 	public PacketSyncScents(){ }
 	public PacketSyncScents(ScentsManager manager)
 	{
-		scentData = manager.write(new CompoundNBT());
+		scentData = manager.write(new CompoundTag());
 	}
 	
 	public static PacketSyncScents decode(PacketBuffer par1Buffer)
@@ -38,8 +38,8 @@ public class PacketSyncScents
 		NetworkEvent.Context context = cxt.get();
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
-			ScentsManager manager = VariousOddities.proxy.getScentsManager(player.getEntityWorld());
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			ScentsManager manager = VariousOddities.proxy.getScentsManager(player.getLevel());
 			manager.read(msg.scentData);
 		}
 		

@@ -3,8 +3,8 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityGetBreathableFluidEvent;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -30,14 +30,14 @@ public class AbilityAmphibious extends Ability
 	/** Prevents suppression of air-breathing by the Aquatic type */
 	public void suppressAirSuffocation(AbilityGetBreathableFluidEvent.Add event)
 	{
-		if(AbilityRegistry.hasAbility(event.getEntityLiving(), REGISTRY_NAME) && !event.getFluids().contains(null))
+		if(AbilityRegistry.hasAbility(event.getEntity(), REGISTRY_NAME) && !event.getFluids().contains(null))
 			event.add(null);
 	}
 	
 	/** Prevents suppression of air-breathing by the Aquatic type */
 	public void suppressAirSuffocation2(AbilityGetBreathableFluidEvent.Remove event)
 	{
-		if(AbilityRegistry.hasAbility(event.getEntityLiving(), REGISTRY_NAME) && event.getFluids().contains(null))
+		if(AbilityRegistry.hasAbility(event.getEntity(), REGISTRY_NAME) && event.getFluids().contains(null))
 			event.remove(null);
 	}
 	
@@ -45,7 +45,7 @@ public class AbilityAmphibious extends Ability
 	{
 		public Builder() { super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound){ return new AbilityAmphibious(); }
+		public Ability create(CompoundTag compound){ return new AbilityAmphibious(); }
 		
 	}
 }

@@ -3,13 +3,12 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 
 public class AbilityTremorsense extends AbilityVision
 {
@@ -32,14 +31,15 @@ public class AbilityTremorsense extends AbilityVision
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".tremorsense", (int)range); }
+	public Component translatedName(){ return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".tremorsense", (int)range); }
 	
+	@SuppressWarnings("deprecation")
 	public boolean testEntity(Entity entity, LivingEntity player)
 	{
 		if(entity.isOnGround())
 			return true;
 		else if(EnumCreatureType.getTypes(player).includesType(EnumCreatureType.AQUATIC))
-			return entity.areEyesInFluid(FluidTags.WATER) || entity.getEntityWorld().getBlockState(entity.getPosition()).getFluidState().isTagged(FluidTags.WATER);
+			return entity.isEyeInFluid(FluidTags.WATER) || entity.getLevel().getBlockState(entity.blockPosition()).getFluidState().is(FluidTags.WATER);
 		return false;
 	}
 	
@@ -47,7 +47,7 @@ public class AbilityTremorsense extends AbilityVision
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			Ability ability = new AbilityTremorsense();
 			ability.readFromNBT(compound);

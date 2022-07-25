@@ -6,10 +6,10 @@ import com.google.common.collect.ImmutableList;
 
 import net.minecraft.client.renderer.entity.model.AgeableModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.animal.Fox;
 
-public class ModelFoxAccessories<T extends FoxEntity> extends AgeableModel<T>
+public class ModelFoxAccessories<T extends Fox> extends AgeableModel<T>
 {
 	private final ModelRenderer head;
 	private final ModelRenderer scarfTail;

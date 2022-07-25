@@ -2,8 +2,8 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 
 public class AbilityHoldBreath extends Ability
 {
@@ -19,7 +19,7 @@ public class AbilityHoldBreath extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityHoldBreath();
 		}

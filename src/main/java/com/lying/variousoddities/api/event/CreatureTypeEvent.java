@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.Event;
 
@@ -32,18 +32,18 @@ public class CreatureTypeEvent extends Event
 	 */
 	public static class GetEntityTypesEvent extends Event
 	{
-		private final World world;
+		private final Level world;
 		private final LivingEntity entity;
 		private final List<EnumCreatureType> types = new ArrayList<>();
 		
-		public GetEntityTypesEvent(World worldIn, LivingEntity entityIn, Collection<EnumCreatureType> typesIn)
+		public GetEntityTypesEvent(Level worldIn, LivingEntity entityIn, Collection<EnumCreatureType> typesIn)
 		{
 			this.world = worldIn;
 			this.entity = entityIn;
 			set(typesIn);
 		}
 		
-		public World getWorld(){ return this.world; }
+		public Level getWorld(){ return this.world; }
 		public LivingEntity getEntity(){ return this.entity; }
 		public List<EnumCreatureType> getTypes(){ return this.types; }
 		

@@ -6,35 +6,34 @@ import java.util.Random;
 
 import com.lying.variousoddities.client.model.entity.ModelFoxAccessories;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.model.FoxModel;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.IEntityRenderer;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.client.renderer.entity.model.FoxModel;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.entity.passive.FoxEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.animal.Fox;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class LayerFoxAccessories extends LayerRenderer<FoxEntity, FoxModel<FoxEntity>>
+public class LayerFoxAccessories extends RenderLayer<Fox, FoxModel<Fox>>
 {
 	private static final ResourceLocation TEXTURE_RED = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/fox_accessories_0.png");
 	private static final ResourceLocation TEXTURE_GREEN = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/fox_accessories_1.png");
 	private static final ResourceLocation TEXTURE_BLUE = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/fox_accessories_2.png");
-	private final ModelFoxAccessories<FoxEntity> model;
+	private final ModelFoxAccessories<Fox> model;
 	
-	public LayerFoxAccessories(IEntityRenderer<FoxEntity, FoxModel<FoxEntity>> entityRendererIn)
+	public LayerFoxAccessories(RenderLayerParent<Fox, FoxModel<Fox>> entityRendererIn)
 	{
 		super(entityRendererIn);
-		this.model = new ModelFoxAccessories<FoxEntity>();
+		this.model = new ModelFoxAccessories<Fox>();
 	}
 	
-	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, FoxEntity entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
+	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Fox entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(isWinter())
 		{
@@ -46,7 +45,7 @@ public class LayerFoxAccessories extends LayerRenderer<FoxEntity, FoxModel<FoxEn
 		}
 	}
 	
-	public ResourceLocation getEntityTexture(FoxEntity entitylivingbaseIn)
+	public ResourceLocation getEntityTexture(Fox entitylivingbaseIn)
 	{
 		Random rand = new Random(entitylivingbaseIn.getUniqueID().getMostSignificantBits());
 		switch(rand.nextInt(3))

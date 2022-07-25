@@ -2,9 +2,9 @@ package com.lying.variousoddities.potion;
 
 import java.util.UUID;
 
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public class PotionEntangled extends PotionImmobility implements IVisualPotion
 {
@@ -12,10 +12,10 @@ public class PotionEntangled extends PotionImmobility implements IVisualPotion
 	
 	public PotionEntangled(int colorIn)
 	{
-		super("entangled", EffectType.HARMFUL, colorIn);
+		super(MobEffectCategory.HARMFUL, colorIn);
 		
-		addAttributesModifier(Attributes.MOVEMENT_SPEED, ENTANGLED_UUID.toString(), -0.99D, Operation.MULTIPLY_TOTAL);
-		addAttributesModifier(Attributes.FLYING_SPEED, ENTANGLED_UUID.toString(), -0.99D, Operation.MULTIPLY_TOTAL);
+		addAttributeModifier(Attributes.MOVEMENT_SPEED, ENTANGLED_UUID.toString(), -0.99D, Operation.MULTIPLY_TOTAL);
+		addAttributeModifier(Attributes.FLYING_SPEED, ENTANGLED_UUID.toString(), -0.99D, Operation.MULTIPLY_TOTAL);
 	}
 	
     public boolean isReady(int duration, int amplifier){ return true; }

@@ -4,15 +4,15 @@ import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.item.IBludgeoningItem;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.EntityDamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -37,12 +37,12 @@ public class AbilityUnarmedStrike extends ToggledAbility
 	{
 		if(isValidDamageSource(event.getSource()))
 		{
-			LivingEntity trueSource = (LivingEntity)event.getSource().getTrueSource();
-			if(isValidItem(trueSource.getHeldItemMainhand(), AbilityRegistry.hasAbility(trueSource, REGISTRY_NAME) && ((AbilityUnarmedStrike)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME)).isActive()))
+			LivingEntity trueSource = (LivingEntity)event.getSource().getEntity();
+			if(isValidItem(trueSource.getMainHandItem(), AbilityRegistry.hasAbility(trueSource, REGISTRY_NAME) && ((AbilityUnarmedStrike)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME)).isActive()))
 			{
 				// Replace melee damage with bludgeoning damage
 				event.setCanceled(true);
-				event.getEntityLiving().attackEntityFrom(VODamageSource.BLUDGEON, event.getAmount());
+				event.getEntity().hurt(VODamageSource.BLUDGEON, event.getAmount());
 			}
 		}
 	}
@@ -51,19 +51,19 @@ public class AbilityUnarmedStrike extends ToggledAbility
 	{
 		if(stackIn.getItem() instanceof IBludgeoningItem)
 			return true;
-		else if(Block.getBlockFromItem(stackIn.getItem()) instanceof AnvilBlock && stackIn.getDisplayName().getString().equalsIgnoreCase("ACME"))
+		else if(Block.byItem(stackIn.getItem()) instanceof AnvilBlock && stackIn.getDisplayName().getString().equalsIgnoreCase("ACME"))
 			return true;
 		return stackIn.isEmpty() && hasActiveAbility;
 	}
 	
 	protected boolean isValidDamageSource(DamageSource source)
 	{
-		if(source != VODamageSource.BLUDGEON && source instanceof EntityDamageSource && !((EntityDamageSource)source).getIsThornsDamage())
+		if(source != VODamageSource.BLUDGEON && source instanceof EntityDamageSource && !((EntityDamageSource)source).isThorns())
 		{
-			Entity trueSource = source.getTrueSource();
-			if(source.getImmediateSource() == trueSource && trueSource != null && trueSource instanceof LivingEntity && trueSource.isAlive())
+			Entity trueSource = source.getEntity();
+			if(source.getDirectEntity() == trueSource && trueSource != null && trueSource instanceof LivingEntity && trueSource.isAlive())
 			{
-				ItemStack weapon = ((LivingEntity)trueSource).getHeldItemMainhand();
+				ItemStack weapon = ((LivingEntity)trueSource).getMainHandItem();
 				return isValidItem(weapon, true);
 			}
 		}
@@ -74,7 +74,7 @@ public class AbilityUnarmedStrike extends ToggledAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public ToggledAbility createAbility(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundTag compound)
 		{
 			return new AbilityUnarmedStrike();
 		}

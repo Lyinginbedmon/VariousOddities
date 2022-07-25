@@ -7,16 +7,16 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSyncPlayerData
 {
 	private UUID playerID;
-	private CompoundNBT dataNBT;
+	private CompoundTag dataNBT;
 	
 	public PacketSyncPlayerData(UUID idIn)
 	{
@@ -51,24 +51,24 @@ public class PacketSyncPlayerData
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			ServerPlayerEntity player = context.getSender();
-			PlayerEntity target = null;
-			if(player.getUniqueID().equals(msg.playerID))
+			ServerPlayer player = context.getSender();
+			Player target = null;
+			if(player.getUUID().equals(msg.playerID))
 				target = player;
 			else
-				target = player.getEntityWorld().getPlayerByUuid(msg.playerID);
+				target = player.getLevel().getPlayerByUUID(msg.playerID);
 			
 			if(target != null)
 				PacketHandler.sendTo(player, new PacketSyncPlayerData(msg.playerID, PlayerData.forPlayer(target)));
 		}
 		else
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
-			PlayerEntity target = null;
-			if(player.getUniqueID().equals(msg.playerID))
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player target = null;
+			if(player.getUUID().equals(msg.playerID))
 				target = player;
 			else
-				target = player.getEntityWorld().getPlayerByUuid(msg.playerID);
+				target = player.getLevel().getPlayerByUUID(msg.playerID);
 			
 			if(target != null)
 			{

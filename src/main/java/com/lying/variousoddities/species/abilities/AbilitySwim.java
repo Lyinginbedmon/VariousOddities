@@ -4,16 +4,16 @@ import java.util.UUID;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySwim extends Ability implements IBonusJumpAbility
@@ -44,13 +44,13 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putDouble("Speed", this.speed);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.speed = compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.2D;
 	}
@@ -60,10 +60,10 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 		bus.addListener(this::applySwim);
 	}
 	
-	public void applySwim(LivingUpdateEvent event)
+	public void applySwim(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
-		ModifiableAttributeInstance attribute = entity.getAttribute(ForgeMod.SWIM_SPEED.get());
+		LivingEntity entity = event.getEntity();
+		AttributeInstance attribute = entity.getAttribute(ForgeMod.SWIM_SPEED.get());
 		if(attribute == null)
 			return;
 		
@@ -82,9 +82,8 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 			if(modifier == null)
 			{
 				modifier = new AttributeModifier(SWIM_SPEED_UUID, "swim_speed", amount, Operation.MULTIPLY_TOTAL);
-				attribute.applyPersistentModifier(modifier);
+				attribute.addPermanentModifier(modifier);
 			}
-			
 		}
 		else if(attribute.getModifier(SWIM_SPEED_UUID) != null)
 			attribute.removeModifier(SWIM_SPEED_UUID);
@@ -92,7 +91,7 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 	
 	public int getRate(){ return jumpRate; }
 	
-	public boolean isValid(LivingEntity entity, World world)
+	public boolean isValid(LivingEntity entity, Level world)
 	{
 		return isEntitySwimming(entity);
 	}
@@ -101,14 +100,14 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 	
 	public static boolean isEntitySwimming(LivingEntity entity)
 	{
-		return entity.isAlive() && entity.getPose() == Pose.SWIMMING && entity.isActualySwimming();
+		return entity.isAlive() && entity.getPose() == Pose.SWIMMING && entity.isSwimming();
 	}
 	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilitySwim(compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.2D);
 		}

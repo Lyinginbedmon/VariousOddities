@@ -2,12 +2,11 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 
 public class AbilityScent extends ToggledAbility 
 {
@@ -36,9 +35,9 @@ public class AbilityScent extends ToggledAbility
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".scent", (int)range); }
+	public Component translatedName(){ return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".scent", (int)range); }
 	
-	public boolean isInRange(Vector3d position, LivingEntity owner){ return owner.getDistanceSq(position) <= (range * range); }
+	public boolean isInRange(Vec3 position, LivingEntity owner){ return owner.distanceToSqr(position) <= (range * range); }
 	
 	public double range(){ return this.range; }
 	
@@ -46,7 +45,7 @@ public class AbilityScent extends ToggledAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public ToggledAbility createAbility(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundTag compound)
 		{
 			return new AbilityScent(compound.contains("Range", 6) ? compound.getDouble("Range") : 16D);
 		}

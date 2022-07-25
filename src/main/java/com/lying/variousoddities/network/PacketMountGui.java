@@ -6,11 +6,11 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketMountGui
 {
@@ -32,8 +32,8 @@ public class PacketMountGui
 		context.setPacketHandled(true);
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			ServerPlayerEntity player = context.getSender();
-			Entity mount = player.getRidingEntity();
+			ServerPlayer player = context.getSender();
+			Entity mount = player.getVehicle();
 			if(mount == null || !(mount instanceof IMountInventory))
 				return;
 			
@@ -44,8 +44,8 @@ public class PacketMountGui
 		}
 		else
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
-			Entity mount = player.getRidingEntity();
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Entity mount = player.getVehicle();
 			if(mount == null || !(mount instanceof IMountInventory))
 				return;
 			

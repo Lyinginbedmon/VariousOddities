@@ -4,11 +4,10 @@ import com.lying.variousoddities.api.event.DamageResistanceEvent;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityDamageResistance extends Ability
@@ -25,7 +24,7 @@ public class AbilityDamageResistance extends Ability
 		this.resistType = typeIn;
 	}
 	
-	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "damage_resistance_"+damageType.getString()); }
+	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "damage_resistance_"+damageType.getSerializedName()); }
 	
 	public int compare(Ability abilityIn)
 	{
@@ -35,24 +34,24 @@ public class AbilityDamageResistance extends Ability
 		return 0;
 	}
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
 		return resistType.getTranslated(damageType);
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability.varodd:damage_resistance."+resistType.getString(), damageType.getTranslated());
+		return Component.translatable("ability.varodd:damage_resistance."+resistType.getSerializedName(), damageType.getTranslated());
 	}
 	
 	public Type getType(){ return resistType == DamageResist.VULNERABLE ? Ability.Type.WEAKNESS : Ability.Type.DEFENSE; }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
-		compound.putString("Damage", this.damageType.getString());
-		compound.putString("Type", this.resistType.getString());
+		compound.putString("Damage", this.damageType.getSerializedName());
+		compound.putString("Type", this.resistType.getSerializedName());
 		return compound;
 	}
 	
@@ -64,7 +63,7 @@ public class AbilityDamageResistance extends Ability
 	public void applyDamageResistance(DamageResistanceEvent event)
 	{
 		DamageSource source = event.getSource();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntityLiving(), REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), REGISTRY_NAME))
 		{
 			AbilityDamageResistance resistance = (AbilityDamageResistance)ability;
 			if(resistance.damageType.isDamageType(source) && event.getResistance() != DamageResist.IMMUNE)
@@ -79,7 +78,7 @@ public class AbilityDamageResistance extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			DamageType damageType = DamageType.fromString(compound.getString("Damage"));
 			DamageResist resistType = DamageResist.fromString(compound.getString("Type"));

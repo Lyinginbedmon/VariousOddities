@@ -7,16 +7,16 @@ import java.util.List;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.state.Property;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 
 public class TriggerBlock extends Trigger
 {
@@ -33,7 +33,7 @@ public class TriggerBlock extends Trigger
 		pos = posIn;
 	}
 	
-	public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"block" + (inverted ? "_inverted" : "")); }
+	public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"block" + (inverted ? "_inverted" : "")); }
 	
 	public Collection<? extends Trigger> possibleVariables(){ return possibleVariables; }
 	
@@ -41,9 +41,9 @@ public class TriggerBlock extends Trigger
 	
 	public List<? extends Trigger> getVariables(){ return variables; }
 	
-	public boolean applyToBlock(World world)
+	public boolean applyToBlock(Level world)
 	{
-		if(!world.isAirBlock(pos))
+		if(!world.isEmptyBlock(pos))
 		{
 			for(TriggerBlock variable : variables)
 				if(variable.applyToBlock(world) == variable.inverted())
@@ -53,15 +53,15 @@ public class TriggerBlock extends Trigger
 		return false;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
-		compound.put("Pos", NBTUtil.writeBlockPos(pos));
+		compound.put("Pos", NbtUtils.writeBlockPos(pos));
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
-		pos = NBTUtil.readBlockPos(compound.getCompound("Pos"));
+		pos = NbtUtils.readBlockPos(compound.getCompound("Pos"));
 	}
 	
 	public static class TriggerBlockType extends TriggerBlock
@@ -71,28 +71,30 @@ public class TriggerBlock extends Trigger
 		public String type(){ return "block_type"; }
 		
 		public TriggerBlockType(){ }
+		@SuppressWarnings("deprecation")
 		public TriggerBlockType(Block blockIn)
 		{
-			block = blockIn.getRegistryName();
+			block = Registry.BLOCK.getKey(blockIn);
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"block_type" + (inverted ? "_inverted" : ""), block == null ? "anything" : block); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"block_type" + (inverted ? "_inverted" : ""), block == null ? "anything" : block); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
-		public boolean applyToBlock(World world)
+		@SuppressWarnings("deprecation")
+		public boolean applyToBlock(Level world)
 		{
-			return block == null || world.getBlockState(pos).getBlock().getRegistryName().equals(block);
+			return block == null || Registry.BLOCK.getKey(world.getBlockState(pos).getBlock()).equals(block);
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			super.writeToNBT(compound);
 			compound.putString("Block", block.toString());
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			super.readFromNBT(compound);
 			block = new ResourceLocation(compound.getString("Block"));
@@ -113,12 +115,12 @@ public class TriggerBlock extends Trigger
 			propertyValue = valIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"block_state" + (inverted ? "_inverted" : ""), propertyName, propertyValue); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"block_state" + (inverted ? "_inverted" : ""), propertyName, propertyValue); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
 		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public boolean applyToBlock(World world)
+		public boolean applyToBlock(Level world)
 		{
 			if(propertyName.length() == 0 || propertyValue.length() == 0)
 				return true;
@@ -127,14 +129,14 @@ public class TriggerBlock extends Trigger
 			for(Property property : state.getProperties())
 				if(property.getName().equals(propertyName))
 				{
-					Comparable<?> stateValue = state.get(property);
-					return stateValue.equals(property.parseValue(propertyValue));
+					Comparable<?> stateValue = state.getValue(property);
+					return stateValue.equals(property.getValue(propertyValue));
 				}
 			
 			return false;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			super.writeToNBT(compound);
 			compound.putString("Name", propertyName);
@@ -142,7 +144,7 @@ public class TriggerBlock extends Trigger
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			super.readFromNBT(compound);
 			propertyName = compound.getString("Name");
@@ -160,13 +162,13 @@ public class TriggerBlock extends Trigger
 			setInverted(!boolIn);
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"block_powered" + (inverted ? "_inverted" : "")); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"block_powered" + (inverted ? "_inverted" : "")); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
-		public boolean applyToBlock(World world)
+		public boolean applyToBlock(Level world)
 		{
-			return world.isBlockPowered(pos);
+			return world.hasNeighborSignal(pos);
 		}
 	}
 }

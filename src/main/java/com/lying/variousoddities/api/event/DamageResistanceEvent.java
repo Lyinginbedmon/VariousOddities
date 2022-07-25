@@ -2,8 +2,8 @@ package com.lying.variousoddities.api.event;
 
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingEvent;
 
 public class DamageResistanceEvent extends LivingEvent

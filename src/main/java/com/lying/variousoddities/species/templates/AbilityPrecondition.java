@@ -7,10 +7,10 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.templates.TypeOperation.Condition.Style;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 
 public class AbilityPrecondition extends TemplatePrecondition
 {
@@ -31,9 +31,9 @@ public class AbilityPrecondition extends TemplatePrecondition
 	
 	public static AbilityPrecondition hasNo(Ability abilityIn){ return new AbilityPrecondition(Style.NOR, abilityIn); }
 	
-	public IFormattableTextComponent translate()
+	public MutableComponent translate()
 	{
-		return new TranslationTextComponent("precondition."+Reference.ModInfo.MOD_ID+".ability."+style.getString(), ability == null ? "NULL" : ability.getDisplayName());
+		return Component.translatable("precondition."+Reference.ModInfo.MOD_ID+".ability."+style.getSerializedName(), ability == null ? "NULL" : ability.getDisplayName());
 	}
 	
 	protected boolean testAbilities(Map<ResourceLocation, Ability> abilities)
@@ -52,15 +52,15 @@ public class AbilityPrecondition extends TemplatePrecondition
 			return true;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
-		compound.putString("Style", style.getString());
+		compound.putString("Style", style.getSerializedName());
 		if(this.ability != null)
-			compound.put("Ability", this.ability.writeAtomically(new CompoundNBT()));
+			compound.put("Ability", this.ability.writeAtomically(new CompoundTag()));
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		style = Style.fromString(compound.getString("Style"));
 		if(compound.contains("Ability", 10))

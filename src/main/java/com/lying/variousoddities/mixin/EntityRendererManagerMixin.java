@@ -9,8 +9,8 @@ import com.lying.variousoddities.client.special.BlindRender;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -21,7 +21,7 @@ public class EntityRendererManagerMixin
 	@Inject(method = "getPackedLight(Lnet/minecraft/entity/Entity;F)I", at = @At("HEAD"), cancellable = true)
 	public <E extends Entity> void getPackedLight(E entityIn, float partialTicks, final CallbackInfoReturnable<Integer> ci)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		if(player != null && BlindRender.playerIsBlind() && entityIn == player)
 			ci.setReturnValue(8);
 	}

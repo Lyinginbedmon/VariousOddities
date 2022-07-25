@@ -1,78 +1,78 @@
 package com.lying.variousoddities.entity.ai;
 
 import java.util.EnumSet;
-import java.util.Random;
 
 import com.lying.variousoddities.api.world.settlement.SettlementRoomBehaviour;
 import com.lying.variousoddities.entity.ISettlementEntity;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.Level;
 
 public class EntityAIOperateRoom extends Goal
 {
-	protected final World theWorld;
-	protected final MobEntity theMob;
-	protected final PathNavigator theNavigator;
+	protected final Level theWorld;
+	protected final Monster theMob;
+	protected final PathNavigation theNavigator;
 	
 	protected BoxRoom targetRoom = null;
 	protected SettlementRoomBehaviour targetBehaviour = null;
-	protected Random targetRand = null;
+	protected RandomSource targetRand = null;
 	
 	protected boolean discontinue = false;
 	
-	public EntityAIOperateRoom(MobEntity creatureIn)
+	public EntityAIOperateRoom(Monster creatureIn)
 	{
-		theWorld = creatureIn.getEntityWorld();
+		theWorld = creatureIn.getLevel();
 		theMob = creatureIn;
-		theNavigator = creatureIn.getNavigator();
+		theNavigator = creatureIn.getNavigation();
 		this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		return theMob.getAttackTarget() == null && isBusy();
+		return theMob.getTarget() == null && isBusy();
 	}
 	
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
-		return shouldExecute() && !isInsideRoom() && !discontinue;
+		return canUse() && !isInsideRoom() && !discontinue;
 	}
 	
-	public void resetTask()
+	public void stop()
 	{
-		if(isInsideRoom() && !theWorld.isRemote)
-			targetBehaviour.function(targetRoom, (ServerWorld)theWorld, targetRand);
+		if(isInsideRoom() && !theWorld.isClientSide)
+			targetBehaviour.function(targetRoom, (ServerLevel)theWorld, targetRand);
 		
-		theNavigator.clearPath();
+		theNavigator.stop();
 		targetRoom = null;
 		targetBehaviour = null;
 		targetRand = null;
 		discontinue = false;
 	}
 	
-	public void startExecuting()
+	public void start()
 	{
-		theNavigator.clearPath();
+		theNavigator.stop();
 		BlockPos core = targetRoom.getCore();
 		
-		theNavigator.tryMoveToXYZ(core.getX(), core.getY(), core.getZ(), 1.0D);
+		theNavigator.moveTo(core.getX(), core.getY(), core.getZ(), 1.0D);
 	}
 	
 	public void tick()
 	{
 		if(!isInsideRoom())
 		{
-			if(theNavigator.noPath())
+			if(theNavigator.isDone())
 			{
-				startExecuting();
+				start();
 				
-				if(theNavigator.noPath() && !isInsideRoom())
+				if(theNavigator.isDone() && !isInsideRoom())
 					discontinue = true;
 			}
 		}
@@ -96,7 +96,7 @@ public class EntityAIOperateRoom extends Goal
 		return targetRoom.getCore();
 	}
 	
-	public void requestVisitTo(BoxRoom roomIn, SettlementRoomBehaviour behaviourIn, Random randIn)
+	public void requestVisitTo(BoxRoom roomIn, SettlementRoomBehaviour behaviourIn, RandomSource randIn)
 	{
 		if(isBusy()) return;
 		targetRoom = roomIn;
@@ -104,7 +104,7 @@ public class EntityAIOperateRoom extends Goal
 		targetRand = randIn;
 	}
 	
-	public static EntityAIOperateRoom getOperateTask(MobEntity creature)
+	public static EntityAIOperateRoom getOperateTask(Monster creature)
 	{
 		return creature instanceof ISettlementEntity ? ((ISettlementEntity)creature).getOperateRoomTask() : null;
 	}

@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public class PotionHealthDrain extends PotionHealthDamage
 {
@@ -13,7 +13,7 @@ public class PotionHealthDrain extends PotionHealthDamage
 	
 	public PotionHealthDrain()
 	{
-		super("health_drain", DRAIN_UUID, 3146242);
+		super(DRAIN_UUID, 3146242);
 	}
 	
 	public List<ItemStack> getCurativeItems(){ return Lists.newArrayList(); }

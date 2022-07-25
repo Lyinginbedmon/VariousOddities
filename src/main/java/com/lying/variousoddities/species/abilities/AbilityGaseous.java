@@ -1,18 +1,17 @@
 package com.lying.variousoddities.species.abilities;
 
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -38,7 +37,7 @@ public class AbilityGaseous extends AbilityPhasing implements ICompoundAbility
 	
 	public boolean ignoresNonMagicDamage(){ return false; }
 	
-	public boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(Level worldIn, BlockPos pos, LivingEntity entity)
 	{
 		return false;
 	}
@@ -54,12 +53,12 @@ public class AbilityGaseous extends AbilityPhasing implements ICompoundAbility
 	public void tick(RenderLivingEvent.Post<?,?> event)
 	{
 		LivingEntity living = event.getEntity();
-		World world = living.getEntityWorld();
-		if(world.isRemote && AbilityRegistry.hasAbility(living, REGISTRY_NAME))
+		Level world = living.getLevel();
+		if(world.isClientSide && AbilityRegistry.hasAbility(living, REGISTRY_NAME))
 		{
-			Random rand = world.rand;
+			RandomSource rand = world.random;
 			world.addParticle(ParticleTypes.SMOKE, 
-					living.getPosXRandom(0.5D), living.getPosYRandom() - 0.25D, living.getPosZRandom(0.5D), 
+					living.getX(0.5D), living.getY(1D) - 0.25D, living.getZ(0.5D), 
 					(rand.nextDouble() - 0.5D) * 0.125D, rand.nextDouble() * 0.0125D, (rand.nextDouble() - 0.5D) * 0.125D);
 		}
 	}
@@ -68,7 +67,7 @@ public class AbilityGaseous extends AbilityPhasing implements ICompoundAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityGaseous();
 		}

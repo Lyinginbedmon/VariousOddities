@@ -2,7 +2,6 @@ package com.lying.variousoddities.entity;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -16,42 +15,31 @@ import com.lying.variousoddities.inventory.ContainerBody;
 import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.EquipmentSlotType.Group;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.IInventoryChangedListener;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SpawnEggItem;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.HandSide;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
 
 public abstract class AbstractBody extends LivingEntity implements IInventoryChangedListener
 {
-    protected static final DataParameter<CompoundNBT> ENTITY	= EntityDataManager.<CompoundNBT>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
-    protected static final DataParameter<CompoundNBT> PROFILE	= EntityDataManager.<CompoundNBT>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
-    protected static final DataParameter<CompoundNBT> EQUIPMENT	= EntityDataManager.<CompoundNBT>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
+    protected static final DataParameter<CompoundTag> ENTITY	= EntityDataManager.<CompoundTag>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
+    protected static final DataParameter<CompoundTag> PROFILE	= EntityDataManager.<CompoundTag>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
+    protected static final DataParameter<CompoundTag> EQUIPMENT	= EntityDataManager.<CompoundTag>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
     protected static final DataParameter<Optional<UUID>> SOUL_ID	= EntityDataManager.<Optional<UUID>>createKey(AbstractBody.class, DataSerializers.OPTIONAL_UNIQUE_ID);
     protected static final EntitySize BODY_SIZE = EntitySize.fixed(0.75F, 0.5F);
     
@@ -60,7 +48,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	/** True if this corpse should not despawn, even if its bound entity is not dead. */
 	protected boolean persistent = false;
 	
-	public AbstractBody(EntityType<? extends AbstractBody> type, World worldIn)
+	public AbstractBody(EntityType<? extends AbstractBody> type, Level worldIn)
 	{
 		super(type, worldIn);
 		this.bodyInventory = new Inventory(12);
@@ -70,16 +58,16 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public void copyFrom(LivingEntity living, boolean withDropChances)
 	{
 		setBody(living, withDropChances);
-		setPositionAndRotation(living.getPosX(), living.getPosY(), living.getPosZ(), living.rotationYaw, living.rotationPitch);
+		setPositionAndRotation(living.getX(), living.getY(), living.getZ(), living.getYRot(), living.getXRot());
 		setMotion(living.getMotion());
 	}
 	
 	public void registerData()
 	{
 		super.registerData();
-		getDataManager().register(ENTITY, new CompoundNBT());
-		getDataManager().register(PROFILE, new CompoundNBT());
-		getDataManager().register(EQUIPMENT, new CompoundNBT());
+		getDataManager().register(ENTITY, new CompoundTag());
+		getDataManager().register(PROFILE, new CompoundTag());
+		getDataManager().register(EQUIPMENT, new CompoundTag());
 		getDataManager().register(SOUL_ID, Optional.<UUID>empty());
 	}
 	
@@ -89,19 +77,19 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
         		.createMutableAttribute(Attributes.MAX_HEALTH, 10.0D);
     }
 	
-	public void readAdditional(CompoundNBT compound)
+	public void readAdditional(CompoundTag compound)
 	{
-		super.readAdditional(compound);
+		super.readAdditionalSaveData(compound);
 		getDataManager().set(ENTITY, compound.getCompound("Entity"));
 		getDataManager().set(PROFILE, compound.getCompound("Player"));
 		updateSize();
 		this.persistent = compound.getBoolean("PersistenceRequired");
 		readInventoryFromNBT(compound);
 		if(compound.contains("SoulUUID", 11))
-			setSoulUUID(compound.getUniqueId("SoulUUID"));
+			setSoulUUID(compound.getUUID("SoulUUID"));
 	}
 	
-	public void writeAdditional(CompoundNBT compound)
+	public void writeAdditional(CompoundTag compound)
 	{
 		super.writeAdditional(compound);
 		compound.put("Entity", getDataManager().get(ENTITY));
@@ -109,15 +97,15 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		compound.putBoolean("PersistenceRequired", this.persistent);
 		writeInventoryToNBT(compound);
 		if(hasSoul())
-			compound.putUniqueId("SoulUUID", getSoulUUID());
+			compound.putUUID("SoulUUID", getSoulUUID());
 	}
 	
-	private CompoundNBT writeInventoryToNBT(CompoundNBT compound)
+	private CompoundTag writeInventoryToNBT(CompoundTag compound)
 	{
-		ListNBT armourList = new ListNBT();
+		ListTag armourList = new ListTag();
 		for(int i=0; i<4; i++)
 		{
-			CompoundNBT stackData = new CompoundNBT();
+			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = this.bodyInventory.getStackInSlot(i);
 			if(!stack.isEmpty())
 				stack.write(stackData);
@@ -125,10 +113,10 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		}
 		compound.put("ArmorItems", armourList);
 		
-		ListNBT handList = new ListNBT();
+		ListTag handList = new ListTag();
 		for(int i=0; i<2; i++)
 		{
-			CompoundNBT stackData = new CompoundNBT();
+			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = this.bodyInventory.getStackInSlot(4+i);
 			if(!stack.isEmpty())
 				stack.write(stackData);
@@ -136,10 +124,10 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		}
 		compound.put("HandItems", handList);
 		
-		ListNBT inventoryList = new ListNBT();
+		ListTag inventoryList = new ListTag();
 		for(int i=0; i<6; i++)
 		{
-			CompoundNBT stackData = new CompoundNBT();
+			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = this.bodyInventory.getStackInSlot(6+i);
 			if(!stack.isEmpty())
 				stack.write(stackData);
@@ -150,22 +138,22 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return compound;
 	}
 	
-	protected static CompoundNBT writeInventoryToNBT(CompoundNBT compound, IInventory armour, IInventory hands, IInventory bag)
+	protected static CompoundTag writeInventoryToNBT(CompoundTag compound, IInventory armour, IInventory hands, IInventory bag)
 	{
 		if(armour != null)
-			compound.put("ArmorItems", writeInventoryToList(new ListNBT(), armour));
+			compound.put("ArmorItems", writeInventoryToList(new ListTag(), armour));
 		if(hands != null)
-			compound.put("HandItems", writeInventoryToList(new ListNBT(), hands));
+			compound.put("HandItems", writeInventoryToList(new ListTag(), hands));
 		if(bag != null)
-			compound.put("Inventory", writeInventoryToList(new ListNBT(), bag));
+			compound.put("Inventory", writeInventoryToList(new ListTag(), bag));
 		return compound;
 	}
 	
-	protected static ListNBT writeInventoryToList(ListNBT list, IInventory inv)
+	protected static ListTag writeInventoryToList(ListTag list, IInventory inv)
 	{
 		for(int i=0; i<inv.getSizeInventory(); i++)
 		{
-			CompoundNBT stackData = new CompoundNBT();
+			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = inv.getStackInSlot(i);
 			if(!stack.isEmpty())
 				stack.write(stackData);
@@ -174,9 +162,9 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return list;
 	}
 	
-	private void readInventoryFromNBT(CompoundNBT compound)
+	private void readInventoryFromNBT(CompoundTag compound)
 	{
-		ListNBT armourList = compound.getList("ArmorItems", 10);
+		ListTag armourList = compound.getList("ArmorItems", 10);
 		armourList.addAll(compound.getList("HandItems", 10));
 		armourList.addAll(compound.getList("Inventory", 10));
 		for(int i=0; i<this.bodyInventory.getSizeInventory(); i++)
@@ -185,8 +173,8 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public void onInventoryChanged(IInventory invBasic)
 	{
-		if(!getEntityWorld().isRemote)
-			getDataManager().set(EQUIPMENT, writeInventoryToNBT(new CompoundNBT()));
+		if(!getLevel().isClientSide)
+			getDataManager().set(EQUIPMENT, writeInventoryToNBT(new CompoundTag()));
 	}
 	
 	public static void clearNearbyAttackTargetsOf(@Nonnull LivingEntity victim)
@@ -195,12 +183,12 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		 * Clear nearby mob attack targets if they were targetting the owner of this corpse<br>
 		 * This stops mobs attacking players they've already "killed"
 		 */
-		for(MobEntity entity : victim.getEntityWorld().getEntitiesWithinAABB(MobEntity.class, victim.getBoundingBox().grow(64D)))
-			if(entity.getAttackTarget() != null && entity.getAttackTarget().equals(victim))
-				entity.setAttackTarget(null);
+		for(Monster entity : victim.getLevel().getEntitiesWithinAABB(Monster.class, victim.getBoundingBox().inflate(64D)))
+			if(entity.getTarget() != null && entity.getTarget().equals(victim))
+				entity.setTarget(null);
 	}
 	
-	public ITextComponent getDisplayName(){ return this.hasBody() ? getBody().getDisplayName() : super.getDisplayName(); }
+	public Component getDisplayName(){ return this.hasBody() ? getBody().getDisplayName() : super.getDisplayName(); }
 	
 	public boolean hasBody(){ return getDataManager().get(ENTITY).contains("id", 8); }
 	
@@ -208,16 +196,16 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public void setBody(@Nullable LivingEntity living, boolean withDropChance)
 	{
-		CompoundNBT data = new CompoundNBT();
+		CompoundTag data = new CompoundTag();
 		
 		// Store entity equipment in body inventory
 		if(living != null)
 		{
-			setSoulUUID(living.getUniqueID());
+			setSoulUUID(living.getUUID());
 			
-			Random rand = living.getRNG();
-			boolean checkDrop = living instanceof MobEntity && withDropChance;
-			if(checkDrop && (living.isChild() || !living.getEntityWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT)))
+			RandomSource rand = living.getRandom();
+			boolean checkDrop = living instanceof Monster && withDropChance;
+			if(checkDrop && (living.isBaby() || !living.getLevel().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)))
 				checkDrop = false;
 			
 			float[] armorChances = new float[4];
@@ -225,7 +213,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			Arrays.fill(armorChances, 0F);
 			Arrays.fill(handChances, 0F);
 			// Preserve equipment for mobs and player corpses
-			if(stealsGear() || living instanceof MobEntity)
+			if(stealsGear() || living instanceof Monster)
 			{
 				int slot = 0;
 				for(ItemStack stack : living.getArmorInventoryList())
@@ -233,7 +221,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 					if(!checkDrop || checkDrop && rand.nextFloat() <= armorChances[slot])
 					{
 						this.bodyInventory.setInventorySlotContents(slot, stack.copy());
-						living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.ARMOR, slot), ItemStack.EMPTY);
+						living.setItemStackToSlot(EquipmentSlot.fromSlotTypeAndIndex(EquipmentSlot.Type.ARMOR, slot), ItemStack.EMPTY);
 					}
 					slot++;
 				}
@@ -244,7 +232,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 					if(!checkDrop || checkDrop && rand.nextFloat() <= handChances[handSlot++])
 					{
 						this.bodyInventory.setInventorySlotContents(slot, stack.copy());
-						living.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(Group.HAND, handSlot), ItemStack.EMPTY);
+						living.setItemStackToSlot(EquipmentSlot.fromSlotTypeAndIndex(EquipmentSlot.Type.HAND, handSlot), ItemStack.EMPTY);
 					}
 					slot++;
 				}
@@ -252,20 +240,20 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			// Preserve equipment if it passes a mob drop chance check
 			else if(checkDrop)
 			{
-				MobEntity mob = (MobEntity)living;
-				CompoundNBT mobData = new CompoundNBT();
+				Monster mob = (Monster)living;
+				CompoundTag mobData = new CompoundTag();
 				mob.writeAdditional(mobData);
 				
 				if(mobData.contains("ArmorDropChances", 9))
 				{
-					ListNBT armorList = mobData.getList("ArmorDropChances", 5);
+					ListTag armorList = mobData.getList("ArmorDropChances", 5);
 					for(int i=0; i<armorList.size(); ++i)
 						armorChances[i] = armorList.getFloat(i);
 				}
 				
 				if(mobData.contains("HandDropChances", 5))
 				{
-					ListNBT handList = mobData.getList("HandDropChances", 5);
+					ListTag handList = mobData.getList("HandDropChances", 5);
 					for(int i=0; i<handList.size(); ++i)
 						handChances[i] = handList.getFloat(i);
 				}
@@ -276,7 +264,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
-				getDataManager().set(PROFILE, NBTUtil.writeGameProfile(new CompoundNBT(), ((PlayerEntity)living).getGameProfile()));
+				getDataManager().set(PROFILE, NBTUtil.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
 				data.putString("id", living.getEntityString());
@@ -300,7 +288,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public GameProfile getGameProfile()
 	{
-		return NBTUtil.readGameProfile(getDataManager().get(PROFILE));
+		return NbtUtils.readGameProfile(getDataManager().get(PROFILE));
 	}
 	
 	public void setSoulUUID(UUID idIn){ getDataManager().set(SOUL_ID, Optional.<UUID>of(idIn)); }
@@ -321,7 +309,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			return null;
 		
 		if(isPlayer())
-			return getEntityWorld().getPlayerByUuid(getSoulUUID());
+			return getLevel().getPlayerByUUID(getSoulUUID());
 		else
 			return getBody();
 	}
@@ -333,19 +321,19 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	@Nullable
 	public LivingEntity getBody()
 	{
-		CompoundNBT data = getDataManager().get(ENTITY);
+		CompoundTag data = getDataManager().get(ENTITY);
 		if(data.isEmpty()) return null;
 		
 		String id = data.getString("id");
 		Entity entity = null;
 		if(id.equalsIgnoreCase("player"))
-			entity = VOEntities.DUMMY_BIPED.create(getEntityWorld());
+			entity = VOEntities.DUMMY_BIPED.create(getLevel());
 		else
 		{
 			if(!EntityType.byKey(id).isPresent())
 				return null;
 			else
-				entity = EntityType.byKey(id).get().create(getEntityWorld());
+				entity = EntityType.byKey(id).get().create(getLevel());
 		}
 		
 		if(entity != null)
@@ -355,7 +343,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			if(entity.getType() == VOEntities.DUMMY_BIPED)
 				((EntityDummyBiped)entity).setGameProfile(getGameProfile());
 			
-			for(EquipmentSlotType slot : EquipmentSlotType.values())
+			for(EquipmentSlot slot : EquipmentSlot.values())
 				entity.setItemStackToSlot(slot, getItemStackFromSlot(slot));
 			
 			if(entity instanceof LivingEntity)
@@ -370,7 +358,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	{
 		if(isPlayer())
 		{
-			EntityDummyBiped dummy = VOEntities.DUMMY_BIPED.create(getEntityWorld());
+			EntityDummyBiped dummy = VOEntities.DUMMY_BIPED.create(getLevel());
 			dummy.setGameProfile(getGameProfile());
 			return dummy;
 		}
@@ -449,7 +437,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public IInventory getInventory()
 	{
-		if(getEntityWorld().isRemote)
+		if(getLevel().isClientSide)
 			readInventoryFromNBT(getDataManager().get(EQUIPMENT));
 		return this.bodyInventory;
 	}
@@ -460,9 +448,9 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			entityDropItem(getInventory().getStackInSlot(i));
 	}
 	
-	public ItemStack getItemStackFromSlot(EquipmentSlotType slotIn)
+	public ItemStack getItemStackFromSlot(EquipmentSlot slotIn)
 	{
-		if(getEntityWorld().isRemote)
+		if(getLevel().isClientSide)
 			readInventoryFromNBT(getDataManager().get(EQUIPMENT));
 		
 		switch(slotIn)
@@ -477,15 +465,15 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return ItemStack.EMPTY;
 	}
 	
-	public void setItemStackToSlot(EquipmentSlotType slotIn, ItemStack stack)
+	public void setItemStackToSlot(EquipmentSlot slotIn, ItemStack stack)
 	{
 		playEquipSound(stack);
 		setEquipmentInSlot(slotIn, stack);
 	}
 	
-	protected void setEquipmentInSlot(EquipmentSlotType slotIn, ItemStack stack)
+	protected void setEquipmentInSlot(EquipmentSlot slotIn, ItemStack stack)
 	{
-		this.bodyInventory.setInventorySlotContents(slotIn.getSlotIndex() + (slotIn.getSlotType() == Group.HAND ? 4 : 0), stack);
+		this.bodyInventory.setInventorySlotContents(slotIn.getIndex() + (slotIn.getType() == EquipmentSlot.Type.HAND ? 4 : 0), stack);
 		onInventoryChanged(null);
 	}
 	
@@ -502,7 +490,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		
 		if(isPlayer())
 		{
-			PlayerEntity player = (PlayerEntity)getSoul();
+			Player player = (Player)getSoul();
 			if(player != null)
 			{
 				SoulCondition condition = PlayerData.forPlayer(player).getSoulCondition();
@@ -512,7 +500,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			}
 		}
 		
-		if(getEntityWorld().isRemote)
+		if(getLevel().isClientSide)
 			return;
 		
 		if(getBody() != null)
@@ -528,15 +516,15 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return hasBody() ? BODY_SIZE : super.getSize(poseIn);
 	}
 	
-	public final ActionResultType processInitialInteract(PlayerEntity player, Hand hand)
+	public final ActionResultType processInitialInteract(Player player, Hand hand)
 	{
 		ItemStack heldStack = player.getHeldItem(hand);
 		if(!heldStack.isEmpty() && heldStack.getItem() instanceof SpawnEggItem)
 		{
 			SpawnEggItem egg = (SpawnEggItem)heldStack.getItem();
 			EntityType<?> entityType = egg.getType(heldStack.getTag());
-			Entity entity = entityType.create(player.getEntityWorld());
-			if(entity instanceof LivingEntity && !player.getEntityWorld().isRemote)
+			Entity entity = entityType.create(player.getLevel());
+			if(entity instanceof LivingEntity && !player.getLevel().isClientSide)
 			{
 				this.setBody((LivingEntity)entity, false);
 				
@@ -550,7 +538,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return ActionResultType.PASS;
 	}
 	
-	public void openContainer(PlayerEntity playerIn)
+	public void openContainer(Player playerIn)
 	{
 		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerBody(window, player, getInventory(), this), this.getDisplayName()));
 	}

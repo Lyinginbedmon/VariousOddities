@@ -6,7 +6,7 @@ import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketMobLoseTrack
 {

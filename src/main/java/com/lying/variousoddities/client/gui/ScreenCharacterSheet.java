@@ -14,25 +14,21 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.Types;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.util.text.event.HoverEvent;
-import net.minecraft.util.text.event.HoverEvent.Action;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.HoverEvent.Action;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.registries.tags.ITag;
 
 public class ScreenCharacterSheet extends Screen
 {
@@ -40,8 +36,8 @@ public class ScreenCharacterSheet extends Screen
 	private static final int ACTION_ICON_SIZE = 12;
 	private static final int ACTION_ICON_SEP = 4;
 	
-	private final StringTextComponent speciesHeader;
-	private ITextComponent typesHeader;
+	private final MutableComponent speciesHeader;
+	private Component typesHeader;
 	private final ActionSet actionSet;
 	private final List<ITag.INamedTag<Fluid>> fluids;
 	private double health, armour;
@@ -50,15 +46,15 @@ public class ScreenCharacterSheet extends Screen
 	
 	public ScreenCharacterSheet()
 	{
-		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".character_sheet"));
+		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".character_sheet"));
 		
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		LivingData data = LivingData.forEntity(player);
 		
 		// Species name and actions
-		this.speciesHeader = new StringTextComponent("");
+		this.speciesHeader = Component.literal("");
 		if(data.hasSpecies())
-			speciesHeader.append(((IFormattableTextComponent)data.getSpecies().getDisplayName().copyRaw()));
+			speciesHeader.append(((MutableComponent)data.getSpecies().getDisplayName().plainCopy()));
 		
 		actionSet = ActionSet.fromTypes(player, EnumCreatureType.getTypes(player).asSet());
 		fluids = data.getBreathableFluids(player);
@@ -68,24 +64,24 @@ public class ScreenCharacterSheet extends Screen
 		templates.addAll(data.getTemplates());
 		if(!templates.isEmpty())
 		{
-			speciesHeader.append(new StringTextComponent(" ("));
-			speciesHeader.append(new TranslationTextComponent("gui.varodd.character_sheet.templates", String.valueOf(templates.size())).modifyStyle((style) -> 
+			speciesHeader.append(Component.literal(" ("));
+			speciesHeader.append(Component.translatable("gui.varodd.character_sheet.templates", String.valueOf(templates.size())).withStyle((style) -> 
 				{
-					IFormattableTextComponent templateList = null;
+					MutableComponent templateList = null;
 					for(int i=0; i<templates.size(); i++)
 					{
-						IFormattableTextComponent name = (IFormattableTextComponent)templates.get(i).getDisplayName().deepCopy();
+						MutableComponent name = (MutableComponent)templates.get(i).getDisplayName().copy();
 						if(templateList == null)
 							templateList = name;
 						else
 						{
-							templateList.appendString("\n");
+							templateList.append("\n");
 							templateList.append(templates.get(i).getDisplayName());
 						}
 					}
-					return style.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, templateList));
+					return style.withHoverEvent(new HoverEvent(Action.SHOW_TEXT, templateList));
 				}));
-			speciesHeader.append(new StringTextComponent(")"));
+			speciesHeader.append(Component.literal(")"));
 		}
 	}
 	
@@ -96,7 +92,7 @@ public class ScreenCharacterSheet extends Screen
     	super.init(minecraft, width, height);
         this.buttons.clear();
 		
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		
 		Types types = EnumCreatureType.getTypes(player);
 		this.typesHeader = types.toHeader();
@@ -120,7 +116,7 @@ public class ScreenCharacterSheet extends Screen
 		};
         
 		this.isDoubleList = !actives.isEmpty();
-		int listWidth = MathHelper.clamp((int)(this.width * (actives.isEmpty() ? 0.6D : 0.3D)), 200, 250);
+		int listWidth = Mth.clamp((int)(this.width * (actives.isEmpty() ? 0.6D : 0.3D)), 200, 250);
 		int listSep = (ACTION_ICON_SIZE + ACTION_ICON_SEP * 2) / 2;
 		this.listPassives = new AbilityList(minecraft, isDoubleList ? (this.width / 2) + listSep : (this.width - listWidth) / 2, listWidth, this.height, 20);
 		if(!passives.isEmpty())
@@ -157,7 +153,7 @@ public class ScreenCharacterSheet extends Screen
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, yPos, 16777215);
 		yPos += 17;
 		drawCenteredString(matrixStack, this.font, this.speciesHeader, this.width / 2, yPos, 16777215);
-		int speciesWidth = this.font.getStringPropertyWidth(this.speciesHeader);
+		int speciesWidth = (int)this.font.getSplitter().stringWidth(this.speciesHeader);
 		if(mouseY >= yPos && mouseY <= (yPos + 9))
 			if(mouseX <= (this.width + speciesWidth) / 2 && mouseX >= (this.width - speciesWidth) / 2)
 			{
@@ -169,7 +165,7 @@ public class ScreenCharacterSheet extends Screen
 		yPos += 14;
 		
 		drawCenteredString(matrixStack, this.font, typesHeader, this.width / 2, yPos, -1);
-		int typesWidth = this.font.getStringPropertyWidth(typesHeader);
+		int typesWidth = (int)this.font.getSplitter().stringWidth(typesHeader);
 		if(mouseY >= yPos && mouseY <= (yPos + 9))
 			if(mouseX <= (this.width + typesWidth) / 2 && mouseX >= (this.width - typesWidth) / 2)
 			{
@@ -185,11 +181,11 @@ public class ScreenCharacterSheet extends Screen
 		this.listPassives.setTop(67);
 		if(this.isDoubleList)
 		{
-			ITextComponent activesTitle = new TranslationTextComponent("gui.varodd.character_sheet.actives");
-			this.font.drawString(matrixStack, activesTitle.getString(), this.listActives.getLeft() + this.listActives.getWidth() / 2 - this.font.getStringWidth(activesTitle.getString()) / 2, this.listActives.getTop() - 1 - this.font.FONT_HEIGHT, 4210752);
+			Component activesTitle = Component.translatable("gui.varodd.character_sheet.actives");
+			this.font.drawString(matrixStack, activesTitle.getSerializedName(), this.listActives.getLeft() + this.listActives.getWidth() / 2 - this.font.getStringWidth(activesTitle.getSerializedName()) / 2, this.listActives.getTop() - 1 - this.font.FONT_HEIGHT, 4210752);
 		}
-		ITextComponent passivesTitle = new TranslationTextComponent("gui.varodd.character_sheet.passives");
-		this.font.drawString(matrixStack, passivesTitle.getString(), this.listPassives.getLeft() + this.listPassives.getWidth() / 2 - this.font.getStringWidth(passivesTitle.getString()) / 2, this.listPassives.getTop() - 1 - this.font.FONT_HEIGHT, 4210752);
+		Component passivesTitle = Component.translatable("gui.varodd.character_sheet.passives");
+		this.font.drawString(matrixStack, passivesTitle.getSerializedName(), this.listPassives.getLeft() + this.listPassives.getWidth() / 2 - this.font.getStringWidth(passivesTitle.getSerializedName()) / 2, this.listPassives.getTop() - 1 - this.font.FONT_HEIGHT, 4210752);
 		
 		renderActionSet(matrixStack, mouseX, mouseY);
 		
@@ -304,11 +300,11 @@ public class ScreenCharacterSheet extends Screen
 		
 		if(hovered != null)
 		{
-			List<ITextProperties> tooltip = Lists.newArrayList();
+			List<FormattedText> tooltip = Lists.newArrayList();
 			String translated = hovered.translated().getString().toLowerCase();
 			if(this.actionSet.contains(hovered))
 			{
-				tooltip.add(new TranslationTextComponent("enum.varodd.type_action.does", translated));
+				tooltip.add(Component.translatable("enum.varodd.type_action.does", translated));
 				
 				if(hovered == EnumCreatureType.Action.BREATHES)
 					this.fluids.forEach((fluid) -> 
@@ -316,11 +312,11 @@ public class ScreenCharacterSheet extends Screen
 						String name = "air";
 						if(fluid != null)
 							name = fluid.getName().getPath();
-						tooltip.add(new StringTextComponent(" "+name));
+						tooltip.add(Component.literal(" "+name));
 					});
 			}
 			else
-				tooltip.add(new TranslationTextComponent("enum.varodd.type_action.doesnt", translated));
+				tooltip.add(Component.translatable("enum.varodd.type_action.doesnt", translated));
 			
 			renderWrappedToolTip(matrixStack, tooltip, mouseX, mouseY, this.font);
 		}

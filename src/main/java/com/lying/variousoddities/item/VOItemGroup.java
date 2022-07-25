@@ -4,22 +4,22 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 
-public abstract class VOItemGroup extends ItemGroup
+public abstract class VOItemGroup extends CreativeModeTab
 {
-	public static final ItemGroup EGGS = new VOItemGroup("eggs")
+	public static final CreativeModeTab EGGS = new VOItemGroup("eggs")
 	{
-		public ItemStack createIcon(){ return VOEntities.SPAWN_EGGS.get(VOEntities.KOBOLD).getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOEntities.SPAWN_EGGS.get(VOEntities.KOBOLD).getDefaultInstance(); }
 	};
-	public static final ItemGroup BLOCKS = new VOItemGroup("blocks")
+	public static final CreativeModeTab BLOCKS = new VOItemGroup("blocks")
 	{
-		public ItemStack createIcon(){ return VOItems.EGG_KOBOLD.getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOItems.EGG_KOBOLD.getDefaultInstance(); }
 	};
-	public static final ItemGroup LOOT = new VOItemGroup("loot")
+	public static final CreativeModeTab LOOT = new VOItemGroup("loot")
 	{
-		public ItemStack createIcon(){ return VOItems.SCALE_KOBOLD.getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOItems.SCALE_KOBOLD.getDefaultInstance(); }
 	};
 	
 	public VOItemGroup(String labelIn)
@@ -27,5 +27,5 @@ public abstract class VOItemGroup extends ItemGroup
 		super(Reference.ModInfo.MOD_ID+"."+labelIn);
 	}
 	
-	public abstract ItemStack createIcon();
+	public abstract ItemStack makeIcon();
 }

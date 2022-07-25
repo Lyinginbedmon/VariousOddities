@@ -6,10 +6,10 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.init.VOEntities;
 
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSit
 {
@@ -38,13 +38,13 @@ public class PacketSit
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			World world = context.getSender().getEntityWorld();
-			PlayerEntity player = world.getPlayerByUuid(msg.playerID);
+			Level world = context.getSender().getLevel();
+			Player player = world.getPlayerByUUID(msg.playerID);
 			if(player != null)
-				if(player.getRidingEntity() != null && player.getRidingEntity().getType() == VOEntities.WARG)
+				if(player.getVehicle() != null && player.getVehicle().getType() == VOEntities.WARG)
 				{
-					EntityWarg warg = (EntityWarg)player.getRidingEntity();
-					warg.func_233687_w_(msg.sitting);
+					EntityWarg warg = (EntityWarg)player.getVehicle();
+					warg.setOrderedToSit(msg.sitting);
 				}
 		}
 		context.setPacketHandled(true);

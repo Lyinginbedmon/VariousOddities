@@ -6,14 +6,9 @@ import java.util.List;
 import com.lying.variousoddities.enchantment.EnchantmentSilversheen;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraftforge.event.RegistryEvent.Register;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraftforge.registries.ForgeRegistries;
 
-@Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class VOEnchantments
 {
 	private static final List<Enchantment> ENCHANTMENTS = new ArrayList<>();
@@ -22,16 +17,10 @@ public class VOEnchantments
 	
 	private static Enchantment register(String name, Enchantment ench)
 	{
-		ench.setRegistryName(Reference.ModInfo.MOD_ID, name);
+		ForgeRegistries.ENCHANTMENTS.register(Reference.ModInfo.MOD_PREFIX+name, ench);
 		ENCHANTMENTS.add(ench);
 		return ench;
 	}
 	
-	@SubscribeEvent
-	public static void registerEnchantmentsEvent(Register<Enchantment> event)
-	{
-		IForgeRegistry<Enchantment> registry = event.getRegistry();
-		for(Enchantment ench : ENCHANTMENTS)
-			registry.register(ench);
-	}
+	public void init() { }
 }

@@ -15,20 +15,19 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeMod;
 
 /**
@@ -40,7 +39,7 @@ public interface IMagicEffect
 {
 	public String getSimpleName();
 	public default String getName(){ return "magic."+Reference.ModInfo.MOD_PREFIX+getSimpleName() + ".name"; }
-	public default String getTranslatedName(){ return (new TranslationTextComponent(getName())).getUnformattedComponentText(); }
+	public default String getTranslatedName(){ return (Component.translatable(getName())).getString(); }
 	
 	/** The level of this spell, typically between 0 and 9 */
 	public default int getLevel(){ return 0; }
@@ -78,9 +77,9 @@ public interface IMagicEffect
 	 */
 	public default boolean canCast(LivingEntity casterIn, ItemStack scrollIn)
 	{
-		if(getDurationType() == DurationType.CONCENTRATE && casterIn != null && casterIn.getEntityWorld() != null)
+		if(getDurationType() == DurationType.CONCENTRATE && casterIn != null && casterIn.getLevel() != null)
 		{
-			Map<ResourceLocation, List<SpellData>> activeOwnedSpells = SpellManager.get(casterIn.getEntityWorld()).getSpellsOwnedBy(casterIn);
+			Map<ResourceLocation, List<SpellData>> activeOwnedSpells = SpellManager.get(casterIn.getLevel()).getSpellsOwnedBy(casterIn);
 			for(ResourceLocation dim : activeOwnedSpells.keySet())
 				for(SpellData spell : activeOwnedSpells.get(dim))
 					if(!spell.isPermanent() && spell.getSpell().getDurationType() == DurationType.CONCENTRATE)
@@ -114,7 +113,7 @@ public interface IMagicEffect
 	 * Returns TRUE if the spell is considered to be at its object position instead of at the position of an affected entity.<br>
 	 * Usually FALSE for de/buff spells and spells with a PERSONAL range type.
 	 */
-	public default boolean activeFromObject(SpellData dataIn, World worldIn){ return getRangeType() != RangeType.PERSONAL; }
+	public default boolean activeFromObject(SpellData dataIn, Level worldIn){ return getRangeType() != RangeType.PERSONAL; }
 	
 	/**
 	 * Returns the caster level of players or IMobSpellcaster entities, or 0 if the caster is neither.
@@ -125,8 +124,8 @@ public interface IMagicEffect
 	{
 		if(casterIn != null)
 		{
-//			if(casterIn instanceof PlayerEntity)
-//				return VOPlayerData.getCasterLevel((PlayerEntity)casterIn);
+//			if(casterIn instanceof Player)
+//				return VOPlayerData.getCasterLevel((Player)casterIn);
 			if(casterIn instanceof IMobSpellcaster)
 				return ((IMobSpellcaster)casterIn).getCasterLevel();
 		}
@@ -136,9 +135,9 @@ public interface IMagicEffect
 	
 	public default EnumCastingError getFullCastingState(LivingEntity casterIn, ItemStack scrollIn)
 	{
-		if(getDurationType() == DurationType.CONCENTRATE && casterIn != null && casterIn.getEntityWorld() != null)
+		if(getDurationType() == DurationType.CONCENTRATE && casterIn != null && casterIn.getLevel() != null)
 		{
-			Map<ResourceLocation, List<SpellData>> activeOwnedSpells = SpellManager.get(casterIn.getEntityWorld()).getSpellsOwnedBy(casterIn);
+			Map<ResourceLocation, List<SpellData>> activeOwnedSpells = SpellManager.get(casterIn.getLevel()).getSpellsOwnedBy(casterIn);
 			for(ResourceLocation dim : activeOwnedSpells.keySet())
 				for(SpellData spell : activeOwnedSpells.get(dim))
 					if(!spell.isPermanent() && spell.getSpell().getDurationType() == DurationType.CONCENTRATE)
@@ -221,7 +220,7 @@ public interface IMagicEffect
 	public default boolean isEditable(){ return false; }
 	
 	/** Opens the corresponding UI for editing the variables of this spell */
-	public default void edit(PlayerEntity playerIn, SpellData dataIn, World worldIn){ }
+	public default void edit(Player playerIn, SpellData dataIn, Level worldIn){ }
 	
 	/** True if the spell object should never be visible */
 	public default boolean shouldHideEntity(){ return false; }
@@ -250,13 +249,13 @@ public interface IMagicEffect
 	public default double getTargetRange(Entity casterIn){ return RangeType.getRange(casterIn, this); }
 	
 	/** Called by SpellData when it first updates, chiefly meant for Instantaneous effects */
-	public default void doEffectStart(SpellData data, World world, Side onSide){ }
-	public void doEffect(SpellData data, World world, int ticksActive, Side onSide);
+	public default void doEffectStart(SpellData data, Level world, Side onSide){ }
+	public void doEffect(SpellData data, Level world, int ticksActive, Side onSide);
 	/** Called by SpellData when it is destroyed before its duration completes */
-	public default void doEffectCancel(SpellData data, World world, Side onSide){ doEffect(data, world, getDuration(data.casterLevel()), onSide); }
+	public default void doEffectCancel(SpellData data, Level world, Side onSide){ doEffect(data, world, getDuration(data.casterLevel()), onSide); }
 	
 //	@OnlyIn(Dist.CLIENT)
-//	public default void renderEffect(SpellData dataIn, int activeTime, World world, double x, double y, double z, float entityYaw, float partialTicks, RenderManager rendererIn){ }
+//	public default void renderEffect(SpellData dataIn, int activeTime, Level world, double x, double y, double z, float entityYaw, float partialTicks, RenderManager rendererIn){ }
 	
 	public MagicSchool getSchool();
 	public List<MagicSubType> getDescriptors();
@@ -268,7 +267,7 @@ public interface IMagicEffect
 		SOMATIC,
 		VERBAL;
 		
-		public String translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_PREFIX+"components."+this.name().toLowerCase())).getUnformattedComponentText(); }
+		public String translatedName(){ return (Component.translatable("enum."+Reference.ModInfo.MOD_PREFIX+"components."+this.name().toLowerCase())).getString(); }
 		
 		/** Returns true if the given caster could fulfill this component's requirement */
 		public boolean isValid(LivingEntity casterIn, IMagicEffect spellIn)
@@ -277,12 +276,12 @@ public interface IMagicEffect
 			switch(this)
 			{
 				case FOCUS:
-					if(casterIn instanceof PlayerEntity && ((PlayerEntity)casterIn).isCreative()) return true;
+					if(casterIn instanceof Player && ((Player)casterIn).isCreative()) return true;
 					
 					boolean focusFound = false;
-					for(Hand hand : Hand.values())
+					for(InteractionHand hand : InteractionHand.values())
 					{
-						ItemStack heldItem = casterIn.getHeldItem(hand);
+						ItemStack heldItem = casterIn.getItemInHand(hand);
 						if(spellIn.itemMatchesFocus(heldItem))
 						{
 							focusFound = true;
@@ -290,12 +289,12 @@ public interface IMagicEffect
 						}
 					}
 					
-					if(!focusFound && casterIn instanceof PlayerEntity)
+					if(!focusFound && casterIn instanceof Player)
 					{
-						PlayerEntity player = (PlayerEntity)casterIn;
+						Player player = (Player)casterIn;
 						for(int slot=0; slot<9; slot++)
 						{
-							ItemStack heldItem = player.inventory.getStackInSlot(slot);
+							ItemStack heldItem = player.getInventory().getItem(slot);
 							if(spellIn.itemMatchesFocus(heldItem))
 							{
 								focusFound = true;
@@ -306,10 +305,10 @@ public interface IMagicEffect
 					
 					return focusFound;
 				case MATERIAL:
-					if(casterIn instanceof PlayerEntity && ((PlayerEntity)casterIn).isCreative()) ;
+					if(casterIn instanceof Player && ((Player)casterIn).isCreative()) ;
 					else
 					{
-						PlayerEntity player = casterIn instanceof PlayerEntity ? (PlayerEntity)casterIn : null;
+						Player player = casterIn instanceof Player ? (Player)casterIn : null;
 						for(ItemStack material : spellIn.getMaterialComponents())
 						{
 							int count = material.getCount();
@@ -317,9 +316,9 @@ public interface IMagicEffect
 							// Check player inventory
 							if(player != null)
 							{
-								for(int slot=0; slot<player.inventory.getSizeInventory(); slot++)
+								for(int slot=0; slot<player.getInventory().getContainerSize(); slot++)
 								{
-									ItemStack heldItem = player.inventory.getStackInSlot(slot);
+									ItemStack heldItem = player.getInventory().getItem(slot);
 									if(heldItem.isEmpty()) continue;
 									if(isMatchingItem(heldItem, material)) count -= Math.min(count, heldItem.getCount());
 								}
@@ -327,17 +326,17 @@ public interface IMagicEffect
 							else
 							{
 								// Check held items
-								for(Hand hand : Hand.values())
+								for(InteractionHand hand : InteractionHand.values())
 								{
-									ItemStack heldItem = casterIn.getHeldItem(hand);
+									ItemStack heldItem = casterIn.getItemInHand(hand);
 									if(heldItem.isEmpty()) continue;
 									if(isMatchingItem(heldItem, material)) count -= Math.min(count, heldItem.getCount());
 								}
 								
 								// Check armour slots
-								for(EquipmentSlotType hand : EquipmentSlotType.values())
+								for(EquipmentSlot hand : EquipmentSlot.values())
 								{
-									ItemStack heldItem = casterIn.getItemStackFromSlot(hand);
+									ItemStack heldItem = casterIn.getItemBySlot(hand);
 									if(heldItem.isEmpty()) continue;
 									if(isMatchingItem(heldItem, material)) count -= Math.min(count, heldItem.getCount());
 								}
@@ -369,39 +368,39 @@ public interface IMagicEffect
 				case MATERIAL:
 	    			for(ItemStack item : spellIn.getMaterialComponents())
 	    			{
-	    				if(casterIn instanceof PlayerEntity)
+	    				if(casterIn instanceof Player)
 	    				{
-//	    					PlayerEntity player = (PlayerEntity)casterIn;
+//	    					Player player = (Player)casterIn;
 //	    					if(!player.isCreative())
 //	    						player.inventory.clearMatchingItems(item.getItem(), item.getMetadata(), item.getCount(), item.hasTag() ? item.getTag() : null);
 	    				}
 	    				else
 	    				{
 		    				int count = item.getCount();
-		    				for(Hand hand : Hand.values())
+		    				for(InteractionHand hand : InteractionHand.values())
 		    				{
 								if(count <= 0) break;
-		    					ItemStack heldItem = casterIn.getHeldItem(hand);
+		    					ItemStack heldItem = casterIn.getItemInHand(hand);
 		    					if(heldItem.isEmpty()) continue;
 								if(isMatchingItem(heldItem, item))
 								{
 									int dif = Math.min(count, heldItem.getCount());
 									count -= dif;
-									if(dif >= heldItem.getCount()) casterIn.setHeldItem(hand, ItemStack.EMPTY);
+									if(dif >= heldItem.getCount()) casterIn.setItemInHand(hand, ItemStack.EMPTY);
 									else heldItem.setCount(heldItem.getCount() - dif);
 								}
 		    				}
 		    				
-		    				for(EquipmentSlotType slot : EquipmentSlotType.values())
+		    				for(EquipmentSlot slot : EquipmentSlot.values())
 		    				{
 		    					if(count <= 0) break;
-		    					ItemStack heldItem = casterIn.getItemStackFromSlot(slot);
+		    					ItemStack heldItem = casterIn.getItemBySlot(slot);
 		    					if(heldItem.isEmpty()) continue;
 								if(isMatchingItem(heldItem, item))
 								{
 									int dif = Math.min(count, heldItem.getCount());
 									count -= dif;
-									if(dif >= heldItem.getCount()) casterIn.setItemStackToSlot(slot, ItemStack.EMPTY);
+									if(dif >= heldItem.getCount()) casterIn.setItemSlot(slot, ItemStack.EMPTY);
 									else heldItem.setCount(heldItem.getCount() - dif);
 								}
 		    				}
@@ -413,7 +412,7 @@ public interface IMagicEffect
 		
 		private boolean isMatchingItem(ItemStack heldItem, ItemStack item)
 		{
-			return heldItem.isItemEqual(item);
+			return heldItem.sameItem(item);
 		}
 	}
 	
@@ -424,7 +423,7 @@ public interface IMagicEffect
 		PERMANENT,
 		CONCENTRATE;
 		
-		public String translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_PREFIX+"magic_duration."+this.name().toLowerCase())).getUnformattedComponentText(); }
+		public String translatedName(){ return (Component.translatable("enum."+Reference.ModInfo.MOD_PREFIX+"magic_duration."+this.name().toLowerCase())).getString(); }
 	}
 	
 	public enum RangeType
@@ -437,7 +436,7 @@ public interface IMagicEffect
 		FEET,
 		UNLIMITED;
 		
-		public String translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_PREFIX+"magic_range."+this.name().toLowerCase())).getUnformattedComponentText(); }
+		public String translatedName(){ return (Component.translatable("enum."+Reference.ModInfo.MOD_PREFIX+"magic_range."+this.name().toLowerCase())).getString(); }
 		
 		public static double getRange(Entity caster, IMagicEffect spell)
 		{
@@ -447,7 +446,7 @@ public interface IMagicEffect
 			switch(spell.getRangeType())
 			{
 				case PERSONAL:
-				case TOUCH:		return (caster != null && caster instanceof PlayerEntity) ? ((PlayerEntity)caster).getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue() : 5D;
+				case TOUCH:		return (caster != null && caster instanceof Player) ? ((Player)caster).getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue() : 5D;
 				case CLOSE:		return Spell.feetToMetres(25 + Math.floor(CL / 2) * 5);
 				case MEDIUM:	return Spell.feetToMetres(100 + CL * 10);
 				case LONG:		return Spell.feetToMetres(400 + CL * 40);
@@ -469,41 +468,41 @@ public interface IMagicEffect
 		CUSTOM;
 	}
 	
-	public enum MagicSchool implements IStringSerializable
+	public enum MagicSchool implements StringRepresentable
 	{
-		ABJURATION(-1, TextFormatting.GRAY),
-		CONJURATION(16449280, TextFormatting.YELLOW),
-		DIVINATION(61695, TextFormatting.AQUA),
-		ENCHANTMENT(16711848, TextFormatting.LIGHT_PURPLE),
-		EVOCATION(16711680, TextFormatting.RED),
-		ILLUSION(10354943, TextFormatting.DARK_PURPLE),
-		NECROMANCY(0, TextFormatting.DARK_GRAY),
-		TRANSMUTATION(65305, TextFormatting.GREEN);
+		ABJURATION(-1, ChatFormatting.GRAY),
+		CONJURATION(16449280, ChatFormatting.YELLOW),
+		DIVINATION(61695, ChatFormatting.AQUA),
+		ENCHANTMENT(16711848, ChatFormatting.LIGHT_PURPLE),
+		EVOCATION(16711680, ChatFormatting.RED),
+		ILLUSION(10354943, ChatFormatting.DARK_PURPLE),
+		NECROMANCY(0, ChatFormatting.DARK_GRAY),
+		TRANSMUTATION(65305, ChatFormatting.GREEN);
 		
 		private final int colour;
-		private final TextFormatting textColour;
+		private final ChatFormatting textColour;
 		
-		private MagicSchool(int colourIn, TextFormatting textIn)
+		private MagicSchool(int colourIn, ChatFormatting textIn)
 		{
 			colour = colourIn;
 			textColour = textIn;
 		}
 		
-		public String getString(){ return this.name().toLowerCase(); }
+		public String getSerializedName(){ return this.name().toLowerCase(); }
 		public int getColour(){ return this.colour; }
-		public TextFormatting getTextColour(){ return this.textColour; }
-		public ITextComponent translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".magic_school."+getString())); }
+		public ChatFormatting getTextColour(){ return this.textColour; }
+		public Component translatedName(){ return (Component.translatable("enum."+Reference.ModInfo.MOD_ID+".magic_school."+getSerializedName())); }
 		
 		public static MagicSchool fromString(String nameIn)
 		{
 			for(MagicSchool school : values())
-				if(school.getString().equalsIgnoreCase(nameIn))
+				if(school.getSerializedName().equalsIgnoreCase(nameIn))
 					return school;
 			return null;
 		}
 	}
 	
-	public enum MagicSubType implements IStringSerializable
+	public enum MagicSubType implements StringRepresentable
 	{
 		ACID,
 		AIR,
@@ -540,12 +539,12 @@ public interface IMagicEffect
 		public static MagicSubType fromString(String nameIn)
 		{
 			for(MagicSubType subtype : values())
-				if(subtype.getString().equalsIgnoreCase(nameIn))
+				if(subtype.getSerializedName().equalsIgnoreCase(nameIn))
 					return subtype;
 			return null;
 		}
 		
-		public String getString(){ return this.name().toLowerCase(); }
-		public ITextComponent translatedName(){ return (new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".magic_subtype."+getString())); }
+		public String getSerializedName(){ return this.name().toLowerCase(); }
+		public Component translatedName(){ return (Component.translatable("enum."+Reference.ModInfo.MOD_ID+".magic_subtype."+getSerializedName())); }
 	}
 }

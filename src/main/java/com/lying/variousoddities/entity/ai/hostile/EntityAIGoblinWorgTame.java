@@ -9,27 +9,27 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.MobEffectInstance;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.level.Level;
 
 public class EntityAIGoblinWorgTame extends Goal
 {
-	private final World theWorld;
+	private final Level theWorld;
 	private final EntityGoblin theGoblin;
-	private final PathNavigator theNavigator;
+	private final PathNavigation theNavigator;
 	
-	private final Predicate<WolfEntity> searchPredicate = new Predicate<WolfEntity>()
+	private final Predicate<Wolf> searchPredicate = new Predicate<Wolf>()
 	{
-		public boolean apply(WolfEntity input)
+		public boolean apply(Wolf input)
 		{
-			return input.isAlive() && !input.isTamed() && !input.isChild() && input.getAttackTarget() == null;
+			return input.isAlive() && !input.isTame() && !input.isBaby() && input.getTarget() == null;
 		}
 	};
-	private WolfEntity targetWolf;
+	private Wolf targetWolf;
 	
 	private State currentState = null;
 	private int tamingTimer = Reference.Values.TICKS_PER_SECOND * 10;
@@ -37,15 +37,15 @@ public class EntityAIGoblinWorgTame extends Goal
 	public EntityAIGoblinWorgTame(EntityGoblin goblinIn)
 	{
 		this.theGoblin = goblinIn;
-		theWorld = goblinIn.getEntityWorld();
-		theNavigator = goblinIn.getNavigator();
+		theWorld = goblinIn.getLevel();
+		theNavigator = goblinIn.getNavigation();
 		setMutexFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
 		double minDist = Double.MAX_VALUE;
-		for(WolfEntity wolf : theWorld.<WolfEntity>getEntitiesWithinAABB(WolfEntity.class, theGoblin.getBoundingBox().grow(8D), searchPredicate))
+		for(Wolf wolf : theWorld.<Wolf>getEntitiesOfClass(Wolf.class, theGoblin.getBoundingBox().inflate(8D), searchPredicate))
 		{
 			double dist = wolf.getDistanceSq(theGoblin);
 			if(dist < minDist)
@@ -55,7 +55,7 @@ public class EntityAIGoblinWorgTame extends Goal
 			}
 		}
 		
-		return targetWolf != null && theGoblin.getAttackTarget() == null && theGoblin.getRNG().nextInt(100) == 0;
+		return targetWolf != null && theGoblin.getTarget() == null && theGoblin.getRandom().nextInt(100) == 0;
 	}
 	
 	public boolean shouldContinueExecuting()
@@ -100,14 +100,14 @@ public class EntityAIGoblinWorgTame extends Goal
 				else currentState = State.TAMING;
 				break;
 			case TAMING:
-				targetWolf.addPotionEffect(new EffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
+				targetWolf.addEffect(new MobEffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
 				if(--tamingTimer <= 0)
 				{
 					// TODO Ensure goblin arm swing during worg taming
-					theGoblin.swing(Hand.MAIN_HAND, true);
+					theGoblin.swing(InteractionHand.MAIN_HAND, true);
 					EntityWorg theWorg = VOEntities.WORG.create(theWorld);
 					theWorg.setHealth(targetWolf.getHealth());
-					theWorg.addPotionEffect(new EffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
+					theWorg.addEffect(new MobEffectInstance(VOPotions.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
 					
 					if(targetWolf.hasCustomName())
 						theWorg.setCustomName(targetWolf.getCustomName());
@@ -115,14 +115,14 @@ public class EntityAIGoblinWorgTame extends Goal
 					theWorg.setPositionAndRotation(targetWolf.getPosX(), targetWolf.getPosY(), targetWolf.getPosZ(), targetWolf.rotationYaw, targetWolf.rotationPitch);
 					
 					targetWolf.remove();
-					theWorld.addEntity(theWorg);
+					theWorld.addFreshEntity(theWorg);
 					theWorld.setEntityState(theWorg, (byte)7);
 					
 					currentState = null;
 				}
 				else if(tamingTimer%Reference.Values.TICKS_PER_SECOND == 0)
 				{
-					theGoblin.swing(Hand.MAIN_HAND, true);
+					theGoblin.swing(InteractionHand.MAIN_HAND, true);
 					theWorld.setEntityState(targetWolf, (byte)6);
 				}
 				break;

@@ -2,9 +2,9 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.capabilities.LivingData;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 
 public abstract class ActivatedAbility extends Ability
@@ -19,14 +19,14 @@ public abstract class ActivatedAbility extends Ability
 		this.default_cooldown = this.cooldown = cooldownIn;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putInt("Cooldown", getCooldown());
 		compound.putInt("Active", this.activeTicks);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.cooldown = compound.contains("Cooldown", 3) ? compound.getInt("Cooldown") : this.default_cooldown;
 		this.activeTicks = compound.contains("Active", 3) ? compound.getInt("Active") : 0;

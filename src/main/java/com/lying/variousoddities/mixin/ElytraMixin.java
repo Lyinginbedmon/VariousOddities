@@ -12,8 +12,8 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 
 @Mixin(LivingEntity.class)
 public class ElytraMixin extends EntityMixin

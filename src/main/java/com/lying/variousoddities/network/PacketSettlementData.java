@@ -6,16 +6,15 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSettlementData
 {
-	private CompoundNBT data = new CompoundNBT();
+	private CompoundTag data = new CompoundTag();
 	
 	public PacketSettlementData(){ }
-	public PacketSettlementData(CompoundNBT dataIn)
+	public PacketSettlementData(CompoundTag dataIn)
 	{
 		data = dataIn;
 	}
@@ -47,7 +46,7 @@ public class PacketSettlementData
 		SettlementManager manager;
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			manager = SettlementManager.get(context.getSender().getServerWorld());
+			manager = SettlementManager.get(context.getSender().getLevel());
 			manager.notifyObserver(context.getSender());
 		}
 		else

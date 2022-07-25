@@ -30,14 +30,14 @@ import com.lying.variousoddities.species.abilities.IBonusJumpAbility.JumpType;
 import com.lying.variousoddities.species.abilities.ICompoundAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 
 public class Abilities
@@ -62,24 +62,24 @@ public class Abilities
 	/** Synchronise this object with surrounding entities */
 	public void markDirty()
 	{
-		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
+		if(this.entity != null && !this.entity.getLevel().isClientSide)
 		{
-			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUniqueID(), serializeNBT());
-			PacketHandler.sendToNearby(entity.getEntityWorld(), entity, packet);
+			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUUID(), serializeNBT());
+			PacketHandler.sendToNearby(entity.getLevel(), entity, packet);
 		}
 	}
 	
 	public void markForRecache(){ this.cacheDirty = true; }
 	
-	public CompoundNBT serializeNBT()
+	public CompoundTag serializeNBT()
 	{
-		CompoundNBT compound = new CompoundNBT();
+		CompoundTag compound = new CompoundTag();
 		if(!customAbilities.isEmpty())
 		{
-			ListNBT abilityList = new ListNBT();
+			ListTag abilityList = new ListTag();
 			for(Ability ability : customAbilities.values())
 			{
-				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				CompoundTag abilityData = ability.writeAtomically(new CompoundTag());
 				ResourceLocation mapName = ability.getMapName();
 				
 				if(isAbilityOnCooldown(mapName))
@@ -94,10 +94,10 @@ public class Abilities
 		}
 		if(!cachedAbilities.isEmpty())
 		{
-			ListNBT abilityList = new ListNBT();
+			ListTag abilityList = new ListTag();
 			for(Ability ability : cachedAbilities.values())
 			{
-				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				CompoundTag abilityData = ability.writeAtomically(new CompoundTag());
 				ResourceLocation mapName = ability.getMapName();
 				
 				if(isAbilityOnCooldown(mapName))
@@ -115,7 +115,7 @@ public class Abilities
 		return compound;
 	}
 	
-	public void deserializeNBT(CompoundNBT nbt)
+	public void deserializeNBT(CompoundTag nbt)
 	{
 		this.customAbilities.clear();
 		this.cachedAbilities.clear();
@@ -123,11 +123,11 @@ public class Abilities
 		
 		if(nbt.contains("Abilities", 9))
 		{
-			ListNBT abilityList = nbt.getList("Abilities", 10);
+			ListTag abilityList = nbt.getList("Abilities", 10);
 			this.favourites = new ResourceLocation[this.favourites.length];
 			for(int i=0; i<abilityList.size(); i++)
 			{
-				CompoundNBT abilityData = abilityList.getCompound(i);
+				CompoundTag abilityData = abilityList.getCompound(i);
 				Ability ability = AbilityRegistry.getAbility(abilityData);
 				if(ability != null)
 				{
@@ -144,11 +144,11 @@ public class Abilities
 		}
 		if(nbt.contains("CachedAbilities", 9))
 		{
-			ListNBT abilityList = nbt.getList("CachedAbilities", 10);
+			ListTag abilityList = nbt.getList("CachedAbilities", 10);
 			this.favourites = new ResourceLocation[this.favourites.length];
 			for(int i=0; i<abilityList.size(); i++)
 			{
-				CompoundNBT abilityData = abilityList.getCompound(i);
+				CompoundTag abilityData = abilityList.getCompound(i);
 				Ability ability = AbilityRegistry.getAbility(abilityData);
 				if(ability != null)
 				{
@@ -214,8 +214,8 @@ public class Abilities
 		{
 			ability.onAbilityRemoved(this.entity);
 			MinecraftForge.EVENT_BUS.post(new AbilityRemoveEvent(this.entity, ability, this));
-			if(this.entity.getType() == EntityType.PLAYER && !this.entity.getEntityWorld().isRemote)
-				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketAbilityRemove(ability.getMapName()));
+			if(this.entity.getType() == EntityType.PLAYER && !this.entity.getLevel().isClientSide)
+				PacketHandler.sendTo((ServerPlayer)this.entity, new PacketAbilityRemove(ability.getMapName()));
 		}
 		this.customAbilities.remove(mapName);
 		markForRecache();
@@ -314,7 +314,7 @@ public class Abilities
 	public void tick()
 	{
 		boolean dirty = false;
-		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
+		if(this.entity != null && !this.entity.getLevel().isClientSide)
 		{
 			// Refresh cached abilities
 			if(this.cacheDirty)
@@ -334,7 +334,7 @@ public class Abilities
 			if(!finishedCooldowns.isEmpty())
 			{
 				if(this.entity.getType() == EntityType.PLAYER)
-					PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketAbilityCooldown());
+					PacketHandler.sendTo((ServerPlayer)this.entity, new PacketAbilityCooldown());
 				dirty = true;
 			}
 			
@@ -505,7 +505,7 @@ public class Abilities
 			ability.onAbilityRemoved(this.entity);
 			MinecraftForge.EVENT_BUS.post(new AbilityRemoveEvent(this.entity, ability, this));
 			if(this.entity.getType() == EntityType.PLAYER)
-				PacketHandler.sendTo((ServerPlayerEntity)this.entity, new PacketAbilityRemove(mapname));
+				PacketHandler.sendTo((ServerPlayer)this.entity, new PacketAbilityRemove(mapname));
 			uncacheAbility(mapname);
 		});
 		
@@ -548,7 +548,7 @@ public class Abilities
 			
 			IBonusJumpAbility jump = (IBonusJumpAbility)ability;
 			// Start and/or increment jump timer
-			if(jump.isValid(this.entity, this.entity.getEntityWorld()) && (this.currentJumpType == null || this.currentJumpType == jump.jumpType()))
+			if(jump.isValid(this.entity, this.entity.getLevel()) && (this.currentJumpType == null || this.currentJumpType == jump.jumpType()))
 			{
 				this.currentJumpType = jump.jumpType();
 				if(!canBonusJump)
@@ -577,7 +577,7 @@ public class Abilities
 	/** Returns true if the entity is alive, not mounted, and not sleeping */
 	public static boolean canBonusJump(@Nullable LivingEntity entity)
 	{
-		return entity != null && entity.isAlive() && entity.getRidingEntity() == null && !entity.isSleeping();
+		return entity != null && entity.isAlive() && entity.getVehicle() == null && !entity.isSleeping();
 	}
 	
 	public void doAirJump()
@@ -593,11 +593,11 @@ public class Abilities
 			return;
 		
 		double scale = flight.flySpeed();
-		Vector3d motion = entity.getLookVec();
-		entity.setMotion(motion.x * scale, motion.y * scale, motion.z * scale);
+		Vec3 motion = entity.getLookAngle();
+		entity.push(motion.x * scale, motion.y * scale, motion.z * scale);
 		
-		if(entity.getRNG().nextInt(4) == 0)
-			entity.getEntityWorld().playSound(entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, entity.getSoundCategory(), 5.0F, 0.8F + entity.getRNG().nextFloat() * 0.3F, false);
+		if(entity.getRandom().nextInt(4) == 0)
+			entity.getLevel().playSound(null, entity.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, entity.getSoundSource(), 5.0F, 0.8F + entity.getRandom().nextFloat() * 0.3F);
 		
 		resetBonusJump();
 	}
@@ -611,10 +611,10 @@ public class Abilities
 			return;
 		
 		double scale = 0.7D;
-		Vector3d motion = entity.getLookVec();
-		entity.addVelocity(motion.x * scale, motion.y * scale, motion.z * scale);
+		Vec3 motion = entity.getLookAngle();
+		entity.push(motion.x * scale, motion.y * scale, motion.z * scale);
 		
-		entity.getEntityWorld().playSound(entity.getPosX(), entity.getPosY(), entity.getPosZ(), SoundEvents.ITEM_TRIDENT_RIPTIDE_1, entity.getSoundCategory(), 5.0F, 0.8F + entity.getRNG().nextFloat() * 0.3F, false);
+		entity.getLevel().playSound(null, entity.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_1, entity.getSoundSource(), 5.0F, 0.8F + entity.getRandom().nextFloat() * 0.3F);
 		
 		resetBonusJump();
 	}

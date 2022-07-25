@@ -19,30 +19,28 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.command.arguments.BlockPosArgument;
-import net.minecraft.command.arguments.NBTCompoundTagArgument;
-import net.minecraft.command.arguments.ResourceLocationArgument;
-import net.minecraft.command.arguments.SuggestionProviders;
-import net.minecraft.command.arguments.Vec3Argument;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.CompoundTagArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.commands.synchronization.SuggestionProviders;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponentUtils;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.util.text.event.ClickEvent;
-import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 
 public class CommandSettlement extends CommandBase
 {
@@ -50,39 +48,37 @@ public class CommandSettlement extends CommandBase
 	
 	public String getName(){ return "settlement"; }
 	
-	public String getUsage(PlayerEntity sender)
+	public String getUsage(Player sender)
 	{
 		return translationSlug+"usage";
 	}
 	
-	public static void register(CommandDispatcher<CommandSource> dispatcher)
+	public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
 	{
-		LiteralArgumentBuilder<CommandSource> literal = newLiteral("settlement").requires((source) -> { return source.hasPermissionLevel(2); } )
+		dispatcher.register(Commands.literal("settlement").requires((source) -> { return source.hasPermission(2); } )
 			.then(VariantList.build())
 			.then(VariantHere.build())
 			.then(VariantRemove.build())
 			.then(VariantAdd.build())
 			.then(VariantEdit.build())
 			.then(VariantMove.build())
-			.then(VariantRoom.build());
-		
-		dispatcher.register(literal);
+			.then(VariantRoom.build()));
 	}
 	
 	/** Notify the given source that the desired settlement was not found */
-	public static void notifyUnknownSettlement(CommandSource source)
+	public static void notifyUnknownSettlement(CommandSourceStack source)
 	{
-		source.sendFeedback(makeErrorMessage(translationSlug+"failed_unknown"), true);
+		source.sendFailure(makeErrorMessage(translationSlug+"failed_unknown"));
 	}
 	
-	public static ITextComponent makeErrorMessage(String translation, Object... args)
+	public static Component makeErrorMessage(String translation, Object... args)
 	{
-		return new TranslationTextComponent(translation, args).modifyStyle((style) -> {
-			return style.setFormatting(TextFormatting.RED);
+		return Component.translatable(translation, args).withStyle((style) -> {
+			return style.applyFormat(ChatFormatting.RED);
 		});
 	}
     
-    public static void notifyListenerOfRoom(int index, BoxRoom room, CommandSource source)
+    public static void notifyListenerOfRoom(int index, BoxRoom room, CommandSourceStack source)
     {
     	BlockPos min = room.min();
     	int minX = min.getX();
@@ -94,33 +90,33 @@ public class CommandSettlement extends CommandBase
     	int maxY = max.getY();
     	int maxZ = max.getZ();
 		if(room.hasCustomName())
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.room.index_name", new Object[]{index, room.getName(), room.getFunction().getName(), minX, minY, minZ, maxX, maxY, maxZ}), false);
+			source.sendSuccess(Component.translatable(translationSlug+"list.room.index_name", new Object[]{index, room.getName(), room.getFunction().getName(), minX, minY, minZ, maxX, maxY, maxZ}), false);
 		else
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"list.room.index", new Object[]{index, room.getFunction().getName(), minX, minY, minZ, maxX, maxY, maxZ}), false);
+			source.sendSuccess(Component.translatable(translationSlug+"list.room.index", new Object[]{index, room.getFunction().getName(), minX, minY, minZ, maxX, maxY, maxZ}), false);
     }
     
-    public static void notifyListenerOfSettlement(Settlement settlement, SettlementManager manager, CommandSource source)
+    public static void notifyListenerOfSettlement(Settlement settlement, SettlementManager manager, CommandSourceStack source)
     {
 		int index = manager.getIndexBySettlement(settlement);
 		if(settlement.hasCustomName())
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"index_name", new Object[]{index, settlement.getCustomName(), settlement.typeName()}), false);
+			source.sendSuccess(Component.translatable(translationSlug+"index_name", new Object[]{index, settlement.getCustomName(), settlement.typeName()}), false);
 		else
-			source.sendFeedback(new TranslationTextComponent(translationSlug+"index",new Object[]{index, settlement.typeName()}), false);
+			source.sendSuccess(Component.translatable(translationSlug+"index",new Object[]{index, settlement.typeName()}), false);
     }
     
-    public static ITextComponent translateSettlementDetails(Settlement settlement, SettlementManager manager, boolean link)
+    public static Component translateSettlementDetails(Settlement settlement, SettlementManager manager, boolean link)
     {
 		int index = manager.getIndexBySettlement(settlement);
 		
-		IFormattableTextComponent component = 
+		MutableComponent component = 
 				settlement.hasCustomName() ? 
-						new TranslationTextComponent(translationSlug+"index_name", index, settlement.getCustomName(), settlement.typeName()) :  
-						new TranslationTextComponent(translationSlug+"index", index, settlement.typeName());
+						Component.translatable(translationSlug+"index_name", index, settlement.getCustomName(), settlement.typeName()) :  
+						Component.translatable(translationSlug+"index", index, settlement.typeName());
 		
 		if(link)
 		{
-			component = TextComponentUtils.wrapWithSquareBrackets(component).modifyStyle((p_211752_2_) -> {
-	            return p_211752_2_.setFormatting(TextFormatting.DARK_AQUA).setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/settlement list "+index))).setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslationTextComponent(translationSlug+"list.more_info")));
+			component = ComponentUtils.wrapInSquareBrackets(component).withStyle((p_211752_2_) -> {
+	            return p_211752_2_.applyFormat(ChatFormatting.DARK_AQUA).withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, String.valueOf("/settlement list "+index))).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(translationSlug+"list.more_info")));
 	         });
 		}
 		return component;
@@ -128,42 +124,42 @@ public class CommandSettlement extends CommandBase
     
     private static class VariantList
     {
-		public static final SimpleCommandExceptionType LIST_FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent(translationSlug+"list.failed"));
+		public static final SimpleCommandExceptionType LIST_FAILED_EXCEPTION = new SimpleCommandExceptionType(Component.translatable(translationSlug+"list.failed"));
     	
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("list")
+    		return Commands.literal("list")
     				.executes(VariantList::listAllSettlements)
-    				.then(newArgument("name", StringArgumentType.string())
+    				.then(Commands.argument("name", StringArgumentType.string())
     					.executes(VariantList::listTargetSettlementName))
-    				.then(newArgument("index", IntegerArgumentType.integer(0))
+    				.then(Commands.argument("index", IntegerArgumentType.integer(0))
     					.executes(VariantList::listTargetSettlementIndex));
     	}
     	
     	/** List all settlements in chat, including embedded commands to detail specific ones */
-    	public static int listAllSettlements(final CommandContext<CommandSource> source) throws CommandSyntaxException
+    	public static int listAllSettlements(final CommandContext<CommandSourceStack> source) throws CommandSyntaxException
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		
     		if(manager.isEmpty())
     			throw LIST_FAILED_EXCEPTION.create();
     		else
     		{
 				Collection<Settlement> settlements = manager.getSettlements();
-				source.getSource().sendFeedback(new TranslationTextComponent(translationSlug+"list.success", settlements.size()), true);
+				source.getSource().sendSuccess(Component.translatable(translationSlug+"list.success", settlements.size()), true);
 				for(Settlement settlement : settlements)
-					source.getSource().sendFeedback(new StringTextComponent("-").append(CommandSettlement.translateSettlementDetails(settlement, manager, true)), false);
+					source.getSource().sendSuccess(Component.literal("-").append(CommandSettlement.translateSettlementDetails(settlement, manager, true)), false);
     		}
     		
     		return manager.getSettlements().size();
     	}
     	
     	/** List a settlement in chat, including the details of all rooms */
-    	private static int listSettlement(Settlement settlement, SettlementManager manager, CommandSource source)
+    	private static int listSettlement(Settlement settlement, SettlementManager manager, CommandSourceStack source)
     	{
     		if(settlement != null)
     		{
-    			source.sendFeedback(CommandSettlement.translateSettlementDetails(settlement, manager, false), true);
+    			source.sendSuccess(CommandSettlement.translateSettlementDetails(settlement, manager, false), true);
 				if(settlement.hasRooms())
 				{
 					int index = 0;
@@ -177,22 +173,22 @@ public class CommandSettlement extends CommandBase
     		return 0;
     	}
     	
-    	public static int listTargetSettlementName(final CommandContext<CommandSource> source)
+    	public static int listTargetSettlementName(final CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		return listSettlement(manager.getSettlementByName(StringArgumentType.getString(source, "name")), manager, source.getSource());
     	}
     	
-    	public static int listTargetSettlementIndex(final CommandContext<CommandSource> source)
+    	public static int listTargetSettlementIndex(final CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		return listSettlement(manager.getSettlementByIndex(IntegerArgumentType.getInteger(source, "index")), manager, source.getSource());
     	}
     }
     
     private static class VariantAdd
     {
-	 	public static final SuggestionProvider<CommandSource> TYPE_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("settlement_types"), (context, builder) -> {
+	 	public static final SuggestionProvider<CommandSourceStack> TYPE_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("settlement_types"), (context, builder) -> {
 	 		return ISuggestionProvider.suggestIterable(SettlementManager.getSettlementTypes(), builder);
 	 		});
     	
@@ -201,32 +197,32 @@ public class CommandSettlement extends CommandBase
 	 	private static final String NAME = "name";
 	 	private static final String NBT = "nbt";
 	 	
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("add")
-    				.then(newArgument(TYPE, ResourceLocationArgument.resourceLocation()).suggests(VariantAdd.TYPE_SUGGESTIONS)
-    					.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), null, null, null, source.getSource()); })
-    					.then(newArgument(POS, BlockPosArgument.blockPos())
-    						.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), BlockPosArgument.getBlockPos(source, POS), null, null, source.getSource()); })
-    						.then(newArgument(NAME, StringArgumentType.string())
-    							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), BlockPosArgument.getBlockPos(source, POS), StringArgumentType.getString(source, NAME), null, source.getSource()); }))
-    						.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-    							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), BlockPosArgument.getBlockPos(source, POS), null, NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))
-    						.then(newArgument(NAME, StringArgumentType.string())
-								.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-									.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), BlockPosArgument.getBlockPos(source, POS), StringArgumentType.getString(source, NAME), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))))
-						.then(newArgument(NAME, StringArgumentType.string())
-							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), null, StringArgumentType.getString(source, NAME), null, source.getSource()); })
-							.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-								.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), null, StringArgumentType.getString(source, NAME), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); })))
-						.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getResourceLocation(source, TYPE), null, null, NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); })));
+    		return Commands.literal("add")
+    				.then(Commands.argument(TYPE, ResourceLocationArgument.id()).suggests(VariantAdd.TYPE_SUGGESTIONS)
+    					.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), null, null, null, source.getSource()); })
+    					.then(Commands.argument(POS, BlockPosArgument.blockPos())
+    						.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), BlockPosArgument.getLoadedBlockPos(source, POS), null, null, source.getSource()); })
+    						.then(Commands.argument(NAME, StringArgumentType.string())
+    							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), BlockPosArgument.getLoadedBlockPos(source, POS), StringArgumentType.getString(source, NAME), null, source.getSource()); }))
+    						.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+    							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), BlockPosArgument.getLoadedBlockPos(source, POS), null, CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); }))
+    						.then(Commands.argument(NAME, StringArgumentType.string())
+								.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+									.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), BlockPosArgument.getLoadedBlockPos(source, POS), StringArgumentType.getString(source, NAME), CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); }))))
+						.then(Commands.argument(NAME, StringArgumentType.string())
+							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), null, StringArgumentType.getString(source, NAME), null, source.getSource()); })
+							.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+								.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), null, StringArgumentType.getString(source, NAME), CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); })))
+						.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+							.executes((source) -> { return VariantAdd.add(ResourceLocationArgument.getId(source, TYPE), null, null, CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); })));
     	}
     	
-    	public static int add(ResourceLocation type, BlockPos pos, String name, CompoundNBT nbt, CommandSource source)
+    	public static int add(ResourceLocation type, BlockPos pos, String name, CompoundTag nbt, CommandSourceStack source)
     	{
-    		CompoundNBT data = nbt == null || nbt.isEmpty() ? new CompoundNBT() : nbt;
-    		SettlementManager manager = SettlementManager.get(source.getWorld());
+    		CompoundTag data = nbt == null || nbt.isEmpty() ? new CompoundTag() : nbt;
+    		SettlementManager manager = SettlementManager.get(source.getLevel());
     		Settlement settlement = SettlementManager.createSettlementFromNBT(type, data);
     		if(settlement != null)
     		{
@@ -241,12 +237,12 @@ public class CommandSettlement extends CommandBase
 					settlement.setInvulnerable(true);
 				
 	    		int newIndex = manager.add(settlement);
-	    		source.sendFeedback(new TranslationTextComponent(translationSlug+"add.success", new Object[]{settlement.hasCustomName() ? settlement.getCustomName() : newIndex}), true);
+	    		source.sendSuccess(Component.translatable(translationSlug+"add.success", new Object[]{settlement.hasCustomName() ? settlement.getCustomName() : newIndex}), true);
 	    		return 15;
     		}
     		else
     		{
-	    		source.sendFeedback(makeErrorMessage(translationSlug+"add.failed"), true);
+	    		source.sendFailure(makeErrorMessage(translationSlug+"add.failed"));
 	    		return 0;
     		}
     	}
@@ -254,41 +250,41 @@ public class CommandSettlement extends CommandBase
     
     private static class VariantRemove
     {
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("remove")
-    				.then(newArgument("name", StringArgumentType.string())
+    		return Commands.literal("remove")
+    				.then(Commands.argument("name", StringArgumentType.string())
 						.executes(VariantRemove::removeSettlementName))
-					.then(newArgument("index", IntegerArgumentType.integer(0))
+					.then(Commands.argument("index", IntegerArgumentType.integer(0))
 						.executes(VariantRemove::removeSettlementIndex));
     	}
     	
-    	private static int removeSettlement(Settlement target, String name, CommandSource source)
+    	private static int removeSettlement(Settlement target, String name, CommandSourceStack source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getLevel());
     		if(target != null)
     		{
     			if(manager.remove(target))
-    				source.sendFeedback(new TranslationTextComponent(translationSlug+"remove.success", name), true);
+    				source.sendSuccess(Component.translatable(translationSlug+"remove.success", name), true);
     			else
-    				source.sendFeedback(makeErrorMessage(translationSlug+"remove.failed", name), true);
+    				source.sendFailure(makeErrorMessage(translationSlug+"remove.failed", name));
     		}
     		else
     			notifyUnknownSettlement(source);
     		return target != null ? 15 : 0;
     	}
     	
-    	public static int removeSettlementName(CommandContext<CommandSource> source)
+    	public static int removeSettlementName(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		String name = StringArgumentType.getString(source, "name");
     		Settlement target = manager.getSettlementByName(name);
     		return removeSettlement(target, name, source.getSource());
     	}
     	
-    	public static int removeSettlementIndex(CommandContext<CommandSource> source)
+    	public static int removeSettlementIndex(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		Integer index = IntegerArgumentType.getInteger(source, "index");
     		Settlement target = manager.getSettlementByIndex(index);
     		return removeSettlement(target, String.valueOf(index), source.getSource());
@@ -297,18 +293,18 @@ public class CommandSettlement extends CommandBase
     
     private static class VariantMove
     {
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("move")
-    				.then(newArgument("index", IntegerArgumentType.integer(0))
-						.then(newArgument("destination", BlockPosArgument.blockPos())
+    		return Commands.literal("move")
+    				.then(Commands.argument("index", IntegerArgumentType.integer(0))
+						.then(Commands.argument("destination", BlockPosArgument.blockPos())
 						.executes(VariantMove::moveSettlementIndex)))
-    				.then(newArgument("name", StringArgumentType.string())
-						.then(newArgument("destination", BlockPosArgument.blockPos())
+    				.then(Commands.argument("name", StringArgumentType.string())
+						.then(Commands.argument("destination", BlockPosArgument.blockPos())
 						.executes(VariantMove::moveSettlementName)));
     	}
     	
-    	private static int moveSettlement(Settlement target, String id, BlockPos pos, CommandSource source)
+    	private static int moveSettlement(Settlement target, String id, BlockPos pos, CommandSourceStack source)
     	{
     		if(target == null)
     		{
@@ -317,35 +313,35 @@ public class CommandSettlement extends CommandBase
     		}
     		else if(pos == null)
     		{
-    			source.sendFeedback(makeErrorMessage(translationSlug+"move.failed", id), true);
+    			source.sendFailure(makeErrorMessage(translationSlug+"move.failed", id));
     			return 0;
     		}
 			else
 			{
 				target.setMarker(pos);
-    			source.sendFeedback(new TranslationTextComponent(translationSlug+"move.success", id, pos.getX(), pos.getY(), pos.getZ()), true);
+    			source.sendSuccess(Component.translatable(translationSlug+"move.success", id, pos.getX(), pos.getY(), pos.getZ()), true);
     			return 15;
 			}
     	}
     	
-    	public static int moveSettlementIndex(CommandContext<CommandSource> source)
+    	public static int moveSettlementIndex(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		int index = IntegerArgumentType.getInteger(source, "index");
     		BlockPos dest = null;
     		try {
-				dest = BlockPosArgument.getBlockPos(source, "destination");
+				dest = BlockPosArgument.getLoadedBlockPos(source, "destination");
 			} catch (CommandSyntaxException e){ }
     		return moveSettlement(manager.getSettlementByIndex(index), String.valueOf(index), dest, source.getSource());
     	}
     	
-    	public static int moveSettlementName(CommandContext<CommandSource> source)
+    	public static int moveSettlementName(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		String index = StringArgumentType.getString(source, "name");
     		BlockPos dest = null;
     		try {
-				dest = BlockPosArgument.getBlockPos(source, "destination");
+				dest = BlockPosArgument.getLoadedBlockPos(source, "destination");
 			} catch (CommandSyntaxException e){ }
     		return moveSettlement(manager.getSettlementByName(index), index, dest, source.getSource());
     	}
@@ -353,31 +349,31 @@ public class CommandSettlement extends CommandBase
     
     private static class VariantEdit
     {
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("edit")
-    				.then(newArgument("index", IntegerArgumentType.integer(0))
-						.then(newArgument("nbt", NBTCompoundTagArgument.nbt())
+    		return Commands.literal("edit")
+    				.then(Commands.argument("index", IntegerArgumentType.integer(0))
+						.then(Commands.argument("nbt", CompoundTagArgument.compoundTag())
 						.executes(VariantEdit::editIndex)))
-    				.then(newArgument("name", StringArgumentType.string())
-						.then(newArgument("nbt", NBTCompoundTagArgument.nbt())
+    				.then(Commands.argument("name", StringArgumentType.string())
+						.then(Commands.argument("nbt", CompoundTagArgument.compoundTag())
 						.executes(VariantEdit::editName)));
     	}
     	
-    	private static int edit(Settlement settlement, CompoundNBT newNBT, SettlementManager manager, CommandSource source)
+    	private static int edit(Settlement settlement, CompoundTag newNBT, SettlementManager manager, CommandSourceStack source)
     	{
     		if(settlement != null)
     		{
 	    		int index = manager.getIndexBySettlement(settlement);
-				CompoundNBT settlementNBT = SettlementManager.settlementToNBT(index, settlement, new CompoundNBT());
-				CompoundNBT originalNBT = settlementNBT.copy();
+				CompoundTag settlementNBT = SettlementManager.settlementToNBT(index, settlement, new CompoundTag());
+				CompoundTag originalNBT = settlementNBT.copy();
 				settlementNBT.merge(newNBT);
 				if(settlementNBT.equals(originalNBT))
-					source.sendFeedback(makeErrorMessage(translationSlug+"edit.failed", settlementNBT.toFormattedComponent()), true);
+					source.sendFailure(makeErrorMessage(translationSlug+"edit.failed", settlementNBT.toFormattedComponent()), true);
 				else
 				{
 					manager.add(index, SettlementManager.NBTToSettlement(settlementNBT));
-					source.sendFeedback(new TranslationTextComponent(translationSlug+"edit.success", settlementNBT.toFormattedComponent()), true);
+					source.sendSuccess(Component.translatable(translationSlug+"edit.success", settlementNBT.toFormattedComponent()), true);
 				}
     		}
     		else
@@ -386,34 +382,34 @@ public class CommandSettlement extends CommandBase
 			return settlement == null ? 0 : 15;
     	}
     	
-    	public static int editIndex(CommandContext<CommandSource> source)
+    	public static int editIndex(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		Settlement settlement = manager.getSettlementByIndex(IntegerArgumentType.getInteger(source, "index"));
-    		return edit(settlement, NBTCompoundTagArgument.getNbt(source, "nbt"), manager, source.getSource());
+    		return edit(settlement, CompoundTagArgument.getCompoundTag(source, "nbt"), manager, source.getSource());
     	}
     	
-    	public static int editName(CommandContext<CommandSource> source)
+    	public static int editName(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		Settlement settlement = manager.getSettlementByName(StringArgumentType.getString(source, "name"));
-    		return edit(settlement, NBTCompoundTagArgument.getNbt(source, "nbt"), manager, source.getSource());
+    		return edit(settlement, CompoundTagArgument.getCompoundTag(source, "nbt"), manager, source.getSource());
     	}
     }
     
     private static class VariantHere
     {
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("here")
+    		return Commands.literal("here")
     				.executes(VariantHere::listHere)
-    				.then(newArgument("position", Vec3Argument.vec3())
+    				.then(Commands.argument("position", Vec3Argument.vec3())
     					.executes(VariantHere::listHerePos));
     	}
     	
-    	private static int herePos(Vector3d pos, CommandSource source) throws CommandSyntaxException
+    	private static int herePos(Vec3 pos, CommandSourceStack source) throws CommandSyntaxException
     	{
-    		SettlementManager manager = SettlementManager.get(source.getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getLevel());
 			Settlement settlementHere = manager.getSettlementAt(pos);
 			if(settlementHere == null)
 				throw VariantList.LIST_FAILED_EXCEPTION.create();
@@ -422,14 +418,14 @@ public class CommandSettlement extends CommandBase
     		return settlementHere == null ? 0 : 15;
     	}
     	
-    	public static int listHere(CommandContext<CommandSource> source) throws CommandSyntaxException
+    	public static int listHere(CommandContext<CommandSourceStack> source) throws CommandSyntaxException
     	{
-    		return herePos(source.getSource().getPos(), source.getSource());
+    		return herePos(source.getSource().getPosition(), source.getSource());
     	}
     	
-    	public static int listHerePos(CommandContext<CommandSource> source) throws CommandSyntaxException
+    	public static int listHerePos(CommandContext<CommandSourceStack> source) throws CommandSyntaxException
     	{
-    		Vector3d position = null;
+    		Vec3 position = null;
 			try
 			{
 				position = Vec3Argument.getVec3(source, "position");
@@ -437,7 +433,7 @@ public class CommandSettlement extends CommandBase
 			
 			if(position == null)
 			{
-				source.getSource().sendFeedback(makeErrorMessage(translationSlug+".here.failed.coords"), true);
+				source.getSource().sendFailure(makeErrorMessage(translationSlug+".here.failed.coords"));
 				return 0;
 			}
 			else
@@ -456,15 +452,15 @@ public class CommandSettlement extends CommandBase
     	protected static final String POS_A = "from";
 		protected static final String POS_B = "to";
     	
-    	public static LiteralArgumentBuilder<CommandSource> build()
+    	public static LiteralArgumentBuilder<CommandSourceStack> build()
     	{
-    		return newLiteral("room")
-    				.then(newArgument(SET_INDEX, IntegerArgumentType.integer(0))
+    		return Commands.literal("room")
+    				.then(Commands.argument(SET_INDEX, IntegerArgumentType.integer(0))
 	    				.then(VariantRoomAdd.build())
 	    				.then(VariantRoomRemove.build())
 	    				.then(VariantRoomEdit.build())
 	    				.then(VariantRoomMove.build()))
-    				.then(newArgument(SET_NAME, StringArgumentType.string())
+    				.then(Commands.argument(SET_NAME, StringArgumentType.string())
 	    				.then(VariantRoomAdd.build())
 	    				.then(VariantRoomRemove.build())
 	    				.then(VariantRoomEdit.build())
@@ -474,9 +470,9 @@ public class CommandSettlement extends CommandBase
     	/** 
     	 * Returns the settlement indicated by the contained arguments.<br>
     	 * Produces an error message if it cannot be found. */
-    	public static Settlement getSettlement(CommandContext<CommandSource> source)
+    	public static Settlement getSettlement(CommandContext<CommandSourceStack> source)
     	{
-    		SettlementManager manager = SettlementManager.get(source.getSource().getWorld());
+    		SettlementManager manager = SettlementManager.get(source.getSource().getLevel());
     		Settlement settlement = null;
     		try
     		{
@@ -516,28 +512,28 @@ public class CommandSettlement extends CommandBase
     		return null;
     	}
 		
-		private static Tuple<BlockPos, BlockPos> getCoordinates(CommandContext<CommandSource> source)
+		private static Tuple<BlockPos, BlockPos> getCoordinates(CommandContext<CommandSourceStack> source)
 		{
 			BlockPos posA = null;
 			try
 			{
-				posA = BlockPosArgument.getBlockPos(source, POS_A);
+				posA = BlockPosArgument.getLoadedBlockPos(source, POS_A);
 				if(posA != null)
 					if(posA.getY() < 0)
-						posA.add(0, Math.abs(posA.getY()), 0);
+						posA.offset(0, Math.abs(posA.getY()), 0);
 					else if(posA.getY() > 255)
-						posA.add(0, 255 - posA.getY(), 0);
+						posA.offset(0, 255 - posA.getY(), 0);
 			}
 			catch(Exception e){ }
 			BlockPos posB = null;
 			try
 			{
-				posB = BlockPosArgument.getBlockPos(source, POS_B);
+				posB = BlockPosArgument.getLoadedBlockPos(source, POS_B);
 				if(posB != null)
 					if(posB.getY() < 0)
-						posB.add(0, Math.abs(posB.getY()), 0);
+						posB.offset(0, Math.abs(posB.getY()), 0);
 					else if(posB.getY() > 255)
-						posB.add(0, 255 - posB.getY(), 0);
+						posB.offset(0, 255 - posB.getY(), 0);
 			}
 			catch(Exception e){ }
 			if(posA == null || posB == null)
@@ -545,9 +541,9 @@ public class CommandSettlement extends CommandBase
 			return new Tuple<BlockPos, BlockPos>(posA, posB);
 		}
     	
-    	public static void notifyUnknownRoom(String token, CommandSource source)
+    	public static void notifyUnknownRoom(String token, CommandSourceStack source)
     	{
-    		source.sendFeedback(makeErrorMessage(translationSlug+"failed_room", token), true);
+    		source.sendFailure(makeErrorMessage(translationSlug+"failed_room", token));
     	}
     	
     	private static class VariantRoomAdd
@@ -556,30 +552,30 @@ public class CommandSettlement extends CommandBase
     		private static final String NAME = "name";
     		private static final String NBT = "nbt";
     		
-    		public static LiteralArgumentBuilder<CommandSource> build()
+    		public static LiteralArgumentBuilder<CommandSourceStack> build()
     		{
-    			return newLiteral("add")
+    			return Commands.literal("add")
     					.executes(VariantRoomAdd::addFromHand)
-    					.then(newArgument(POS_A, BlockPosArgument.blockPos())
-    						.then(newArgument(POS_B, BlockPosArgument.blockPos())
-								.then(newArgument(FUNCTION, EnumArgumentChecked.enumArgument(EnumRoomFunction.class))
-									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, null, source.getSource()); })
-									.then(newArgument(NAME, StringArgumentType.string())
-										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), null, source.getSource()); }))
-									.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))
-									.then(newArgument(NAME, StringArgumentType.string())
-										.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-											.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))))
-								.then(newArgument(NAME, StringArgumentType.string())
-									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), null, StringArgumentType.getString(source, NAME), null, source.getSource()); })
-									.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), null, StringArgumentType.getString(source, NAME), NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); })))
-								.then(newArgument(NBT, NBTCompoundTagArgument.nbt())
-										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getBlockPos(source, POS_A), BlockPosArgument.getBlockPos(source, POS_B), null, null, NBTCompoundTagArgument.getNbt(source, NBT), source.getSource()); }))));
+    					.then(Commands.argument(POS_A, BlockPosArgument.blockPos())
+    						.then(Commands.argument(POS_B, BlockPosArgument.blockPos())
+								.then(Commands.argument(FUNCTION, EnumArgumentChecked.enumArgument(EnumRoomFunction.class))
+									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, null, source.getSource()); })
+									.then(Commands.argument(NAME, StringArgumentType.string())
+										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), null, source.getSource()); }))
+									.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); }))
+									.then(Commands.argument(NAME, StringArgumentType.string())
+										.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+											.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); }))))
+								.then(Commands.argument(NAME, StringArgumentType.string())
+									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), null, StringArgumentType.getString(source, NAME), null, source.getSource()); })
+									.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), null, StringArgumentType.getString(source, NAME), CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); })))
+								.then(Commands.argument(NBT, CompoundTagArgument.compoundTag())
+										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), null, null, CompoundTagArgument.getCompoundTag(source, NBT), source.getSource()); }))));
     		}
     		
-    		public static int addFromHand(CommandContext<CommandSource> source)
+    		public static int addFromHand(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement == null)
@@ -587,19 +583,19 @@ public class CommandSettlement extends CommandBase
     			
     			try
     			{
-    				Entity ent = source.getSource().assertIsEntity();
+    				Entity ent = source.getSource().getEntity();
     				if(ent instanceof LivingEntity)
     				{
     					LivingEntity living = (LivingEntity)ent;
-    					if(!living.getHeldItemMainhand().isEmpty() && living.getHeldItemMainhand().getItem() == VOItems.DRAFTING_TABLE)
+    					if(!living.getMainHandItem().isEmpty() && living.getMainHandItem().getItem() == VOItems.DRAFTING_TABLE)
     					{
-    						ItemStack table = living.getHeldItemMainhand();
+    						ItemStack table = living.getMainHandItem();
     						if(table.hasTag() && table.getTag().contains("BlockEntityTag", 10))
     						{
-    							CompoundNBT tableData = table.getTag().getCompound("BlockEntityTag");
+    							CompoundTag tableData = table.getTag().getCompound("BlockEntityTag");
     							if(tableData.contains("Locked", 3) && tableData.getInt("Locked") == 15)
     							{
-	    							if(!(living instanceof PlayerEntity && ((PlayerEntity)living).isCreative()))
+	    							if(!(living instanceof Player && ((Player)living).isCreative()))
 	    								table.shrink(1);
 	    							
 	    							BoxRoom room = TileEntityDraftingTable.getRoomFromNBT(tableData);
@@ -610,25 +606,25 @@ public class CommandSettlement extends CommandBase
     				}
     			}
     			catch(Exception e){ }
-				source.getSource().sendFeedback(makeErrorMessage(translationSlug+"room.add.failed"), false);
+				source.getSource().sendFailure(makeErrorMessage(translationSlug+"room.add.failed"));
     			return 0;
     		}
     		
-    		public static int add(Settlement settlement, BoxRoom room, CommandSource source)
+    		public static int add(Settlement settlement, BoxRoom room, CommandSourceStack source)
     		{
     			if(settlement != null && room != null)
     			{
 	    			settlement.addRoom(room);
 	    			
-	    			SettlementManager manager = SettlementManager.get(source.getWorld());
+	    			SettlementManager manager = SettlementManager.get(source.getLevel());
 	    			manager.add(manager.getIndexBySettlement(settlement), settlement);
-	    			source.sendFeedback(new TranslationTextComponent(translationSlug+"room.add.success", room.hasCustomName() ? room.getName() : settlement.getIndexFromRoom(room)), true);
+	    			source.sendSuccess(Component.translatable(translationSlug+"room.add.success", room.hasCustomName() ? room.getName() : settlement.getIndexFromRoom(room)), true);
 	    			return 15;
     			}
     			return 0;
     		}
     		
-    		public static int add(Settlement settlement, BlockPos posA, BlockPos posB, EnumRoomFunction function, String name, CompoundNBT nbt, CommandSource source)
+    		public static int add(Settlement settlement, BlockPos posA, BlockPos posB, EnumRoomFunction function, String name, CompoundTag nbt, CommandSourceStack source)
     		{
     			BoxRoom room = new BoxRoom(posA, posB);
     			if(function != null)
@@ -644,16 +640,16 @@ public class CommandSettlement extends CommandBase
     	
     	private static class VariantRoomRemove
     	{
-    		public static LiteralArgumentBuilder<CommandSource> build()
+    		public static LiteralArgumentBuilder<CommandSourceStack> build()
     		{
-    			return newLiteral("remove")
-    					.then(newArgument(ROM_INDEX, IntegerArgumentType.integer(0))
+    			return Commands.literal("remove")
+    					.then(Commands.argument(ROM_INDEX, IntegerArgumentType.integer(0))
 							.executes(VariantRoomRemove::removeIndex))
-    					.then(newArgument(ROM_NAME, StringArgumentType.string())
+    					.then(Commands.argument(ROM_NAME, StringArgumentType.string())
     						.executes(VariantRoomRemove::removeName));
     		}
     		
-    		public static int remove(Settlement settlement, BoxRoom room, SettlementManager manager, CommandSource source)
+    		public static int remove(Settlement settlement, BoxRoom room, SettlementManager manager, CommandSourceStack source)
     		{
 	    		if(settlement != null && room != null)
 	    		{
@@ -665,71 +661,71 @@ public class CommandSettlement extends CommandBase
 	    		return 0;
     		}
     		
-    		public static int removeIndex(CommandContext<CommandSource> source)
+    		public static int removeIndex(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement == null) return 0;
     			
 				int index = IntegerArgumentType.getInteger(source, ROM_INDEX);
-	    		int result = remove(settlement, getRoom(index, settlement), SettlementManager.get(source.getSource().getWorld()), source.getSource());
+	    		int result = remove(settlement, getRoom(index, settlement), SettlementManager.get(source.getSource().getLevel()), source.getSource());
 	    		if(result == 0)
 	    			notifyUnknownRoom(String.valueOf(index), source.getSource());
 	    		else
-	    			source.getSource().sendFeedback(new TranslationTextComponent(translationSlug+"room.remove.success", index), true);
+	    			source.getSource().sendSuccess(Component.translatable(translationSlug+"room.remove.success", index), true);
 	    		return result;
     		}
     		
-    		public static int removeName(CommandContext<CommandSource> source)
+    		public static int removeName(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement == null) return 0;
     			
     			String name = StringArgumentType.getString(source, ROM_NAME);
-	    		int result = remove(settlement, getRoom(name, settlement), SettlementManager.get(source.getSource().getWorld()), source.getSource());
+	    		int result = remove(settlement, getRoom(name, settlement), SettlementManager.get(source.getSource().getLevel()), source.getSource());
 	    		if(result == 0)
 	    			notifyUnknownRoom(name, source.getSource());
 	    		else
-	    			source.getSource().sendFeedback(new TranslationTextComponent(translationSlug+"room.remove.success", name), true);
+	    			source.getSource().sendSuccess(Component.translatable(translationSlug+"room.remove.success", name), true);
 	    		return result;
     		}
     	}
     	
     	private static class VariantRoomEdit
     	{
-    		public static LiteralArgumentBuilder<CommandSource> build()
+    		public static LiteralArgumentBuilder<CommandSourceStack> build()
     		{
-    			return newLiteral("edit")
-    					.then(newArgument(ROM_INDEX, IntegerArgumentType.integer(0))
-    						.then(newArgument("nbt", NBTCompoundTagArgument.nbt())
+    			return Commands.literal("edit")
+    					.then(Commands.argument(ROM_INDEX, IntegerArgumentType.integer(0))
+    						.then(Commands.argument("nbt", CompoundTagArgument.compoundTag())
     							.executes(VariantRoomEdit::editIndex)))
-    					.then(newArgument(ROM_NAME, StringArgumentType.string())
-        					.then(newArgument("nbt", NBTCompoundTagArgument.nbt())
+    					.then(Commands.argument(ROM_NAME, StringArgumentType.string())
+        					.then(Commands.argument("nbt", CompoundTagArgument.compoundTag())
         						.executes(VariantRoomEdit::editName)));
     		}
     		
-    		public static int edit(BoxRoom room, CompoundNBT newNBT, Settlement settlement, CommandSource source)
+    		public static int edit(BoxRoom room, CompoundTag newNBT, Settlement settlement, CommandSourceStack source)
     		{
-                CompoundNBT roomNBT = room.writeToNBT(new CompoundNBT());
-                CompoundNBT originalNBT = roomNBT.copy();
+                CompoundTag roomNBT = room.writeToNBT(new CompoundTag());
+                CompoundTag originalNBT = roomNBT.copy();
                 roomNBT.merge(newNBT);
                 if(roomNBT.equals(originalNBT))
                 {
-                	source.sendFeedback(makeErrorMessage(translationSlug+"room.edit.failed", roomNBT.toFormattedComponent()), true);
+                	source.sendFailure(makeErrorMessage(translationSlug+"room.edit.failed", roomNBT.toFormattedComponent()), true);
                 	return 0;
                 }
                 else
                 {
                 	room.readFromNBT(roomNBT);
                 	settlement.addRoom(settlement.getIndexFromRoom(room), room);
-                	SettlementManager manager = SettlementManager.get(source.getWorld());
+                	SettlementManager manager = SettlementManager.get(source.getLevel());
                 	manager.add(manager.getIndexBySettlement(settlement), settlement);
                 	
-                	source.sendFeedback(new TranslationTextComponent(translationSlug+"room.edit.success", roomNBT.toFormattedComponent()), true);
+                	source.sendSuccess(Component.translatable(translationSlug+"room.edit.success", roomNBT.toFormattedComponent()), true);
                 	return 15;
                 }
     		}
     		
-    		public static int editIndex(CommandContext<CommandSource> source)
+    		public static int editIndex(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement != null)
@@ -741,12 +737,12 @@ public class CommandSettlement extends CommandBase
     					notifyUnknownRoom(String.valueOf(index), source.getSource());
     					return 0;
     				}
-    				return edit(room, NBTCompoundTagArgument.getNbt(source, "nbt"), settlement, source.getSource());
+    				return edit(room, CompoundTagArgument.getCompoundTag(source, "nbt"), settlement, source.getSource());
     			}
     			return 0;
     		}
     		
-    		public static int editName(CommandContext<CommandSource> source)
+    		public static int editName(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement != null)
@@ -758,7 +754,7 @@ public class CommandSettlement extends CommandBase
     					notifyUnknownRoom(name, source.getSource());
     					return 0;
     				}
-    				return edit(room, NBTCompoundTagArgument.getNbt(source, "nbt"), settlement, source.getSource());
+    				return edit(room, CompoundTagArgument.getCompoundTag(source, "nbt"), settlement, source.getSource());
     			}
     			return 0;
     		}
@@ -766,37 +762,37 @@ public class CommandSettlement extends CommandBase
     	
     	private static class VariantRoomMove
     	{
-    		public static LiteralArgumentBuilder<CommandSource> build()
+    		public static LiteralArgumentBuilder<CommandSourceStack> build()
     		{
-    			return newLiteral("move")
-    					.then(newArgument(ROM_INDEX, IntegerArgumentType.integer(0))
-    						.then(newArgument(POS_A, BlockPosArgument.blockPos())
-    	    					.then(newArgument(POS_B, BlockPosArgument.blockPos())
+    			return Commands.literal("move")
+    					.then(Commands.argument(ROM_INDEX, IntegerArgumentType.integer(0))
+    						.then(Commands.argument(POS_A, BlockPosArgument.blockPos())
+    	    					.then(Commands.argument(POS_B, BlockPosArgument.blockPos())
     	    						.executes(VariantRoomMove::moveIndex))))
-    					.then(newArgument(ROM_NAME, IntegerArgumentType.integer(0))
-    						.then(newArgument(POS_A, BlockPosArgument.blockPos())
-    	    					.then(newArgument(POS_B, BlockPosArgument.blockPos())
+    					.then(Commands.argument(ROM_NAME, IntegerArgumentType.integer(0))
+    						.then(Commands.argument(POS_A, BlockPosArgument.blockPos())
+    	    					.then(Commands.argument(POS_B, BlockPosArgument.blockPos())
     	    						.executes(VariantRoomMove::moveName))));
     		}
     		
-    		public static int move(int index, BoxRoom room, Settlement settlement, BlockPos posA, BlockPos posB, CommandSource source)
+    		public static int move(int index, BoxRoom room, Settlement settlement, BlockPos posA, BlockPos posB, CommandSourceStack source)
     		{
     			if(settlement != null && room != null && posA != null && posB != null)
     			{
     				room.set(posA, posB);
     				settlement.addRoom(index, room);
-    				SettlementManager manager = SettlementManager.get(source.getWorld());
+    				SettlementManager manager = SettlementManager.get(source.getLevel());
     				manager.add(manager.getIndexBySettlement(settlement), settlement);
     				
     				BlockPos roomMin = room.min();
     				BlockPos roomMax = room.max();
-    				source.sendFeedback(new TranslationTextComponent(translationSlug+"room.move.success", room.hasCustomName() ? room.getName() : index, roomMin.getX(), roomMin.getY(), roomMin.getZ(), roomMax.getX(), roomMax.getY(), roomMax.getZ()), true);
+    				source.sendSuccess(Component.translatable(translationSlug+"room.move.success", room.hasCustomName() ? room.getName() : index, roomMin.getX(), roomMin.getY(), roomMin.getZ(), roomMax.getX(), roomMax.getY(), roomMax.getZ()), true);
     				return 15;
     			}
     			return 0;
     		}
     		
-    		public static int moveIndex(CommandContext<CommandSource> source)
+    		public static int moveIndex(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement != null)
@@ -815,7 +811,7 @@ public class CommandSettlement extends CommandBase
     			return 0;
     		}
     		
-    		public static int moveName(CommandContext<CommandSource> source)
+    		public static int moveName(CommandContext<CommandSourceStack> source)
     		{
     			Settlement settlement = getSettlement(source);
     			if(settlement != null)

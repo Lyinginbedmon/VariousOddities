@@ -16,16 +16,17 @@ import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientProxy extends CommonProxy
@@ -33,7 +34,7 @@ public class ClientProxy extends CommonProxy
 	private static final Minecraft mc = Minecraft.getInstance();
 	private SettlementManager settlements = new SettlementManagerClient();
 	private SpellManager spells = new SpellManagerClient();
-	private Map<RegistryKey<World>, ScentsManager> scentManagers = new HashMap<>();
+	private Map<ResourceKey<DimensionType>, ScentsManager> scentManagers = new HashMap<>();
 	
 	public static TypesManager localTypesData = new TypesManager();
 	public static Map<String, Integer> localReputation = new HashMap<>();
@@ -56,29 +57,29 @@ public class ClientProxy extends CommonProxy
 	public void onLoadComplete(FMLLoadCompleteEvent event)
 	{
 		event.enqueueWork(() -> { ColorHandler.registerColorHandlers(); });
-		EntityRenderRegistry.appendRenderers(mc.getRenderManager());
+		EntityRenderRegistry.appendRenderers(mc.getEntityRenderDispatcher());
 	}
 	
-	public PlayerEntity getPlayerEntity(NetworkEvent.Context ctx){ return (ctx.getDirection().getReceptionSide().isClient() ? mc.player : super.getPlayerEntity(ctx)); }
+	public Player getPlayerEntity(NetworkEvent.Context ctx){ return (ctx.getDirection().getReceptionSide().isClient() ? mc.player : super.getPlayerEntity(ctx)); }
 	
-	public SettlementManager getSettlementManager(World worldIn)
+	public SettlementManager getSettlementManager(Level worldIn)
 	{
-		if(settlements == null || mc.world.getDimensionType() != settlements.getDim())
+		if(settlements == null || mc.level.dimensionType() != settlements.getDim())
 		{
 			settlements = new SettlementManagerClient();
-			settlements.setWorld(mc.world);
+			settlements.setWorld(mc.level);
 		}
 		return settlements;
 	}
 	
 	public void clearSettlements(){ settlements = null; }
 	
-	public ScentsManager getScentsManager(World worldIn)
+	public ScentsManager getScentsManager(Level worldIn)
 	{
-		RegistryKey<World> dim = worldIn.getDimensionKey();
+		ResourceKey<DimensionType> dim = worldIn.dimensionTypeId();
 		if(!scentManagers.containsKey(dim))
 			scentManagers.put(dim, new ScentsManager(worldIn));
-		return scentManagers.get(worldIn.getDimensionKey());
+		return scentManagers.get(dim);
 	}
 	
 	public SpellManager getSpells()
@@ -86,9 +87,9 @@ public class ClientProxy extends CommonProxy
 		return spells;
 	}
 	
-	public void openSpeciesSelectScreen(PlayerEntity entity, int power, boolean random)
+	public void openSpeciesSelectScreen(Player entity, int power, boolean random)
 	{
-		if(Minecraft.getInstance().currentScreen == null)
-			Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(entity, power, random));
+		if(Minecraft.getInstance().screen == null)
+			Minecraft.getInstance().setScreen(new ScreenSelectSpecies(entity, power, random));
 	}
 }

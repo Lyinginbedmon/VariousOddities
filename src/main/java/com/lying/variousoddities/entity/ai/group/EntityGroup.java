@@ -4,12 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
@@ -22,7 +22,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 public class EntityGroup
 {
 	/** Map of members to their last sighting */
-	protected Map<MobEntity, Sighting> members = new HashMap<>();
+	protected Map<Mob, Sighting> members = new HashMap<>();
 	/** Map of targets to their last sighting */
 	protected Map<LivingEntity, Sighting> targets = new HashMap<>();
 	
@@ -37,26 +37,27 @@ public class EntityGroup
 		targets.remove(entity);
 	}
 	
-	public void addMember(MobEntity entity)
+	public void addMember(Mob entity)
 	{
 		if(entity == null || !entity.isAlive()) return;
 		members.put(entity, new Sighting(entity));
 	}
 	
-	public void removeMember(MobEntity entity)
+	public void removeMember(Mob entity)
 	{
 		members.remove(entity);
 	}
 	
-	public final boolean isMember(MobEntity entity){ return members.containsKey(entity); }
+	public final boolean isMember(Mob entity){ return members.containsKey(entity); }
 	public final boolean isTarget(LivingEntity entity){ return targets.containsKey(entity); }
-	public boolean isTracking(LivingEntity entity){ return (entity instanceof MobEntity && isMember((MobEntity)entity)) || isTarget(entity); }
+	public boolean isTracking(LivingEntity entity){ return (entity instanceof Mob && isMember((Mob)entity)) || isTarget(entity); }
 	
 	/** Returns true if any member is in a loaded chunk */
+	@SuppressWarnings("deprecation")
 	public boolean isLoaded()
 	{
-		for(MobEntity entity : members.keySet())
-			if(entity.isAlive() && entity.getEntityWorld().isAreaLoaded(entity.getPosition(), 1))
+		for(Mob entity : members.keySet())
+			if(entity.isAlive() && entity.getLevel().isAreaLoaded(entity.blockPosition(), 1))
 				return true;
 		return false;
 	}
@@ -66,8 +67,8 @@ public class EntityGroup
 	 */
 	public boolean isObserved(LivingEntity entity)
 	{
-		for(MobEntity member : members.keySet())
-			if(member != entity && member.isAlive() && member.getEntitySenses().canSee(entity))
+		for(Mob member : members.keySet())
+			if(member != entity && member.isAlive() && member.hasLineOfSight(entity))
 				return true;
 		return false;
 	}
@@ -77,12 +78,12 @@ public class EntityGroup
 	 */
 	public boolean isObserved(BlockPos pos)
 	{
-		for(MobEntity member : members.keySet())
+		for(Mob member : members.keySet())
 			if(member.isAlive())
 			{
-			    Vector3d vector3d = new Vector3d(member.getPosX(), member.getPosYEye(), member.getPosZ());
-			    Vector3d vector3d1 = new Vector3d(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-			    if(member.getEntityWorld().rayTraceBlocks(new RayTraceContext(vector3d, vector3d1, RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, member)).getType() == RayTraceResult.Type.MISS)
+			    Vec3 vector3d = new Vec3(member.getX(), member.getEyeY(), member.getZ());
+			    Vec3 vector3d1 = new Vec3(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+			    if(member.getLevel().clip(new ClipContext(vector3d, vector3d1, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, member)).getType() == HitResult.Type.MISS)
 			    	return true;
 			}
 		return false;
@@ -110,7 +111,7 @@ public class EntityGroup
 	}
 	
 	/** Called whenever a member is injured, such as to add new targets */
-	public void onMemberHarmed(LivingHurtEvent event, MobEntity victim, LivingEntity attacker)
+	public void onMemberHarmed(LivingHurtEvent event, Mob victim, LivingEntity attacker)
 	{
 		if(isObserved(victim))
 			addTarget(attacker);
@@ -122,11 +123,11 @@ public class EntityGroup
 	 */
 	public void onEntityKilled(LivingDeathEvent event)
 	{
-		LivingEntity living = event.getEntityLiving();
+		LivingEntity living = event.getEntity();
 		if(isTarget(living))
 			removeTarget(living);
-		else if(living instanceof MobEntity && isMember((MobEntity)living))
-			removeMember((MobEntity)living);
+		else if(living instanceof Mob && isMember((Mob)living))
+			removeMember((Mob)living);
 	}
 	
 	/**
@@ -141,8 +142,8 @@ public class EntityGroup
 		
 		public Sighting(LivingEntity entity)
 		{
-			time = entity.getEntityWorld().getGameTime();
-			location = entity.getPosition();
+			time = entity.getLevel().getGameTime();
+			location = entity.blockPosition();
 		}
 		
 		public long age(long gameTime){ return gameTime - time; }
@@ -150,15 +151,15 @@ public class EntityGroup
 		
 		public void update(LivingEntity target)
 		{
-			time = target.getEntityWorld().getGameTime();
-			location = target.getPosition();
+			time = target.getLevel().getGameTime();
+			location = target.blockPosition();
 		}
 		
-		public void updateWith(LivingEntity target, List<MobEntity> observers)
+		public void updateWith(LivingEntity target, List<Mob> observers)
 		{
-			for(MobEntity observer : observers)
+			for(Mob observer : observers)
 			{
-				if(observer.getEntitySenses().canSee(target))
+				if(observer.hasLineOfSight(target))
 				{
 					update(target);
 					return;

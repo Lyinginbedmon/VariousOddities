@@ -14,17 +14,18 @@ import com.lying.variousoddities.faction.FactionReputation.EnumInteraction;
 import com.lying.variousoddities.world.savedata.FactionManager;
 import com.lying.variousoddities.world.savedata.FactionManager.Faction;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.player.Player;
 
 @Mixin(NearestAttackableTargetGoal.class)
 public class NearestAttackableTargetGoalMixin
 {
-	@ModifyVariable(method = "<init>(Lnet/minecraft/entity/MobEntity;Ljava/lang/Class;IZZLjava/util/function/Predicate;)V", at = @At("HEAD"), ordinal = 0)
-	private static Predicate<LivingEntity> modifyPredicate(Predicate<LivingEntity> targetPredicate, MobEntity goalOwnerIn, Class<? extends LivingEntity> classIn)
+	@ModifyVariable(method = "<init>(Lnet/minecraft/entity/Mob;Ljava/lang/Class;IZZLjava/util/function/Predicate;)V", at = @At("HEAD"), ordinal = 0)
+	private static Predicate<LivingEntity> modifyPredicate(Predicate<LivingEntity> targetPredicate, Mob goalOwnerIn, Class<? extends LivingEntity> classIn)
 	{
 		if(targetPredicate == null)
 			return getPredicate(goalOwnerIn);
@@ -39,8 +40,8 @@ public class NearestAttackableTargetGoalMixin
 			public boolean test(LivingEntity target)
 			{
 				// Undead mobs do not target other undead
-				if(goalOwnerIn.isNonBoss() && goalOwnerIn.isEntityUndead())
-					if(target.isEntityUndead())
+				if(goalOwnerIn.canChangeDimensions() && goalOwnerIn.getMobType() == MobType.UNDEAD)
+					if(target.getMobType() == MobType.UNDEAD)
 						return false;
 				
 				// Mobs do not attack creatures that have mind-controlled them somehow
@@ -51,12 +52,12 @@ public class NearestAttackableTargetGoalMixin
 				// Faction mobs do not attack mobs with good reputation
 				if(goalOwnerIn instanceof IFactionMob)
 				{
-					FactionManager factionManager = FactionManager.get(target.getEntityWorld());
+					FactionManager factionManager = FactionManager.get(target.getLevel());
 					Faction ownerFaction = factionManager.getFaction(goalOwnerIn);
 					if(ownerFaction != null)
 						if(target.getType() == EntityType.PLAYER)
 						{
-							PlayerData data = PlayerData.forPlayer((PlayerEntity)target);
+							PlayerData data = PlayerData.forPlayer((Player)target);
 							if(data != null)
 							{
 								int reputation = data.reputation.getReputation(ownerFaction.name);

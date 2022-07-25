@@ -1,30 +1,30 @@
 package com.lying.variousoddities.block;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.HorizontalBlock;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 
-public class VOBlockRotated extends HorizontalBlock
+public class VOBlockRotated extends HorizontalDirectionalBlock
 {
-	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	
 	protected VOBlockRotated(Properties builder)
 	{
 		super(builder);
-		this.setDefaultState(getDefaultState().with(FACING, Direction.NORTH));
+		this.registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH));
 	}
     
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder)
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
     {
     	builder.add(FACING);
     }
     
-    public BlockState getStateForPlacement(BlockItemUseContext context)
+    public BlockState getStateForPlacement(BlockPlaceContext context)
     {
-    	return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing());
+    	return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection());
     }
 }

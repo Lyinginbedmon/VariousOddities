@@ -11,43 +11,40 @@ import com.lying.variousoddities.client.special.BlindRender;
 import com.lying.variousoddities.client.special.ScentRender;
 import com.lying.variousoddities.client.special.SettlementRender;
 import com.lying.variousoddities.config.ConfigVO;
-import com.lying.variousoddities.data.VODataGenerators;
 import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.faction.FactionBus;
 import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.init.VOCommands;
 import com.lying.variousoddities.init.VODamageSource;
-import com.lying.variousoddities.init.VORegistryHandler;
+import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.ClientProxy;
 import com.lying.variousoddities.proxy.IProxy;
 import com.lying.variousoddities.proxy.ServerProxy;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.species.SpeciesRegistry;
-import com.lying.variousoddities.species.TemplateRegistry;
 import com.lying.variousoddities.species.types.TypeBus;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.lying.variousoddities.utility.VOBusServer;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.config.ModConfig.ModConfigEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(Reference.ModInfo.MOD_ID)
@@ -56,8 +53,6 @@ public class VariousOddities
 	public static final Logger log = LogManager.getLogger(Reference.ModInfo.MOD_ID);
 	
 	public static IProxy proxy = new ServerProxy();
-	
-	private final VORegistryHandler registries;
 	
 	@SuppressWarnings("deprecation")
 	public VariousOddities()
@@ -69,11 +64,10 @@ public class VariousOddities
         bus.addListener(this::doCommonSetup);
         bus.addListener(this::doClientSetup);
         bus.addListener(this::doLoadComplete);
-        bus.addListener(VODataGenerators::onGatherData);
+//        bus.addListener(VODataGenerators::onGatherData);
         MinecraftForge.EVENT_BUS.register(this);
         
-        bus.register(registries = new VORegistryHandler());
-        MinecraftForge.EVENT_BUS.register(registries);
+        VORegistries.init();
         
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigVO.server_spec);
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigVO.client_spec);
@@ -95,13 +89,14 @@ public class VariousOddities
     	MinecraftForge.EVENT_BUS.register(FactionBus.class);
     }
     
-    private void doClientSetup(final FMLClientSetupEvent event)
+    @SuppressWarnings("removal")
+	private void doClientSetup(final FMLClientSetupEvent event)
     {
     	KeyBindings.register();
         EntityRenderRegistry.registerEntityRenderers();
-        RenderTypeLookup.setRenderLayer(VOBlocks.LAYER_SCALE, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(VOBlocks.MOSS_BLOCK, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(VOBlocks.TABLE_DRAFTING, RenderType.getCutout());
+        ItemBlockRenderTypes.setRenderLayer(VOBlocks.LAYER_SCALE, RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(VOBlocks.MOSS_BLOCK, RenderType.cutout());
+        ItemBlockRenderTypes.setRenderLayer(VOBlocks.TABLE_DRAFTING, RenderType.cutout());
         MinecraftForge.EVENT_BUS.register(VOBusClient.class);
         MinecraftForge.EVENT_BUS.register(SettlementRender.class);
         MinecraftForge.EVENT_BUS.register(BlindRender.class);
@@ -128,18 +123,18 @@ public class VariousOddities
     }
     
     @SubscribeEvent
-    public void onServerStarting(FMLServerStartingEvent event)
+    public void onServerStarting(ServerStartingEvent event)
     {
     	
     }
     
     @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event){ VOCommands.onCommandRegister(event); }
+    public void onRegisterCommands(RegisterCommandsEvent event){ VOCommands.init(); }
 	
     @SubscribeEvent
 	public void onReloadListenersEvent(AddReloadListenerEvent event)
 	{
-		event.addListener(SpeciesRegistry.getInstance());
-		event.addListener(TemplateRegistry.getInstance());
+//		event.addListener(SpeciesRegistry.getInstance());
+//		event.addListener(TemplateRegistry.getInstance());
 	}
 }

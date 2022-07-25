@@ -8,10 +8,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 
-import net.minecraft.entity.EntityPredicate;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 
 @Mixin(EntityPredicate.class)
 public class EntityPredicateMixin
@@ -31,11 +31,11 @@ public class EntityPredicateMixin
 		else if(victim.getType() == EntityType.PLAYER)
 			if(!PlayerData.isPlayerNormalFunction(victim))
 			{
-				if(attacker instanceof MobEntity)
+				if(attacker instanceof Mob)
 				{
-					MobEntity mob = (MobEntity)attacker;
-					if(mob.getAttackTarget() != null && mob.getAttackTarget().equals(victim))
-						mob.setAttackTarget(null);
+					Mob mob = (Mob)attacker;
+					if(mob.getTarget() != null && mob.getTarget().equals(victim))
+						mob.setTarget(null);
 				}
 				
 				ci.setReturnValue(false);

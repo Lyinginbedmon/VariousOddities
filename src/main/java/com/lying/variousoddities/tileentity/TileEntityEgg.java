@@ -3,19 +3,16 @@ package com.lying.variousoddities.tileentity;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.block.BlockEgg;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.spawner.WorldEntitySpawner.EntityDensityManager;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class TileEntityEgg extends VOTileEntity implements ITickableTileEntity
 {
@@ -24,7 +21,7 @@ public abstract class TileEntityEgg extends VOTileEntity implements ITickableTil
 	
 	protected int ticksToHatching;
 	
-	public TileEntityEgg(TileEntityType<?> typeIn)
+	public TileEntityEgg(BlockEntityType<?> typeIn)
 	{
 		super(typeIn);
 //		fakeID = eggRandom.nextInt(1000);
@@ -33,20 +30,20 @@ public abstract class TileEntityEgg extends VOTileEntity implements ITickableTil
 	
 	public void tick()
 	{
-		if(!(getWorld().getBlockState(getPos()).getBlock() instanceof BlockEgg))
+		if(!(this.getBlockState().getBlock() instanceof BlockEgg))
 		{
-			getWorld().removeTileEntity(getPos());
-			VariousOddities.log.warn("Removing orphaned egg tile "+getPos());
+			getLevel().removeBlockEntity(getBlockPos());
+			VariousOddities.log.warn("Removing orphaned egg tile "+getBlockPos());
 			return;
 		}
 		
 		int prevBreak = getBreakProgress();
 		this.ticksToHatching -= Math.signum(this.ticksToHatching);
 		
-		World world = getWorld();
+		Level world = getLevel();
 		if(this.ticksToHatching <= 0)
 		{
-			if(!world.isRemote && canHatch())
+			if(!world.isClientSide && canHatch())
 				hatchEgg();
 		}
 		else if(this.ticksToHatching < getHatchingTime())
@@ -60,8 +57,8 @@ public abstract class TileEntityEgg extends VOTileEntity implements ITickableTil
 				{
 					for(int i=0; i <5; i++)
 						spawnBreakParticle();
-//					if(!world.isRemote) world.sendBlockBreakProgress(-fakeID, getPos(), newBreak);
-		            world.playSound((PlayerEntity)null, getPos(), SoundEvents.ENTITY_TURTLE_EGG_HATCH, SoundCategory.BLOCKS, 0.7F, 0.9F + world.rand.nextFloat() * 0.2F);
+//					if(!world.isClientSide) world.sendBlockBreakProgress(-fakeID, getPos(), newBreak);
+		            world.playSound((Player)null, getBlockPos(), SoundEvents.TURTLE_EGG_HATCH, SoundSource.BLOCKS, 0.7F, 0.9F + world.random.nextFloat() * 0.2F);
 				}
 			}
 		}
@@ -70,29 +67,29 @@ public abstract class TileEntityEgg extends VOTileEntity implements ITickableTil
 	/** Returns true if the world isn't overpopulated with the type of creature produced by this egg */
 	private boolean canHatch()
 	{
-		if(getWorld().isRemote) return false;
+		if(getLevel().isClientSide) return false;
 		
 		EntityClassification entityClass = getCreatureClass();
-		EntityDensityManager manager = ((ServerWorld)getWorld()).getChunkProvider().func_241101_k_();
+		EntityDensityManager manager = ((ServerLevel)getLevel()).getChunkProvider().func_241101_k_();
 		return manager.func_234995_b_().getInt(entityClass) < entityClass.getMaxNumberOfCreature();
 	}
 	
 	private EntityClassification getCreatureClass()
 	{
-		LivingEntity hatchling = getHatchling(getWorld());
+		LivingEntity hatchling = getHatchling(getLevel());
 		return hatchling.getClassification(true);
 	}
 	
 	public void hatchEgg()
 	{
-		double coreX = getPos().getX() + 0.5D;
-		double coreZ = getPos().getZ() + 0.5D;
+		double coreX = getBlockPos().getX() + 0.5D;
+		double coreZ = getBlockPos().getZ() + 0.5D;
 		
-		LivingEntity baby = getHatchling(getWorld());
-		baby.setPosition(coreX, getPos().getY() + 0.2D, coreZ);
+		LivingEntity baby = getHatchling(getLevel());
+		baby.setPos(coreX, getBlockPos().getY() + 0.2D, coreZ);
 		
-		getWorld().addEntity(baby);
-		((BlockEgg)getWorld().getBlockState(getPos()).getBlock()).onHatch(getPos(), getWorld());
+		getLevel().addFreshEntity(baby);
+		((BlockEgg)getLevel().getBlockState(getBlockPos()).getBlock()).onHatch(getBlockPos(), getLevel());
 	}
 	
 	public float getHatchingProgress()
@@ -106,7 +103,7 @@ public abstract class TileEntityEgg extends VOTileEntity implements ITickableTil
 	
 	private void spawnBreakParticle()
 	{
-        getWorld().playEvent(2001, pos, Block.getStateId(getBlockState()));
+        getLevel().playEvent(2001, getBlockPos(), Block.getId(getBlockState()));
 	}
 	
 	public int getTicksToHatching(){ return this.ticksToHatching; }
@@ -115,16 +112,16 @@ public abstract class TileEntityEgg extends VOTileEntity implements ITickableTil
 	public abstract int getInitialHatchTime();
 	/** How long it takes the hatchling to crack through the egg */
 	public abstract int getHatchingTime();
-	public abstract LivingEntity getHatchling(World worldIn);
+	public abstract LivingEntity getHatchling(Level worldIn);
 	
-    public CompoundNBT write(CompoundNBT compound)
+    public CompoundTag write(CompoundTag compound)
     {
         super.write(compound);
         compound.putInt("TimeToHatch", this.ticksToHatching);
         return compound;
     }
     
-    public void read(BlockState state, CompoundNBT compound)
+    public void read(BlockState state, CompoundTag compound)
     {
         super.read(state, compound);
         this.ticksToHatching = compound.getInt("TimeToHatch");

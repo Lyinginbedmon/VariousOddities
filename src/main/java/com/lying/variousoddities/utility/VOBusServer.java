@@ -1,7 +1,6 @@
 package com.lying.variousoddities.utility;
 
 import java.util.List;
-import java.util.Random;
 
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
@@ -40,32 +39,33 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.entity.projectile.FireballEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.EntityDamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Fireball;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
-import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -99,51 +99,51 @@ public class VOBusServer
 	public static void onChangeDimensionEvent(EntityTravelToDimensionEvent event)
 	{
 		Entity entity = event.getEntity();
-		if(!entity.getEntityWorld().isRemote && entity.getType() == EntityType.PLAYER)
+		if(!entity.getLevel().isClientSide && entity.getType() == EntityType.PLAYER)
 		{
-			PlayerEntity player = (PlayerEntity)entity;
+			Player player = (Player)entity;
 			LivingData data = LivingData.forEntity(player);
 			if(data != null)
 			{
-				PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncAir(data.getAir()));
+				PacketHandler.sendTo((ServerPlayer)player, new PacketSyncAir(data.getAir()));
 				data.getAbilities().markDirty();
 			}
 		}
 		
-		if(entity instanceof LivingEntity && ((LivingEntity)entity).isPotionActive(VOPotions.ANCHORED))
+		if(entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(VOPotions.ANCHORED))
 			event.setCanceled(true);
 	}
 	
 	@SubscribeEvent
 	public static void onPlayerLogInEvent(PlayerLoggedInEvent event)
 	{
-		PlayerEntity player = event.getPlayer();
-		PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncSpecies(VORegistries.SPECIES));
+		Player player = event.getEntity();
+		PacketHandler.sendTo((ServerPlayer)player, new PacketSyncSpecies(VORegistries.SPECIES));
 		
 		LivingData livingData = LivingData.forEntity(player);
 		if(livingData != null)
 		{
-			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncLivingData(player.getUniqueID(), livingData));
+			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncLivingData(player.getUUID(), livingData));
 			livingData.getAbilities().markDirty();
 			
 			if(!livingData.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
 			{
-				if(!player.getEntityWorld().isRemote)
-					PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
-				player.addPotionEffect(new EffectInstance(Effects.RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
+				if(!player.getLevel().isClientSide)
+					PacketHandler.sendTo((ServerPlayer)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
+				player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
 			}
 		}
 		
 		PlayerData playerData = PlayerData.forPlayer(player);
 		if(playerData != null)
-			PacketHandler.sendToAll((ServerWorld)player.getEntityWorld(), new PacketSyncPlayerData(player.getUniqueID(), playerData));
+			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncPlayerData(player.getUUID(), playerData));
 	}
 	
 	@SubscribeEvent
 	public static void onPlayerCloneEvent(PlayerEvent.Clone event)
 	{
 		LivingData oldLiving = LivingData.forEntity(event.getOriginal());
-		LivingData newLiving = LivingData.forEntity(event.getPlayer());
+		LivingData newLiving = LivingData.forEntity(event.getEntity());
 		if(oldLiving != null && newLiving != null)
 		{
 			newLiving.setCustomTypes(oldLiving.getCustomTypes());
@@ -155,7 +155,7 @@ public class VOBusServer
 		}
 		
 		PlayerData oldPlayer = PlayerData.forPlayer(event.getOriginal());
-		PlayerData newPlayer = PlayerData.forPlayer(event.getPlayer());
+		PlayerData newPlayer = PlayerData.forPlayer(event.getEntity());
 		if(oldPlayer != null && newPlayer != null)
 		{
 			if(!event.isWasDeath())
@@ -163,45 +163,45 @@ public class VOBusServer
 				newPlayer.setBodyCondition(oldPlayer.getBodyCondition());
 				newPlayer.setBodyUUID(oldPlayer.getBodyUUID());
 			}
-			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundNBT()));
+			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundTag()));
 		}
 	}
 	
 	@SubscribeEvent
 	public static void onPlayerRespawnEvent(PlayerRespawnEvent event)
 	{
-		LivingData livingData = LivingData.forEntity(event.getPlayer());
+		LivingData livingData = LivingData.forEntity(event.getEntity());
 		if(livingData != null)
 			livingData.getAbilities().markDirty();
 		
 		if(ConfigVO.MOBS.newCharacterOnDeath.get())
 			livingData.setSelectedSpecies(false);
 		
-		if(AbilityRegistry.hasAbility(event.getPlayer(), AbilitySize.REGISTRY_NAME))
-			event.getPlayer().recalculateSize();
+		if(AbilityRegistry.hasAbility(event.getEntity(), AbilitySize.REGISTRY_NAME))
+			event.getEntity().recalculateSize();
 		
-		if(PlayerData.isPlayerBodyDead(event.getPlayer()))
+		if(PlayerData.isPlayerBodyDead(event.getEntity()))
 		{
-			PlayerData playerData = PlayerData.forPlayer(event.getPlayer());
+			PlayerData playerData = PlayerData.forPlayer(event.getEntity());
 			playerData.setBodyCondition(BodyCondition.ALIVE);
 			playerData.setSoulCondition(SoulCondition.ALIVE);
 		}
 	}
 	
 	@SubscribeEvent
-	public static void addEntityBehaviours(EntityJoinWorldEvent event)
+	public static void addEntityBehaviours(EntityJoinLevelEvent event)
 	{
 		Entity theEntity = event.getEntity();
-		if(theEntity instanceof LivingEntity && !theEntity.getEntityWorld().isRemote)
+		if(theEntity instanceof LivingEntity && !theEntity.getLevel().isClientSide)
 		{
 			LivingData data = LivingData.forEntity((LivingEntity)theEntity);
-			if(data != null && !theEntity.getEntityWorld().isRemote)
-				PacketHandler.sendToAll((ServerWorld)theEntity.getEntityWorld(), new PacketSyncLivingData(theEntity.getUniqueID(), data));
+			if(data != null && !theEntity.getLevel().isClientSide)
+				PacketHandler.sendToAll((ServerLevel)theEntity.getLevel(), new PacketSyncLivingData(theEntity.getUUID(), data));
 		}
 		
 		if(theEntity.getType() == EntityType.CAT || theEntity.getType() == EntityType.OCELOT)
 		{
-			MobEntity feline = (MobEntity)theEntity;
+			Monster feline = (Monster)theEntity;
 			
 			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT))
 				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRat>(feline, EntityRat.class, true));
@@ -211,19 +211,18 @@ public class VOBusServer
 		}
 		
 		// Add special AI to mobs
-		if(theEntity instanceof MobEntity)
+		if(theEntity instanceof Monster)
 		{
-			MobEntity living = (MobEntity)theEntity;
-			if(living instanceof CreatureEntity)
-				living.goalSelector.addGoal(1, new EntityAIFrightened((CreatureEntity)living));
+			Monster living = (Monster)theEntity;
+			living.goalSelector.addGoal(1, new EntityAIFrightened((Mob)living));
 		}
 		
 		// Spook worgs
 		if(event.getEntity().getType() == EntityType.LIGHTNING_BOLT)
 		{
-			BlockPos pos = event.getEntity().getPosition();
-			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 256, 1).offset(pos.getX(), 0, pos.getZ()).grow(128, 0, 128);
-			for(EntityWorg worg : event.getEntity().getEntityWorld().getEntitiesWithinAABB(EntityWorg.class, bounds))
+			BlockPos pos = event.getEntity().blockPosition();
+			AABB bounds = new AABB(0, 0, 0, 1, 256, 1).move(pos.getX(), 0, pos.getZ()).inflate(128, 0, 128);
+			for(EntityWorg worg : event.getEntity().getLevel().getEntitiesOfClass(EntityWorg.class, bounds))
 				worg.spook();
 		}
 	}
@@ -231,55 +230,57 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onDeathNearGoblinEvent(LivingDeathEvent event)
 	{
-		LivingEntity victim = event.getEntityLiving();
+		LivingEntity victim = event.getEntity();
 		DamageSource cause = event.getSource();
-		World world = victim.getEntityWorld();
+		Level world = victim.getLevel();
 		
 		// Reduce refractory period of nearby goblins when a. goblin is slain or b. goblin slays any mob (esp. players)
-		if(victim instanceof EntityGoblin)
+		if(victim.getType() == VOEntities.GOBLIN)
 			reduceRefractory(victim, 1000);
-		else if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof EntityGoblin)
-			reduceRefractory(victim, victim instanceof PlayerEntity ? 4000 : 500);
+		else if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getEntity() instanceof EntityGoblin)
+			reduceRefractory(victim, victim instanceof Player ? 4000 : 500);
 		
 		// Occasionally spawn ghastlings when a ghast dies to a reflected fireball
 		if(victim.getType() == EntityType.GHAST)
-			if(cause.getImmediateSource() instanceof FireballEntity && cause.getTrueSource() instanceof PlayerEntity)
+			if(cause.getDirectEntity() instanceof Fireball && cause.getEntity() instanceof Player)
 			{
-				Random rand = victim.getRNG();
+				RandomSource rand = victim.getRandom();
 				if(rand.nextInt(15) == 0)
 					for(int i=0; i<rand.nextInt(3); i++)
 					{
 						EntityGhastling ghastling = VOEntities.GHASTLING.create(world);
-						ghastling.setLocationAndAngles(victim.getPosX(), victim.getPosY(), victim.getPosZ(), rand.nextFloat() * 360F, 0F);
-						world.addEntity(ghastling);
+						ghastling.setPos(victim.getX(), victim.getY(), victim.getZ());
+						ghastling.setYRot(rand.nextFloat() * 360F);
+						ghastling.setXRot(0F);
+						world.addFreshEntity(ghastling);
 					}
 			}
 		
 		// Heal worgs and wargs when they kill something
-		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getTrueSource() instanceof AbstractGoblinWolf)
-			((AbstractGoblinWolf)cause.getTrueSource()).heal(2F + victim.getRNG().nextFloat() * 3F);
+		if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getEntity() instanceof AbstractGoblinWolf)
+			((AbstractGoblinWolf)cause.getEntity()).heal(2F + victim.getRandom().nextFloat() * 3F);
 		
 	}
 	
 	@SubscribeEvent(priority=EventPriority.LOW)
 	public static void unconsciousDeathEvent(LivingDeathEvent event)
 	{
-		LivingEntity victim = event.getEntityLiving();
+		LivingEntity victim = event.getEntity();
 		EntityBodyUnconscious body = EntityBodyUnconscious.getBodyFromEntity(victim);
 		if(body != null)
-			victim.copyLocationAndAnglesFrom(body);
+			victim.copyPosition(body);
 	}
 	
 	/** Spawn a corpse when a Needled creature dies */
 	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public static void corpseSpawnEvent(LivingDeathEvent event)
 	{
-		LivingEntity victim = event.getEntityLiving();
-		World world = victim.getEntityWorld();
+		LivingEntity victim = event.getEntity();
+		Level world = victim.getLevel();
 		if(event.getSource() == DamageSource.OUT_OF_WORLD || event.isCanceled())
 			return;
 		
-		if(!(victim instanceof MobEntity || victim instanceof PlayerEntity))
+		if(!(victim instanceof Monster || victim instanceof Player))
 			return;
 		
 		boolean spawnCorpse = false;
@@ -289,10 +290,10 @@ public class VOBusServer
 				spawnCorpse = victim.getType() == EntityType.PLAYER;
 				break;
 			case NEEDLED_ONLY:
-				spawnCorpse = victim.isPotionActive(VOPotions.NEEDLED);
+				spawnCorpse = victim.hasEffect(VOPotions.NEEDLED);
 				break;
 			case PLAYERS_AND_NEEDLED:
-				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.isPotionActive(VOPotions.NEEDLED);
+				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.hasEffect(VOPotions.NEEDLED);
 				break;
 			case ALWAYS:
 				spawnCorpse = true;
@@ -305,36 +306,36 @@ public class VOBusServer
 		if(spawnCorpse)
 		{
 			AbstractBody.clearNearbyAttackTargetsOf(victim);
-			victim.removeActivePotionEffect(VOPotions.NEEDLED);
+			victim.removeEffect(VOPotions.NEEDLED);
 			EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(victim);
 			
 			if(victim.getType() == EntityType.PLAYER)
 			{
-				PlayerData playerData = PlayerData.forPlayer((PlayerEntity)victim);
+				PlayerData playerData = PlayerData.forPlayer((Player)victim);
 				
 				// If player is already dead, let them die as normal
-				if(PlayerData.isPlayerBodyDead((PlayerEntity)victim))
+				if(PlayerData.isPlayerBodyDead((Player)victim))
 					return;
 				// Otherwise, cancel the event and set them to be dead
-				else if(playerData.setConditionIsDead(corpse.getUniqueID()))
+				else if(playerData.setConditionIsDead(corpse.getUUID()))
 				{
 					event.setCanceled(true);
-					world.getPlayers().forEach((player) -> { player.sendMessage(event.getSource().getDeathMessage(victim), victim.getUniqueID()); });
+					world.players().forEach((player) -> { player.sendSystemMessage(event.getSource().getLocalizedDeathMessage(victim)); });
 					return;
 				}
 			}
-			else if(corpse != null && !world.isRemote)
+			else if(corpse != null && !world.isClientSide)
 			{
 				corpse.setPocketInventory(LivingData.forEntity(victim).getPocketInventory());
-				world.addEntity(corpse);
+				world.addFreshEntity(corpse);
 			}
 		}
-		else if(!world.isRemote)
+		else if(!world.isClientSide)
 		{
 			LivingData livingData = LivingData.forEntity(victim);
 			for(ItemStack stack : livingData.getPocketInventory())
 				if(!stack.isEmpty())
-					victim.entityDropItem(stack, victim.getRNG().nextFloat());
+					victim.spawnAtLocation(stack, victim.getRandom().nextFloat());
 		}
 	}
 	
@@ -347,9 +348,9 @@ public class VOBusServer
 	{
 		if(event.bodyChange())
 		{
-			PlayerEntity player = event.getPlayer();
+			Player player = event.getEntity();
 			PlayerData data = PlayerData.forPlayer(player);
-			World world = player.getEntityWorld();
+			Level world = player.getLevel();
 			
 			if(!(event.getNewBody() == BodyCondition.ALIVE && event.getNewSoul() == SoulCondition.ALIVE))
 				AbstractBody.clearNearbyAttackTargetsOf(player);
@@ -357,18 +358,18 @@ public class VOBusServer
 			switch(event.getNewBody())
 			{
 				case DEAD:
-					player.removeActivePotionEffect(VOPotions.NEEDLED);
+					player.removeEffect(VOPotions.NEEDLED);
 					EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(player);
-					data.setBodyUUID(corpse.getUniqueID());
+					data.setBodyUUID(corpse.getUUID());
 					player.setHealth(player.getMaxHealth());
-					if(!world.isRemote)
-						world.addEntity(corpse);
+					if(!world.isClientSide)
+						world.addFreshEntity(corpse);
 					break;
 				case UNCONSCIOUS:
 					LivingEntity body = EntityBodyUnconscious.createBodyFrom(player);
-					data.setBodyUUID(body.getUniqueID());
-					if(!world.isRemote)
-						world.addEntity(body);
+					data.setBodyUUID(body.getUUID());
+					if(!world.isClientSide)
+						world.addFreshEntity(body);
 					break;
 				case ALIVE:
 				default:
@@ -380,11 +381,11 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onFireworkBlastEvent(FireworkExplosionEvent event)
 	{
-		ListNBT explosions = event.fireworkData().getList("Explosions", 10);
+		ListTag explosions = event.fireworkData().getList("Explosions", 10);
 		if(!explosions.isEmpty())
 		{
-			AxisAlignedBB bounds = new AxisAlignedBB(0, 0, 0, 1, 1, 1).offset(event.position()).grow(16 * explosions.size());
-			for(EntityWorg worg : event.world().getEntitiesWithinAABB(EntityWorg.class, bounds))
+			AABB bounds = new AABB(0, 0, 0, 1, 1, 1).move(event.position()).inflate(16 * explosions.size());
+			for(EntityWorg worg : event.world().getEntitiesOfClass(EntityWorg.class, bounds))
 				worg.spook();
 		}
 	}
@@ -403,7 +404,7 @@ public class VOBusServer
 			if(types.contains(EnumCreatureType.EXTRAPLANAR) || types.contains(EnumCreatureType.NATIVE))
 				return;
 			
-			ResourceLocation currentDim = entity.getEntityWorld().getDimensionKey().getLocation();
+			ResourceLocation currentDim = new ResourceLocation(entity.getLevel().dimensionType().toString());
 			if(currentDim.equals(data.getHomeDimension()))
 			{
 				if(!types.contains(EnumCreatureType.EXTRAPLANAR) && EnumCreatureType.NATIVE.canApplyTo(types))
@@ -426,18 +427,18 @@ public class VOBusServer
 	{
 		if(event.getAmount() > 0F && !event.isCanceled())
 		{
-			LivingEntity hurtEntity = event.getEntityLiving();
+			LivingEntity hurtEntity = event.getEntity();
 			if(VOPotions.isSilenced(hurtEntity))
 				return;
 			
 			wakeupEntitiesAround(hurtEntity);
 			
-			EffectInstance sleepEffect = hurtEntity.getActivePotionEffect(VOPotions.SLEEP);
+			MobEffectInstance sleepEffect = hurtEntity.getEffect(VOPotions.SLEEP);
 			int tier = (sleepEffect == null || sleepEffect.getDuration() <= 0) ? -1 : sleepEffect.getAmplifier();
 			
 			if(PotionSleep.isSleeping(hurtEntity) && tier < 1)
 				if(!MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(hurtEntity, true)))
-					hurtEntity.removePotionEffect(VOPotions.SLEEP);
+					hurtEntity.removeEffect(VOPotions.SLEEP);
 		}
 	}
 	
@@ -448,12 +449,12 @@ public class VOBusServer
 		{
 			DamageSource source = event.getSource();
 			
-			LivingData data = LivingData.forEntity(event.getEntityLiving());
+			LivingData data = LivingData.forEntity(event.getEntity());
 			if(data == null)
 				return;
 			
-			Entity immediate = source.getImmediateSource();
-			Entity distant = source.getTrueSource();
+			Entity immediate = source.getDirectEntity();
+			Entity distant = source.getEntity();
 			if(immediate != null && immediate instanceof LivingEntity && data.hasCondition(Conditions.CHARMED, (LivingEntity)immediate))
 				data.clearCondition((LivingEntity)immediate, Conditions.CHARMED);
 			if(distant != null && distant instanceof LivingEntity && data.hasCondition(Conditions.CHARMED, (LivingEntity)distant))
@@ -470,7 +471,7 @@ public class VOBusServer
 	{
 		if(!event.isCanceled() && event.getSource() == VODamageSource.BLUDGEON)
 		{
-			LivingEntity hurtEntity = event.getEntityLiving();
+			LivingEntity hurtEntity = event.getEntity();
 			LivingData data = LivingData.forEntity(hurtEntity);
 			
 			if(data != null)
@@ -484,7 +485,7 @@ public class VOBusServer
 	public static void onAnchoredTeleport(EntityTeleportEvent.EnderEntity event)
 	{
 		LivingEntity entity = event.getEntityLiving();
-		if(entity.isPotionActive(VOPotions.ANCHORED))
+		if(entity.hasEffect(VOPotions.ANCHORED))
 			event.setCanceled(true);
 	}
 	
@@ -496,28 +497,28 @@ public class VOBusServer
 	public static void onAbilityAffectPlayer(AbilityAffectEntityEvent event)
 	{
 		if(event.getEntity() != null && event.getEntity().getType() == EntityType.PLAYER)
-			if(!PlayerData.isPlayerNormalFunction((PlayerEntity)event.getEntity()))
+			if(!PlayerData.isPlayerNormalFunction((Player)event.getEntity()))
 				event.setCanceled(true);
 	}
 	
 	public static void wakeupEntitiesAround(Entity source, double rangeXZ, double rangeY)
 	{
-		for(LivingEntity entity : source.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, source.getBoundingBox().grow(rangeXZ, rangeY, rangeXZ)))
+		for(LivingEntity entity : source.getLevel().getEntitiesOfClass(LivingEntity.class, source.getBoundingBox().inflate(rangeXZ, rangeY, rangeXZ)))
 		{
 			if(entity == source || !PotionSleep.isSleeping(entity) || PotionSleep.hasSleepEffect(entity))
 				continue;
 			
 			if(entity instanceof LivingEntity)
 			{
-				double wakeupChance = (new Random(entity.getUniqueID().getLeastSignificantBits())).nextDouble();
-				if(entity.getRNG().nextDouble() < wakeupChance && !MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(entity, true)))
-					entity.removeActivePotionEffect(VOPotions.SLEEP);
+				double wakeupChance = (RandomSource.create(entity.getUUID().getLeastSignificantBits())).nextDouble();
+				if(entity.getRandom().nextDouble() < wakeupChance && !MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(entity, true)))
+					entity.removeEffect(VOPotions.SLEEP);
 			}
-			else if(entity instanceof PlayerEntity)
+			else if(entity instanceof Player)
 			{
-				PlayerEntity player = (PlayerEntity)entity;
+				Player player = (Player)entity;
 				if(!MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(entity, true)))
-					player.wakeUp();
+					player.stopSleeping();
 			}
 		}
 	}
@@ -529,9 +530,9 @@ public class VOBusServer
 	
 	private static void reduceRefractory(LivingEntity goblinIn, int amount)
 	{
-		List<EntityGoblin> nearbyGoblins = goblinIn.getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, goblinIn.getBoundingBox().grow(10));
+		List<EntityGoblin> nearbyGoblins = goblinIn.getLevel().getEntitiesOfClass(EntityGoblin.class, goblinIn.getBoundingBox().inflate(10));
 		for(EntityGoblin goblin : nearbyGoblins)
 			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
-				goblin.setGrowingAge(Math.max(0, goblin.getGrowingAge() - amount));
+				goblin.setAge(Math.max(0, goblin.getGrowingAge() - amount));
 	}
 }

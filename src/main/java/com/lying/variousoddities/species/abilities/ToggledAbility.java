@@ -3,9 +3,9 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 
 public abstract class ToggledAbility extends ActivatedAbility
@@ -22,14 +22,14 @@ public abstract class ToggledAbility extends ActivatedAbility
 		this(registryName, Reference.Values.TICKS_PER_SECOND / 2);
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
 		compound.putBoolean("IsActive", isActive);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		this.isActive = compound.getBoolean("IsActive");
@@ -60,13 +60,13 @@ public abstract class ToggledAbility extends ActivatedAbility
 	{
 		public Builder(ResourceLocation registryName){ super(registryName); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			ToggledAbility ability = createAbility(compound);
 			ability.readFromNBT(compound);
 			return ability;
 		}
 		
-		public abstract ToggledAbility createAbility(CompoundNBT compound);
+		public abstract ToggledAbility createAbility(CompoundTag compound);
 	}
 }

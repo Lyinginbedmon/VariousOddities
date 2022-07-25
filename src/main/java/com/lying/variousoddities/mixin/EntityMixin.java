@@ -13,23 +13,23 @@ import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
+import com.mojang.math.Vector3d;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 @Mixin(Entity.class)
 public class EntityMixin
 {
-	@Shadow public World world;
+	@Shadow public Level world;
 	
 	@Shadow
 	public final double getPosX(){ return 0D; }
@@ -41,7 +41,7 @@ public class EntityMixin
 	public final double getPosZ(){ return 0D; }
 	
 	@Shadow
-	public EntityDataManager getDataManager(){ return null; }
+	public SynchedEntityData getDataManager(){ return null; }
 	
 	@Shadow
 	public int getMaxAir(){ return 0; }
@@ -136,27 +136,27 @@ public class EntityMixin
 		}
 	}
 	
-	@Inject(method = "getBoundingBox(Lnet/minecraft/entity/Pose;)Lnet/minecraft/util/math/AxisAlignedBB;", at = @At("TAIL"), cancellable = true)
-	public void getSize(Pose poseIn, final CallbackInfoReturnable<AxisAlignedBB> ci)
+	@Inject(method = "getBoundingBox(Lnet/minecraft/entity/Pose;)Lnet/minecraft/util/math/AABB;", at = @At("TAIL"), cancellable = true)
+	public void getSize(Pose poseIn, final CallbackInfoReturnable<AABB> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent.getType() == EntityType.PLAYER && AbilityRegistry.hasAbility((PlayerEntity)ent, AbilitySize.REGISTRY_NAME))
+		if(ent.getType() == EntityType.PLAYER && AbilityRegistry.hasAbility((Player)ent, AbilitySize.REGISTRY_NAME))
 		{
-			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName((PlayerEntity)ent, AbilitySize.REGISTRY_NAME);
+			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName((Player)ent, AbilitySize.REGISTRY_NAME);
 			if(size == null) return;
 			
-			AxisAlignedBB baseSize = ci.getReturnValue();
+			AABB baseSize = ci.getReturnValue();
 			float scale = size.getScale();
 			
-			double posX = ent.getPosX();
-			double posY = ent.getPosY();
-			double posZ = ent.getPosZ();
+			double posX = ent.getX();
+			double posY = ent.getY();
+			double posZ = ent.getZ();
 			
-			double lenX = baseSize.getXSize() * scale * 0.5D;
-			double lenY = baseSize.getYSize() * scale;
-			double lenZ = baseSize.getZSize() * scale * 0.5D;
+			double lenX = baseSize.getXsize() * scale * 0.5D;
+			double lenY = baseSize.getYsize() * scale;
+			double lenZ = baseSize.getZsize() * scale * 0.5D;
 			
-			AxisAlignedBB trueSize = new AxisAlignedBB(
+			AABB trueSize = new AABB(
 					posX - lenX, posY, posZ - lenZ,
 					posX + lenX, posY + lenY, posZ + lenZ
 					);

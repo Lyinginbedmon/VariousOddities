@@ -7,11 +7,11 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.potion.PotionPetrifying;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketPetrifying
 {
@@ -41,7 +41,7 @@ public class PacketPetrifying
 		NetworkEvent.Context context = cxt.get();
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			LivingEntity target = getEntityFromUUID(player, msg.entityID);
 			if(target != null)
 				PotionPetrifying.doParticles(target, msg.amplifier);
@@ -49,19 +49,19 @@ public class PacketPetrifying
 		context.setPacketHandled(true);
 	}
 	
-	private static LivingEntity getEntityFromUUID(PlayerEntity player, UUID entityID)
+	private static LivingEntity getEntityFromUUID(Player player, UUID entityID)
 	{
 		LivingEntity target = null;
-		if(player.getUniqueID().equals(entityID))
+		if(player.getUUID().equals(entityID))
 			target = player;
 		else
 		{
-			World world = player.getEntityWorld();
-			target = world.getPlayerByUuid(entityID);
+			Level world = player.getLevel();
+			target = world.getPlayerByUUID(entityID);
 			
 			if(target == null)
-				for(LivingEntity ent : world.getEntitiesWithinAABB(LivingEntity.class, player.getBoundingBox().grow(64D)))
-					if(ent.getUniqueID().equals(entityID))
+				for(LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(64D)))
+					if(ent.getUUID().equals(entityID))
 					{
 						target = ent;
 						break;

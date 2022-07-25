@@ -6,11 +6,10 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 public class ItemSap extends VOItem implements IBludgeoningItem
 {
@@ -19,8 +18,8 @@ public class ItemSap extends VOItem implements IBludgeoningItem
 		super(properties);
 	}
 	
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn)
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn)
 	{
-		tooltip.add(new TranslationTextComponent("info."+Reference.ModInfo.MOD_ID+".bludgeoning_item"));
+		tooltip.add(Component.translatable("info."+Reference.ModInfo.MOD_ID+".bludgeoning_item"));
 	}
 }

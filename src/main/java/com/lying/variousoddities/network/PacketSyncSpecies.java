@@ -7,23 +7,23 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.species.Species;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSyncSpecies
 {
-	private CompoundNBT speciesData = new CompoundNBT();
+	private CompoundTag speciesData = new CompoundTag();
 	
 	public PacketSyncSpecies(){ }
 	public PacketSyncSpecies(Map<ResourceLocation, Species> registryIn)
 	{
-		ListNBT data = new ListNBT();
+		ListTag data = new ListTag();
 		registryIn.values().forEach((species) -> 
 		{
-			data.add(species.storeInNBT(new CompoundNBT()));
+			data.add(species.storeInNBT(new CompoundTag()));
 		});
 		speciesData.put("Species", data);
 		VariousOddities.log.info("Sending species to client, "+data.size()+" species");
@@ -44,7 +44,7 @@ public class PacketSyncSpecies
 	public static void handle(PacketSyncSpecies msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		VORegistries.SPECIES.clear();
-		ListNBT data = msg.speciesData.getList("Species", 10);
+		ListTag data = msg.speciesData.getList("Species", 10);
 		for(int i=0; i<data.size(); i++)
 		{
 			Species species = null;

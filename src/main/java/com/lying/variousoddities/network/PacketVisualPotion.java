@@ -7,11 +7,11 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketVisualPotion
 {
@@ -52,15 +52,15 @@ public class PacketVisualPotion
 			return;
 		}
 		
-		PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+		Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 		LivingEntity target = null;
-		if(player.getUniqueID().equals(msg.entityID))
+		if(player.getUUID().equals(msg.entityID))
 			target = player;
 		else
 		{
-			World world = player.getEntityWorld();
-			for(LivingEntity ent : world.getEntitiesWithinAABB(LivingEntity.class, player.getBoundingBox().grow(64D)))
-				if(ent.getUniqueID().equals(msg.entityID))
+			Level world = player.getLevel();
+			for(LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(64D)))
+				if(ent.getUUID().equals(msg.entityID))
 				{
 					target = ent;
 					break;

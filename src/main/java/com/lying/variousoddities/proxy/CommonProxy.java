@@ -1,16 +1,16 @@
 package com.lying.variousoddities.proxy;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public abstract class CommonProxy implements IProxy
 {
-	public PlayerEntity getPlayerEntity(NetworkEvent.Context ctx)
+	public Player getPlayerEntity(NetworkEvent.Context ctx)
 	{
 		return ctx.getSender();
 	}
 	
 	public void clearSettlements(){ }
 	
-	public void openSpeciesSelectScreen(PlayerEntity entity, int power, boolean randomise){ }
+	public void openSpeciesSelectScreen(Player entity, int power, boolean randomise){ }
 }

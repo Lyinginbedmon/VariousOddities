@@ -19,11 +19,10 @@ import com.lying.variousoddities.species.templates.TemplateOperation;
 import com.lying.variousoddities.species.templates.TemplatePrecondition;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
 
 public class Template
 {
@@ -35,7 +34,7 @@ public class Template
 	private ResourceLocation registryName;
 	private UUID templateID;
 	
-	private ITextComponent customName = null;
+	private Component customName = null;
 	
 	public Template(){ }
 	public Template(ResourceLocation name, UUID uuid)
@@ -49,16 +48,16 @@ public class Template
 	
 	public UUID uuid(){ return this.templateID; }
 	
-	public ITextComponent getDisplayName()
+	public Component getDisplayName()
 	{
 		if(this.customName != null)
 			return this.customName;
 		String path = this.registryName.getPath();
 		path = (path.substring(0, 1).toUpperCase() + path.substring(1)).replace('_', ' ');
-		return new StringTextComponent(path);
+		return Component.literal(path);
 	}
 	
-	public Template setDisplayName(ITextComponent nameIn)
+	public Template setDisplayName(Component nameIn)
 	{
 		this.customName = nameIn;
 		return this;
@@ -89,7 +88,7 @@ public class Template
 	
 	public Template setPower(@Nonnull int par1Int)
 	{
-		this.power = MathHelper.clamp(par1Int, 0, 10);
+		this.power = Mth.clamp(par1Int, 0, 10);
 		return this;
 	}
 	
@@ -111,7 +110,7 @@ public class Template
 		json.addProperty("Power", getPower());
 		
 		if(this.customName != null)
-			json.addProperty("CustomName", ITextComponent.Serializer.toJson(this.customName));
+			json.addProperty("CustomName", Component.Serializer.toJson(this.customName));
 		
 		JsonArray operations = new JsonArray();
 			for(TemplateOperation operation : this.operations)
@@ -155,7 +154,7 @@ public class Template
 			String s = object.get("CustomName").getAsString();
 			try
 			{
-				template.setDisplayName(ITextComponent.Serializer.getComponentFromJson(s));
+				template.setDisplayName(Component.Serializer.fromJson(s));
 			}
 			catch (Exception exception)
 			{

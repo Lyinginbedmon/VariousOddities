@@ -1,10 +1,9 @@
 package com.lying.variousoddities.species.abilities;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public abstract class AbilityModifier extends Ability
@@ -25,15 +24,15 @@ public abstract class AbilityModifier extends Ability
 	
 	public double amount(){ return this.amount; }
 	
-	public ITextComponent translatedAmount(){ return new StringTextComponent(amount() <= 0 ? String.valueOf((int)amount()) : "+"+(int)amount); }
+	public Component translatedAmount(){ return Component.literal(amount() <= 0 ? String.valueOf((int)amount()) : "+"+(int)amount); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putDouble("Amount", this.amount);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.amount = compound.getDouble("Amount");
 	}
@@ -43,5 +42,5 @@ public abstract class AbilityModifier extends Ability
 		bus.addListener(this::applyModifier);
 	}
 	
-	public abstract void applyModifier(LivingUpdateEvent event);
+	public abstract void applyModifier(LivingTickEvent event);
 }

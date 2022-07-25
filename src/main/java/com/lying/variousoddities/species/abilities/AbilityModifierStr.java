@@ -4,16 +4,15 @@ import java.util.UUID;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 
 public class AbilityModifierStr extends AbilityModifier
 {
@@ -29,20 +28,20 @@ public class AbilityModifierStr extends AbilityModifier
 	
 	public Type getType(){ return this.amount >= 0 ? Type.ATTACK : Type.WEAKNESS; }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability.varodd.strength_modifier", translatedAmount());
+		return Component.translatable("ability.varodd.strength_modifier", translatedAmount());
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability.varodd:strength_modifier.desc"+(amount < 0 ? ".minus" : ".plus"), (int)Math.abs(amount));
+		return Component.translatable("ability.varodd:strength_modifier.desc"+(amount < 0 ? ".minus" : ".plus"), (int)Math.abs(amount));
 	}
 	
-	public void applyModifier(LivingUpdateEvent event)
+	public void applyModifier(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
-		ModifiableAttributeInstance attribute = entity.getAttribute(Attributes.ATTACK_DAMAGE);
+		LivingEntity entity = event.getEntity();
+		AttributeInstance attribute = entity.getAttribute(Attributes.ATTACK_DAMAGE);
 		if(attribute == null)
 			return;
 		
@@ -61,9 +60,8 @@ public class AbilityModifierStr extends AbilityModifier
 			if(modifier == null)
 			{
 				modifier = new AttributeModifier(STRENGTH_UUID, "strength_modifier", amount, Operation.ADDITION);
-				attribute.applyPersistentModifier(modifier);
+				attribute.addPermanentModifier(modifier);
 			}
-			
 		}
 		else if(attribute.getModifier(STRENGTH_UUID) != null)
 			attribute.removeModifier(STRENGTH_UUID);
@@ -73,7 +71,7 @@ public class AbilityModifierStr extends AbilityModifier
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			double amount = compound.contains("Amount", 6) ? compound.getDouble("Amount") : 2F;
 			return new AbilityModifierStr(amount);

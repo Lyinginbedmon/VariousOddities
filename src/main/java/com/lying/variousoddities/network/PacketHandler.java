@@ -2,17 +2,17 @@ package com.lying.variousoddities.network;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.simple.SimpleChannel;
 
 public class PacketHandler
 {
@@ -63,34 +63,34 @@ public class PacketHandler
 	/**
 	 * Send message to all within 64 blocks that have this chunk loaded
 	 */
-	public static void sendToNearby(World world, BlockPos pos, Object toSend)
+	public static void sendToNearby(Level world, BlockPos pos, Object toSend)
 	{
-		if(world instanceof ServerWorld)
+		if(world instanceof ServerLevel)
 		{
-			ServerWorld ws = (ServerWorld) world;
+			ServerLevel ws = (ServerLevel) world;
 			ws.getChunkProvider().chunkManager.getTrackingPlayers(new ChunkPos(pos), false).filter(p -> p.getDistanceSq(pos.getX(), pos.getY(), pos.getZ()) < 64 * 64).forEach(p -> HANDLER.send(PacketDistributor.PLAYER.with(() -> p), toSend));
 		}
 	}
 	
-	public static void sendToNearby(World world, Entity e, Object toSend)
+	public static void sendToNearby(Level world, Entity e, Object toSend)
 	{
-		sendToNearby(world, e.getPosition(), toSend);
+		sendToNearby(world, e.blockPosition(), toSend);
 	}
 	
-	public static void sendToAll(ServerWorld world, Object toSend)
+	public static void sendToAll(ServerLevel world, Object toSend)
 	{
-		for(ServerPlayerEntity player : world.getPlayers())
+		for(ServerPlayer player : world.players())
 			HANDLER.sendTo(toSend, player.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
 	}
 	
-	public static void sendTo(ServerPlayerEntity playerMP, Object toSend)
+	public static void sendTo(ServerPlayer playerMP, Object toSend)
 	{
 		HANDLER.sendTo(toSend, playerMP.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
 	}
 	
-	public static void sendNonLocal(ServerPlayerEntity playerMP, Object toSend)
+	public static void sendNonLocal(ServerPlayer playerMP, Object toSend)
 	{
-		if(playerMP.server.isDedicatedServer() || !playerMP.getGameProfile().getName().equals(playerMP.server.getServerOwner()))
+		if(playerMP.server.isDedicatedServer() || !playerMP.server.isSingleplayerOwner(playerMP.getGameProfile()))
 			sendTo(playerMP, toSend);
 	}
 	

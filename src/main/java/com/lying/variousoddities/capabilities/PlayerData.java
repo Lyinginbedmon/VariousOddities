@@ -16,28 +16,26 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncPlayerData;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class PlayerData implements ICapabilitySerializable<CompoundNBT>
+public class PlayerData implements ICapabilitySerializable<CompoundTag>
 {
 	@CapabilityInject(PlayerData.class)
 	public static final Capability<PlayerData> CAPABILITY = null;
@@ -46,7 +44,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	
 	private final LazyOptional<PlayerData> handler;
 	
-	private PlayerEntity player = null;
+	private Player player = null;
 	
 	public Reputation reputation = new Reputation();
 	
@@ -72,7 +70,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	
 	public LazyOptional<PlayerData> handler(){ return this.handler; }
 	
-	public static PlayerData forPlayer(PlayerEntity player)
+	public static PlayerData forPlayer(Player player)
 	{
 		if(player == null)
 			return null;
@@ -93,28 +91,28 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		return CAPABILITY.orEmpty(cap, this.handler);
 	}
 	
-	public CompoundNBT serializeNBT()
+	public CompoundTag serializeNBT()
 	{
-		CompoundNBT compound = new CompoundNBT();
+		CompoundTag compound = new CompoundTag();
 		
-		compound.put("Reputation", this.reputation.serializeNBT(new CompoundNBT()));
-		compound.putString("Body", conditionBody.getString());
-		compound.putString("Soul", conditionSoul.getString());
+		compound.put("Reputation", this.reputation.serializeNBT(new CompoundTag()));
+		compound.putString("Body", conditionBody.getSerializedName());
+		compound.putString("Soul", conditionSoul.getSerializedName());
 		if(this.bodyUUID != null)
-			compound.putUniqueId("BodyUUID", this.bodyUUID);
+			compound.putUUID("BodyUUID", this.bodyUUID);
 		if(isBodyDead())
 			compound.putInt("DeadTicks", this.deadTimer);
 		return compound;
 	}
 	
-	public void deserializeNBT(CompoundNBT nbt)
+	public void deserializeNBT(CompoundTag nbt)
 	{
 		if(nbt.contains("Reputation"))
 			this.reputation.deserializeNBT(nbt.getCompound("Reputation"));
 		this.conditionBody = BodyCondition.fromString(nbt.getString("Body"));
 		this.conditionSoul = SoulCondition.fromString(nbt.getString("Soul"));
 		if(nbt.contains("BodyUUID", 11))
-			this.bodyUUID = nbt.getUniqueId("BodyUUID");
+			this.bodyUUID = nbt.getUUID("BodyUUID");
 		else
 			this.bodyUUID = null;
 		if(isBodyDead())
@@ -194,7 +192,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	/** Returns true if the given player's soul is bound to their body, whether inhabiting it or not */
 	public static boolean isPlayerSoulBound(@Nullable LivingEntity player){ return !checkCondition(player, null, SoulCondition.ROAMING); }
 	
-	public static boolean isPlayerBody(@Nullable PlayerEntity player, Entity body)
+	public static boolean isPlayerBody(@Nullable Player player, Entity body)
 	{
 		return player != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isBody(body);
 	}
@@ -203,7 +201,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	{
 		if(playerIn != null && playerIn.getType() == EntityType.PLAYER)
 		{
-			PlayerEntity player = (PlayerEntity)playerIn;
+			Player player = (Player)playerIn;
 			PlayerData data = PlayerData.forPlayer(player);
 			return data != null && (bodyCondition == null || data.getBodyCondition() == bodyCondition) && (soulCondition == null || data.getSoulCondition() == soulCondition);
 		}
@@ -225,29 +223,29 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean isBody(@Nullable Entity entityIn)
 	{
-		return getBodyUUID() != null && entityIn != null && entityIn.getUniqueID().equals(getBodyUUID());
+		return getBodyUUID() != null && entityIn != null && entityIn.getUUID().equals(getBodyUUID());
 	}
 	
 	@Nullable
-	public Entity getBody(@Nonnull World world)
+	public Entity getBody(@Nonnull Level world)
 	{
 		if(world == null || getBodyCondition() == BodyCondition.ALIVE)
 			return null;
 		
-		AxisAlignedBB bounds = player.getBoundingBox().grow(256D);
+		AABB bounds = player.getBoundingBox().inflate(256D);
 		if(getBodyUUID() != null)
 		{
-			List<Entity> candidates = world.getEntitiesWithinAABB(Entity.class, bounds, this::isBody);
+			List<Entity> candidates = world.getEntitiesOfClass(Entity.class, bounds, this::isBody);
 			if(!candidates.isEmpty())
 				return candidates.get(0);
 		}
 		
-		List<AbstractBody> candidates = world.getEntitiesWithinAABB(AbstractBody.class, bounds, AbstractBody::isPlayer);
+		List<AbstractBody> candidates = world.getEntitiesOfClass(AbstractBody.class, bounds, AbstractBody::isPlayer);
 		for(AbstractBody body : candidates)
 		{
 			if(body.isPlayer() && body.getGameProfile().getId().equals(player.getGameProfile().getId()))
 			{
-				setBodyUUID(body.getUniqueID());
+				setBodyUUID(body.getUUID());
 				return body;
 			}
 		}
@@ -255,7 +253,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		return null;
 	}
 	
-	public void tick(PlayerEntity player)
+	public void tick(Player player)
 	{
 		if(isBodyDead())
 			setDeadTicks(this.deadTimer-1);
@@ -264,8 +262,8 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		{
 			this.isDirty = false;
 			
-			if(!player.getEntityWorld().isRemote)
-				PacketHandler.sendTo((ServerPlayerEntity)player, new PacketSyncPlayerData(player.getUniqueID(), this));
+			if(!player.getLevel().isClientSide)
+				PacketHandler.sendTo((ServerPlayer)player, new PacketSyncPlayerData(player.getUUID(), this));
 		}
 	}
 	
@@ -280,14 +278,14 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		private final Map<String, Integer> reputation = new HashMap<>();
 		private String faction = "";
 		
-		public CompoundNBT serializeNBT(CompoundNBT compound)
+		public CompoundTag serializeNBT(CompoundTag compound)
 		{
 			if(!reputation.isEmpty())
 			{
-				ListNBT list = new ListNBT();
+				ListTag list = new ListTag();
 				for(String faction : reputation.keySet())
 				{
-					CompoundNBT data = new CompoundNBT();
+					CompoundTag data = new CompoundTag();
 					data.putString("Faction", faction);
 					data.putInt("Rep", reputation.get(faction));
 					list.add(data);
@@ -297,12 +295,12 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 			return compound;
 		}
 		
-		public void deserializeNBT(CompoundNBT nbt)
+		public void deserializeNBT(CompoundTag nbt)
 		{
-			ListNBT list = nbt.getList("Reputation", 10);
+			ListTag list = nbt.getList("Reputation", 10);
 			for(int i=0; i<list.size(); i++)
 			{
-				CompoundNBT data = list.getCompound(i);
+				CompoundTag data = list.getCompound(i);
 				reputation.put(data.getString("Faction"), data.getInt("Rep"));
 			}
 		}
@@ -325,7 +323,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		{
 			if(ConfigVO.GENERAL.verboseLogs())
 				VariousOddities.log.info("Set reputation with "+faction+" to "+rep);
-			reputation.put(faction, MathHelper.clamp(rep, -100, 100));
+			reputation.put(faction, Mth.clamp(rep, -100, 100));
 		}
 		
 		public void addReputation(String faction, int rep)
@@ -335,24 +333,24 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		}
 	}
 	
-	public static enum BodyCondition implements IStringSerializable
+	public static enum BodyCondition implements StringRepresentable
 	{
 		ALIVE,			// Body is functioning normally
 		UNCONSCIOUS,	// Body is temporarily inert
 		DEAD;			// Body is inert until respawning
 		
-		public String getString(){ return name().toLowerCase(); }
+		public String getSerializedName(){ return name().toLowerCase(); }
 		
 		public static BodyCondition fromString(String nameIn)
 		{
 			for(BodyCondition condition : values())
-				if(condition.getString().equalsIgnoreCase(nameIn))
+				if(condition.getSerializedName().equalsIgnoreCase(nameIn))
 					return condition;
 			return ALIVE;
 		}
 	}
 	
-	public static enum SoulCondition implements IStringSerializable
+	public static enum SoulCondition implements StringRepresentable
 	{
 		ALIVE(0D),		// Soul is functioning normally
 		BOUND(6D),		// Soul is restricted to the vicinity of the body
@@ -365,12 +363,12 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 			this.wanderRange = range;
 		}
 		
-		public String getString(){ return name().toLowerCase(); }
+		public String getSerializedName(){ return name().toLowerCase(); }
 		
 		public static SoulCondition fromString(String nameIn)
 		{
 			for(SoulCondition condition : values())
-				if(condition.getString().equalsIgnoreCase(nameIn))
+				if(condition.getSerializedName().equalsIgnoreCase(nameIn))
 					return condition;
 			return ALIVE;
 		}
@@ -389,7 +387,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundNBT>
 		public void readNBT(Capability<PlayerData> capability, PlayerData instance, Direction side, INBT nbt)
 		{
 			if(nbt.getId() == 10)
-				instance.deserializeNBT((CompoundNBT)nbt);
+				instance.deserializeNBT((CompoundTag)nbt);
 		}
 	}
 }

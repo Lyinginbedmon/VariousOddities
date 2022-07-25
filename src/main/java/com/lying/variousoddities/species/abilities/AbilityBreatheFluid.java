@@ -9,14 +9,14 @@ import com.lying.variousoddities.api.event.AbilityEvent.AbilityGetBreathableFlui
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -29,28 +29,28 @@ public class AbilityBreatheFluid extends Ability
 	
 	public AbilityBreatheFluid(){ super(REGISTRY_NAME); }
 	
-	public AbilityBreatheFluid(@Nonnull ITag.INamedTag<Fluid> fluid)
+	public AbilityBreatheFluid(@Nonnull TagKey<Fluid> fluid)
 	{
 		this();
 		
 		if(fluid != null)
-			this.fluidTag = fluid.getName();
+			this.fluidTag = fluid.location();
 	}
 	
 	public ResourceLocation getMapName() { return new ResourceLocation(Reference.ModInfo.MOD_ID, (isRemove ? "no_" : "")+(isAirBreathing() ? "air" : this.fluidTag.getPath().toLowerCase())+"_breathing"); }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
 		String translation = "ability."+Reference.ModInfo.MOD_ID+".fluid_breathing";
 		if(isRemove)
 			translation += ".remove";
 		
-		return new TranslationTextComponent(translation, isAirBreathing() ? "air" : fluidTag.getPath());
+		return Component.translatable(translation, isAirBreathing() ? "air" : fluidTag.getPath());
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability."+getRegistryName()+(isRemove ? ".remove" : "")+".desc", isAirBreathing() ? "air" : fluidTag.getPath().toLowerCase());
+		return Component.translatable("ability."+getRegistryName()+(isRemove ? ".remove" : "")+".desc", isAirBreathing() ? "air" : fluidTag.getPath().toLowerCase());
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
@@ -59,7 +59,7 @@ public class AbilityBreatheFluid extends Ability
 	
 	public boolean displayInSpecies(){ return !isAirBreathing(); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(fluidTag != null)
 			compound.putString("Fluid", this.fluidTag.toString());
@@ -67,7 +67,7 @@ public class AbilityBreatheFluid extends Ability
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("Fluid", 8))
 			this.fluidTag = new ResourceLocation(compound.getString("Fluid"));
@@ -83,14 +83,14 @@ public class AbilityBreatheFluid extends Ability
 	
 	public void addFluidBreathing(AbilityGetBreathableFluidEvent.Add event)
 	{
-		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfType(event.getEntityLiving(), AbilityBreatheFluid.class))
+		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfType(event.getEntity(), AbilityBreatheFluid.class))
 			if(!breathing.isRemove)
 				event.add(breathing.getFluid());
 	}
 	
 	public void removeFluidBreathing(AbilityGetBreathableFluidEvent.Remove event)
 	{
-		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfType(event.getEntityLiving(), AbilityBreatheFluid.class))
+		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfType(event.getEntity(), AbilityBreatheFluid.class))
 			if(breathing.isRemove)
 				event.add(breathing.getFluid());
 	}
@@ -108,12 +108,9 @@ public class AbilityBreatheFluid extends Ability
 	
 	public boolean isAirBreathing() { return this.fluidTag == null; }
 	
-	public ITag.INamedTag<Fluid> getFluid()
+	public TagKey<Fluid> getFluid()
 	{
-		for(ITag.INamedTag<Fluid> fluid : FluidTags.getAllTags())
-			if(fluid.getName().equals(fluidTag))
-				return fluid;
-		return null;
+		return TagKey.create(Registry.FLUID_REGISTRY, fluidTag);
 	}
 	
 	public ResourceLocation getTargetFluid()
@@ -132,13 +129,13 @@ public class AbilityBreatheFluid extends Ability
 	public static AbilityBreatheFluid water() { return new AbilityBreatheFluid(FluidTags.WATER); }
 	
 	public static boolean breathes(LivingEntity entity) { return AbilityRegistry.hasAbility(entity, AbilityBreatheFluid.class); }
-	public static boolean canBreatheIn(LivingEntity entity, ITag.INamedTag<Fluid> fluid) { return AbilityRegistry.hasAbility(entity, new ResourceLocation(Reference.ModInfo.MOD_ID, fluid.getName().getPath().toLowerCase()+"_breathing")); }
+	public static boolean canBreatheIn(LivingEntity entity, TagKey<Fluid> fluid) { return AbilityRegistry.hasAbility(entity, new ResourceLocation(Reference.ModInfo.MOD_ID, fluid.location().getPath().toLowerCase()+"_breathing")); }
 	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			AbilityBreatheFluid breathing = new AbilityBreatheFluid();
 			breathing.readFromNBT(compound);

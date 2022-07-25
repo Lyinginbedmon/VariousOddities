@@ -5,16 +5,15 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketTypesData
 {
-	private CompoundNBT data = new CompoundNBT();
+	private CompoundTag data = new CompoundTag();
 	
 	public PacketTypesData(){ }
-	public PacketTypesData(CompoundNBT dataIn)
+	public PacketTypesData(CompoundTag dataIn)
 	{
 		data = dataIn;
 	}

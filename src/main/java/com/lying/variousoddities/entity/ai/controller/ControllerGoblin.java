@@ -13,9 +13,9 @@ import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgTame;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityGoblin.GoblinType;
 
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 
 public class ControllerGoblin
 {
@@ -27,7 +27,7 @@ public class ControllerGoblin
 					{
 						public boolean apply(EntityGoblin input)
 						{
-							return input.isChild();
+							return input.isBaby();
 						}
 					});
 			

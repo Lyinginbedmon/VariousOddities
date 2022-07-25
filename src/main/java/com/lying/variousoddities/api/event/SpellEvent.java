@@ -2,27 +2,26 @@ package com.lying.variousoddities.api.event;
 
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.eventbus.api.Cancelable;
 import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.Event.HasResult;
 
 public class SpellEvent extends Event
 {
 	private final SpellData spellData;
-	private final World world;
+	private final Level world;
 	
-	public SpellEvent(SpellData dataIn, World worldIn)
+	public SpellEvent(SpellData dataIn, Level worldIn)
 	{
 		spellData = dataIn;
 		world = worldIn;
 	}
 	
 	public SpellData getSpellData(){ return this.spellData; }
-	public World getWorld(){ return this.world; }
+	public Level getWorld(){ return this.world; }
 	
 	/**
 	 * Fired whenever a spell is cast, regardless of source or means<br>
@@ -38,12 +37,12 @@ public class SpellEvent extends Event
 	{
 		private LivingEntity caster;
 		
-		public SpellCastEvent(SpellData dataIn, World worldIn)
+		public SpellCastEvent(SpellData dataIn, Level worldIn)
 		{
 			super(dataIn, worldIn);
 			this.caster = null;
 		}
-		public SpellCastEvent(SpellData dataIn, World worldIn, LivingEntity casterIn)
+		public SpellCastEvent(SpellData dataIn, Level worldIn, LivingEntity casterIn)
 		{
 			this(dataIn, worldIn);
 			this.caster = casterIn;
@@ -67,7 +66,7 @@ public class SpellEvent extends Event
 	{
 		private final Entity targetEntity;
 		
-		public SpellAffectEntityEvent(SpellData dataIn, World worldIn, Entity targetIn)
+		public SpellAffectEntityEvent(SpellData dataIn, Level worldIn, Entity targetIn)
 		{
 			super(dataIn, worldIn);
 			targetEntity = targetIn;
@@ -81,7 +80,7 @@ public class SpellEvent extends Event
     {
     	private final SpellData targetSpell;
     	
-    	public SpellAffectSpellEvent(SpellData dataIn, World worldIn, SpellData targetIn)
+    	public SpellAffectSpellEvent(SpellData dataIn, Level worldIn, SpellData targetIn)
     	{
     		super(dataIn, worldIn);
     		targetSpell = targetIn;
@@ -101,7 +100,7 @@ public class SpellEvent extends Event
     @Cancelable
     public static class SpellExpireEvent extends SpellEvent
     {
-    	public SpellExpireEvent(SpellData dataIn, World worldIn)
+    	public SpellExpireEvent(SpellData dataIn, Level worldIn)
     	{
     		super(dataIn, worldIn);
     	}
@@ -118,7 +117,7 @@ public class SpellEvent extends Event
     @Cancelable
     public static class SpellCancelEvent extends SpellEvent
     {
-    	public SpellCancelEvent(SpellData dataIn, World worldIn)
+    	public SpellCancelEvent(SpellData dataIn, Level worldIn)
     	{
     		super(dataIn, worldIn);
     	}

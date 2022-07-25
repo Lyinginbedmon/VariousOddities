@@ -6,21 +6,22 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.Goal.Flag;
+import net.minecraft.world.level.Level;
 
 public class EntityAIGoblinWorgHurt extends Goal
 {
 	private final EntityGoblin theGoblin;
-	private final World theWorld;
+	private final Level theWorld;
 	
 	private Predicate<EntityWorg> searchPredicate = new Predicate<EntityWorg>()
 			{
 				public boolean apply(EntityWorg input)
 				{
-					return !input.isChild() && input.getAttackTarget() == null && !input.isTamed();
+					return !input.isBaby() && input.getTarget() == null && !input.isTame();
 				}
 			};
 	private EntityWorg targetWorg = null;
@@ -28,34 +29,34 @@ public class EntityAIGoblinWorgHurt extends Goal
 	public EntityAIGoblinWorgHurt(EntityGoblin goblinIn)
 	{
 		theGoblin = goblinIn;
-		theWorld = goblinIn.getEntityWorld();
+		theWorld = goblinIn.getLevel();
 		
 		setMutexFlags(EnumSet.of(Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theGoblin.isChild() || !theGoblin.isViolent() || theGoblin.getAttackTarget() != null) return false;
+		if(theGoblin.isBaby() || !theGoblin.isViolent() || theGoblin.getTarget() != null) return false;
 		
 		targetWorg = null;
-		for(EntityWorg worg : theWorld.getEntitiesWithinAABB(EntityWorg.class, theGoblin.getBoundingBox().grow(1D, 0D, 1D), searchPredicate))
+		for(EntityWorg worg : theWorld.getEntitiesOfClass(EntityWorg.class, theGoblin.getBoundingBox().inflate(1D, 0D, 1D), searchPredicate))
 		{
 			targetWorg = worg;
 			break;
 		}
 		
-		return targetWorg != null && theGoblin.getRNG().nextInt(100) == 0;
+		return targetWorg != null && theGoblin.getRandom().nextInt(100) == 0;
 	}
 	
 	public void startExecuting()
 	{
 		theGoblin.getLookController().setLookPositionWithEntity(targetWorg, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
-		theGoblin.swingArm(Hand.OFF_HAND);
+		theGoblin.swingArm(InteractionHand.OFF_HAND);
 		targetWorg.attackEntityFrom(DamageSource.causeMobDamage(theGoblin), 0F);
 		
-		for(EntityGoblin child : theWorld.getEntitiesWithinAABB(EntityGoblin.class, targetWorg.getBoundingBox().grow(12, 2, 12), new Predicate<EntityGoblin>()
+		for(EntityGoblin child : theWorld.getEntitiesWithinAABB(EntityGoblin.class, targetWorg.getBoundingBox().inflate(12, 2, 12), new Predicate<EntityGoblin>()
 			{
-				public boolean apply(EntityGoblin input){ return input.isChild() && input.canEntityBeSeen(targetWorg) && input.canEntityBeSeen(theGoblin); }
+				public boolean apply(EntityGoblin input){ return input.isBaby() && input.canEntityBeSeen(targetWorg) && input.canEntityBeSeen(theGoblin); }
 			}))
 			child.setViolent(true);
 	}

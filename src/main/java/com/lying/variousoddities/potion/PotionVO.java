@@ -1,16 +1,12 @@
 package com.lying.variousoddities.potion;
 
-import com.lying.variousoddities.reference.Reference;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectType;
-import net.minecraft.util.ResourceLocation;
-
-public class PotionVO extends Effect
+public class PotionVO extends MobEffect
 {
-	public PotionVO(String nameIn, EffectType badEffectIn, int colorIn)
+	public PotionVO(MobEffectCategory badEffectIn, int colorIn)
 	{
 		super(badEffectIn, colorIn);
-		setRegistryName(new ResourceLocation(Reference.ModInfo.MOD_ID, nameIn));
 	}
 }

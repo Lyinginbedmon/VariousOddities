@@ -4,9 +4,8 @@ import java.util.Collection;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 
 public class TriggerTime extends Trigger
 {
@@ -15,7 +14,7 @@ public class TriggerTime extends Trigger
 	
 	public String type(){ return "time"; }
 	
-	public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"time" + (inverted ? "_inverted" : ""), timeMin, timeMax); }
+	public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"time" + (inverted ? "_inverted" : ""), timeMin, timeMax); }
 	
 	public boolean applyToTime(long timeIn)
 	{
@@ -29,14 +28,14 @@ public class TriggerTime extends Trigger
 	
 	public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putLong("TimeMin", timeMin);
 		compound.putLong("TimeMax", timeMax);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		timeMin = compound.getLong("TimeMin") % Reference.Values.TICKS_PER_DAY;
 		timeMax = compound.getLong("TimeMax") % Reference.Values.TICKS_PER_DAY;

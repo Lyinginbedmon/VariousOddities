@@ -1,19 +1,19 @@
 package com.lying.variousoddities.enchantment;
 
-import net.minecraft.enchantment.EnchantmentType;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentCategory;
 
 public class EnchantmentSilversheen extends TemporaryEnchantment
 {
 	public EnchantmentSilversheen()
 	{
-		super(Rarity.COMMON, EnchantmentType.WEAPON, new EquipmentSlotType[] { EquipmentSlotType.MAINHAND });
+		super(Rarity.COMMON, EnchantmentCategory.WEAPON, new EquipmentSlot[] { EquipmentSlot.MAINHAND });
 	}
 	
 	public boolean canApplyAtEnchantingTable(ItemStack stack){ return false; }
 	
-	public boolean canApply(ItemStack stack){ return this.type.canEnchantItem(stack.getItem()); }
+	public boolean canEnchant(ItemStack stack){ return this.category.canEnchant(stack.getItem()); }
 	
 	public boolean isAllowedOnBooks(){ return false; }
 	

@@ -11,38 +11,31 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.templates.TemplateOperation;
 import com.lying.variousoddities.species.templates.TemplatePrecondition;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.IForgeRegistryEntry;
-import net.minecraftforge.registries.RegistryBuilder;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.DeferredRegister;
 
 public class VORegistries
 {
 	private static final ResourceLocation ABILITY_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities");
-	private static final ResourceLocation OPERATIONS_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "template_operations");
-	private static final ResourceLocation PRECONDITIONS_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "template_preconditions");
-	private static final ResourceLocation CONDITIONS_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "conditions");
+	private static final ResourceKey<Registry<Ability.Builder>> ABILITY_KEY = ResourceKey.createRegistryKey(ABILITY_REG);
+	public static final DeferredRegister<Ability.Builder> ABILITIES = DeferredRegister.create(ABILITY_KEY, Reference.ModInfo.MOD_ID);
 	
-	public static final IForgeRegistry<Ability.Builder> ABILITIES;
-	public static final IForgeRegistry<TemplateOperation.Builder> OPERATIONS;
-	public static final IForgeRegistry<TemplatePrecondition.Builder> PRECONDITIONS;
-	public static final IForgeRegistry<Condition> CONDITIONS;
+	private static final ResourceLocation OPERATIONS_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "template_operations");
+	private static final ResourceKey<Registry<TemplateOperation.Builder>> OPERATIONS_KEY = ResourceKey.createRegistryKey(OPERATIONS_REG);
+	public static final DeferredRegister<TemplateOperation.Builder> OPERATIONS = DeferredRegister.create(OPERATIONS_KEY, Reference.ModInfo.MOD_ID);
+	
+	private static final ResourceLocation PRECONDITIONS_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "template_preconditions");
+	private static final ResourceKey<Registry<TemplatePrecondition.Builder>> PRECONDITIONS_KEY = ResourceKey.createRegistryKey(PRECONDITIONS_REG);
+	public static final DeferredRegister<TemplatePrecondition.Builder> PRECONDITIONS = DeferredRegister.create(PRECONDITIONS_KEY, Reference.ModInfo.MOD_ID);
+	
+	private static final ResourceLocation CONDITIONS_REG = new ResourceLocation(Reference.ModInfo.MOD_ID, "conditions");
+	private static final ResourceKey<Registry<Condition>> CONDITIONS_KEY = ResourceKey.createRegistryKey(CONDITIONS_REG);
+	public static final DeferredRegister<Condition> CONDITIONS = DeferredRegister.create(CONDITIONS_KEY, Reference.ModInfo.MOD_ID);
 	
 	public static final Map<ResourceLocation, Species> SPECIES = new HashMap<>();
 	public static final Map<ResourceLocation, Template> TEMPLATES = new HashMap<>();
 	
-	static
-	{
-		ABILITIES = makeRegistry(ABILITY_REG, Ability.Builder.class, Integer.MAX_VALUE >> 5);
-		OPERATIONS = makeRegistry(OPERATIONS_REG, TemplateOperation.Builder.class, Integer.MAX_VALUE >> 5);
-		PRECONDITIONS = makeRegistry(PRECONDITIONS_REG, TemplatePrecondition.Builder.class, Integer.MAX_VALUE >> 5);
-		CONDITIONS = makeRegistry(CONDITIONS_REG, Condition.class, Integer.MAX_VALUE >> 5);
-	}
-	
 	public static void init(){ }
-	
-	private static <T extends IForgeRegistryEntry<T>> IForgeRegistry<T> makeRegistry(ResourceLocation name, Class<T> type, int max)
-	{
-        return new RegistryBuilder<T>().setName(name).setType(type).setMaxID(max).create();
-    }
 }

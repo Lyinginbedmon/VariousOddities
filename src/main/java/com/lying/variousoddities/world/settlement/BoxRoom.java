@@ -8,18 +8,18 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.DyeColor;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.util.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 public class BoxRoom
 {
@@ -32,9 +32,9 @@ public class BoxRoom
 	private BlockPos max = null;
 	
 	private String customName = "";
-	private ITextComponent title = null;
+	private Component title = null;
 	private EnumRoomFunction function = EnumRoomFunction.NONE;
-	private CompoundNBT tag = new CompoundNBT();
+	private CompoundTag tag = new CompoundTag();
 	
 	public BoxRoom(BlockPos origin)
 	{
@@ -47,7 +47,7 @@ public class BoxRoom
 			add(point);
 	}
 	
-	public BoxRoom(CompoundNBT compound)
+	public BoxRoom(CompoundTag compound)
 	{
 		readFromNBT(compound);
 	}
@@ -83,8 +83,8 @@ public class BoxRoom
 	
 	public boolean hasTitle(){ return getTitle() != null; }
 	/** Returns the splash displayed when a player enters this room, if any */
-	public ITextComponent getTitle(){ return this.title; }
-	public void setTitle(ITextComponent titleIn){ this.title = titleIn; }
+	public Component getTitle(){ return this.title; }
+	public void setTitle(Component titleIn){ this.title = titleIn; }
 	
 	public boolean hasCustomName()
 	{
@@ -121,20 +121,20 @@ public class BoxRoom
 	
 	public boolean hasTagCompound(){ return !this.tag.isEmpty(); }
 	
-	public CompoundNBT getTagCompound(){ return this.tag; }
+	public CompoundTag getTagCompound(){ return this.tag; }
 	
-	public void setTagCompound(CompoundNBT compound){ this.tag = compound; }
+	public void setTagCompound(CompoundTag compound){ this.tag = compound; }
 	
 	public boolean couldBeUsefulSize(List<BlockPos> volume)
 	{
 		BlockPos min = min();
-		if(!volume.contains(min.add(0, 0, MIN_SIZE)))
+		if(!volume.contains(min.offset(0, 0, MIN_SIZE)))
 			return false;
-		if(!volume.contains(min.add(0, MIN_SIZE, 0)))
+		if(!volume.contains(min.offset(0, MIN_SIZE, 0)))
 			return false;
-		if(!volume.contains(min.add(MIN_SIZE, 0, 0)))
+		if(!volume.contains(min.offset(MIN_SIZE, 0, 0)))
 			return false;
-		return volume.contains(min().add(MIN_SIZE, MIN_SIZE, MIN_SIZE));
+		return volume.contains(min().offset(MIN_SIZE, MIN_SIZE, MIN_SIZE));
 	}
 	
 	/**
@@ -148,7 +148,7 @@ public class BoxRoom
 		return size.getY() >= MIN_SIZE && size.getX() >= MIN_SIZE && size.getZ() >= MIN_SIZE;
 	}
 	
-	public boolean hasSolidFoundation(World worldIn, float threshold)
+	public boolean hasSolidFoundation(Level worldIn, float threshold)
 	{
 		int footprint = sizeX() * sizeZ();
 		int tallyMin = (int)Math.ceil((double)footprint * threshold);
@@ -157,26 +157,26 @@ public class BoxRoom
 		for(int z=0; z<sizeZ(); z++)
 			for(int x=0; x<sizeX(); x++)
 			{
-				BlockPos point = min.add(x, 0, z);
-				BlockPos down = point.down();
+				BlockPos point = min.offset(x, 0, z);
+				BlockPos down = point.below();
 				BlockState stateAt = worldIn.getBlockState(point);
 				BlockState stateBelow = worldIn.getBlockState(down);
 				if(
 						// Case 1: Creep with DOWN side at point
 //					stateAt.getBlock() instanceof BlockHiveCreep && BlockHiveCreep.shouldConnectTo(down, worldIn) ||
 						// Case 2: Solid block at point
-					!worldIn.isAirBlock(point) && stateAt.isNormalCube(worldIn, point) ||
+					!worldIn.isEmptyBlock(point) && stateAt.isCollisionShapeFullBlock(worldIn, point) ||
 						// Case 3: Block with solid UP side below point
-					!worldIn.isAirBlock(down) && stateBelow.isSolidSide(worldIn, down, Direction.UP)
+					!worldIn.isEmptyBlock(down) && stateBelow.isFaceSturdy(worldIn, down, Direction.UP)
 					)
 						if(++tally >= tallyMin) return true;
 			}
 		return false;
 	}
 	
-	public AxisAlignedBB getBounds()
+	public AABB getBounds()
 	{
-		return new AxisAlignedBB
+		return new AABB
 				(
 						min.getX(), min.getY(), min.getZ(),
 						max.getX()+1D, max.getY()+1D, max.getZ()+1D
@@ -231,7 +231,7 @@ public class BoxRoom
 	{
 		if(min == null || max == null) return false;
 		
-		AxisAlignedBB bounds = getBounds();
+		AABB bounds = getBounds();
 		if(pos.getX() >= bounds.minX && pos.getX() < bounds.maxX)
 			if(pos.getY() >= bounds.minY && pos.getY() < bounds.maxY)
 				if(pos.getZ() >= bounds.minZ && pos.getZ() < bounds.maxZ)
@@ -253,7 +253,7 @@ public class BoxRoom
 		return this.cachedPoints;
 	}
 	
-	public void drawBox(World worldIn, DyeColor col)
+	public void drawBox(Level worldIn, DyeColor col)
 	{
 		Block block = Blocks.WHITE_CONCRETE;
 		switch(col)
@@ -277,7 +277,7 @@ public class BoxRoom
 		}
 		
 		for(BlockPos lego : getBlocks())
-			worldIn.setBlockState(lego.up(25), block.getDefaultState());
+			worldIn.setBlockAndUpdate(lego.above(25), block.defaultBlockState());
 	}
 	
 	public BlockPos size()
@@ -305,14 +305,14 @@ public class BoxRoom
 		return size().getX() * size().getY() * size().getZ();
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
-		compound.put("Min", NBTUtil.writeBlockPos(min));
-		compound.put("Max", NBTUtil.writeBlockPos(max));
+		compound.put("Min", NbtUtils.writeBlockPos(min));
+		compound.put("Max", NbtUtils.writeBlockPos(max));
 		if(hasCustomName())
 			compound.putString("CustomName", getName());
 		if(hasTitle())
-			compound.putString("Title", ITextComponent.Serializer.toJson(getTitle()));
+			compound.putString("Title", Component.Serializer.toJson(getTitle()));
 		if(hasFunction())
 			compound.putString("Function", this.function.name().toLowerCase());
 		if(tag != null && !tag.isEmpty())
@@ -320,19 +320,19 @@ public class BoxRoom
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("Min", 10))
-			add(NBTUtil.readBlockPos(compound.getCompound("Min")));
+			add(NbtUtils.readBlockPos(compound.getCompound("Min")));
 		
 		if(compound.contains("Max", 10))
-			add(NBTUtil.readBlockPos(compound.getCompound("Max")));
+			add(NbtUtils.readBlockPos(compound.getCompound("Max")));
 		
 		if(compound.contains("CustomName"))
 			setName(compound.getString("CustomName"));
 		
 		if(compound.contains("Title"))
-			setTitle(ITextComponent.Serializer.getComponentFromJsonLenient(compound.getString("Title")));
+			setTitle(Component.Serializer.fromJsonLenient(compound.getString("Title")));
 		
 		if(compound.contains("Function"))
 			setFunction(EnumRoomFunction.fromString(compound.getString("Function")));
@@ -488,14 +488,14 @@ public class BoxRoom
 		if(sizeX/2 >= MIN_SIZE && sizeX > sizeZ)
 		{
 			int xLen = sizeX / 2;
-			roomA = new BoxRoom(min(), min.add(xLen, sizeY(), sizeZ));
-			roomB = new BoxRoom(min().add(xLen, 0, 0), min().add(sizeX - xLen, sizeY(), sizeZ));
+			roomA = new BoxRoom(min(), min.offset(xLen, sizeY(), sizeZ));
+			roomB = new BoxRoom(min().offset(xLen, 0, 0), min().offset(sizeX - xLen, sizeY(), sizeZ));
 		}
 		else
 		{
 			int zLen = sizeZ / 2;
-			roomA = new BoxRoom(min(), min.add(sizeX, sizeY(), sizeZ()));
-			roomB = new BoxRoom(min().add(0, 0, zLen), min().add(sizeX, sizeY(), sizeZ - zLen));
+			roomA = new BoxRoom(min(), min.offset(sizeX, sizeY(), sizeZ()));
+			roomB = new BoxRoom(min().offset(0, 0, zLen), min().offset(sizeX, sizeY(), sizeZ - zLen));
 		}
 		
 		return new Tuple<BoxRoom, BoxRoom>(roomA, roomB);

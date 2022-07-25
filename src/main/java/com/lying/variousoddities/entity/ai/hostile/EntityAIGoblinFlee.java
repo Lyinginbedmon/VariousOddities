@@ -3,36 +3,36 @@ package com.lying.variousoddities.entity.ai.hostile;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.RandomPositionGenerator;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIGoblinFlee extends Goal
 {
-	private final World theWorld;
+	private final Level theWorld;
 	private final EntityGoblin theGoblin;
-	private final PathNavigator theNavigator;
+	private final PathNavigation theNavigator;
 	
-	private MobEntity toAvoid;
+	private Mob toAvoid;
 	private final double fleeSpeed;
 	
 	public EntityAIGoblinFlee(EntityGoblin goblinIn, double speedIn)
 	{
 		theGoblin = goblinIn;
-		theNavigator = goblinIn.getNavigator();
-		theWorld = goblinIn.getEntityWorld();
+		theNavigator = goblinIn.getNavigation();
+		theWorld = goblinIn.getLevel();
 		fleeSpeed = speedIn;
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
 		toAvoid = getNearestAvoid();
-		return theGoblin.isChild() && toAvoid != null && toAvoid.getDistance(theGoblin) < 5D;
+		return theGoblin.isBaby() && toAvoid != null && toAvoid.getDistance(theGoblin) < 5D;
 	}
 	
 	public boolean shouldContinueExecuting()
@@ -55,15 +55,15 @@ public class EntityAIGoblinFlee extends Goal
 		}
 	}
 	
-	private MobEntity getNearestAvoid()
+	private Mob getNearestAvoid()
 	{
-		MobEntity avoid = null;
+		Mob avoid = null;
 		double minDist = Double.MAX_VALUE;
-		for(MobEntity living : theWorld.getEntitiesWithinAABB(MobEntity.class, theGoblin.getBoundingBox().grow(6), new Predicate<MobEntity>()
+		for(Mob living : theWorld.getEntitiesOfClass(Mob.class, theGoblin.getBoundingBox().inflate(6), new Predicate<Mob>()
 			{
-				public boolean apply(MobEntity input)
+				public boolean apply(Mob input)
 				{
-					return input != theGoblin && input.getAttackTarget() != null && input.getAttackTarget() instanceof EntityGoblin;
+					return input != theGoblin && input.getTarget() != null && input.getTarget() instanceof EntityGoblin;
 				}
 			}))
 		{
@@ -78,9 +78,9 @@ public class EntityAIGoblinFlee extends Goal
 	}
 	
 	/** Returns a path to a random position that isn't closer to the flee target */
-	private Path getPathAwayFrom(MobEntity fleeTarget)
+	private Path getPathAwayFrom(Mob fleeTarget)
 	{
-        Vector3d vec = RandomPositionGenerator.findRandomTargetBlockAwayFrom(theGoblin, 16, 7, new Vector3d(fleeTarget.getPosX(), fleeTarget.getPosY(), fleeTarget.getPosZ()));
+        Vec3 vec = RandomPositionGenerator.findRandomTargetBlockAwayFrom(theGoblin, 16, 7, new Vec3(fleeTarget.getPosX(), fleeTarget.getPosY(), fleeTarget.getPosZ()));
         if(vec == null) return null;
         else if(fleeTarget.getDistanceSq(vec.x, vec.y, vec.z) < fleeTarget.getDistanceSq(theGoblin))
         	return null;

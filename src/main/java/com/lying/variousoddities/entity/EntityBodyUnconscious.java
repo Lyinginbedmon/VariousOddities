@@ -11,39 +11,32 @@ import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.inventory.ContainerPlayerBody;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.EffectInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public class EntityBodyUnconscious extends AbstractBody
 {
-    protected static final DataParameter<CompoundNBT> LAST_KNOWN_EQUIPMENT	= EntityDataManager.<CompoundNBT>createKey(EntityBodyUnconscious.class, DataSerializers.COMPOUND_NBT);
+    protected static final DataParameter<CompoundTag> LAST_KNOWN_EQUIPMENT	= EntityDataManager.<CompoundTag>createKey(EntityBodyUnconscious.class, DataSerializers.COMPOUND_NBT);
 	private final NonNullList<ItemStack> lastKnownArmour = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
 	private final NonNullList<ItemStack> lastKnownEquip = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
 	
-	public EntityBodyUnconscious(EntityType<? extends EntityBodyUnconscious> type, World worldIn)
+	public EntityBodyUnconscious(EntityType<? extends EntityBodyUnconscious> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
     
-    public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<?> animal, Level level, SpawnReason reason, BlockPos pos, Random random)
     {
 	    return true;
     }
@@ -51,21 +44,21 @@ public class EntityBodyUnconscious extends AbstractBody
 	public void registerData()
 	{
 		super.registerData();
-		getDataManager().register(LAST_KNOWN_EQUIPMENT, new CompoundNBT());
+		getDataManager().register(LAST_KNOWN_EQUIPMENT, new CompoundTag());
 	}
 	
 	@Nullable
 	public static EntityBodyUnconscious createBodyFrom(@Nonnull LivingEntity living)
 	{
 		if(living == null) return null;
-		EntityBodyUnconscious body = new EntityBodyUnconscious(VOEntities.BODY, living.getEntityWorld());
+		EntityBodyUnconscious body = new EntityBodyUnconscious(VOEntities.BODY, living.getLevel());
 		body.copyFrom(living, false);
-		body.setSoulUUID(living.getUniqueID());
+		body.setSoulUUID(living.getUUID());
 		
 		if(living.getType() == EntityType.PLAYER)
 		{
-			PlayerEntity player = (PlayerEntity)living;
-			PlayerData.forPlayer(player).setBodyUUID(body.getUniqueID());
+			Player player = (Player)living;
+			PlayerData.forPlayer(player).setBodyUUID(body.getUUID());
 		}
 		
 		return body;
@@ -73,9 +66,9 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	public static EntityBodyUnconscious getBodyFromEntity(@Nonnull LivingEntity living)
 	{
-		World world = living.getEntityWorld();
-		for(EntityBodyUnconscious body : world.getEntitiesWithinAABB(EntityBodyUnconscious.class, living.getBoundingBox().grow(256D)))
-			if(body.getSoulUUID().equals(living.getUniqueID()))
+		Level level = living.getLevel();
+		for(EntityBodyUnconscious body : level.getEntitiesWithinAABB(EntityBodyUnconscious.class, living.getBoundingBox().grow(256D)))
+			if(body.getSoulUUID().equals(living.getUUID()))
 				return body;
 		return null;
 	}
@@ -86,18 +79,18 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	public void setBody(@Nullable LivingEntity living)
 	{
-		CompoundNBT data = new CompoundNBT();
+		CompoundTag data = new CompoundTag();
 		
 		// Store entity equipment in body inventory
 		if(living != null)
 		{
-			setSoulUUID(living.getUniqueID());
+			setSoulUUID(living.getUUID());
 			
 			living.writeWithoutTypeId(data);
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
-				getDataManager().set(PROFILE, NBTUtil.writeGameProfile(new CompoundNBT(), ((PlayerEntity)living).getGameProfile()));
+				getDataManager().set(PROFILE, NBTUtil.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
 				data.putString("id", living.getEntityString());
@@ -118,8 +111,8 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	public LivingEntity getBody()
 	{
-		for(LivingEntity living : getEntityWorld().getLoadedEntitiesWithinAABB(LivingEntity.class, getBoundingBox().grow(256D)))
-			if(living.getUniqueID() == this.getSoulUUID())
+		for(LivingEntity living : getLevel().getLoadedEntitiesWithinAABB(LivingEntity.class, getBoundingBox().grow(256D)))
+			if(living.getUUID() == this.getSoulUUID())
 				return living;
 		
 		return super.getBody();
@@ -137,13 +130,13 @@ public class EntityBodyUnconscious extends AbstractBody
 		{
 			if(isPlayer())
 			{
-				PlayerEntity soul = (PlayerEntity)getSoul();
-				if(soul != null && !this.world.isRemote)
+				Player soul = (Player)getSoul();
+				if(soul != null && !this.level.isClientSide)
 				{
 					boolean needsUpdate = false;
 					for(int slot=0; slot<4; slot++)
 					{
-						ItemStack equipped = soul.getItemStackFromSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.ARMOR, slot));
+						ItemStack equipped = soul.getItemStackFromSlot(EquipmentSlot.fromSlotTypeAndIndex(EquipmentSlot.Type.ARMOR, slot));
 						if(!(ItemStack.areItemsEqual(equipped, lastKnownArmour.get(slot)) && ItemStack.areItemStackTagsEqual(equipped, lastKnownArmour.get(slot))))
 						{
 							needsUpdate = true;
@@ -153,7 +146,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					
 					for(int slot=0; slot<2; slot++)
 					{
-						ItemStack equipped = soul.getItemStackFromSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.HAND, slot));
+						ItemStack equipped = soul.getItemStackFromSlot(EquipmentSlot.fromSlotTypeAndIndex(EquipmentSlot.Type.HAND, slot));
 						if(!(ItemStack.areItemsEqual(equipped, lastKnownEquip.get(slot)) && ItemStack.areItemStackTagsEqual(equipped, lastKnownEquip.get(slot))))
 						{
 							needsUpdate = true;
@@ -162,7 +155,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					}
 					
 					if(needsUpdate)
-						getDataManager().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundNBT(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
+						getDataManager().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundTag(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
 					
 					// If the player is online and not unconscious, remove body
 					PlayerData data = PlayerData.forPlayer(soul);
@@ -172,7 +165,7 @@ public class EntityBodyUnconscious extends AbstractBody
 				
 				return;
 			}
-			else if(!this.world.isRemote)
+			else if(!this.level.isClientSide)
 			{
 				LivingEntity body = getBody();
 				LivingData bodyData = LivingData.forEntity(body);
@@ -188,18 +181,18 @@ public class EntityBodyUnconscious extends AbstractBody
 		}
 	}
 	
-	private void readLastKnownFromNBT(CompoundNBT compound)
+	private void readLastKnownFromNBT(CompoundTag compound)
 	{
-		ListNBT armourList = compound.getList("ArmorItems", 10);
+		ListTag armourList = compound.getList("ArmorItems", 10);
 		for(int i=0; i<this.lastKnownArmour.size(); i++)
 			this.lastKnownArmour.set(i, ItemStack.read(armourList.getCompound(i)));
 		
-		ListNBT handList = compound.getList("HandItems", 10);
+		ListTag handList = compound.getList("HandItems", 10);
 		for(int i=0; i<this.lastKnownEquip.size(); i++)
 			this.lastKnownEquip.set(i, ItemStack.read(handList.getCompound(i)));
 	}
 	
-	private ItemStack getSlotFromLastKnown(EquipmentSlotType.Group group, int index)
+	private ItemStack getSlotFromLastKnown(EquipmentSlot.Type group, int index)
 	{
 		readLastKnownFromNBT(getDataManager().get(LAST_KNOWN_EQUIPMENT));
 		switch(group)
@@ -218,10 +211,10 @@ public class EntityBodyUnconscious extends AbstractBody
 			LivingEntity body = super.getBodyForRender();
 			
 			for(int slot=0; slot<4; slot++)
-				body.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.ARMOR, slot), getSlotFromLastKnown(EquipmentSlotType.Group.ARMOR, slot));
+				body.setItemStackToSlot(EquipmentSlot.fromSlotTypeAndIndex(EquipmentSlot.Type.ARMOR, slot), getSlotFromLastKnown(EquipmentSlot.Type.ARMOR, slot));
 			
 			for(int slot=0; slot<2; slot++)
-				body.setItemStackToSlot(EquipmentSlotType.fromSlotTypeAndIndex(EquipmentSlotType.Group.HAND, slot), getSlotFromLastKnown(EquipmentSlotType.Group.HAND, slot));
+				body.setItemStackToSlot(EquipmentSlot.fromSlotTypeAndIndex(EquipmentSlot.Type.HAND, slot), getSlotFromLastKnown(EquipmentSlot.Type.HAND, slot));
 			
 			return body;
 		}
@@ -230,8 +223,8 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	public void respawnMob(LivingEntity body)
 	{
-		body.setPosition(getPosX(), getPosY(), getPosZ());
-		getEntityWorld().addEntity(body);
+		body.setPos(getX(), getY(), getZ());
+		getLevel().addFreshEntity(body);
 		remove();
 	}
 	
@@ -274,25 +267,25 @@ public class EntityBodyUnconscious extends AbstractBody
 	public void onKillCommand()
 	{
 		super.onKillCommand();
-		if(!isPlayer() && getBody() != null && !getEntityWorld().isRemote)
+		if(!isPlayer() && getBody() != null && !getLevel().isClientSide)
 		{
 			LivingEntity body = getBody();
-			body.setPosition(getPosX(), getPosY(), getPosZ());
+			body.setPos(getX(), getY(), getZ());
 			
 			LivingData data = LivingData.forEntity(body);
 			data.setBludgeoning(0F);
 			
-			getEntityWorld().addEntity(body);
+			getLevel().addFreshEntity(body);
 			body.onKillCommand();
 		}
 	}
 	
-	public void openContainer(PlayerEntity playerIn)
+	public void openContainer(Player playerIn)
 	{
 		LivingEntity soul = getSoul();
 		if(!isPlayer())
 			super.openContainer(playerIn);
 		else if(soul != null)
-			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerPlayerBody(window, player, ((PlayerEntity)soul).inventory, this), soul.getDisplayName()));
+			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerPlayerBody(window, player, ((Player)soul).inventory, this), soul.getDisplayName()));
 	}
 }

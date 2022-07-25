@@ -7,42 +7,42 @@ import com.lying.variousoddities.api.event.DamageTypesEvent;
 import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.init.VOEnchantments;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.IItemTier;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemTier;
-import net.minecraft.item.TieredItem;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.TieredItem;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.common.MinecraftForge;
 
 /** A predefined set of damage types, used when applying damage resistance or damage reduction. */
-public enum DamageType implements IStringSerializable
+public enum DamageType implements StringRepresentable
 {
 	MUNDANE(false, (source) -> { return false; }),
+	@SuppressWarnings("deprecation")
 	SILVER(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> 
 		{
 			Item held = itemstack.getItem();
-			IItemTier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
-			return (itemTier != null && itemTier.toString().toLowerCase().contains("silver")) || EnchantmentHelper.getEnchantmentLevel(VOEnchantments.SILVERSHEEN, itemstack) > 0;
+			Tier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
+			return (itemTier != null && itemTier.toString().toLowerCase().contains("silver")) || EnchantmentHelper.getItemEnchantmentLevel(VOEnchantments.SILVERSHEEN, itemstack) > 0;
 		} ); }),
-	WOOD(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, ItemTier.WOOD); } ); }),
-	STONE(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, ItemTier.STONE); } ); }),
-	GOLD(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, ItemTier.GOLD); } ); }),
-	IRON(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, ItemTier.IRON); } ); }),
-	DIAMOND(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, ItemTier.DIAMOND); } ); }),
-	NETHERITE(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, ItemTier.NETHERITE); } ); }),
+	WOOD(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.WOOD); } ); }),
+	STONE(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.STONE); } ); }),
+	GOLD(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.GOLD); } ); }),
+	IRON(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.IRON); } ); }),
+	DIAMOND(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.DIAMOND); } ); }),
+	NETHERITE(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.NETHERITE); } ); }),
 	FALLING(false, (source) -> { return source == DamageSource.FALL || source == DamageSource.FLY_INTO_WALL; } ),
 	POISON(false, (source) -> { return source == VODamageSource.POISON; }),
 	ACID(true, (source) -> { return source == VODamageSource.ACID; }),
-	FIRE(true, (source) -> { return source.isFireDamage(); } ),
+	FIRE(true, (source) -> { return source.isFire(); } ),
 	COLD(true, (source) -> VODamageSource.isOrSynonym(source, VODamageSource.COLD)),
 	HOLY(true, (source) -> VODamageSource.isOrSynonym(source, VODamageSource.HOLY)),
 	EVIL(true, (source) -> VODamageSource.isOrSynonym(source, VODamageSource.EVIL)),
 	LIGHTNING(true, (source) -> { return source == DamageSource.LIGHTNING_BOLT; } ),
-	MAGIC(false, (source) -> { return source == DamageSource.MAGIC || source.isMagicDamage() || VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return itemstack.isEnchanted(); } ); } ),
+	MAGIC(false, (source) -> { return source == DamageSource.MAGIC || source.isMagic() || VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return itemstack.isEnchanted(); } ); } ),
 	SONIC(true, (source) -> { return source == VODamageSource.SONIC; }),
 	FORCE(false, (source) -> { return source == VODamageSource.FORCE; }),
 	PSYCHIC(false, (source) -> { return source == VODamageSource.PSYCHIC; }),
@@ -57,14 +57,14 @@ public enum DamageType implements IStringSerializable
 		identifier = identifierIn;
 	}
 	
-	public String getString()
+	public String getSerializedName()
 	{
 		return this.name().toLowerCase();
 	}
 	
-	public ITextComponent getTranslated()
+	public Component getTranslated()
 	{
-		return new TranslationTextComponent("enum.varodd.damage_type."+getString());
+		return Component.translatable("enum.varodd.damage_type."+getSerializedName());
 	}
 	
 	public boolean isDamageType(DamageSource source)
@@ -90,7 +90,7 @@ public enum DamageType implements IStringSerializable
 	public static DamageType fromString(String str)
 	{
     	for(DamageType val : values())
-    		if(val.getString().equalsIgnoreCase(str))
+    		if(val.getSerializedName().equalsIgnoreCase(str))
     			return val;
     	return null;
 	}

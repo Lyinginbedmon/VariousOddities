@@ -11,10 +11,10 @@ import com.lying.variousoddities.entity.ai.passive.EntityAIKoboldPlaceTorch;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.init.VOEntities;
 
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 
 public class ControllerKobold extends EntityController<EntityKobold>
 {
@@ -40,7 +40,7 @@ public class ControllerKobold extends EntityController<EntityKobold>
 		{
 			super(priorityIn, par1Entity, new Predicate<EntityKobold>()
 				{
-					public boolean apply(EntityKobold input){ return input.isChild(); }
+					public boolean apply(EntityKobold input){ return input.isBaby(); }
 				});
 			
 			addBehaviour(2, new EntityAIKoboldParade(par1Entity, 0.20999999046325684D));
@@ -76,7 +76,7 @@ public class ControllerKobold extends EntityController<EntityKobold>
 			{
 				public boolean apply(EntityKobold input)
 				{
-					return !input.isChild() && input.isHatcheryGuardian();
+					return !input.isBaby() && input.isHatcheryGuardian();
 				}
 			});
 			

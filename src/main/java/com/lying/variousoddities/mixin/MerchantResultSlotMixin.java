@@ -8,11 +8,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.api.event.PlayerTradeEvent;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.merchant.IMerchant;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.MerchantResultSlot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MerchantResultSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.Merchant;
 import net.minecraftforge.common.MinecraftForge;
 
 @Mixin(MerchantResultSlot.class)
@@ -22,20 +22,20 @@ public class MerchantResultSlotMixin
 			{
 				public boolean apply(LivingEntity input)
 				{
-					return input instanceof IMerchant && ((IMerchant)input).getCustomer() != null;
+					return input instanceof Merchant && ((Merchant)input).getTradingPlayer() != null;
 				}
 			};
 	
 	@Inject(method = "onTake", at = @At("RETURN"))
-	public void performTrade(PlayerEntity thePlayer, ItemStack stack, CallbackInfoReturnable<?> callback)
+	public void performTrade(Player thePlayer, ItemStack stack, CallbackInfoReturnable<?> callback)
 	{
-		if(thePlayer.getEntityWorld().isRemote)
+		if(thePlayer.getLevel().isClientSide)
 			return;
 		
 		LivingEntity merchant = null;
-		for(LivingEntity entity : thePlayer.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, thePlayer.getBoundingBox().grow(6D), MERCHANT))
+		for(LivingEntity entity : thePlayer.getLevel().getEntitiesOfClass(LivingEntity.class, thePlayer.getBoundingBox().inflate(6D), MERCHANT))
 		{
-			if(((IMerchant)entity).getCustomer() == thePlayer)
+			if(((Merchant)entity).getTradingPlayer() == thePlayer)
 			{
 				merchant = entity;
 				break;

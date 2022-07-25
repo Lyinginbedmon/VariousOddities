@@ -2,7 +2,6 @@ package com.lying.variousoddities.mixin;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,13 +21,14 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
-@Mixin(PlayerEntity.class)
+@Mixin(Player.class)
 public class PlayerEntityMixin extends LivingEntityMixin
 {
 	@Shadow
@@ -37,7 +37,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	@Inject(method = "tick()V", at = @At("HEAD"))
 	public void tick(final CallbackInfo ci)
 	{
-		PlayerEntity player = (PlayerEntity)(Object)this;
+		Player player = (Player)(Object)this;
 		PlayerData data = PlayerData.forPlayer(player);
 		if(data != null)
 			data.tick(player);
@@ -46,14 +46,14 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	@Inject(method = "isPlayerFullyAsleep()Z", at = @At("HEAD"), cancellable = true)
 	public void fullySleeping(final CallbackInfoReturnable<Boolean> ci)
 	{
-		if(PlayerData.isPlayerBodyAsleep((PlayerEntity)(Object)this))
+		if(PlayerData.isPlayerBodyAsleep((Player)(Object)this))
 			ci.setReturnValue(true);
 	}
 	
 	@Inject(method = "shouldHeal()Z", at = @At("HEAD"), cancellable = true)
 	public void shouldHeal(final CallbackInfoReturnable<Boolean> ci)
 	{
-		PlayerEntity player = (PlayerEntity)(Object)this;
+		Player player = (Player)(Object)this;
 		LivingData livingData = LivingData.forEntity(player);
 		if(livingData != null && livingData.checkingFoodRegen)
 		{
@@ -71,12 +71,12 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	@Inject(method = "tryToStartFallFlying()Z", at = @At("HEAD"), cancellable = true)
 	public void startElytraFlying(final CallbackInfoReturnable<Boolean> ci)
 	{
-		PlayerEntity player = (PlayerEntity)(Object)this;
+		Player player = (Player)(Object)this;
 		Abilities abilities = LivingData.forEntity(player).getAbilities();
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 		if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
 		{
-			if(!player.isOnGround() && !player.isElytraFlying() && abilities.canBonusJump)
+			if(!player.isOnGround() && !player.isFallFlying() && abilities.canBonusJump)
 			{
 				player.startFallFlying();
 				ci.setReturnValue(true);
@@ -85,27 +85,27 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	}
 	
 	private int scentTimer = -1;
-	private Vector3d prevScentPos = null;
+	private Vec3 prevScentPos = null;
 	
 	@Inject(method = "livingTick()V", at = @At("HEAD"), cancellable = true)
 	public void livingTick(final CallbackInfo ci)
 	{
-		PlayerEntity player = (PlayerEntity)(Object)this;
-		World world = player.getEntityWorld();
+		Player player = (Player)(Object)this;
+		Level world = player.getLevel();
 		handlePlayerScent(player, world);
 	}
 	
-	private void handlePlayerScent(PlayerEntity player, World worldIn)
+	private void handlePlayerScent(Player player, Level worldIn)
 	{
-		if(world.isRemote || player.isCreative() || player.isSpectator() || PlayerData.isPlayerSoulDetached(player))
+		if(world.isClientSide || player.isCreative() || player.isSpectator() || PlayerData.isPlayerSoulDetached(player))
 			return;
 		
-		Random rand = world.rand;
+		RandomSource rand = world.random;
 		if(scentTimer < 0)
 			resetScentTimer(rand);
 		else if(--scentTimer == 0)
 		{
-			Vector3d pos = player.getPositionVec();
+			Vec3 pos = player.position();
 			if(prevScentPos == null)
 				prevScentPos = pos;
 			else
@@ -129,7 +129,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	@Inject(method = "collideWithPlayer(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
 	public void collideWithPlayer(Entity entityIn, final CallbackInfo ci)
 	{
-		PlayerEntity player = (PlayerEntity)(Object)this;
+		Player player = (Player)(Object)this;
 		if(PlayerData.isPlayerSoulDetached(player))
 			ci.cancel();
 	}
@@ -137,12 +137,12 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	@Inject(method = "canTriggerWalking()Z", at = @At("HEAD"), cancellable = true)
 	public void canTriggerWalking(final CallbackInfoReturnable<Boolean> ci)
 	{
-		PlayerEntity player = (PlayerEntity)(Object)this;
+		Player player = (Player)(Object)this;
 		if(PlayerData.isPlayerSoulDetached(player))
 			ci.setReturnValue(false);
 	}
 	
-	private void resetScentTimer(Random rand)
+	private void resetScentTimer(RandomSource rand)
 	{
 		scentTimer = Reference.Values.TICKS_PER_SECOND + rand.nextInt(Reference.Values.TICKS_PER_SECOND);
 	}

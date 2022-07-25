@@ -8,14 +8,14 @@ import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.MagicEffects;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.util.Hand;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.IForgeRegistry;
 
 public abstract class ItemSpellContainer extends VOItem
@@ -29,10 +29,10 @@ public abstract class ItemSpellContainer extends VOItem
 	{
 		if(MagicEffects.getTotalSpells() > 0)
 		{
-			VOItems.register("spell_list", new ItemSpellList(new Properties().group(VOItemGroup.LOOT)));
+			VOItems.register("spell_list", new ItemSpellList(new Properties().tab(VOItemGroup.LOOT)));
 			for(IMagicEffect spell : MagicEffects.getAllSpells())
 			{
-				VOItems.register("scroll_"+spell.getName(), new ItemSpellScroll(new Properties().group(VOItemGroup.LOOT)));
+				VOItems.register("scroll_"+spell.getName(), new ItemSpellScroll(new Properties().tab(VOItemGroup.LOOT)));
 				
 				// If spell is level 4 or less, also create wand
 			}
@@ -41,16 +41,16 @@ public abstract class ItemSpellContainer extends VOItem
     
     public void onSpellCast(String spellID, ItemStack stack, LivingEntity caster)
     {
-    	if(caster instanceof PlayerEntity)
+    	if(caster instanceof Player)
 		{
-    		PlayerEntity player = (PlayerEntity)caster;
+    		Player player = (Player)caster;
 //    		handlePlayerStats(player, MagicEffects.getSpellFromName(spellID));
     		if(player.isCreative()) return;
 		}
     	
-    	if(stack.isDamageable())
-    		stack.damageItem(1, caster, (player) -> {
-                     player.sendBreakAnimation(Hand.MAIN_HAND);
+    	if(stack.isDamageableItem())
+    		stack.hurtAndBreak(1, caster, (player) -> {
+                     player.broadcastBreakEvent(InteractionHand.MAIN_HAND);
                   });
     }
     
@@ -71,7 +71,7 @@ public abstract class ItemSpellContainer extends VOItem
     	}
     	else if(stack.hasTag())
     	{
-    		CompoundNBT stackData = stack.getTag();
+    		CompoundTag stackData = stack.getTag();
     		if(stackData.contains("Spell")) return stack.getTag().getString("Spell");
     		else if(stackData.contains("ContainedSpells"))
     		{
@@ -102,7 +102,7 @@ public abstract class ItemSpellContainer extends VOItem
     
     public static void setInverted(ItemStack stack, boolean inverted)
     {
-    	CompoundNBT stackData = stack.hasTag() ? stack.getTag() : new CompoundNBT();
+    	CompoundTag stackData = stack.hasTag() ? stack.getTag() : new CompoundTag();
     	stackData.putBoolean("Inverted", inverted);
     	stack.setTag(stackData);
     }
@@ -112,7 +112,7 @@ public abstract class ItemSpellContainer extends VOItem
     	return getContainedSpells(stack, null);
     }
     
-    public static String[] getContainedSpells(ItemStack stack, PlayerEntity player)
+    public static String[] getContainedSpells(ItemStack stack, Player player)
     {
     	if(stack.getItem() instanceof ItemSpellList)
     	{
@@ -122,10 +122,10 @@ public abstract class ItemSpellContainer extends VOItem
     	}
     	else if(stack.hasTag())
     	{
-    		CompoundNBT stackData = stack.getTag();
+    		CompoundTag stackData = stack.getTag();
     		if(stackData.contains("ContainedSpells"))
     		{
-    			ListNBT spells = stackData.getList("ContainedSpells", 8);
+    			ListTag spells = stackData.getList("ContainedSpells", 8);
     			String[] spellList = new String[spells.size()];
     			for(int i=0; i<spells.size(); i++) spellList[i] = spells.getString(i);
     			return spellList;
@@ -134,10 +134,10 @@ public abstract class ItemSpellContainer extends VOItem
     	return new String[0];
     }
     
-    public static String generateRandomSpells(ItemStack stack, CompoundNBT stackData)
+    public static String generateRandomSpells(ItemStack stack, CompoundTag stackData)
     {
 		Random rand = new Random();
-		CompoundNBT randStats = stackData.getCompound("RandomSpell");
+		CompoundTag randStats = stackData.getCompound("RandomSpell");
 		
 		// How many spells to generate
 		int spellCount = 1;
@@ -186,7 +186,7 @@ public abstract class ItemSpellContainer extends VOItem
     
     public static ItemStack setSpell(ItemStack stack, String spellName)
     {
-    	CompoundNBT data = stack.hasTag() ? stack.getTag() : new CompoundNBT();
+    	CompoundTag data = stack.hasTag() ? stack.getTag() : new CompoundTag();
     	if(spellName != null) data.putString("Spell", spellName);
     	else if(data.contains("Spell")) data.remove("Spell");
     	stack.setTag(data);
@@ -195,7 +195,7 @@ public abstract class ItemSpellContainer extends VOItem
     
     public static void setContainedSpells(ItemStack stack, List<String> spells)
     {
-    	CompoundNBT stackData = stack.hasTag() ? stack.getTag() : new CompoundNBT();
+    	CompoundTag stackData = stack.hasTag() ? stack.getTag() : new CompoundTag();
     	if(spells.isEmpty())
     	{
     		if(stackData.contains("ContainedSpells")) stackData.remove("ContainedSpells");
@@ -204,11 +204,11 @@ public abstract class ItemSpellContainer extends VOItem
     	else
     	{
     		spells = validateSpellNames(spells);
-	    	ListNBT spellList = new ListNBT();
+	    	ListTag spellList = new ListTag();
 	    	for(String spell : spells)
     		{
 	    		if(MagicEffects.getSpellFromName(spell) == null) continue;
-	    		spellList.add(StringNBT.valueOf(spell));
+	    		spellList.add(StringTag.valueOf(spell));
     		}
 	    	stackData.put("ContainedSpells", spellList);
 			

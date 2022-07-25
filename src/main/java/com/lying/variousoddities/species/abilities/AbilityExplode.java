@@ -5,22 +5,21 @@ import java.util.Collection;
 import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.AreaEffectCloudEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.Explosion;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.entity.EntityStruckByLightningEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityExplode extends ActivatedAbility
@@ -37,7 +36,7 @@ public class AbilityExplode extends ActivatedAbility
 		super(REGISTRY_NAME, Reference.Values.TICKS_PER_MINUTE);
 	}
 	
-	public ITextComponent translatedName(){ return this.charged ? new TranslationTextComponent("ability."+getMapName()+"_charged") : super.translatedName(); }
+	public Component translatedName(){ return this.charged ? Component.translatable("ability."+getMapName()+"_charged") : super.translatedName(); }
 	
 	public int compare(Ability abilityIn)
 	{
@@ -60,13 +59,13 @@ public class AbilityExplode extends ActivatedAbility
 			default:
 				this.ignited = true;
 				this.activeTicks = this.fuse;
-				entity.getEntityWorld().playSound(null, entity.getPosition(), SoundEvents.ENTITY_CREEPER_PRIMED, SoundCategory.HOSTILE, 1.0F, 0.5F);
+				entity.getLevel().playSound(null, entity.blockPosition(), SoundEvents.CREEPER_PRIMED, SoundSource.HOSTILE, 1.0F, 0.5F);
 				putOnCooldown(entity);
 				break;
 		}
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
 		compound.putBoolean("Ignited", this.ignited);
@@ -76,7 +75,7 @@ public class AbilityExplode extends ActivatedAbility
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		this.ignited = compound.getBoolean("Ignited");
@@ -106,30 +105,30 @@ public class AbilityExplode extends ActivatedAbility
 		}
 	}
 	
-	public void doExplosion(LivingUpdateEvent event)
+	public void doExplosion(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		if(AbilityRegistry.hasAbility(entity, REGISTRY_NAME))
 		{
 			AbilityExplode ability = (AbilityExplode)AbilityRegistry.getAbilityByName(entity, REGISTRY_NAME);
 			if(ability.ignited)
 			{
-				World world = entity.getEntityWorld();
-				if(world.isRemote)
+				Level world = entity.getLevel();
+				if(world.isClientSide)
 				{
 					// Do particles
 					for(int i=0; i<2; i++)
-						world.addParticle(ParticleTypes.SMOKE, entity.getPosXRandom(0.5D), entity.getPosYRandom() - 0.25D, entity.getPosZRandom(0.5D), 0D, entity.getRNG().nextDouble() * 0.5D, 0D);
+						world.addParticle(ParticleTypes.SMOKE, entity.getRandomX(0.5D), entity.getRandomY() - 0.25D, entity.getRandomZ(0.5D), 0D, entity.getRandom().nextDouble() * 0.5D, 0D);
 				}
 				else
 				{
 					if(--ability.activeTicks < 0)
 					{
 						// Do Explosion
-						Explosion.Mode mode = net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(world, entity) ? Explosion.Mode.DESTROY : Explosion.Mode.NONE;
+						Explosion.BlockInteraction mode = net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(world, entity) ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE;
 						float f = ability.charged ? 2.0F : 1.0F;
-						world.createExplosion(entity, entity.getPosX(), entity.getPosY(), entity.getPosZ(), (float)ability.radius * f, mode);
-						entity.attackEntityFrom(VODamageSource.EXPLOSION, Float.MAX_VALUE);
+						world.explode(entity, entity.getX(), entity.getY(), entity.getZ(), (float)ability.radius * f, mode);
+						entity.hurt(VODamageSource.EXPLOSION, Float.MAX_VALUE);
 						spawnLingeringCloud(entity, world);
 						
 						ability.ignited = false;
@@ -142,22 +141,22 @@ public class AbilityExplode extends ActivatedAbility
 		}
 	}
 	
-	private void spawnLingeringCloud(LivingEntity entity, World world)
+	private void spawnLingeringCloud(LivingEntity entity, Level world)
 	{
-		Collection<EffectInstance> collection = entity.getActivePotionEffects();
+		Collection<MobEffectInstance> collection = entity.getActiveEffects();
 		if(!collection.isEmpty())
 		{
-			AreaEffectCloudEntity lingeringCloud = new AreaEffectCloudEntity(world, entity.getPosX(), entity.getPosY(), entity.getPosZ());
+			AreaEffectCloud lingeringCloud = new AreaEffectCloud(world, entity.getX(), entity.getY(), entity.getZ());
 			lingeringCloud.setRadius(2.5F);
 			lingeringCloud.setRadiusOnUse(-0.5F);
 			lingeringCloud.setWaitTime(10);
 			lingeringCloud.setDuration(lingeringCloud.getDuration() / 2);
 			lingeringCloud.setRadiusPerTick(-lingeringCloud.getRadius() / (float)lingeringCloud.getDuration());
 			
-			for(EffectInstance effectinstance : collection)
-				lingeringCloud.addEffect(new EffectInstance(effectinstance));
+			for(MobEffectInstance effectinstance : collection)
+				lingeringCloud.addEffect(new MobEffectInstance(effectinstance));
 		
-			world.addEntity(lingeringCloud);
+			world.addFreshEntity(lingeringCloud);
 		}
 	}
 	
@@ -165,10 +164,10 @@ public class AbilityExplode extends ActivatedAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			AbilityExplode explode = new AbilityExplode();
-			CompoundNBT nbt = explode.writeToNBT(new CompoundNBT());
+			CompoundTag nbt = explode.writeToNBT(new CompoundTag());
 			nbt.merge(compound);
 			explode.readFromNBT(nbt);
 			return explode;

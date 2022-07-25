@@ -9,23 +9,14 @@ import com.lying.variousoddities.magic.MagicEffects;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.network.play.server.SSpawnObjectPacket;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 /**
  * Host entity for ongoing magical effects
@@ -36,22 +27,22 @@ public class EntitySpell extends Entity
 {
     private static final DataParameter<ItemStack> ITEM				= EntityDataManager.<ItemStack>createKey(EntitySpell.class, DataSerializers.ITEMSTACK);
     private static final DataParameter<Integer> SPELL_ID			= EntityDataManager.<Integer>createKey(EntitySpell.class, DataSerializers.VARINT);
-    private static final DataParameter<CompoundNBT> SPELLDATA	= EntityDataManager.<CompoundNBT>createKey(EntitySpell.class, DataSerializers.COMPOUND_NBT);
+    private static final DataParameter<CompoundTag> SPELLDATA	= EntityDataManager.<CompoundTag>createKey(EntitySpell.class, DataSerializers.COMPOUND_NBT);
     
-    public EntitySpell(EntityType<? extends EntitySpell> typeIn, World worldIn)
+    public EntitySpell(EntityType<? extends EntitySpell> typeIn, Level worldIn)
     {
     	super(typeIn, worldIn);
 //		setSize(0.5F, 0.5F);
 //		setItem(new ItemStack(VOItems.SPELL_SCROLL));
     }
     
-	public EntitySpell(EntityType<EntitySpell> typeIn, World worldIn, double x, double y, double z)
+	public EntitySpell(EntityType<EntitySpell> typeIn, Level worldIn, double x, double y, double z)
 	{
 		super(typeIn, worldIn);
 		setPosition(x, y, z);
 	}
 	
-	public EntitySpell(EntityType<EntitySpell> typeIn, World worldIn, ItemStack stackIn, double x, double y, double z)
+	public EntitySpell(EntityType<EntitySpell> typeIn, Level worldIn, ItemStack stackIn, double x, double y, double z)
 	{
 		this(typeIn, worldIn, x, y, z);
 		setItem(stackIn);
@@ -66,15 +57,15 @@ public class EntitySpell extends Entity
 	{
 		getDataManager().register(ITEM, ItemStack.EMPTY);
 		getDataManager().register(SPELL_ID, -1);
-		getDataManager().register(SPELLDATA, new CompoundNBT());
+		getDataManager().register(SPELLDATA, new CompoundTag());
 	}
     
-    public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<?> animal, Level level, SpawnReason reason, BlockPos pos, Random random)
     {
 	    return true;
     }
 	
-	protected void readAdditional(CompoundNBT compound)
+	protected void readAdditional(CompoundTag compound)
 	{
 		ItemStack item = ItemStack.read(compound.getCompound("Item"));
         setItem(item);
@@ -85,7 +76,7 @@ public class EntitySpell extends Entity
     	}
         if(compound.contains("SpellID"))
         	setSpellID(compound.getInt("SpellID"));
-        else if(!item.isEmpty() && getEntityWorld() != null)
+        else if(!item.isEmpty() && getLevel() != null)
         {
         	// Attempt to construct SpellData from old version in memory and initialise from that
         	IMagicEffect spell = MagicEffects.getSpellFromName(ItemSpellContainer.getSpellName(item));
@@ -105,14 +96,14 @@ public class EntitySpell extends Entity
         	UUID uuid = compound.contains("OwnerUUIDMost") ? new UUID(compound.getLong("OwnerUUIDMost"), compound.getLong("OwnerUUIDLeast")) : null;
         	spellData.setCaster(name, uuid);
         	
-        	World world = getEntityWorld();
-        	setSpellID(SpellManager.get(world).registerNewSpell(spellData, world));
+        	Level level = getLevel();
+        	setSpellID(SpellManager.get(level).registerNewSpell(spellData, level));
         }
 	}
 	
-	protected void writeAdditional(CompoundNBT compound)
+	protected void writeAdditional(CompoundTag compound)
 	{
-		compound.put("Item", this.getItem().write(new CompoundNBT()));
+		compound.put("Item", this.getItem().write(new CompoundTag()));
 		compound.putInt("SpellID", getSpellID());
 	}
 	
@@ -134,7 +125,7 @@ public class EntitySpell extends Entity
 	
 	public SpellData getSpell()
 	{
-		return SpellManager.get(getEntityWorld()).getSpellByID(getSpellID());
+		return SpellManager.get(getLevel()).getSpellByID(getSpellID());
 	}
 	
     public boolean isNoDespawnRequired(){ return true; }
@@ -146,13 +137,13 @@ public class EntitySpell extends Entity
 //    	getDataManager().setDirty(ITEM);
     }
 	
-    public ActionResultType processInitialInteract(PlayerEntity player, Hand hand)
+    public ActionResultType processInitialInteract(Player player, Hand hand)
     {
-    	if(!player.getEntityWorld().isRemote)
+    	if(!player.getLevel().isClientSide)
     	{
-    		SpellData data = SpellManager.get(getEntityWorld()).getSpellByID(getSpellID());
+    		SpellData data = SpellManager.get(getLevel()).getSpellByID(getSpellID());
         	if(data.castTime() <= 0) return ActionResultType.FAIL;
-        	return data.dismiss(getEntityWorld(), player) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
+        	return data.dismiss(getLevel(), player) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
     	}
     	
     	return ActionResultType.FAIL;
@@ -162,7 +153,7 @@ public class EntitySpell extends Entity
 	{
 		super.tick();
 		
-		if(getEntityWorld().isRemote) return;
+		if(getLevel().isClientSide) return;
 		
 		SpellData data = getSpell();
 		if(data == null || data.isDead())
@@ -183,7 +174,7 @@ public class EntitySpell extends Entity
     public boolean attackEntityFrom(DamageSource source, float amount)
     {
         if(isInvulnerable()) return false;
-        else if(this.world.isRemote) return false;
+        else if(this.level.isClientSide) return false;
         else if(source == DamageSource.OUT_OF_WORLD)
         {
             if(!this.isAlive()) return false;
@@ -197,9 +188,9 @@ public class EntitySpell extends Entity
     
     public void onDeath(DamageSource cause)
     {
-    	getEntityWorld().setEntityState(this, (byte)3);
-//		if(!getEntityWorld().isRemote)
-//			PacketHandler.sendToNearby(new PacketSpellDispel(posX, posY + height / 2, posZ), getEntityWorld(), this);
+    	getLevel().setEntityState(this, (byte)3);
+//		if(!getLevel().isClientSide)
+//			PacketHandler.sendToNearby(new PacketSpellDispel(posX, posY + height / 2, posZ), getLevel(), this);
     }
     
     protected boolean canTriggerWalking()

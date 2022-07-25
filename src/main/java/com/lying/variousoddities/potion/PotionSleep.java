@@ -2,29 +2,29 @@ package com.lying.variousoddities.potion;
 
 import com.lying.variousoddities.init.VOPotions;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 
 public class PotionSleep extends PotionVO
 {
 	public PotionSleep(int colorIn)
 	{
-		super("sleep", EffectType.HARMFUL, colorIn);
+		super(MobEffectCategory.HARMFUL, colorIn);
 	}
 	
     public boolean isReady(int duration, int amplifier){ return true; }
 	
 	public static boolean isSleeping(LivingEntity entity)
 	{
-		if(entity instanceof PlayerEntity)
-			return ((PlayerEntity)entity).isSleeping() || hasSleepEffect(entity);
+		if(entity instanceof Player)
+			return ((Player)entity).isSleeping() || hasSleepEffect(entity);
 		
 		return false;
 	}
 	
 	public static boolean hasSleepEffect(LivingEntity theMob)
 	{
-		return theMob.getActivePotionEffect(VOPotions.SLEEP) != null && theMob.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0;
+		return theMob.getEffect(VOPotions.SLEEP) != null && theMob.getEffect(VOPotions.SLEEP).getDuration() > 0;
 	}
 }

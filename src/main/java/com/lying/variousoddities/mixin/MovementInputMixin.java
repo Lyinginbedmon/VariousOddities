@@ -15,15 +15,12 @@ import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.utility.VOHelper;
 
-import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.MovementInput;
-import net.minecraft.util.MovementInputFromOptions;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -38,7 +35,7 @@ public class MovementInputMixin
 	@Inject(method = "tickMovement(Z)V", at = @At("HEAD"), cancellable = true)
 	public void dazedPreventMovement(boolean forceDown, final CallbackInfo ci)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		if(player != null)
 		{
 			if(!VOHelper.isCreativeOrSpectator(player))
@@ -53,7 +50,7 @@ public class MovementInputMixin
 	@Inject(method = "tickMovement(Z)V", at = @At("RETURN"), cancellable = true)
 	public void afraidPreventMovement(boolean forceDown, final CallbackInfo ci)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		if(player != null)
 		{
 			MovementInput input = (MovementInput)(Object)this;
@@ -62,9 +59,9 @@ public class MovementInputMixin
 			PlayerData data = PlayerData.forPlayer(player);
 			if(data != null && PlayerData.isPlayerSoulBound(player))
 			{
-				Entity body = data.getBody(player.getEntityWorld());
+				Entity body = data.getBody(player.getLevel());
 				if(body != null && data.getSoulCondition().getWanderRange() >= 0D)
-					handleBound(player, body.getPositionVec(), data.getSoulCondition().getWanderRange(), input, ci);
+					handleBound(player, body.position(), data.getSoulCondition().getWanderRange(), input, ci);
 			}
 		}
 	}
@@ -91,19 +88,19 @@ public class MovementInputMixin
 		input.moveStrafe = 0F;
 	}
 	
-	private static Vector3d getAbsoluteMotion(Vector3d relative, float p_213299_1_, float facing)
+	private static Vec3 getAbsoluteMotion(Vec3 relative, float p_213299_1_, float facing)
 	{
-		double d0 = relative.lengthSquared();
+		double d0 = relative.lengthSqr();
 		if (d0 < 1.0E-7D)
-			return Vector3d.ZERO;
+			return Vec3.ZERO;
 		
-		Vector3d vector3d = (d0 > 1.0D ? relative.normalize() : relative).scale((double)p_213299_1_);
-		float f = MathHelper.sin(facing * ((float)Math.PI / 180F));
-		float f1 = MathHelper.cos(facing * ((float)Math.PI / 180F));
-		return new Vector3d(vector3d.x * (double)f1 - vector3d.z * (double)f, vector3d.y, vector3d.z * (double)f1 + vector3d.x * (double)f);
+		Vec3 vector3d = (d0 > 1.0D ? relative.normalize() : relative).scale((double)p_213299_1_);
+		float f = Mth.sin(facing * ((float)Math.PI / 180F));
+		float f1 = Mth.cos(facing * ((float)Math.PI / 180F));
+		return new Vec3(vector3d.x * (double)f1 - vector3d.z * (double)f, vector3d.y, vector3d.z * (double)f1 + vector3d.x * (double)f);
 	}
 	
-	private static void handleTerror(PlayerEntity player, MovementInput input, final CallbackInfo ci)
+	private static void handleTerror(Player player, MovementInput input, final CallbackInfo ci)
 	{
 		LivingData data = LivingData.forEntity(player);
 		if(data == null)
@@ -113,18 +110,18 @@ public class MovementInputMixin
 		if(terrorisers.isEmpty())
 			return;
 		
-		Vector3d currentPos = player.getPositionVec();
-		Vector3d move = getAbsoluteMotion(new Vector3d(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
+		Vec3 currentPos = player.position();
+		Vec3 move = getAbsoluteMotion(new Vec3(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
 		
 		float slow = 1F;
 		for(LivingEntity terroriser : terrorisers)
 		{
-			if(terroriser.isInvisibleToPlayer(player) || !player.canEntityBeSeen(terroriser))
+			if(terroriser.isInvisibleTo(player) || !player.canEntityBeSeen(terroriser))
 				continue;
 			
-			double dist = terroriser.getDistanceSq(player);
+			double dist = terroriser.distanceTo(player);
 			// If movement would take us too close to terroriser, nullify or slow down
-			if(dist > terroriser.getDistanceSq(currentPos.add(move)))
+			if(dist > terroriser.distanceToSqr(currentPos.add(move)))
 				if(dist <= (6D * 6D))
 				{
 					clearMoveInputs(input);
@@ -142,12 +139,12 @@ public class MovementInputMixin
 		}
 	}
 	
-	private static void handleBound(PlayerEntity player, Vector3d boundPos, double maxDist, MovementInput input, final CallbackInfo ci)
+	private static void handleBound(Player player, Vec3 boundPos, double maxDist, MovementInput input, final CallbackInfo ci)
 	{
-		Vector3d currentPos = player.getPositionVec();
-		Vector3d move = getAbsoluteMotion(new Vector3d(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
+		Vec3 currentPos = player.position();
+		Vec3 move = getAbsoluteMotion(new Vec3(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
 		
-		double dist = boundPos.distanceTo(player.getPositionVec());
+		double dist = boundPos.distanceTo(currentPos);
 		double distB = boundPos.distanceTo(currentPos.add(move));
 		
 		if(distB >= maxDist)

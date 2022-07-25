@@ -7,12 +7,11 @@ import java.util.List;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.item.DyeColor;
-import net.minecraft.item.IDyeableArmorItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.DyeableArmorItem;
+import net.minecraft.world.item.ItemStack;
 
 public class TriggerItem extends Trigger
 {
@@ -29,7 +28,7 @@ public class TriggerItem extends Trigger
 		itemStack = stackIn;
 	}
 	
-	public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"item" + (inverted ? "_inverted" : ""), itemStack.getDisplayName()); }
+	public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"item" + (inverted ? "_inverted" : ""), itemStack.getDisplayName()); }
 	
 	public boolean applyToItem(ItemStack stack)
 	{
@@ -50,15 +49,15 @@ public class TriggerItem extends Trigger
 	
 	public List<? extends Trigger> getVariables(){ return variables; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
-		compound.put("Item", itemStack.write(new CompoundNBT()));
+		compound.put("Item", itemStack.save(new CompoundTag()));
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
-		itemStack = ItemStack.read(compound.getCompound("Item"));
+		itemStack = ItemStack.of(compound.getCompound("Item"));
 	}
 	
 	public static class TriggerItemName extends TriggerItem
@@ -73,22 +72,22 @@ public class TriggerItem extends Trigger
 			name = nameIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"item_name" + (inverted ? "_inverted" : "")); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"item_name" + (inverted ? "_inverted" : "")); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
 		public boolean applyToItem(ItemStack stack)
 		{
-			return name.length() == 0 || stack.hasDisplayName() && stack.getDisplayName().equals(name);
+			return name.length() == 0 || stack.hasCustomHoverName() && stack.getDisplayName().equals(name);
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Name", name);
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			name = compound.getString("Name");
 		}
@@ -104,7 +103,7 @@ public class TriggerItem extends Trigger
 			setInverted(!boolIn);
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"item_enchanted" + (inverted ? "_inverted" : "")); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"item_enchanted" + (inverted ? "_inverted" : "")); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
@@ -113,12 +112,12 @@ public class TriggerItem extends Trigger
 			return stack.isEnchanted();
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			
 		}
@@ -134,7 +133,7 @@ public class TriggerItem extends Trigger
 		public TriggerItemColor(){ }
 		public TriggerItemColor(DyeColor colorIn)
 		{
-			this(colorIn.getColorValue());
+			this(colorIn.getFireworkColor());
 		}
 		public TriggerItemColor(String colorIn)
 		{
@@ -145,16 +144,16 @@ public class TriggerItem extends Trigger
 			color = colorIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"item_color" + (inverted ? "_inverted" : "")); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"item_color" + (inverted ? "_inverted" : "")); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
 		public boolean applyToItem(ItemStack stack)
 		{
-			if(stack.getItem() instanceof IDyeableArmorItem)
+			if(stack.getItem() instanceof DyeableArmorItem)
 			{
-				IDyeableArmorItem armor = (IDyeableArmorItem)stack.getItem();
-				if(!armor.hasColor(stack))
+				DyeableArmorItem armor = (DyeableArmorItem)stack.getItem();
+				if(!armor.hasCustomColor(stack))
 					return false;
 				
 				if(color < 0)
@@ -181,13 +180,13 @@ public class TriggerItem extends Trigger
 			return false;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putInt("Color", color);
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			if(compound.contains("Color", 8))
 				color = hexToDec(compound.getString("Color"));

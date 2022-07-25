@@ -6,18 +6,17 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityStatusEffect extends Ability
@@ -25,16 +24,16 @@ public class AbilityStatusEffect extends Ability
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect");
 	public static int TIME = Reference.Values.TICKS_PER_SECOND * 15;
 	
-	protected EffectInstance effect = null;
+	protected MobEffectInstance effect = null;
 	private int timer = Integer.MAX_VALUE;
 	
-	public AbilityStatusEffect(ResourceLocation registryName, @Nullable EffectInstance effectIn)
+	public AbilityStatusEffect(ResourceLocation registryName, @Nullable MobEffectInstance effectIn)
 	{
 		super(registryName);
 		this.effect = effectIn;
 	}
 	
-	public AbilityStatusEffect(@Nullable EffectInstance effectIn)
+	public AbilityStatusEffect(@Nullable MobEffectInstance effectIn)
 	{
 		this(REGISTRY_NAME, effectIn);
 	}
@@ -42,40 +41,43 @@ public class AbilityStatusEffect extends Ability
 	public int compare(Ability abilityIn)
 	{
 		AbilityStatusEffect statusEffect = (AbilityStatusEffect)abilityIn;
-		EffectInstance effectA = getEffect();
-		EffectInstance effectB = statusEffect.getEffect();
+		MobEffectInstance effectA = getEffect();
+		MobEffectInstance effectB = statusEffect.getEffect();
 		
-		if(effectB.getPotion() == effectA.getPotion())
+		if(effectB.getEffect() == effectA.getEffect())
 			return effectB.getAmplifier() < effectA.getAmplifier() ? 1 : effectB.getAmplifier() > effectA.getAmplifier() ? -1 : 0;
 		return 0;
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
-	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+getEffect().getEffectName().toLowerCase()); }
+	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect_"+getEffect().getEffect().getDisplayName().getString().toLowerCase()); }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		String name = I18n.format(getEffect().getPotion().getName());
+		MutableComponent name = (MutableComponent)getEffect().getEffect().getDisplayName();
 		int amp = getEffect().getAmplifier();
 		if(amp >= 1 && amp <= 9)
-			name += ' ' + I18n.format("enchantment.level." + (amp + 1));
-		return new StringTextComponent(name);
+		{
+			name.append(" ");
+			name.append(Component.translatable("enchantment.level." + (amp + 1)));
+		}
+		return name;
 	}
 	
-	public Type getType(){ return getEffect().getPotion().isBeneficial() ? Ability.Type.DEFENSE : Ability.Type.WEAKNESS; }
+	public Type getType(){ return getEffect().getEffect().isBeneficial() ? Ability.Type.DEFENSE : Ability.Type.WEAKNESS; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(this.effect != null)
-			this.effect.write(compound);
+			this.effect.save(compound);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(!compound.isEmpty())
-			this.effect = EffectInstance.read(compound);
+			this.effect = MobEffectInstance.load(compound);
 	}
 	
 	public void addListeners(IEventBus bus)
@@ -83,49 +85,49 @@ public class AbilityStatusEffect extends Ability
 		bus.addListener(this::applyModifiers);
 	}
 	
-	public EffectInstance getEffect(){ return this.effect; }
+	public MobEffectInstance getEffect(){ return this.effect; }
 	
 	public void tick(LivingEntity entity)
 	{
-		EffectInstance effect = getEffect();
+		MobEffectInstance effect = getEffect();
 		if(effect == null)
 			return;
 		
-		Effect potion = effect.getPotion();
+		MobEffect potion = effect.getEffect();
 		int amplifier = effect.getAmplifier();
-		if(!potion.isInstant() && potion.isReady(--timer, amplifier))
-			potion.performEffect(entity, amplifier);
+		if(!potion.isInstantenous() && potion.isDurationEffectTick(--timer, amplifier))
+			potion.applyEffectTick(entity, amplifier);
 		
 		if(timer <= 0)
 			timer = Integer.MAX_VALUE;
 	}
 	
-	public void applyModifiers(LivingUpdateEvent event)
+	public void applyModifiers(LivingTickEvent event)
 	{
-		LivingEntity living = event.getEntityLiving();
+		LivingEntity living = event.getEntity();
 		for(AbilityStatusEffect effect : AbilityRegistry.getAbilitiesOfType(living, AbilityStatusEffect.class))
 		{
-			EffectInstance statusEffect = effect.getEffect();
-			if(statusEffect != null && !statusEffect.getPotion().getAttributeModifierMap().isEmpty())
+			MobEffectInstance statusEffect = effect.getEffect();
+			if(statusEffect != null && !statusEffect.getEffect().getAttributeModifiers().isEmpty())
 			{
-				Effect potion = statusEffect.getPotion();
+				MobEffect potion = statusEffect.getEffect();
 				int amplifier = statusEffect.getAmplifier();
 				
 				// If the entity has a stronger version of this effect active, ignore this effect
-				if(living.getActivePotionEffect(potion).getAmplifier() != amplifier)
+				if(living.getEffect(potion).getAmplifier() != amplifier)
 					continue;
 				
-				Map<Attribute, AttributeModifier> attributeMap = potion.getAttributeModifierMap();
+				Map<Attribute, AttributeModifier> attributeMap = potion.getAttributeModifiers();
 				for(Attribute attribute : attributeMap.keySet())
 				{
 					if(living.getAttribute(attribute) == null) continue;
-					ModifiableAttributeInstance instance = living.getAttribute(attribute);
+					AttributeInstance instance = living.getAttribute(attribute);
 					
 					AttributeModifier modifier = attributeMap.get(attribute);
-					double amount = potion.getAttributeModifierAmount(amplifier, modifier);
+					double amount = potion.getAttributeModifierValue(amplifier, modifier);
 					
 					instance.removeModifier(modifier);
-					instance.applyNonPersistentModifier(new AttributeModifier(modifier.getID(), potion.getName() + " " + amplifier, amount, modifier.getOperation()));
+					instance.addTransientModifier(new AttributeModifier(modifier.getId(), potion.getDisplayName() + " " + amplifier, amount, modifier.getOperation()));
 				}
 			}
 		}
@@ -133,14 +135,14 @@ public class AbilityStatusEffect extends Ability
 	
 	public void onAbilityRemoved(LivingEntity living)
 	{
-		EffectInstance statusEffect = getEffect();
+		MobEffectInstance statusEffect = getEffect();
 		if(statusEffect == null) return;
 		
-		Effect potion = statusEffect.getPotion();
+		MobEffect potion = statusEffect.getEffect();
 		int amplifier = statusEffect.getAmplifier();
-		if(living.isPotionActive(potion) && living.getActivePotionEffect(potion).getAmplifier() != amplifier) return;
+		if(living.hasEffect(potion) && living.getEffect(potion).getAmplifier() != amplifier) return;
 		
-		Map<Attribute, AttributeModifier> attributeMap = potion.getAttributeModifierMap();
+		Map<Attribute, AttributeModifier> attributeMap = potion.getAttributeModifiers();
 		for(Attribute attribute : attributeMap.keySet())
 		{
 			if(living.getAttribute(attribute) == null) continue;
@@ -152,9 +154,9 @@ public class AbilityStatusEffect extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
-			return new AbilityStatusEffect(EffectInstance.read(compound));
+			return new AbilityStatusEffect(MobEffectInstance.load(compound));
 		}
 	}
 }

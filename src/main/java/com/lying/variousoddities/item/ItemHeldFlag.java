@@ -11,11 +11,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.lying.variousoddities.init.VOItems;
 
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
 
 public class ItemHeldFlag extends VOItem
 {
@@ -29,7 +29,7 @@ public class ItemHeldFlag extends VOItem
 		this.prideType = typeIn;
 		
 	    Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
-	    builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", -1D, AttributeModifier.Operation.MULTIPLY_TOTAL));
+	    builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", -1D, AttributeModifier.Operation.MULTIPLY_TOTAL));
 	    this.attributeModifiers = builder.build();
 	    
 	    PRIDE_TYPE_ITEM_MAP.put(typeIn, this);
@@ -38,12 +38,12 @@ public class ItemHeldFlag extends VOItem
 	public static void registerSubItems()
 	{
 		for(EnumPrideType type : EnumPrideType.values())
-			VOItems.register("held_flag_"+type.name().toLowerCase(), new ItemHeldFlag(type, new Properties().group(VOItemGroup.LOOT)));
+			VOItems.register("held_flag_"+type.name().toLowerCase(), new ItemHeldFlag(type, new Properties().tab(VOItemGroup.LOOT)));
 	}
 	
-	public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot)
+	public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot equipmentSlot)
 	{
-		return equipmentSlot == EquipmentSlotType.MAINHAND ? this.attributeModifiers : HashMultimap.create();
+		return equipmentSlot == EquipmentSlot.MAINHAND ? this.attributeModifiers : HashMultimap.create();
 	}
     
     public EnumPrideType getType(ItemStack stack)

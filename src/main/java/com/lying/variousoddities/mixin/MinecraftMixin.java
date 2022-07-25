@@ -17,30 +17,29 @@ import com.lying.variousoddities.network.PacketUnconsciousAwaken;
 import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.LoadingGui;
-import net.minecraft.client.gui.advancements.AdvancementsScreen;
 import net.minecraft.client.gui.chat.NarratorChatListener;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.social.SocialInteractionsScreen;
-import net.minecraft.client.gui.toasts.TutorialToast;
+import net.minecraft.client.gui.components.toasts.TutorialToast;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
+import net.minecraft.client.gui.screens.social.SocialInteractionsScreen;
 import net.minecraft.client.multiplayer.PlayerController;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.tutorial.Tutorial;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ChatVisibility;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 @Mixin(Minecraft.class)
 public class MinecraftMixin
 {
-	private static final ITextComponent field_244596_I = new TranslationTextComponent("multiplayer.socialInteractions.not_available");
+	private static final Component field_244596_I = Component.translatable("multiplayer.socialInteractions.not_available");
 	@Shadow
 	private Tutorial tutorial;
 	@Shadow
-	public ClientPlayerEntity player;
+	public LocalPlayer player;
 	@Shadow
 	public Entity renderViewEntity;
 	@Shadow
@@ -55,7 +54,7 @@ public class MinecraftMixin
 	@Inject(method = "processKeyBinds()V", at = @At("HEAD"), cancellable = true)
 	public void processKeyBinds(final CallbackInfo ci)
 	{
-		PlayerEntity player = ((Minecraft)(Object)this).player;
+		Player player = ((Minecraft)(Object)this).player;
 		if(player == null)
 			return;
 		
@@ -115,7 +114,7 @@ public class MinecraftMixin
 			if(!this.func_244600_aM())
 			{
 				this.player.sendStatusMessage(field_244596_I, true);
-				NarratorChatListener.INSTANCE.say(field_244596_I.getString());
+				NarratorChatListener.INSTANCE.say(field_244596_I.getSerializedName());
 			}
 			else
 			{

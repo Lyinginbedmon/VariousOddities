@@ -7,9 +7,9 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.loot.LootEntry;
-import net.minecraft.loot.LootPool;
 import net.minecraft.loot.TableLootEntry;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraftforge.event.LootTableLoadEvent;
 
 public class VOLootTables

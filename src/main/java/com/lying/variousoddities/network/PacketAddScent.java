@@ -7,19 +7,19 @@ import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.savedata.ScentsManager.ScentMarker;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketAddScent
 {
-	private CompoundNBT scentData;
+	private CompoundTag scentData;
 	
 	public PacketAddScent(){ }
 	public PacketAddScent(ScentMarker marker)
 	{
-		scentData = marker.writeToNBT(new CompoundNBT());
+		scentData = marker.writeToNBT(new CompoundTag());
 	}
 	
 	public static PacketAddScent decode(PacketBuffer par1Buffer)
@@ -39,10 +39,10 @@ public class PacketAddScent
 		NetworkEvent.Context context = cxt.get();
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
-			ScentsManager manager = VariousOddities.proxy.getScentsManager(player.getEntityWorld());
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			ScentsManager manager = VariousOddities.proxy.getScentsManager(player.getLevel());
 			
-			ScentMarker marker = new ScentMarker(player.getEntityWorld(), msg.scentData);
+			ScentMarker marker = new ScentMarker(player.getLevel(), msg.scentData);
 			manager.addScentMarker(marker);
 		}
 		

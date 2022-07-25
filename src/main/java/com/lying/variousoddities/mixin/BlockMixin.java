@@ -7,17 +7,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 
 @Mixin(Block.class)
 public class BlockMixin
 {
 	@Inject(method = "onFallenUpon(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;F)V", at = @At("HEAD"), cancellable = true)
-	public void incorporealFallOn(World worldIn, BlockPos pos, Entity entityIn, float fallDistance, final CallbackInfo ci)
+	public void incorporealFallOn(Level worldIn, BlockPos pos, Entity entityIn, float fallDistance, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
 			if(IPhasingAbility.isPhasing((LivingEntity)entityIn))
@@ -25,7 +25,7 @@ public class BlockMixin
 	}
 	
 	@Inject(method = "onEntityWalk(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
-	public void incorporealWalkOn(World worldIn, BlockPos pos, Entity entityIn, final CallbackInfo ci)
+	public void incorporealWalkOn(Level worldIn, BlockPos pos, Entity entityIn, final CallbackInfo ci)
 	{
 		if(entityIn instanceof LivingEntity)
 			if(IPhasingAbility.isPhasing((LivingEntity)entityIn))

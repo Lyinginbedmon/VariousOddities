@@ -4,16 +4,15 @@ import java.util.UUID;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityNaturalArmour extends Ability
@@ -43,18 +42,18 @@ public class AbilityNaturalArmour extends Ability
 	
 	public double amount(){ return this.amount; }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability.varodd.natural_armour", (int)amount);
+		return Component.translatable("ability.varodd.natural_armour", (int)amount);
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putDouble("Amount", this.amount);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.amount = compound.getDouble("Amount");
 	}
@@ -64,10 +63,10 @@ public class AbilityNaturalArmour extends Ability
 		bus.addListener(this::applyArmour);
 	}
 	
-	public void applyArmour(LivingUpdateEvent event)
+	public void applyArmour(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
-		ModifiableAttributeInstance attribute = entity.getAttribute(Attributes.ARMOR);
+		LivingEntity entity = event.getEntity();
+		AttributeInstance attribute = entity.getAttribute(Attributes.ARMOR);
 		if(attribute == null)
 			return;
 		
@@ -86,7 +85,7 @@ public class AbilityNaturalArmour extends Ability
 			if(modifier == null)
 			{
 				modifier = new AttributeModifier(NATURAL_ARMOUR_UUID, "natural_armour", amount, Operation.ADDITION);
-				attribute.applyPersistentModifier(modifier);
+				attribute.addPermanentModifier(modifier);
 			}
 			
 		}
@@ -98,7 +97,7 @@ public class AbilityNaturalArmour extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			double amount = compound.contains("Amount", 6) ? compound.getDouble("Amount") : 2F;
 			return new AbilityNaturalArmour(amount);

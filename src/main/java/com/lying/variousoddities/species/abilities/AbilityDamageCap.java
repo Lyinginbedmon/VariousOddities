@@ -4,11 +4,10 @@ import java.util.Map;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -39,10 +38,10 @@ public class AbilityDamageCap extends Ability
 		return damage.soft < soft ? -1 : damage.soft > soft ? 1 : 0;
 	}
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
 		if(this.hard > 0 || this.soft > 0)
-			return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".epic_resilience.value", (int)(this.hard > 0 ? this.hard : this.soft));
+			return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".epic_resilience.value", (int)(this.hard > 0 ? this.hard : this.soft));
 		else
 			return super.translatedName();
 	}
@@ -58,7 +57,7 @@ public class AbilityDamageCap extends Ability
 	
 	public void limitDamage(LivingDamageEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(entity);
 		if(abilities.containsKey(REGISTRY_NAME))
 		{
@@ -75,7 +74,7 @@ public class AbilityDamageCap extends Ability
 		}
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(this.hard > 0)
 			compound.putFloat("Max", this.hard);
@@ -84,7 +83,7 @@ public class AbilityDamageCap extends Ability
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.hard = compound.contains("Max", 5) ? compound.getFloat("Max") : -1;
 		this.soft = compound.contains("SoftCap", 5) ? compound.getFloat("SoftCap") : -1;
@@ -102,7 +101,7 @@ public class AbilityDamageCap extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			float hard = compound.contains("Max", 5) ? compound.getFloat("Max") : -1;
 			float soft = compound.contains("SoftCap", 5) ? compound.getFloat("SoftCap") : -1;

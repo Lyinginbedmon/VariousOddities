@@ -17,14 +17,14 @@ import com.lying.variousoddities.item.ItemScrollRemaking;
 import com.lying.variousoddities.item.ItemSpellContainer;
 import com.lying.variousoddities.item.VOItemGroup;
 import com.lying.variousoddities.reference.Reference;
+import com.mojang.blaze3d.platform.ScreenManager;
 
-import net.minecraft.block.Block;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.event.RegistryEvent;
@@ -32,7 +32,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.network.IContainerFactory;
+import net.minecraftforge.network.IContainerFactory;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 
 @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
@@ -43,15 +44,15 @@ public class VOItems
 	private static final List<ContainerType<?>> CONTAINERS = Lists.newArrayList();
 	
 	// Debug
-	public static final Item SAP	= register("sap", new ItemSap(new Item.Properties().group(VOItemGroup.LOOT)));
+	public static final Item SAP	= register("sap", new ItemSap(new Item.Properties().tab(VOItemGroup.LOOT)));
 	
 	// Mob module
-	public static final Item SCALE_KOBOLD	= register("kobold_scale", new Item(new Item.Properties().group(VOItemGroup.LOOT)));
-	public static final Item MOSS_BOTTLE	= register("moss_bottle", new ItemMossBottle(new Item.Properties().group(VOItemGroup.LOOT)));
+	public static final Item SCALE_KOBOLD	= register("kobold_scale", new Item(new Item.Properties().tab(VOItemGroup.LOOT)));
+	public static final Item MOSS_BOTTLE	= register("moss_bottle", new ItemMossBottle(new Item.Properties().tab(VOItemGroup.LOOT)));
 	
 	// Consumables
-	public static final Item SCROLL_SPECIES	= register("remaking_scroll", new ItemScrollRemaking(false, new Item.Properties().group(VOItemGroup.LOOT)));
-	public static final Item SCROLL_RANDOM_SPECIES	= register("corrupted_remaking_scroll", new ItemScrollRemaking(true, new Item.Properties().group(VOItemGroup.LOOT)));
+	public static final Item SCROLL_SPECIES	= register("remaking_scroll", new ItemScrollRemaking(false, new Item.Properties().tab(VOItemGroup.LOOT)));
+	public static final Item SCROLL_RANDOM_SPECIES	= register("corrupted_remaking_scroll", new ItemScrollRemaking(true, new Item.Properties().tab(VOItemGroup.LOOT)));
 	
 	// Block items
 	public static final BlockItem DRAFTING_TABLE	= registerBlock("drafting_table", VOBlocks.TABLE_DRAFTING, VOItemGroup.LOOT);
@@ -59,8 +60,8 @@ public class VOItems
 	public static final BlockItem EGG_KOBOLD_INERT	= registerBlock("inert_kobold_egg", VOBlocks.EGG_KOBOLD_INERT);
 	public static final BlockItem MOSS_BLOCK		= registerBlock("moss_block", VOBlocks.MOSS_BLOCK);
 	public static final BlockItem LAYER_SCALE		= registerBlock("scale_layer", VOBlocks.LAYER_SCALE);
-	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", new ItemPhylactery(new Item.Properties().group(VOItemGroup.BLOCKS).maxStackSize(1)));
-	public static final BlockItem PHYLACTERY_EMPTY	= registerBlock("empty_phylactery", new BlockItem(VOBlocks.PHYLACTERY_EMPTY, new Item.Properties().group(VOItemGroup.BLOCKS).maxStackSize(1)));
+	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", new ItemPhylactery(new Item.Properties().tab(VOItemGroup.BLOCKS).stacksTo(1)));
+	public static final BlockItem PHYLACTERY_EMPTY	= registerBlock("empty_phylactery", new BlockItem(VOBlocks.PHYLACTERY_EMPTY, new Item.Properties().tab(VOItemGroup.BLOCKS).stacksTo(1)));
 	
 	// Containers
 	public static final ContainerType<ContainerWarg> CONTAINER_WARG	= registerContainer("warg_inventory", ContainerWarg::fromNetwork);
@@ -69,7 +70,7 @@ public class VOItems
 	
 	public static Item register(String nameIn, Item itemIn)
 	{
-		itemIn.setRegistryName(Reference.ModInfo.MOD_PREFIX+nameIn);
+		ForgeRegistries.ITEMS.register(Reference.ModInfo.MOD_PREFIX+nameIn, itemIn);
 		ITEMS.add(itemIn);
 		return itemIn;
 	}
@@ -79,14 +80,14 @@ public class VOItems
 		return registerBlock(nameIn, blockIn, VOItemGroup.BLOCKS);
 	}
 	
-	public static BlockItem registerBlock(String nameIn, Block blockIn, ItemGroup group)
+	public static BlockItem registerBlock(String nameIn, Block blockIn, CreativeModeTab group)
 	{
-		return registerBlock(nameIn, new BlockItem(blockIn, new Item.Properties().group(group)));
+		return registerBlock(nameIn, new BlockItem(blockIn, new Item.Properties().tab(group)));
 	}
 	
 	public static BlockItem registerBlock(String nameIn, BlockItem itemIn)
 	{
-		itemIn.setRegistryName(Reference.ModInfo.MOD_PREFIX+nameIn);
+		ForgeRegistries.ITEMS.register(Reference.ModInfo.MOD_PREFIX+nameIn, itemIn);
 		BLOCK_ITEMS.add(itemIn);
 		return itemIn;
 	}
@@ -99,15 +100,10 @@ public class VOItems
 		return type;
 	}
 	
-    @SubscribeEvent
-    public static void onItemsRegistry(final RegistryEvent.Register<Item> itemRegistryEvent)
+    public static void init()
     {
-    	IForgeRegistry<Item> registry = itemRegistryEvent.getRegistry();
     	ItemHeldFlag.registerSubItems();
     	ItemSpellContainer.registerSubItems(registry);
-    	
-    	registry.registerAll(ITEMS.toArray(new Item[0]));
-    	registry.registerAll(BLOCK_ITEMS.toArray(new Item[0]));
     }
     
     @SubscribeEvent

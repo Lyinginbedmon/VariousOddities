@@ -8,11 +8,10 @@ import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityResistanceSpell extends Ability
@@ -47,16 +46,16 @@ public class AbilityResistanceSpell extends Ability
 	
 	public Type getType(){ return Type.DEFENSE; }
 	
-	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_spell_"+(descriptor == null ? school.getString() : descriptor.getString())); }
+	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_spell_"+(descriptor == null ? school.getSerializedName() : descriptor.getSerializedName())); }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability.varodd.resistance_spell", (descriptor == null ? school.translatedName() : descriptor.translatedName()));
+		return Component.translatable("ability.varodd.resistance_spell", (descriptor == null ? school.translatedName() : descriptor.translatedName()));
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability.varodd:resistance_spell.desc", (descriptor == null ? school.translatedName() : descriptor.translatedName()));
+		return Component.translatable("ability.varodd:resistance_spell.desc", (descriptor == null ? school.translatedName() : descriptor.translatedName()));
 	}
 	
 	public void addListeners(IEventBus bus)
@@ -106,16 +105,16 @@ public class AbilityResistanceSpell extends Ability
 		return false;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(this.school != null)
-			compound.putString("School", this.school.getString());
+			compound.putString("School", this.school.getSerializedName());
 		else if(this.descriptor != null)
-			compound.putString("Descriptor", this.descriptor.getString());
+			compound.putString("Descriptor", this.descriptor.getSerializedName());
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("School", 8))
 			this.school = MagicSchool.fromString(compound.getString("School"));
@@ -127,7 +126,7 @@ public class AbilityResistanceSpell extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			if(compound.contains("School", 8))
 				return new AbilityResistanceSpell(MagicSchool.fromString(compound.getString("School")));

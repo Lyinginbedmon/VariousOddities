@@ -3,13 +3,12 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 
 public abstract class AbilityStatusImmunity extends Ability
 {
@@ -22,7 +21,7 @@ public abstract class AbilityStatusImmunity extends Ability
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public abstract boolean appliesToStatus(EffectInstance effectIn);
+	public abstract boolean appliesToStatus(MobEffectInstance effectIn);
 	
 	public static class Poison extends AbilityStatusImmunity
 	{
@@ -33,12 +32,12 @@ public abstract class AbilityStatusImmunity extends Ability
 			super(REGISTRY_NAME);
 		}
 		
-		public boolean appliesToStatus(EffectInstance effectIn){ return effectIn.getPotion() == Effects.POISON; }
+		public boolean appliesToStatus(MobEffectInstance effectIn){ return effectIn.getEffect() == MobEffects.POISON; }
 		
 		public static class Builder extends Ability.Builder
 		{
 			public Builder(){ super(REGISTRY_NAME); }
-			public Ability create(CompoundNBT compound){ return new Poison(); }
+			public Ability create(CompoundTag compound){ return new Poison(); }
 		}
 	}
 	
@@ -51,12 +50,12 @@ public abstract class AbilityStatusImmunity extends Ability
 			super(REGISTRY_NAME);
 		}
 		
-		public boolean appliesToStatus(EffectInstance effectIn){ return VOPotions.isParalysisEffect(effectIn); }
+		public boolean appliesToStatus(MobEffectInstance effectIn){ return VOPotions.isParalysisEffect(effectIn); }
 		
 		public static class Builder extends Ability.Builder
 		{
 			public Builder(){ super(REGISTRY_NAME); }
-			public Ability create(CompoundNBT compound){ return new Paralysis(); }
+			public Ability create(CompoundTag compound){ return new Paralysis(); }
 		}
 	}
 	
@@ -74,34 +73,34 @@ public abstract class AbilityStatusImmunity extends Ability
 		
 		public ResourceLocation getMapName()
 		{
-			Effect potion = Effect.get(potionID);
+			MobEffect potion = MobEffect.byId(potionID);
 			if(potion == null)
 				return super.getMapName();
 			else
-				return new ResourceLocation(Reference.ModInfo.MOD_ID, potion.getName().toLowerCase()+"_immunity");
+				return new ResourceLocation(Reference.ModInfo.MOD_ID, potion.getDisplayName().getString().toLowerCase()+"_immunity");
 		}
 		
-		public ITextComponent translatedName()
+		public Component translatedName()
 		{
-			Effect potion = Effect.get(potionID);
+			MobEffect potion = MobEffect.byId(potionID);
 			if(potion == null)
 				return super.translatedName();
 			else
-				return new TranslationTextComponent("ability.varodd.status_immunity", potion.getDisplayName());
+				return Component.translatable("ability.varodd.status_immunity", potion.getDisplayName());
 		}
 		
-		public boolean appliesToStatus(EffectInstance effectIn)
+		public boolean appliesToStatus(MobEffectInstance effectIn)
 		{
-			return effectIn.getPotion() == Effect.get(potionID);
+			return effectIn.getEffect() == MobEffect.byId(potionID);
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putInt("Id", potionID);
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			this.potionID = compound.getInt("Id");
 		}
@@ -109,7 +108,7 @@ public abstract class AbilityStatusImmunity extends Ability
 		public static class Builder extends Ability.Builder
 		{
 			public Builder(){ super(REGISTRY_NAME); }
-			public Ability create(CompoundNBT compound){ return new Configurable(compound.getInt("Id")); }
+			public Ability create(CompoundTag compound){ return new Configurable(compound.getInt("Id")); }
 		}
 	}
 }

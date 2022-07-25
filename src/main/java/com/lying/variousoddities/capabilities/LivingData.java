@@ -46,38 +46,36 @@ import com.lying.variousoddities.utility.CompanionMarking.Mark;
 import com.lying.variousoddities.utility.DataHelper;
 import com.mojang.datafixers.util.Pair;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectUtils;
-import net.minecraft.potion.Effects;
-import net.minecraft.stats.ServerStatisticsManager;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.ServerStatsCounter;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -87,7 +85,7 @@ import net.minecraftforge.common.util.LazyOptional;
  * Used predominantly by players, but is not exclusive to them.<br>
  * @author Lying
  */
-public class LivingData implements ICapabilitySerializable<CompoundNBT>
+public class LivingData implements ICapabilitySerializable<CompoundTag>
 {
 	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
 	
@@ -175,9 +173,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.isPlayer = entityIn.getType() == EntityType.PLAYER;
 	}
 	
-	public CompoundNBT serializeNBT()
+	public CompoundTag serializeNBT()
 	{
-		CompoundNBT compound = new CompoundNBT();
+		CompoundTag compound = new CompoundTag();
 			compound.putBoolean("Initialised", this.initialised);
 			
 			if(this.originDimension != null)
@@ -189,27 +187,27 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			compound.putBoolean("Unconscious", isActuallyUnconscious());
 			
 			if(this.species != null)
-				compound.put("Species", this.species.writeToNBT(new CompoundNBT()));
+				compound.put("Species", this.species.writeToNBT(new CompoundTag()));
 			compound.putBoolean("SelectedSpecies", this.selectedSpecies);
 			
 			if(!this.templates.isEmpty())
 			{
-				ListNBT templateList = new ListNBT();
+				ListTag templateList = new ListTag();
 				for(ResourceLocation template : templates.keySet())
-					templateList.add(StringNBT.valueOf(template.toString()));
+					templateList.add(StringTag.valueOf(template.toString()));
 				compound.put("Templates", templateList);
 			}
 			
-			ListNBT types = new ListNBT();
+			ListTag types = new ListTag();
 			for(EnumCreatureType type : prevTypes)
-				types.add(StringNBT.valueOf(type.getString()));
+				types.add(StringTag.valueOf(type.getSerializedName()));
 			compound.put("Types", types);
 			
 			if(!this.customTypes.isEmpty())
 			{
-				ListNBT customTypes = new ListNBT();
+				ListTag customTypes = new ListTag();
 				for(EnumCreatureType type : this.customTypes)
-					customTypes.add(StringNBT.valueOf(type.getString()));
+					customTypes.add(StringTag.valueOf(type.getSerializedName()));
 				compound.put("CustomTypes", customTypes);
 			}
 			
@@ -217,8 +215,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			if(!this.conditions.isEmpty())
 			{
-				ListNBT conditionList = new ListNBT();
-				this.conditions.forEach((instance) -> { conditionList.add(instance.write(new CompoundNBT())); });
+				ListTag conditionList = new ListTag();
+				this.conditions.forEach((instance) -> { conditionList.add(instance.write(new CompoundTag())); });
 				compound.put("Conditions", conditionList);
 			}
 			
@@ -226,16 +224,16 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			if(!isPlayer)
 			{
-				ListNBT pocketItems = new ListNBT();
+				ListTag pocketItems = new ListTag();
 				for(ItemStack stack : pockets)
-					pocketItems.add(stack.write(new CompoundNBT()));
+					pocketItems.add(stack.save(new CompoundTag()));
 				
 				compound.put("Pockets", pocketItems);
 			}
 		return compound;
 	}
 	
-	public void deserializeNBT(CompoundNBT nbt)
+	public void deserializeNBT(CompoundTag nbt)
 	{
 		if(nbt.isEmpty())
 		{
@@ -255,7 +253,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.species = null;
 		if(nbt.contains("Species", 10))
 		{
-			CompoundNBT speciesData = nbt.getCompound("Species");
+			CompoundTag speciesData = nbt.getCompound("Species");
 			this.species = SpeciesRegistry.instanceFromNBT(speciesData);
 		}
 		this.selectedSpecies = nbt.getBoolean("SelectedSpecies");
@@ -263,7 +261,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.templates.clear();
 		if(nbt.contains("Templates", 9))
 		{
-			ListNBT templateList = nbt.getList("Templates", 8);
+			ListTag templateList = nbt.getList("Templates", 8);
 			for(int i=0; i<templateList.size(); i++)
 			{
 				ResourceLocation registryName = new ResourceLocation(templateList.getString(i));
@@ -272,7 +270,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			}
 		}
 		
-		ListNBT types = nbt.getList("Types", 8);
+		ListTag types = nbt.getList("Types", 8);
 		prevTypes.clear();
 		for(int i=0; i<types.size(); i++)
 			prevTypes.add(EnumCreatureType.fromName(types.getString(i)));
@@ -280,7 +278,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.customTypes.clear();
 		if(nbt.contains("CustomTypes", 9))
 		{
-			ListNBT customTypes = nbt.getList("CustomTypes", 8);
+			ListTag customTypes = nbt.getList("CustomTypes", 8);
 			for(int i=0; i<customTypes.size(); i++)
 				this.customTypes.add(EnumCreatureType.fromName(types.getString(i)));
 		}
@@ -290,7 +288,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.conditions.clear();
 		if(nbt.contains("Conditions", 9))
 		{
-			ListNBT conditionList = nbt.getList("Conditions", 10);
+			ListTag conditionList = nbt.getList("Conditions", 10);
 			for(int i=0; i<conditionList.size(); i++)
 			{
 				ConditionInstance instance = ConditionInstance.read(conditionList.getCompound(i));
@@ -303,11 +301,11 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		if(nbt.contains("Pockets", 10))
 		{
-			ListNBT pocketItems = nbt.getList("Pockets", 10);
+			ListTag pocketItems = nbt.getList("Pockets", 10);
 			for(int i=0; i<6; i++)
 			{
-				CompoundNBT stackData = pocketItems.getCompound(i);
-				this.pockets.set(i, ItemStack.read(stackData));
+				CompoundTag stackData = pocketItems.getCompound(i);
+				this.pockets.set(i, ItemStack.of(stackData));
 			}
 		}
 	}
@@ -315,7 +313,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	private void resetLivingData()
 	{
 		LivingData fresh = new LivingData();
-		CompoundNBT freshData = fresh.serializeNBT();
+		CompoundTag freshData = fresh.serializeNBT();
 		this.deserializeNBT(freshData);
 	}
 	
@@ -336,7 +334,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public Abilities getAbilities(){ return this.abilities; }
 	
 	public byte getVisualPotions(){ return this.visualPotions; }
-	public boolean getVisualPotion(@Nullable Effect potion){ return potion == null ? false : getVisualPotion(VOPotions.getVisualPotionIndex(potion)); }
+	public boolean getVisualPotion(@Nullable MobEffect potion){ return potion == null ? false : getVisualPotion(VOPotions.getVisualPotionIndex(potion)); }
 	public boolean getVisualPotion(int index)
 	{
 		if(index < 0) return false;
@@ -358,8 +356,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		this.visualPotions = (byte)DataHelper.Bytes.setBit(visualPotions, index, bool);
 		
 		// Packet to nearby players to sync
-		if(this.entity != null && !this.entity.getEntityWorld().isRemote)
-			PacketHandler.sendToNearby(this.entity.getEntityWorld(), this.entity, new PacketVisualPotion(this.entity.getUniqueID(), index, bool));
+		if(this.entity != null && !this.entity.getLevel().isClientSide)
+			PacketHandler.sendToNearby(this.entity.getLevel(), this.entity, new PacketVisualPotion(this.entity.getUUID(), index, bool));
 	}
 	
 	public void setVisualPotions(byte value)
@@ -395,7 +393,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		{
 			if(this.entity != null && this.entity.getType() == EntityType.PLAYER)
 			{
-				SpeciesEvent.TemplateApplied event = new TemplateApplied((PlayerEntity)this.entity, templateIn.getRegistryName());
+				SpeciesEvent.TemplateApplied event = new TemplateApplied((Player)this.entity, templateIn.getRegistryName());
 				MinecraftForge.EVENT_BUS.post(event);
 			}
 			return true;
@@ -462,13 +460,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	private int decreaseAirSupply(int air, LivingEntity entityIn)
 	{
-		int i = EnchantmentHelper.getRespirationModifier(entityIn);
-		return i > 0 && entityIn.getRNG().nextInt(i + 1) > 0 ? air : air - 1;
+		int i = EnchantmentHelper.getRespiration(entityIn);
+		return i > 0 && entityIn.getRandom().nextInt(i + 1) > 0 ? air : air - 1;
 	}
 	
 	private int determineNextAir(int currentAir, LivingEntity entityIn)
 	{
-		return Math.min(currentAir + 4, entityIn.getMaxAir());
+		return Math.min(currentAir + 4, entityIn.getMaxAirSupply());
 	}
 	
 	public float getBludgeoning(){ return this.bludgeoning; }
@@ -478,12 +476,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		setBludgeoning(this.bludgeoning + bludgeonIn);
 		boolean knockedOutNow = this.bludgeoning >= (entity == null ? 20F : entity.getHealth());
 		
-		if(bludgeonIn > 0F && entity != null && !entity.getEntityWorld().isRemote)
-			PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketBludgeoned(entity.getUniqueID(), knockedOutNow && !knockedOutThen));
+		if(bludgeonIn > 0F && entity != null && !entity.getLevel().isClientSide)
+			PacketHandler.sendToNearby(entity.getLevel(), entity, new PacketBludgeoned(entity.getUUID(), knockedOutNow && !knockedOutThen));
 	}
 	public void setBludgeoning(float bludgeonIn)
 	{
-		this.bludgeoning = MathHelper.clamp(bludgeonIn, 0F, this.entity.getMaxHealth() + ConfigVO.GENERAL.bludgeoningCap());
+		this.bludgeoning = Mth.clamp(bludgeonIn, 0F, this.entity.getMaxHealth() + ConfigVO.GENERAL.bludgeoningCap());
 		markDirty();
 	}
 	
@@ -512,7 +510,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(bludgeoning <= 0F)
 			return false;
 		
-		if(health <= bludgeoning || entity.getActivePotionEffect(VOPotions.SLEEP) != null && entity.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
+		if(health <= bludgeoning || entity.getEffect(VOPotions.SLEEP) != null && entity.getEffect(VOPotions.SLEEP).getDuration() > 0)
 			return true;
 		return false;
 	}
@@ -575,7 +573,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	
 	public boolean hasCondition(@Nonnull Condition condition, @Nullable LivingEntity entity)
 	{
-		return entity == null ? false : hasConditionFrom(condition, entity.getUniqueID());
+		return entity == null ? false : hasConditionFrom(condition, entity.getUUID());
 	}
 	
 	public boolean hasConditionFrom(@Nonnull Condition condition, @Nullable UUID uuidIn)
@@ -616,7 +614,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(!hasCondition(condition, entity))
 			return;
 		
-		getConditionsFromUUID(entity.getUniqueID()).forEach((instance) -> { if(instance.condition() == condition) removeCondition(instance); });
+		getConditionsFromUUID(entity.getUUID()).forEach((instance) -> { if(instance.condition() == condition) removeCondition(instance); });
 	}
 	
 	public void removeCondition(ConditionInstance instance)
@@ -635,18 +633,18 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(controllers.isEmpty())
 			return entities;
 		
-		World world = this.entity.getEntityWorld();
+		Level world = this.entity.getLevel();
 		for(UUID uuid : controllers)
 		{
-			LivingEntity entity = world.getPlayerByUuid(uuid);
+			LivingEntity entity = world.getPlayerByUUID(uuid);
 			if(entity != null)
 			{
 				if(PlayerData.isPlayerNormalFunction(entity))
 					entities.add(entity);
 			}
 			else
-				for(LivingEntity ent : world.getEntitiesWithinAABB(LivingEntity.class, this.entity.getBoundingBox().grow(distance)))
-					if(ent.getUniqueID().equals(uuid))
+				for(LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, this.entity.getBoundingBox().inflate(distance)))
+					if(ent.getUUID().equals(uuid))
 					{
 						entities.add(ent);
 						break;
@@ -659,7 +657,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public boolean isTargetingHindered(LivingEntity target)
 	{
 		for(ConditionInstance instance : this.conditions)
-			if(instance.condition().affectsMobTargeting() && instance.originUUID() != null && instance.originUUID().equals(target.getUniqueID()))
+			if(instance.condition().affectsMobTargeting() && instance.originUUID() != null && instance.originUUID().equals(target.getUUID()))
 				return true;
 		return false;
 	}
@@ -668,8 +666,8 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	{
 		IDefaultSpecies mobDefaults = entity instanceof IDefaultSpecies ? (IDefaultSpecies)entity : null;
 		
-		World world = entity.getEntityWorld();
-		if(!this.initialised && (!isPlayer || ((PlayerEntity)entity).getGameProfile() != null))
+		Level world = entity.getLevel();
+		if(!this.initialised && (!isPlayer || ((Player)entity).getGameProfile() != null))
 		{
 			// TODO Check default home dimension registry for creature before setting to current dim
 			if(mobDefaults != null)
@@ -678,12 +676,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					setHomeDimension(((IDefaultSpecies)entity).defaultHomeDimension());
 			}
 			else
-				setHomeDimension(world.getDimensionKey().getLocation());
+				setHomeDimension(world.dimension().location());
 			
 			if(isPlayer)
 			{
-				PlayerEntity player = (PlayerEntity)entity;
-				String name = player.getName().getUnformattedComponentText();
+				Player player = (Player)entity;
+				String name = player.getName().getString();
 				if(CreatureTypeDefaults.isTypedPatron(name))
 				{
 					setCustomTypes(CreatureTypeDefaults.getPatronTypes(name));
@@ -713,11 +711,11 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 						mobDefaults.defaultCreatureTypes().forEach((type) -> { addCustomType(type); } );
 					
 					if(!mobDefaults.defaultAbilities().isEmpty())
-						mobDefaults.defaultAbilities().forEach((ability) -> { this.abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundNBT()))); });
+						mobDefaults.defaultAbilities().forEach((ability) -> { this.abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundTag()))); });
 				}
 				else
 				{
-					Species guess = SpeciesRegistry.getSpecies(entity.getType().getRegistryName());
+					Species guess = SpeciesRegistry.getSpecies(EntityType.getKey(entity.getType()));
 					if(guess != null)
 						setSpecies(guess);
 				}
@@ -733,9 +731,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		handleTypes(entity, world);
 		
-		PlayerEntity player = null;
+		Player player = null;
 		if(isPlayer)
-			player = (PlayerEntity)entity;
+			player = (Player)entity;
 		
 		if(isPlayer)
 			handleHealth(player);
@@ -745,20 +743,20 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		// Prevent phantoms due to sleeplessness
 		if(!actions.sleeps())
 		{
-			if(isPlayer && !world.isRemote)
+			if(isPlayer && !world.isClientSide)
 			{
-				ServerPlayerEntity serverPlayer = (ServerPlayerEntity)player;
-                ServerStatisticsManager statManager = serverPlayer.getStats();
+				ServerPlayer serverPlayer = (ServerPlayer)player;
+				ServerStatsCounter statManager = serverPlayer.getStats();
                 statManager.setValue(serverPlayer, Stats.CUSTOM.get(Stats.TIME_SINCE_REST), 0);
 			}
 		}
 		
 		handleAir(actions.breathes(), entity);
 		
-		if(this.bludgeoning > 0F && !world.isRemote)
+		if(this.bludgeoning > 0F && !world.isClientSide)
 			if(--this.recoveryTimer <= 0)
 			{
-				addBludgeoning(-(this.isPlayer && ((PlayerEntity)entity).isPlayerFullyAsleep() ? 2F : 1F));
+				addBludgeoning(-(this.isPlayer && entity.isSleeping() ? 2F : 1F));
 				this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
 			}
 		
@@ -767,7 +765,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			if(isPlayer)
 			{
 				if(isUnconscious())
-					PlayerData.forPlayer((PlayerEntity)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
+					PlayerData.forPlayer((Player)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
 				
 				this.isUnconscious = isUnconscious();
 			}
@@ -782,10 +780,10 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 					((AbstractBody)body).setPocketInventory(getPocketInventory());
 					if(entity.isAddedToWorld())
 					{
-						if(!world.isRemote)
+						if(!world.isClientSide)
 						{
-							world.addEntity(body);
-							entity.remove();
+							world.addFreshEntity(body);
+							entity.discard();
 						}
 					}
 				}
@@ -801,15 +799,15 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		
 		if(this.dirty)
 		{
-			if(this.entity != null && !this.entity.getEntityWorld().isRemote)
-				PacketHandler.sendToNearby(entity.getEntityWorld(), entity, new PacketSyncLivingData(entity.getUniqueID(), this));
+			if(this.entity != null && !this.entity.getLevel().isClientSide)
+				PacketHandler.sendToNearby(entity.getLevel(), entity, new PacketSyncLivingData(entity.getUUID(), this));
 			this.dirty = false;
 		}
 		
-		if(world.isRemote && --this.potionSyncTimer <= 0)
+		if(world.isClientSide && --this.potionSyncTimer <= 0)
 		{
 			this.potionSyncTimer = Reference.Values.TICKS_PER_MINUTE;
-			PacketHandler.sendToServer(new PacketSyncVisualPotions(this.entity.getUniqueID()));
+			PacketHandler.sendToServer(new PacketSyncVisualPotions(this.entity.getUUID()));
 		}
 	}
 	
@@ -834,12 +832,12 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	public void setSpeciesSelected()
 	{
 		setSelectedSpecies(true);
-		if(entity.isPotionActive(Effects.RESISTANCE) && entity.getActivePotionEffect(Effects.RESISTANCE).getAmplifier() == 15)
-			entity.removeActivePotionEffect(Effects.RESISTANCE);
+		if(entity.hasEffect(MobEffects.DAMAGE_RESISTANCE) && entity.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() == 15)
+			entity.removeEffect(MobEffects.DAMAGE_RESISTANCE);
 	}
 	
 	/** Manages the application and removal of creature types */
-	public void handleTypes(LivingEntity entity, World world)
+	public void handleTypes(LivingEntity entity, Level world)
 	{
 		List<EnumCreatureType> typesNow = EnumCreatureType.getCreatureTypes(entity);
 		
@@ -858,14 +856,14 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	}
 	
 	/** Manage base health according to active supertypes */
-	public void handleHealth(PlayerEntity player)
+	public void handleHealth(Player player)
 	{
 		List<EnumCreatureType> supertypes = new ArrayList<>();
 		supertypes.addAll(this.prevTypes);
 		supertypes.removeIf(EnumCreatureType.IS_SUBTYPE);
 		
 		double hitDieModifier = 0D;
-		if(!supertypes.isEmpty() && !player.abilities.disableDamage)
+		if(!supertypes.isEmpty() && !player.getAbilities().invulnerable)
 		{
 			for(EnumCreatureType type : supertypes)
 			{
@@ -875,9 +873,9 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			hitDieModifier /= Math.max(1, supertypes.size());
 		}
 		
-		ModifiableAttributeInstance healthAttribute = player.getAttribute(Attributes.MAX_HEALTH);
+		AttributeInstance healthAttribute = player.getAttribute(Attributes.MAX_HEALTH);
 		AttributeModifier modifier = healthAttribute.getModifier(HEALTH_MODIFIER_UUID);
-		if(!TypeBus.shouldFire() || supertypes.isEmpty() || player.abilities.disableDamage)
+		if(!TypeBus.shouldFire() || supertypes.isEmpty() || player.getAbilities().invulnerable)
 			healthAttribute.removeModifier(HEALTH_MODIFIER_UUID);
 		else
 		{
@@ -885,13 +883,13 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			if(modifier == null)
 			{
 				modifier = makeModifier(hitDieModifier);
-				healthAttribute.applyPersistentModifier(modifier);
+				healthAttribute.addPermanentModifier(modifier);
 			}
 			else if(modifier.getAmount() != hitDieModifier)
 			{
 				boolean shouldHeal = player.getHealth() == player.getMaxHealth() && modifier.getAmount() < hitDieModifier;
 				healthAttribute.removeModifier(modifier);
-				healthAttribute.applyPersistentModifier(makeModifier(hitDieModifier));
+				healthAttribute.addPermanentModifier(makeModifier(hitDieModifier));
 				if(shouldHeal)
 					player.setHealth(player.getMaxHealth());
 			}
@@ -899,6 +897,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 	}
 	
 	/** Manage air for creatures that breathe */
+	@SuppressWarnings("deprecation")
 	public void handleAir(boolean breathes, LivingEntity entity)
 	{
 		boolean isPlayer = entity.getType() == EntityType.PLAYER;
@@ -906,29 +905,29 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		if(isPlayer)
 		{
 			isPlayer = true;
-			isInvulnerablePlayer = ((PlayerEntity)entity).abilities.disableDamage || !PlayerData.isPlayerNormalFunction(entity);
+			isInvulnerablePlayer = ((Player)entity).getAbilities().invulnerable || !PlayerData.isPlayerNormalFunction(entity);
 		}
 		
-		if(getAir() > entity.getMaxAir())
-			setAir(entity.getMaxAir());
+		if(getAir() > entity.getMaxAirSupply())
+			setAir(entity.getMaxAirSupply());
 		
 		if(!breathes)
-			setAir(entity.getMaxAir());
+			setAir(entity.getMaxAirSupply());
 		else if(entity.isAlive() && !isInvulnerablePlayer)
 		{
-			List<ITag.INamedTag<Fluid>> breathables = getBreathableFluids(entity);
+			List<TagKey<Fluid>> breathables = getBreathableFluids(entity);
 			if(breathables.isEmpty())
 				return;
 			
-			List<ITag<Fluid>> fluidInEyes = Lists.newArrayList();
-			FluidTags.getAllTags().forEach((fluid) -> { if(entity.areEyesInFluid(fluid)) fluidInEyes.add(fluid); });
+			List<TagKey<Fluid>> fluidInEyes = Lists.newArrayList();
+			Registry.FLUID.getTagNames().forEach((fluid) -> { if(entity.isEyeInFluid(fluid)) fluidInEyes.add(fluid); });
 			
 			boolean hasSpecialBreathing = 
-					EffectUtils.canBreatheUnderwater(entity) ||
-					entity.getEntityWorld().getBlockState(new BlockPos(entity.getPosX(), entity.getPosYEye(), entity.getPosZ())).isIn(Blocks.BUBBLE_COLUMN);
+					MobEffectUtil.hasWaterBreathing(entity) ||
+					entity.getLevel().getBlockState(new BlockPos(entity.getX(), entity.getEyeY(), entity.getZ())).is(Blocks.BUBBLE_COLUMN);
 			
 			boolean canBreathe = false;
-			for(ITag<Fluid> fluid : fluidInEyes)
+			for(TagKey<Fluid> fluid : fluidInEyes)
 				if(breathables.contains(fluid))
 				{
 					canBreathe = true;
@@ -939,30 +938,30 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 			
 			if(canBreathe)
 			{
-				if(getAir() < entity.getMaxAir())
+				if(getAir() < entity.getMaxAirSupply())
 					setAir(determineNextAir(getAir(), entity));
 			}
 			else if(!hasSpecialBreathing)
 			{
-				setAir(Math.min(entity.getMaxAir(), decreaseAirSupply(getAir(), entity)));
+				setAir(Math.min(entity.getMaxAirSupply(), decreaseAirSupply(getAir(), entity)));
 				if(getAir() == -20)
 				{
 					setAir(0);
-					entity.attackEntityFrom(DamageSource.DROWN, 2.0F);
+					entity.hurt(DamageSource.DROWN, 2.0F);
 				}
 			}
 		}
 		
-		if(isPlayer && !entity.getEntityWorld().isRemote && entity.getEntityWorld().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
-			PacketHandler.sendTo((ServerPlayerEntity)entity, new PacketSyncAir(getAir()));
+		if(isPlayer && !entity.getLevel().isClientSide && entity.getLevel().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
+			PacketHandler.sendTo((ServerPlayer)entity, new PacketSyncAir(getAir()));
 	}
 	
-	public List<ITag.INamedTag<Fluid>> getBreathableFluids(LivingEntity entity)
+	public List<TagKey<Fluid>> getBreathableFluids(LivingEntity entity)
 	{
 		AbilityGetBreathableFluidEvent.Add event1 = new AbilityGetBreathableFluidEvent.Add(entity);
 		MinecraftForge.EVENT_BUS.post(event1);
 		
-		List<ITag.INamedTag<Fluid>> breathables = event1.getFluids();
+		List<TagKey<Fluid>> breathables = event1.getFluids();
 		if(!breathables.isEmpty())
 		{
 			AbilityGetBreathableFluidEvent.Remove event2 = new AbilityGetBreathableFluidEvent.Remove(entity);
@@ -994,7 +993,7 @@ public class LivingData implements ICapabilitySerializable<CompoundNBT>
 		public void readNBT(Capability<LivingData> capability, LivingData instance, Direction side, INBT nbt)
 		{
 			if(nbt.getId() == 10)
-				instance.deserializeNBT((CompoundNBT)nbt);
+				instance.deserializeNBT((CompoundTag)nbt);
 		}
 	}
 }

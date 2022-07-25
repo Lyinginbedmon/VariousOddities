@@ -7,15 +7,14 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.api.event.DamageTypesEvent;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -33,48 +32,48 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 		this.exceptions = exceptionsIn;
 	}
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		StringTextComponent exceptionTranslated;
+		MutableComponent exceptionTranslated;
 		if(exceptions.length == 0)
-			exceptionTranslated = new StringTextComponent("-");
+			exceptionTranslated = Component.literal("-");
 		else
 		{
-			exceptionTranslated = new StringTextComponent("");
+			exceptionTranslated = Component.literal("");
 			for(int i=0; i<exceptions.length; i++)
 			{
 				DamageType type = exceptions[i];
 				exceptionTranslated.append(type.getTranslated());
 				if(i < exceptions.length - 1)
-					exceptionTranslated.append(new StringTextComponent(", "));
+					exceptionTranslated.append(Component.literal(", "));
 			}
 		}
 		
-		return new TranslationTextComponent("ability.varodd.damage_reduction", amount, exceptions());
+		return Component.translatable("ability.varodd.damage_reduction", amount, exceptions());
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
 		if(exceptions.length == 0)
-			return new TranslationTextComponent("ability.varodd:damage_reduction.desc", amount);
+			return Component.translatable("ability.varodd:damage_reduction.desc", amount);
 		else
-			return new TranslationTextComponent("ability.varodd:damage_reduction.desc.exceptions", exceptions(), amount);
+			return Component.translatable("ability.varodd:damage_reduction.desc.exceptions", exceptions(), amount);
 	}
 	
-	private ITextComponent exceptions()
+	private Component exceptions()
 	{
-		StringTextComponent exceptionTranslated;
+		MutableComponent exceptionTranslated;
 		if(exceptions.length == 0)
-			exceptionTranslated = new StringTextComponent("-");
+			exceptionTranslated = Component.literal("-");
 		else
 		{
-			exceptionTranslated = new StringTextComponent("");
+			exceptionTranslated = Component.literal("");
 			for(int i=0; i<exceptions.length; i++)
 			{
 				DamageType type = exceptions[i];
 				exceptionTranslated.append(type.getTranslated());
 				if(i < exceptions.length - 1)
-					exceptionTranslated.append(new StringTextComponent(", "));
+					exceptionTranslated.append(Component.literal(", "));
 			}
 		}
 		return exceptionTranslated;
@@ -95,25 +94,25 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 	
 	public int getAmount(){ return Math.max(4, amount); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putInt("Amount", this.amount);
 		if(exceptions.length > 0)
 		{
-			ListNBT exceptionList = new ListNBT();
+			ListTag exceptionList = new ListTag();
 			for(DamageType type : exceptions)
-				exceptionList.add(StringNBT.valueOf(type.getString()));
+				exceptionList.add(StringTag.valueOf(type.getSerializedName()));
 			compound.put("Exceptions", exceptionList);
 		}
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.amount = compound.getInt("Amount");
 		if(compound.contains("Exceptions", 9))
 		{
-			ListNBT exceptionList = compound.getList("Exceptions", 8);
+			ListTag exceptionList = compound.getList("Exceptions", 8);
 			List<DamageType> list = Lists.newArrayList();
 			for(int i=0; i<exceptionList.size(); i++)
 				list.add(DamageType.fromString(exceptionList.getString(i)));
@@ -130,7 +129,7 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 	public void applyDamageReduction(LivingHurtEvent event)
 	{
 		DamageSource source = event.getSource();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntityLiving(), REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), REGISTRY_NAME))
 		{
 			AbilityDamageReduction reduction = (AbilityDamageReduction)ability;
 			if(reduction.applysTo(source))
@@ -147,7 +146,7 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 		DamageSource source = event.getSource();
 		if(isValidDamageSource(event.getSource()))
 		{
-			LivingEntity attacker = (LivingEntity)source.getImmediateSource();
+			LivingEntity attacker = (LivingEntity)source.getDirectEntity();
 			if(attacker != null && AbilityRegistry.hasAbility(attacker, getMapName()))
 			{
 				AbilityDamageReduction reduction = (AbilityDamageReduction)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME);
@@ -160,7 +159,7 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 	
 	public boolean applysTo(DamageSource source)
 	{
-		if(source.isUnblockable())
+		if(source.isBypassArmor())
 			return false;
 		else
 		{
@@ -178,14 +177,14 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			int amount = compound.getInt("Amount");
 			
 			DamageType[] exceptions;
 			if(compound.contains("Exceptions", 9))
 			{
-				ListNBT exceptionList = compound.getList("Exceptions", 8);
+				ListTag exceptionList = compound.getList("Exceptions", 8);
 				exceptions = new DamageType[exceptionList.size()];
 				for(int i=0; i<exceptionList.size(); i++)
 					exceptions[i] = DamageType.fromString(exceptionList.getString(i));

@@ -2,7 +2,7 @@ package com.lying.variousoddities.api.entity;
 
 import com.lying.variousoddities.magic.IMagicEffect;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 
 public interface IMobSpellcaster
 {

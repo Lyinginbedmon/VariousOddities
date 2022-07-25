@@ -14,90 +14,94 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.species.abilities.Ability.Nature;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.registries.IForgeRegistry;
 
 public class AbilityRegistry
 {
-	public static void onRegisterAbilities(RegistryEvent.Register<Ability.Builder> event)
+	private static final Map<ResourceLocation, Ability.Builder> ABILITY_MAP = new HashMap<>();
+	
+	public void init()
 	{
-		IForgeRegistry<Ability.Builder> registry = event.getRegistry();
-		
-		registry.register(new AbilityAmphibious.Builder());
-		registry.register(new AbilityBlind.Builder());
-		registry.register(new AbilityBlindsight.Builder());
-		registry.register(new AbilityBreatheFluid.Builder());
-		registry.register(new AbilityBreathWeapon.Builder());
-		registry.register(new AbilityBurrow.Builder());
-		registry.register(new AbilityClimb.Builder());
-		registry.register(new AbilityDamageCap.Builder());
-		registry.register(new AbilityDamageReduction.Builder());
-		registry.register(new AbilityDamageResistance.Builder());
-		registry.register(new AbilityDarkvision.Builder());
-		registry.register(new AbilityDrainHealth.Builder());
-		registry.register(new AbilityEtherealness.Builder());
-		registry.register(new AbilityExplode.Builder());
-		registry.register(new AbilityFastHealing.Builder());
-		registry.register(new AbilityForm.Ghost.Builder());
-		registry.register(new AbilityForm.Mist.Builder());
-		registry.register(new AbilityFlight.Builder());
-		registry.register(new AbilityGaseous.Builder());
-		registry.register(new AbilityGaze.Charm.Builder());
-		registry.register(new AbilityGaze.Dominate.Builder());
-		registry.register(new AbilityFearAura.Builder());
-		registry.register(new AbilityGaze.Petrify.Builder());
-		registry.register(new AbilityHeat.Builder());
-		registry.register(new AbilityHoldBreath.Builder());
-		registry.register(new AbilityHurtByEnv.Builder());
-		registry.register(new AbilityImmunityCrits.Builder());
-		registry.register(new AbilityIncorporeality.Builder());
-		registry.register(new AbilityInvisibility.Builder());
-		registry.register(new AbilityLightSensitivity.Builder());
-		registry.register(new AbilityModifierCon.Builder());
-		registry.register(new AbilityModifierStr.Builder());
-		registry.register(new AbilityNaturalArmour.Builder());
-		registry.register(new AbilityNaturalRegen.Builder());
-		registry.register(new AbilityPoison.Builder());
-		registry.register(new AbilityStatusImmunity.Configurable.Builder());
-		registry.register(new AbilityStatusImmunity.Paralysis.Builder());
-		registry.register(new AbilityStatusImmunity.Poison.Builder());
-		registry.register(new AbilityRend.Builder());
-		registry.register(new AbilityResistance.Builder());
-		registry.register(new AbilityResistanceSpell.Builder());
-		registry.register(new AbilityScent.Builder());
-		registry.register(new AbilitySize.Builder());
-		registry.register(new AbilitySmite.Builder());
-		registry.register(new AbilityStability.Builder());
-		registry.register(new AbilityStartingItem.Builder());
-		registry.register(new AbilityStatusEffect.Builder());
-		registry.register(new AbilitySunBurn.Builder());
-		registry.register(new AbilitySwim.Builder());
-		registry.register(new AbilityTeleportToHome.Builder());
-		registry.register(new AbilityTeleportToPos.Builder());
-		registry.register(new AbilityTremorsense.Builder());
-		registry.register(new AbilityUnarmedStrike.Builder());
-		registry.register(new AbilityWaterWalking.Builder());
+		register(new AbilityAmphibious.Builder());
+		register(new AbilityBlind.Builder());
+		register(new AbilityBlindsight.Builder());
+		register(new AbilityBreatheFluid.Builder());
+		register(new AbilityBreathWeapon.Builder());
+		register(new AbilityBurrow.Builder());
+		register(new AbilityClimb.Builder());
+		register(new AbilityDamageCap.Builder());
+		register(new AbilityDamageReduction.Builder());
+		register(new AbilityDamageResistance.Builder());
+		register(new AbilityDarkvision.Builder());
+		register(new AbilityDrainHealth.Builder());
+		register(new AbilityEtherealness.Builder());
+		register(new AbilityExplode.Builder());
+		register(new AbilityFastHealing.Builder());
+		register(new AbilityForm.Ghost.Builder());
+		register(new AbilityForm.Mist.Builder());
+		register(new AbilityFlight.Builder());
+		register(new AbilityGaseous.Builder());
+		register(new AbilityGaze.Charm.Builder());
+		register(new AbilityGaze.Dominate.Builder());
+		register(new AbilityFearAura.Builder());
+		register(new AbilityGaze.Petrify.Builder());
+		register(new AbilityHeat.Builder());
+		register(new AbilityHoldBreath.Builder());
+		register(new AbilityHurtByEnv.Builder());
+		register(new AbilityImmunityCrits.Builder());
+		register(new AbilityIncorporeality.Builder());
+		register(new AbilityInvisibility.Builder());
+		register(new AbilityLightSensitivity.Builder());
+		register(new AbilityModifierCon.Builder());
+		register(new AbilityModifierStr.Builder());
+		register(new AbilityNaturalArmour.Builder());
+		register(new AbilityNaturalRegen.Builder());
+		register(new AbilityPoison.Builder());
+		register(new AbilityStatusImmunity.Configurable.Builder());
+		register(new AbilityStatusImmunity.Paralysis.Builder());
+		register(new AbilityStatusImmunity.Poison.Builder());
+		register(new AbilityRend.Builder());
+		register(new AbilityResistance.Builder());
+		register(new AbilityResistanceSpell.Builder());
+		register(new AbilityScent.Builder());
+		register(new AbilitySize.Builder());
+		register(new AbilitySmite.Builder());
+		register(new AbilityStability.Builder());
+		register(new AbilityStartingItem.Builder());
+		register(new AbilityStatusEffect.Builder());
+		register(new AbilitySunBurn.Builder());
+		register(new AbilitySwim.Builder());
+		register(new AbilityTeleportToHome.Builder());
+		register(new AbilityTeleportToPos.Builder());
+		register(new AbilityTremorsense.Builder());
+		register(new AbilityUnarmedStrike.Builder());
+		register(new AbilityWaterWalking.Builder());
 		
 		registerAbilityListeners();
 	}
 	
-	public static Ability getAbility(ResourceLocation registryName, CompoundNBT nbt)
+	private static void register(Ability.Builder builderIn)
 	{
-		if(VORegistries.ABILITIES.containsKey(registryName))
-			return VORegistries.ABILITIES.getValue(registryName).create(nbt);
+		VORegistries.ABILITIES.register(builderIn.getRegistryName().toString(), () -> builderIn);
+		ABILITY_MAP.put(builderIn.getRegistryName(), builderIn);
+	}
+	
+	public static Ability getAbility(ResourceLocation registryName, CompoundTag nbt)
+	{
+		if(ABILITY_MAP.containsKey(registryName))
+			return ABILITY_MAP.get(registryName).create(nbt);
 		return null;
 	}
 	
-	public static Ability getAbility(CompoundNBT compound)
+	public static Ability getAbility(CompoundTag compound)
 	{
 		ResourceLocation registryName = new ResourceLocation(compound.getString("Name"));
 		
-		CompoundNBT abilityData = compound.contains("Tag", 10) ? compound.getCompound("Tag") : new CompoundNBT();
+		CompoundTag abilityData = compound.contains("Tag", 10) ? compound.getCompound("Tag") : new CompoundTag();
 		Ability ability = AbilityRegistry.getAbility(registryName, abilityData);
 		
 		if(ability != null)
@@ -106,10 +110,10 @@ public class AbilityRegistry
 				ability.setSourceId(UUID.fromString(compound.getString("UUID")));
 			
 			if(compound.contains("CustomName", 8))
-				ability.setDisplayName(ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomName")));
+				ability.setDisplayName(Component.Serializer.fromJson(compound.getString("CustomName")));
 			
 			if(compound.contains("CustomDesc", 8))
-				ability.setCustomDesc(ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomDesc")));
+				ability.setCustomDesc(Component.Serializer.fromJson(compound.getString("CustomDesc")));
 			
 			if(compound.contains("CustomNature", 8))
 				ability.setCustomNature(Nature.fromString(compound.getString("CustomNature")));
@@ -120,11 +124,15 @@ public class AbilityRegistry
 	
 	public static void registerAbilityListeners()
 	{
-		for(Ability.Builder builder : VORegistries.ABILITIES.getValues())
-			builder.create(new CompoundNBT()).addListeners(MinecraftForge.EVENT_BUS);
+		VORegistries.ABILITIES.getEntries().forEach((entry) -> entry.get().create(new CompoundTag()).addListeners(MinecraftForge.EVENT_BUS));
 	}
 	
-	public static Collection<ResourceLocation> getAbilityNames(){ return VORegistries.ABILITIES.getKeys(); }
+	public static Collection<ResourceLocation> getAbilityNames()
+	{
+		List<ResourceLocation> keys = Lists.newArrayList();
+		VORegistries.ABILITIES.getEntries().forEach((entry) -> keys.add(entry.getId()));
+		return keys;
+	}
 	
 	/** Returns a map of the given creature's abilities based on their types and LivingData */
 	public static Map<ResourceLocation, Ability> getCreatureAbilities(@Nonnull LivingEntity entity)

@@ -1,9 +1,9 @@
 package com.lying.variousoddities.block;
 
-import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 @SuppressWarnings("deprecation")
 public abstract class BlockEgg extends BlockEggBase implements ITileEntityProvider
@@ -13,5 +13,5 @@ public abstract class BlockEgg extends BlockEggBase implements ITileEntityProvid
 		super(shapeIn, properties);
 	}
 	
-	public abstract void onHatch(BlockPos pos, World world);
+	public abstract void onHatch(BlockPos pos, Level world);
 }

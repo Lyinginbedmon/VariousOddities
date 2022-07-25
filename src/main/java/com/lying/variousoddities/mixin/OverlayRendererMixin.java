@@ -11,7 +11,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OverlayRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -22,7 +22,7 @@ public class OverlayRendererMixin
 	@Inject(method = "renderTexture(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lcom/mojang/blaze3d/matrix/MatrixStack;)V", at = @At("HEAD"), cancellable = true)
 	private static void renderBlockOverlay(Minecraft minecraftIn, TextureAtlasSprite spriteIn, MatrixStack stackIn, CallbackInfo ci)
 	{
-		PlayerEntity living = minecraftIn.player;
+		Player living = minecraftIn.player;
 		if(IPhasingAbility.isPhasing(living))
 			ci.cancel();
 //		Collection<IPhasingAbility> phasings = AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class);

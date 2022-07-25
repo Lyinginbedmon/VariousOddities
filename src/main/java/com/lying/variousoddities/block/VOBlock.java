@@ -1,29 +1,29 @@
 package com.lying.variousoddities.block;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.material.MaterialColor;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MaterialColor;
 
 public class VOBlock extends Block
 {
-	public static boolean isntSolid(BlockState state, IBlockReader reader, BlockPos pos){ return false; }
+	public static boolean isntSolid(BlockState state, Level reader, BlockPos pos){ return false; }
 	
-	public VOBlock(AbstractBlock.Properties properties)
+	public VOBlock(BlockBehaviour.Properties properties)
 	{
 		super(properties);
 	}
 	
 	public VOBlock(String nameIn, Material materialIn)
 	{
-		this(AbstractBlock.Properties.create(materialIn));
+		this(BlockBehaviour.Properties.of(materialIn));
 	}
 	
 	public VOBlock(String nameIn, Material materialIn, MaterialColor colorIn)
 	{
-		this(AbstractBlock.Properties.create(materialIn, colorIn));
+		this(BlockBehaviour.Properties.of(materialIn, colorIn));
 	}
 }

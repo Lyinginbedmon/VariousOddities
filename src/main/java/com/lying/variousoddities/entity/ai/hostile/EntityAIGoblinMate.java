@@ -1,26 +1,26 @@
 package com.lying.variousoddities.entity.ai.hostile;
 
 import java.util.EnumSet;
-import java.util.Random;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.reference.Reference;
+import com.mojang.math.Vector3d;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.ai.RandomPositionGenerator;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
 
 public class EntityAIGoblinMate extends Goal
 {
-	private final World theWorld;
+	private final Level theWorld;
 	private final EntityGoblin theGoblin;
-	private final PathNavigator theNavigator;
+	private final PathNavigation theNavigator;
 	
 	private final Predicate<EntityGoblin> searchPredicate = new Predicate<EntityGoblin>()
 			{
@@ -38,14 +38,14 @@ public class EntityAIGoblinMate extends Goal
 	public EntityAIGoblinMate(EntityGoblin goblinIn)
 	{
 		theGoblin = goblinIn;
-		theNavigator = goblinIn.getNavigator();
-		theWorld = goblinIn.getEntityWorld();
+		theNavigator = goblinIn.getNavigation();
+		theWorld = goblinIn.getLevel();
         this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theGoblin.getAttackTarget() != null)
+		if(theGoblin.getTarget() != null)
 		{
 			theGoblin.setInLove(false);
 			return false;
@@ -54,19 +54,19 @@ public class EntityAIGoblinMate extends Goal
 		if(theGoblin.isCarrying())
 			return true;
 		
-		if(theWorld.getEntitiesWithinAABB(EntityGoblin.class, theGoblin.getBoundingBox().grow(16), searchPredicate).size() < 2)
+		if(theWorld.getEntitiesOfClass(EntityGoblin.class, theGoblin.getBoundingBox().inflate(16), searchPredicate).size() < 2)
 		{
 			theGoblin.setInLove(false);
 			theGoblin.setGrowingAge(1200);
 			return false;
 		}
 		
-		return (theGoblin.getGrowingAge() == 0 && !theGoblin.isChild()) && theGoblin.getRNG().nextInt(100) == 0;
+		return (theGoblin.getGrowingAge() == 0 && !theGoblin.isBaby()) && theGoblin.getRandom().nextInt(100) == 0;
 	}
 	
 	public boolean shouldContinueExecuting()
 	{
-		return theGoblin.getAttackTarget() == null && currentState != null && (theGoblin.isInLove() || !currentState.needsLove);
+		return theGoblin.getTarget() == null && currentState != null && (theGoblin.isInLove() || !currentState.needsLove);
 	}
 	
 	public void resetTask()
@@ -78,7 +78,7 @@ public class EntityAIGoblinMate extends Goal
 	
 	public void startExecuting()
 	{
-		theGoblin.getNavigator().clearPath();
+		theGoblin.getNavigation().clearPath();
 		if(theGoblin.isCarrying())
 			currentState = State.SEARCHING_NEST;
 		else
@@ -146,12 +146,12 @@ public class EntityAIGoblinMate extends Goal
 						if(--matingTimer <= 0)
 						{
 							EntityGoblin parent = theGoblin.getOtherParent();
-							for(int i=0; i < (1 + theGoblin.getRNG().nextInt(2)); i++)
+							for(int i=0; i < (1 + theGoblin.getRandom().nextInt(2)); i++)
 							{
-								EntityGoblin child = (EntityGoblin)theGoblin.func_241840_a((ServerWorld)theWorld, parent);
+								EntityGoblin child = (EntityGoblin)theGoblin.func_241840_a((ServerLevel)theWorld, parent);
 								child.copyLocationAndAnglesFrom(theGoblin);
 								child.setGrowingAge(-4000);
-								theWorld.addEntity(child);
+								theWorld.addFreshEntity(child);
 							}
 							
 							theGoblin.setCarryingFrom(null);
@@ -183,7 +183,7 @@ public class EntityAIGoblinMate extends Goal
 	
 	public BlockPos getRandomNestSite()
 	{
-		Random rand = theGoblin.getRNG();
+		RandomSource rand = theGoblin.getRandom();
 		int attempts = 200;
 		BlockPos nestSite = null;
 		while(!isValidSite(nestSite) && attempts-- > 0)
@@ -191,7 +191,7 @@ public class EntityAIGoblinMate extends Goal
 			double offX = rand.nextInt(16) - 8;
 			double offY = rand.nextInt(8) - 4;
 			double offZ = rand.nextInt(16) - 8;
-			nestSite = theGoblin.getPosition().add(offX, offY, offZ);
+			nestSite = theGoblin.blockPosition().offset(offX, offY, offZ);
 		}
 		
 		return isValidSite(nestSite) ? nestSite : null;
@@ -204,7 +204,7 @@ public class EntityAIGoblinMate extends Goal
 	
 	public boolean isValidForNest(BlockPos pos)
 	{
-		return !theWorld.canBlockSeeSky(pos) && theWorld.isAirBlock(pos) && theWorld.getLight(pos) <= 6;
+		return !theWorld.canSeeSky(pos) && theWorld.isEmptyBlock(pos) && theWorld.getLightEmission(pos) <= 6;
 	}
 	
 	private enum State

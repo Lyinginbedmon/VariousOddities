@@ -6,11 +6,11 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
 
 public class AbilityDrainHealth extends AbilityGaze
 {
@@ -33,9 +33,9 @@ public class AbilityDrainHealth extends AbilityGaze
 	
 	public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 	{
-		if(entity.attackEntityFrom(DamageSource.GENERIC, 2F) && entity.addPotionEffect(new EffectInstance(VOPotions.HEALTH_DRAIN, Integer.MAX_VALUE, 1, true, false)))
+		if(entity.hurt(DamageSource.GENERIC, 2F) && entity.addEffect(new MobEffectInstance(VOPotions.HEALTH_DRAIN, Integer.MAX_VALUE, 1, true, false)))
 		{
-			owner.addPotionEffect(new EffectInstance(VOPotions.TEMP_HP, Integer.MAX_VALUE, 4, true, false));
+			owner.addEffect(new MobEffectInstance(VOPotions.TEMP_HP, Integer.MAX_VALUE, 4, true, false));
 			return true;
 		}
 		return false;
@@ -45,10 +45,10 @@ public class AbilityDrainHealth extends AbilityGaze
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			AbilityDrainHealth drain = new AbilityDrainHealth();
-			CompoundNBT nbt = drain.writeToNBT(new CompoundNBT());
+			CompoundTag nbt = drain.writeToNBT(new CompoundTag());
 			nbt.merge(compound);
 			drain.readFromNBT(nbt);
 			return drain;

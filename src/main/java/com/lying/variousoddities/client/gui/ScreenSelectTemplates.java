@@ -353,9 +353,9 @@ public class ScreenSelectTemplates extends Screen
 		yPos += 1;
 		Types baseTypes = new Types(getBaseTypes());
 		ITextComponent baseTypesText = baseTypes.toHeader();
-		if(baseTypesText.getString().length() > 15)
-			baseTypesText = new StringTextComponent(baseTypesText.getString().substring(0, 15) + "...");
-		drawString(matrixStack, this.font, baseTypesText, xPos - this.font.getStringWidth(baseTypesText.getString()), yPos, 16777215);
+		if(baseTypesText.getSerializedName().length() > 15)
+			baseTypesText = new StringTextComponent(baseTypesText.getSerializedName().substring(0, 15) + "...");
+		drawString(matrixStack, this.font, baseTypesText, xPos - this.font.getStringWidth(baseTypesText.getSerializedName()), yPos, 16777215);
 		yPos += this.font.FONT_HEIGHT + 5;
 		Map<ResourceLocation, Ability> baseAbilities = getBaseAbilities();
 		
@@ -376,7 +376,7 @@ public class ScreenSelectTemplates extends Screen
 		
 		yPos += this.font.FONT_HEIGHT + 5;
 		ITextComponent abilityCount = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select.ability_tally", baseAbilities.size());
-		drawString(matrixStack, this.font, abilityCount, xPos - this.font.getStringWidth(abilityCount.getString()), yPos, 16777215);
+		drawString(matrixStack, this.font, abilityCount, xPos - this.font.getStringWidth(abilityCount.getSerializedName()), yPos, 16777215);
 		
 		if(mouseX <= xPos && mouseY <= (yPos + font.FONT_HEIGHT) && mouseY >= 29)
 			renderCharacterSummary(matrixStack, mouseX, mouseY, baseTypes, baseAbilities);
@@ -420,8 +420,8 @@ public class ScreenSelectTemplates extends Screen
 		yPos += 1;
 		Pair<Types, Map<ResourceLocation, Ability>> selection = getProcessedTemplates();
 		ITextComponent selectionTypesText = selection.getFirst().toHeader();
-		if(selectionTypesText.getString().length() > 15)
-			selectionTypesText = new StringTextComponent(selectionTypesText.getString().substring(0, 15) + "...");
+		if(selectionTypesText.getSerializedName().length() > 15)
+			selectionTypesText = new StringTextComponent(selectionTypesText.getSerializedName().substring(0, 15) + "...");
 		drawString(matrixStack, this.font, selectionTypesText, xPos, yPos, 16777215);
 		yPos += this.font.FONT_HEIGHT + 5;
 		

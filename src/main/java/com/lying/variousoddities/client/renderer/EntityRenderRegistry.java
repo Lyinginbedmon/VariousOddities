@@ -3,22 +3,41 @@ package com.lying.variousoddities.client.renderer;
 import java.util.Map;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.client.renderer.entity.*;
-import com.lying.variousoddities.client.renderer.entity.layer.*;
+import com.lying.variousoddities.client.renderer.entity.EntityBodyRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityChangelingRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityCorpseRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityCrabRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityGhastlingRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityGoblinRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityKoboldRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityMarimoRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityMindFlayerRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityPatronKirinRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityPatronWitchRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityRatRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntitySpellRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityWargRenderer;
+import com.lying.variousoddities.client.renderer.entity.EntityWorgRenderer;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerDazed;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerEntangled;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerFoxAccessories;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerGhastlingShoulder;
+import com.lying.variousoddities.client.renderer.entity.layer.LayerPetrified;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.model.FoxModel;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.VillagerModel;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.IllagerRenderer;
-import net.minecraft.client.renderer.entity.LivingRenderer;
-import net.minecraft.client.renderer.entity.PlayerRenderer;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.entity.model.FoxModel;
-import net.minecraft.client.renderer.entity.model.VillagerModel;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.FoxEntity;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Fox;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -59,12 +78,12 @@ public class EntityRenderRegistry
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static void appendRenderers(EntityRendererManager renderManager)
+	public static void appendRenderers(EntityRenderDispatcher renderManager)
 	{
 		if(ConfigVO.GENERAL.verboseLogs())
 			VariousOddities.log.info("Appending layer renderers");
 		
-		LivingRenderer foxRenderer = (LivingRenderer<FoxEntity, FoxModel<FoxEntity>>)renderManager.renderers.get(EntityType.FOX);
+		LivingEntityRenderer foxRenderer = (LivingEntityRenderer<Fox, FoxModel<Fox>>)renderManager.renderers.get(EntityType.FOX);
 		foxRenderer.addLayer(new LayerFoxAccessories(foxRenderer));
 		if(ConfigVO.GENERAL.verboseLogs())
 			VariousOddities.log.info("  -Registered fox accessories layer");
@@ -83,15 +102,15 @@ public class EntityRenderRegistry
 		
 		renderManager.renderers.forEach((type, renderer) -> 
 		{
-			if(renderer instanceof LivingRenderer)
+			if(renderer instanceof LivingEntityRenderer)
 			{
-				LivingRenderer livingRenderer = (LivingRenderer)renderer;
+				LivingEntityRenderer livingRenderer = (LivingEntityRenderer)renderer;
 				
 				livingRenderer.addLayer(new LayerEntangled(livingRenderer));
 				livingRenderer.addLayer(new LayerPetrified(livingRenderer));
 				
 				if(
-						livingRenderer.getEntityModel() instanceof BipedModel ||
+						livingRenderer.getEntityModel() instanceof HumanoidModel ||
 						livingRenderer.getEntityModel() instanceof VillagerModel ||
 						livingRenderer instanceof IllagerRenderer)
 					livingRenderer.addLayer(new LayerDazed(livingRenderer));

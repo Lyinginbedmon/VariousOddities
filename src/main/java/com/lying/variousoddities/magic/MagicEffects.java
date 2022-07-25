@@ -14,9 +14,8 @@ import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
 public class MagicEffects
@@ -182,30 +181,30 @@ public class MagicEffects
 	
     public static boolean isInsideAntiMagic(Entity entity)
     {
-    	if(entity == null || entity.getEntityWorld() == null) return false;
-    	return isInsideAntiMagic(entity.getEntityWorld(), entity.getPosX(), entity.getPosY(), entity.getPosZ());
+    	if(entity == null || entity.getLevel() == null) return false;
+    	return isInsideAntiMagic(entity.getLevel(), entity.getX(), entity.getY(), entity.getZ());
     }
     
-    private static boolean inRangeOfAntiMagic(SpellData spell, World world, double posX, double posY, double posZ)
+    private static boolean inRangeOfAntiMagic(SpellData spell, Level world, double posX, double posY, double posZ)
     {
-    	return spell.getCaster(world) != null && MathHelper.sqrt(spell.getCaster(world).getDistanceSq(posX, posY, posZ)) < Spell.feetToMetres(10D);
+    	return spell.getCaster(world) != null && Math.sqrt(spell.getCaster(world).distanceToSqr(posX, posY, posZ)) < Spell.feetToMetres(10D);
     }
     
-    public static boolean isInsideAntiMagic(SpellData data, World world)
+    public static boolean isInsideAntiMagic(SpellData data, Level world)
     {
     	if(data == null || world == null) return false;
-    	for(SpellData spell : SpellManager.get(world).getSpellsOfTypeInDimension(MagicEffects.ANTIMAGIC, world.getDimensionType()))
+    	for(SpellData spell : SpellManager.get(world).getSpellsOfTypeInDimension(MagicEffects.ANTIMAGIC, world.dimensionType()))
     		if(data != spell && inRangeOfAntiMagic(spell, world, data.posX, data.posY, data.posZ))
     			return true;
     	
     	return false;
     }
     
-    public static boolean isInsideAntiMagic(World world, double posX, double posY, double posZ)
+    public static boolean isInsideAntiMagic(Level world, double posX, double posY, double posZ)
     {
     	if(world == null) return false;
     	
-    	for(SpellData spell : SpellManager.get(world).getSpellsOfTypeInDimension(MagicEffects.ANTIMAGIC, world.getDimensionType()))
+    	for(SpellData spell : SpellManager.get(world).getSpellsOfTypeInDimension(MagicEffects.ANTIMAGIC, world.dimensionType()))
     		if(inRangeOfAntiMagic(spell, world, posX, posY, posZ))
     			return true;
     	

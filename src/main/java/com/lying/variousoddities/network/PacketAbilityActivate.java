@@ -8,11 +8,11 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketAbilityActivate
 {
@@ -41,7 +41,7 @@ public class PacketAbilityActivate
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(sender != null)
 			{
 				Ability ability = AbilityRegistry.getAbilityByName(sender, msg.abilityName);
@@ -52,7 +52,7 @@ public class PacketAbilityActivate
 						activatedAbility.trigger(sender, Dist.DEDICATED_SERVER);
 				}
 				else
-					VariousOddities.log.warn(sender.getName().getUnformattedComponentText()+" does not have the ability they tried to activate ("+msg.abilityName.toString()+")");
+					VariousOddities.log.warn(sender.getName().getString()+" does not have the ability they tried to activate ("+msg.abilityName.toString()+")");
 			}
 		}
 		

@@ -5,21 +5,19 @@ import java.util.UUID;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySize extends AbilityModifier
@@ -42,7 +40,7 @@ public class AbilitySize extends AbilityModifier
 	public AbilitySize(Size sizeIn, float scaleIn)
 	{
 		this(sizeIn);
-		this.scale = MathHelper.clamp(scaleIn, 0F, 1F);
+		this.scale = Mth.clamp(scaleIn, 0F, 1F);
 	}
 	
 	public int compare(Ability abilityIn)
@@ -53,12 +51,12 @@ public class AbilitySize extends AbilityModifier
 	
 	public boolean displayInSpecies(){ return sizeClass != Size.MEDIUM; }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability." + Reference.ModInfo.MOD_ID + ".size", sizeClass.translate());
+		return Component.translatable("ability." + Reference.ModInfo.MOD_ID + ".size", sizeClass.translate());
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
 		switch(sizeClass)
 		{
@@ -66,36 +64,36 @@ public class AbilitySize extends AbilityModifier
 			case GARGANTUAN:
 			case HUGE:
 			case LARGE:
-				return new TranslationTextComponent("ability.varodd:size.big");
+				return Component.translatable("ability.varodd:size.big");
 			case FINE:
 			case DIMINUTIVE:
 			case TINY:
 			case SMALL:
-				return new TranslationTextComponent("ability.varodd:size.small");
+				return Component.translatable("ability.varodd:size.small");
 			case MEDIUM:
 			default:
-				return new TranslationTextComponent("ability.varodd:size.normal");
+				return Component.translatable("ability.varodd:size.normal");
 		}
 	}
 	
 	public Type getType(){ return Type.UTILITY; }
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
-		compound.putString("Size", this.sizeClass.getString());
+		compound.putString("Size", this.sizeClass.getSerializedName());
 		if(this.scale >= 0F)
 			compound.putFloat("Scale", this.scale);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		this.sizeClass = Size.fromString(compound.getString("Size"));
 		if(compound.contains("Scale", 5))
-			this.scale = MathHelper.clamp(compound.getFloat("Scale"), 0F, 1F);
+			this.scale = Mth.clamp(compound.getFloat("Scale"), 0F, 1F);
 	}
 	
 	public void addListeners(IEventBus bus)
@@ -109,13 +107,13 @@ public class AbilitySize extends AbilityModifier
 		return this.scale >= 0F ? this.sizeClass.scale(this.scale) : this.sizeClass.baseScale();
 	}
 	
-	public void applyModifier(LivingUpdateEvent event)
+	public void applyModifier(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		if(entity.getType() != EntityType.PLAYER)
 			return;
 		
-		ModifiableAttributeInstance attribute = entity.getAttribute(ForgeMod.REACH_DISTANCE.get());
+		AttributeInstance attribute = entity.getAttribute(ForgeMod.REACH_DISTANCE.get());
 		if(attribute == null)
 			return;
 		
@@ -134,7 +132,7 @@ public class AbilitySize extends AbilityModifier
 			if(modifier == null)
 			{
 				modifier = new AttributeModifier(SIZE_MODIFIER, "size_modifier", amount, Operation.MULTIPLY_BASE);
-				attribute.applyPersistentModifier(modifier);
+				attribute.addPermanentModifier(modifier);
 			}
 		}
 		else if(attribute.getModifier(SIZE_MODIFIER) != null)
@@ -175,7 +173,7 @@ public class AbilitySize extends AbilityModifier
 		entity.recalculateSize();
 	}
 	
-	public static enum Size implements IStringSerializable
+	public static enum Size implements StringRepresentable
 	{
 		FINE(0.25F, 0.1F, 0.25F),
 		DIMINUTIVE(0.35F, 0.26F, 0.45F),
@@ -197,14 +195,14 @@ public class AbilitySize extends AbilityModifier
 			this.scaleMax = maxIn;
 		}
 		
-		public String getString()
+		public String getSerializedName()
 		{
 			return this.name().toLowerCase();
 		}
 		
-		public ITextComponent translate()
+		public Component translate()
 		{
-			return new TranslationTextComponent("enum.varodd.size." + getString());
+			return Component.translatable("enum.varodd.size." + getSerializedName());
 		}
 		
 		public float baseScale()
@@ -220,7 +218,7 @@ public class AbilitySize extends AbilityModifier
 		public static Size fromString(String nameIn)
 		{
 			for (Size size : values())
-				if (size.getString().equalsIgnoreCase(nameIn))
+				if (size.getSerializedName().equalsIgnoreCase(nameIn))
 					return size;
 			return MEDIUM;
 		}
@@ -230,7 +228,7 @@ public class AbilitySize extends AbilityModifier
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			Size size = Size.fromString(compound.getString("Size"));
 			return compound.contains("Scale", 5) && compound.getFloat("Scale") >= 0F ? new AbilitySize(size, compound.getFloat("Scale")) : new AbilitySize(size);

@@ -6,11 +6,11 @@ import java.util.Map;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.VariousOddities;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.TargetGoal;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 
-public abstract class EntityController<T extends MobEntity>
+public abstract class EntityController<T extends Mob>
 {
 	/** The priority of this controller.<br>
 	 * Lower value = higher priority. */

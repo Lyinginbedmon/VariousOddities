@@ -6,17 +6,16 @@ import java.util.UUID;
 import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
@@ -48,22 +47,22 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
-		compound.putString("Quality", this.quality.getString());
+		compound.putString("Quality", this.quality.getSerializedName());
 		compound.putDouble("Speed", this.speed);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		this.quality = Grade.fromString(compound.getString("Quality"));
 		this.speed = compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.5D;
 	}
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.flying."+(isActive() ? "active" : "inactive"), quality.getString()); }
+	public Component translatedName(){ return Component.translatable("ability.varodd.flying."+(isActive() ? "active" : "inactive"), quality.getSerializedName()); }
 	
 	public void addListeners(IEventBus bus)
 	{
@@ -72,11 +71,11 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 	
 	public double flySpeed(){ return this.speed; }
 	
-	public void addSlowFalling(LivingUpdateEvent event)
+	public void addSlowFalling(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		
-		ModifiableAttributeInstance gravity = entity.getAttribute(ForgeMod.ENTITY_GRAVITY.get());
+		AttributeInstance gravity = entity.getAttribute(ForgeMod.ENTITY_GRAVITY.get());
 		if(gravity == null)
 			return;
 		AttributeModifier mod = gravity.getModifier(GRAVITY_UUID);
@@ -92,7 +91,7 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 			}
 			else
 			{
-				if(entity.isSneaking())
+				if(entity.isCrouching())
 				{
 					if(mod != null)
 						gravity.removeModifier(GRAVITY_UUID);
@@ -101,14 +100,14 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 				{
 					entity.fallDistance = 0F;
 					
-					AttributeModifier modifier = makeModifier(flight.quality.gravity * (entity.isElytraFlying() ? 0.5F : 1F));
+					AttributeModifier modifier = makeModifier(flight.quality.gravity * (entity.isFallFlying() ? 0.5F : 1F));
 					if(mod != null && mod.getAmount() != modifier.getAmount())
 					{
 						gravity.removeModifier(GRAVITY_UUID);
-						gravity.applyPersistentModifier(modifier);
+						gravity.addPermanentModifier(modifier);
 					}
 					else if(mod == null)
-						gravity.applyPersistentModifier(modifier);
+						gravity.addPermanentModifier(modifier);
 				}
 			}
 		}
@@ -118,7 +117,7 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 	
 	public int getRate(){ return quality.jumpRate; }
 	
-	public boolean isValid(LivingEntity entity, World world)
+	public boolean isValid(LivingEntity entity, Level world)
 	{
 		return isActive() && !entity.isOnGround();
 	}
@@ -134,13 +133,13 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public ToggledAbility createAbility(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundTag compound)
 		{
 			return new AbilityFlight(Grade.fromString(compound.getString("Quality")), (compound.contains("Speed", 6) ? compound.getDouble("Speed") : 0.5D));
 		}
 	}
 	
-	public static enum Grade implements IStringSerializable
+	public static enum Grade implements StringRepresentable
 	{
 		PERFECT(4, 0.95D, 4),
 		GOOD(3, 0.71D, 3),
@@ -159,14 +158,14 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 			jumpRate = jumpsIn;
 		}
 		
-		public String getString(){ return this.name().toLowerCase(); }
+		public String getSerializedName(){ return this.name().toLowerCase(); }
 		
 		public int jumpRate(){ return Reference.Values.TICKS_PER_SECOND / this.jumpRate; }
 		
 		public static Grade fromString(String nameIn)
 		{
 			for(Grade grade : values())
-				if(grade.getString().equalsIgnoreCase(nameIn))
+				if(grade.getSerializedName().equalsIgnoreCase(nameIn))
 					return grade;
 			return PERFECT;
 		}

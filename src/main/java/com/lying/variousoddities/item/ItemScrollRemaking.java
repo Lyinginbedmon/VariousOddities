@@ -5,16 +5,16 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.Level;
 
 public class ItemScrollRemaking extends Item
 {
@@ -22,24 +22,24 @@ public class ItemScrollRemaking extends Item
 	
 	public ItemScrollRemaking(boolean random, Properties properties)
 	{
-		super(properties.maxStackSize(1));
+		super(properties.stacksTo(1));
 		this.randomise = random;
 	}
 	
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn)
+	public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn)
 	{
-		playerIn.setActiveHand(handIn);
-		return ActionResult.resultConsume(playerIn.getHeldItem(handIn));
+		playerIn.startUsingItem(handIn);
+		return InteractionResultHolder.consume(playerIn.getItemInHand(handIn));
 	}
 	
-	public UseAction getUseAction(ItemStack stack) { return UseAction.SPEAR; }
+	public UseAnim getUseAction(ItemStack stack) { return UseAnim.SPEAR; }
 	
 	public int getUseDuration(ItemStack stack) { return Reference.Values.TICKS_PER_SECOND * 5; }
 	
-	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving)
+	public ItemStack onItemUseFinish(ItemStack stack, Level worldIn, LivingEntity entityLiving)
 	{
-		if(entityLiving.getType() == EntityType.PLAYER && !worldIn.isRemote)
-			PacketHandler.sendTo((ServerPlayerEntity)entityLiving, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), randomise));
+		if(entityLiving.getType() == EntityType.PLAYER && !worldIn.isClientSide)
+			PacketHandler.sendTo((ServerPlayer)entityLiving, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), randomise));
 		stack.shrink(1);
 		return stack;
 	}

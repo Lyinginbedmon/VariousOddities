@@ -2,28 +2,28 @@ package com.lying.variousoddities.api.event;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.eventbus.api.Event;
 
 public class FireworkExplosionEvent extends Event
 {
-	private final World world;
+	private final Level world;
 	private final double posX, posY, posZ;
-	private final CompoundNBT nbt;
+	private final CompoundTag nbt;
 	
-	public FireworkExplosionEvent(World worldIn, double x, double y, double z, @Nullable CompoundNBT dataIn)
+	public FireworkExplosionEvent(Level worldIn, double x, double y, double z, @Nullable CompoundTag dataIn)
 	{
 		this.world = worldIn;
 		this.posX = x;
 		this.posY = y;
 		this.posZ = z;
-		this.nbt = dataIn == null ? new CompoundNBT() : dataIn;
+		this.nbt = dataIn == null ? new CompoundTag() : dataIn;
 	}
 	
-	public World world(){ return this.world; }
-	public Vector3d position(){ return new Vector3d(this.posX, this.posY, this.posZ); }
+	public Level world(){ return this.world; }
+	public Vec3 position(){ return new Vec3(this.posX, this.posY, this.posZ); }
 	
-	public CompoundNBT fireworkData(){ return this.nbt.copy(); }
+	public CompoundTag fireworkData(){ return this.nbt.copy(); }
 }

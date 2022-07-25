@@ -22,22 +22,21 @@ import com.lying.variousoddities.magic.MagicEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.DoubleNBT;
-import net.minecraft.nbt.FloatNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
@@ -59,14 +58,14 @@ public class SpellManager extends WorldSavedData
 		super(name);
 	}
 	
-	public CompoundNBT write(CompoundNBT compound)
+	public CompoundTag write(CompoundTag compound)
 	{
 		compound.putInt("NextID", nextID);
 		
-		ListNBT dimensions = new ListNBT();
+		ListTag dimensions = new ListTag();
 		for(ResourceLocation dim : DIM_TO_SPELLS.keySet())
 		{
-			CompoundNBT dimension = new CompoundNBT();
+			CompoundTag dimension = new CompoundTag();
 			dimension.putString("Dim", dim.toString());
 			dimension.put("Spells", spellsToNBT(DIM_TO_SPELLS.get(dim)));
 			dimensions.add(dimension);
@@ -76,32 +75,32 @@ public class SpellManager extends WorldSavedData
 		return compound;
 	}
 	
-	public void read(CompoundNBT compound)
+	public void read(CompoundTag compound)
 	{
 		if(compound.contains("NextID"))
 			nextID = compound.getInt("NextID");
 		
 		DIM_TO_SPELLS.clear();
-		ListNBT dimensions = compound.getList("Dimensions", 10);
+		ListTag dimensions = compound.getList("Dimensions", 10);
 		for(int i=0; i<dimensions.size(); i++)
 		{
-			CompoundNBT dimension = dimensions.getCompound(i);
+			CompoundTag dimension = dimensions.getCompound(i);
 			List<SpellData> spells = NBTToSpells(dimension.getList("Spells", 10));
 			if(!spells.isEmpty())
 				DIM_TO_SPELLS.put(new ResourceLocation(dimension.getString("Dim")), spells);
 		}
 	}
 	
-	public static ListNBT spellsToNBT(List<SpellData> spellsIn)
+	public static ListTag spellsToNBT(List<SpellData> spellsIn)
 	{
-		ListNBT spells = new ListNBT();
+		ListTag spells = new ListTag();
 		for(SpellData spell : spellsIn)
-			spells.add(spell.writeToNBT(new CompoundNBT()));
+			spells.add(spell.writeToNBT(new CompoundTag()));
 		
 		return spells;
 	}
 	
-	public static List<SpellData> NBTToSpells(ListNBT spellsIn)
+	public static List<SpellData> NBTToSpells(ListTag spellsIn)
 	{
 		List<SpellData> spellList = new ArrayList<SpellData>();
 		if(!spellsIn.isEmpty())
@@ -111,21 +110,21 @@ public class SpellManager extends WorldSavedData
 		return spellList;
 	}
 	
-	public static SpellManager get(World worldIn)
+	public static SpellManager get(Level worldIn)
 	{
-		if(worldIn.isRemote)
+		if(worldIn.isClientSide)
 			return VariousOddities.proxy.getSpells();
 		else
-			return (SpellManager)((ServerWorld)worldIn).getSavedData().getOrCreate(SpellManager::new, DATA_NAME);
+			return (SpellManager)((ServerLevel)worldIn).getSavedData().getOrCreate(SpellManager::new, DATA_NAME);
 	}
 	
 	/**
 	 * Updates all spells in the given world.
 	 * @param world
 	 */
-	public void updateSpells(World world, Side side)
+	public void updateSpells(Level world, Side side)
 	{
-		DimensionType dim = world.getDimensionType();
+		DimensionType dim = world.dimensionType();
 		List<Integer> deadSpells = new ArrayList<>();
 		for(SpellData spell : getSpellsInDimension(dim))
 		{
@@ -173,11 +172,11 @@ public class SpellManager extends WorldSavedData
 	 * @param spell
 	 * @return
 	 */
-	public int registerNewSpell(SpellData spell, World world)
+	public int registerNewSpell(SpellData spell, Level world)
 	{
 		spell.setID(nextID);
 		
-		ResourceLocation dim = world.getDimensionKey().getRegistryName();
+		ResourceLocation dim = new ResourceLocation(world.dimensionType().toString());
 		spell.setDim(dim);
 		List<SpellData> spells = DIM_TO_SPELLS.containsKey(dim) ? DIM_TO_SPELLS.get(dim) : new ArrayList<SpellData>();
 		spells.add(spell);
@@ -218,7 +217,7 @@ public class SpellManager extends WorldSavedData
 		{
 			List<SpellData> spellsInDim = new ArrayList<>();
 			for(SpellData spell : DIM_TO_SPELLS.get(dim))
-				if(spell.getCaster(entity.getEntityWorld()) == entity)
+				if(spell.getCaster(entity.getLevel()) == entity)
 					spellsInDim.add(spell);
 			
 			spells.put(dim, spellsInDim);
@@ -238,7 +237,7 @@ public class SpellManager extends WorldSavedData
 		{
 			List<SpellData> spellsInDim = new ArrayList<>();
 			for(SpellData spell : DIM_TO_SPELLS.get(dim))
-				if(spell.getSpell().isAffectingEntity(spell, entity) || spell.getCaster(entity.getEntityWorld()) == entity)
+				if(spell.getSpell().isAffectingEntity(spell, entity) || spell.getCaster(entity.getLevel()) == entity)
 					spellsInDim.add(spell);
 			
 			spells.put(dim, spellsInDim);
@@ -247,12 +246,12 @@ public class SpellManager extends WorldSavedData
 		return spells;
 	}
 	
-	public Map<ResourceLocation, List<SpellData>> getSpellsForClient(PlayerEntity player)
+	public Map<ResourceLocation, List<SpellData>> getSpellsForClient(Player player)
 	{
-		World world = player.getEntityWorld();
-		ResourceLocation localDim = world.getDimensionKey().getRegistryName();
+		Level world = player.getLevel();
+		ResourceLocation localDim = new ResourceLocation(world.dimensionType().toString());
 		Map<ResourceLocation, List<SpellData>> spells = getSpellsAffectingOrOwnedBy(player);
-		List<SpellData> spellsNearby = getSpellsWithin(world, player.getBoundingBox().grow(64D));
+		List<SpellData> spellsNearby = getSpellsWithin(world, player.getBoundingBox().inflate(64D));
 		
 		List<SpellData> spellsInDim = spells.containsKey(localDim) ? spells.get(localDim) : new ArrayList<>();
 		spellsInDim.removeAll(spellsNearby);
@@ -323,16 +322,16 @@ public class SpellManager extends WorldSavedData
 		return spells;
 	}
 	
-	public List<SpellData> getSpellsWithin(World world, AxisAlignedBB bounds, Predicate<SpellData> predicate)
+	public List<SpellData> getSpellsWithin(Level world, AABB bounds, Predicate<SpellData> predicate)
 	{
 		List<SpellData> spells = new ArrayList<>();
-		for(SpellData spell : getSpellsInDimension(world.getDimensionType()))
+		for(SpellData spell : getSpellsInDimension(world.dimensionType()))
 			if(!spell.isDead() && bounds.contains(spell.getPos()) && predicate.test(spell))
 				spells.add(spell);
 		return spells;
 	}
 	
-	public List<SpellData> getSpellsWithin(World world, AxisAlignedBB bounds)
+	public List<SpellData> getSpellsWithin(Level world, AABB bounds)
 	{
 		return getSpellsWithin(world, bounds, Predicates.alwaysTrue());
 	}
@@ -364,7 +363,7 @@ public class SpellManager extends WorldSavedData
 		
 		private final IMagicEffect spell;
 		private int casterLevel;
-		private CompoundNBT spellStorage;
+		private CompoundTag spellStorage;
 		
 		private String customName = "";
 		
@@ -375,7 +374,7 @@ public class SpellManager extends WorldSavedData
 		
 		private boolean isDead = false;
 		
-		public SpellData(IMagicEffect spellIn, int levelIn, CompoundNBT spellDataIn)
+		public SpellData(IMagicEffect spellIn, int levelIn, CompoundTag spellDataIn)
 		{
 			this.spell = spellIn;
 			this.casterLevel = levelIn;
@@ -384,7 +383,7 @@ public class SpellManager extends WorldSavedData
 		
 		public SpellData(IMagicEffect spellIn, int levelIn)
 		{
-			this(spellIn, levelIn, new CompoundNBT());
+			this(spellIn, levelIn, new CompoundTag());
 		}
 		
 		public SpellData(IMagicEffect spellIn, int levelIn, double x, double y, double z)
@@ -393,7 +392,7 @@ public class SpellManager extends WorldSavedData
 			setPosition(x, y, z);
 		}
 		
-		public SpellData(CompoundNBT compound)
+		public SpellData(CompoundTag compound)
 		{
 			this(MagicEffects.getSpellFromName(compound.getString("Spell")), 0);
 			this.readFromNBT(compound);
@@ -405,7 +404,7 @@ public class SpellManager extends WorldSavedData
 		public void setDim(ResourceLocation par1Int){ this.dim = par1Int; }
 		public ResourceLocation dim(){ return this.dim; }
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putInt("ID", getID());
 			compound.putString("Dim", dim.toString());
@@ -413,7 +412,7 @@ public class SpellManager extends WorldSavedData
 			if(this.casterName.length() > 0)
 				compound.putString("CasterName", this.casterName);
 			if(this.casterUUID != null)
-				compound.putUniqueId("CasterUUID", this.casterUUID);
+				compound.putUUID("CasterUUID", this.casterUUID);
 			compound.putLong("CastTime", this.castTime);
 			
 			compound.putString("Spell", this.spell.getSimpleName());
@@ -428,7 +427,7 @@ public class SpellManager extends WorldSavedData
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			setID(compound.getInt("ID"));
 			this.dim = new ResourceLocation(compound.getString("Dim"));
@@ -436,7 +435,7 @@ public class SpellManager extends WorldSavedData
 			if(compound.contains("CasterName"))
 				this.casterName = compound.getString("CasterName");
 			if(compound.contains("CasterUUIDLeast"))
-				this.casterUUID = compound.getUniqueId("CasterUUID");
+				this.casterUUID = compound.getUUID("CasterUUID");
 			this.castTime = compound.getLong("CastTime");
 			
 			this.casterLevel = compound.getInt("Level");
@@ -444,11 +443,11 @@ public class SpellManager extends WorldSavedData
 			
 			this.customName = compound.getString("CustomName");
 			
-            ListNBT positionData = compound.getList("Pos", 6);
+            ListTag positionData = compound.getList("Pos", 6);
             this.posX = positionData.getDouble(0);
             this.posY = positionData.getDouble(1);
             this.posZ = positionData.getDouble(2);
-            ListNBT rotationData = compound.getList("Rotation", 5);
+            ListTag rotationData = compound.getList("Rotation", 5);
             this.rotationYaw = rotationData.getFloat(0);
             this.rotationPitch = rotationData.getFloat(1);
 		}
@@ -460,7 +459,7 @@ public class SpellManager extends WorldSavedData
 		
 		public void setCaster(LivingEntity casterIn)
 		{
-			setCaster(casterIn instanceof PlayerEntity || casterIn.hasCustomName() ? casterIn.getName().getUnformattedComponentText() : "", casterIn.getUniqueID());
+			setCaster(casterIn instanceof Player || casterIn.hasCustomName() ? casterIn.getName().getString() : "", casterIn.getUUID());
 		}
 		
 		public void setCaster(String name, UUID uuid)
@@ -480,9 +479,9 @@ public class SpellManager extends WorldSavedData
 		
 		public int casterLevel(){ return this.casterLevel < 0 ? 20 : this.casterLevel; }
 		
-		public CompoundNBT getStorage(){ return this.spellStorage == null ? new CompoundNBT() : this.spellStorage; }
+		public CompoundTag getStorage(){ return this.spellStorage == null ? new CompoundTag() : this.spellStorage; }
 		
-		public void setStorage(CompoundNBT compound)
+		public void setStorage(CompoundTag compound)
 		{
 			this.spellStorage = compound;
 		}
@@ -535,16 +534,16 @@ public class SpellManager extends WorldSavedData
 		 */
 		public boolean canEdit(){ return false; }
 		
-		public LivingEntity getCaster(World worldIn)
+		public LivingEntity getCaster(Level worldIn)
 		{
 			LivingEntity playerCaster = null;
 			if(this.casterName.length() > 0 && (playerCaster = VOHelper.getPlayerEntityByName(worldIn, this.casterName)) != null)
 				return playerCaster;
-			else if((playerCaster = worldIn.getPlayerByUuid(this.casterUUID)) != null)
+			else if((playerCaster = worldIn.getPlayerByUUID(this.casterUUID)) != null)
 				return playerCaster;
 			
-			for(LivingEntity entity : worldIn.getLoadedEntitiesWithinAABB(LivingEntity.class, new AxisAlignedBB(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE)))
-				if(entity.getUniqueID().equals(this.casterUUID))
+			for(LivingEntity entity : worldIn.getEntitiesOfClass(LivingEntity.class, new AABB(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE)))
+				if(entity.getUUID().equals(this.casterUUID))
 					return entity;
 			
 			return null;
@@ -555,13 +554,13 @@ public class SpellManager extends WorldSavedData
 			if(this.casterName.length() > 0 && living.getName().equals(this.casterName))
 				return true;
 			
-			if(living.getUniqueID().equals(this.casterUUID))
+			if(living.getUUID().equals(this.casterUUID))
 				return true;
 			
 			return false;
 		}
 		
-		public boolean onUpdate(World world, Side side)
+		public boolean onUpdate(Level world, Side side)
 		{
 			if(!isDead() && this.spell == null)
 			{
@@ -596,14 +595,14 @@ public class SpellManager extends WorldSavedData
 			return spell.isDismissable() && (!isPermanent() || spell.isAlwaysDismissable());
 		}
 		
-		public boolean dismiss(World world, LivingEntity player)
+		public boolean dismiss(Level world, LivingEntity player)
 		{
 			if(!canBeDismissed())
 				return false;
 			
 			int activeTime = (int)(world.getGameTime() - this.castTime);
 	    	if(spell.getDurationType() != DurationType.INSTANT && activeTime > (Reference.Values.TICKS_PER_SECOND * 3))
-    			if(player == getCaster(world) || player instanceof PlayerEntity && ((PlayerEntity)player).isCreative())
+    			if(player == getCaster(world) || player instanceof Player && ((Player)player).isCreative())
     	    	{
     				setDead(world);
     	    		return true;
@@ -619,11 +618,11 @@ public class SpellManager extends WorldSavedData
 			this.posZ = z;
 		}
 		
-		public Vector3d getPos(){ return new Vector3d(posX, posY, posZ); }
+		public Vec3 getPos(){ return new Vec3(posX, posY, posZ); }
 		public BlockPos getPosition(){ return new BlockPos(posX, posY, posZ); }
-		public AxisAlignedBB getBoundingBox(){ return new AxisAlignedBB(posX - 0.25D, posY, posZ - 0.25D, posX + 0.25D, posY + 0.5D, posZ + 0.25D); }
+		public AABB getBoundingBox(){ return new AABB(posX - 0.25D, posY, posZ - 0.25D, posX + 0.25D, posY + 0.5D, posZ + 0.25D); }
 		
-		public double getDistance(double x, double y, double z){ return getPos().distanceTo(new Vector3d(x,y,z)); }
+		public double getDistance(double x, double y, double z){ return getPos().distanceTo(new Vec3(x,y,z)); }
 		
 		public void setPositionAndRotation(double x, double y, double z, float yaw, float pitch)
 		{
@@ -634,7 +633,7 @@ public class SpellManager extends WorldSavedData
 		
 		public void copyLocationAndAnglesFrom(Entity entity)
 		{
-			setPositionAndRotation(entity.getPosX(), entity.getPosY(), entity.getPosZ(), entity.rotationYaw, entity.rotationPitch);
+			setPositionAndRotation(entity.getX(), entity.getY(), entity.getZ(), entity.getYRot(), entity.getXRot());
 		}
 		
 		public float yaw(){ return this.rotationYaw; }
@@ -646,10 +645,10 @@ public class SpellManager extends WorldSavedData
 		 * @param worldIn
 		 * @return
 		 */
-		public EntitySpell createSourceEntity(World worldIn)
+		public EntitySpell createSourceEntity(Level worldIn)
 		{
 			EntitySpell spellEntity = VOEntities.SPELL.create(worldIn);
-			spellEntity.setPosition(posX, posY, posZ);
+			spellEntity.setPos(posX, posY, posZ);
 			spellEntity.setSpell(this);
 			return spellEntity;
 		}
@@ -660,7 +659,7 @@ public class SpellManager extends WorldSavedData
 		 */
 		public boolean isDead(){ return this.isDead; }
 		
-		public void setDead(World world)
+		public void setDead(Level world)
 		{
 			if(isDead()) return;
 			this.isDead = true;
@@ -670,30 +669,30 @@ public class SpellManager extends WorldSavedData
 				int duration = spell.getDuration(casterLevel);
 				int activeTime = (int)(world.getGameTime() - this.castTime);
 		    	if(activeTime < duration || duration < 0)
-		    		spell.doEffectCancel(this, world, world.isRemote ? Side.CLIENT : Side.SERVER);
+		    		spell.doEffectCancel(this, world, world.isClientSide ? Side.CLIENT : Side.SERVER);
 			}
 		}
 		
 	    /**
 	     * creates a NBT list from the array of doubles passed to this function
 	     */
-	    protected ListNBT newDoubleNBTList(double... numbers)
+	    protected ListTag newDoubleNBTList(double... numbers)
 	    {
-	        ListNBT ListNBT = new ListNBT();
+	        ListTag ListTag = new ListTag();
 	        for (double d0 : numbers)
-	            ListNBT.add(DoubleNBT.valueOf(d0));
-	        return ListNBT;
+	            ListTag.add(DoubleTag.valueOf(d0));
+	        return ListTag;
 	    }
 
 	    /**
-	     * Returns a new ListNBT filled with the specified floats
+	     * Returns a new ListTag filled with the specified floats
 	     */
-	    protected ListNBT newFloatNBTList(float... numbers)
+	    protected ListTag newFloatNBTList(float... numbers)
 	    {
-	        ListNBT ListNBT = new ListNBT();
+	        ListTag ListTag = new ListTag();
 	        for (float f : numbers)
-	            ListNBT.add(FloatNBT.valueOf(f));
-	        return ListNBT;
+	            ListTag.add(FloatTag.valueOf(f));
+	        return ListTag;
 	    }
 	}
 }

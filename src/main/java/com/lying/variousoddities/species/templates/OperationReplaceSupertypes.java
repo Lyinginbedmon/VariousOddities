@@ -7,11 +7,10 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public class OperationReplaceSupertypes extends TypeOperation
 {
@@ -24,9 +23,9 @@ public class OperationReplaceSupertypes extends TypeOperation
 	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
 	
-	public ITextComponent translate()
+	public Component translate()
 	{
-		ITextComponent translation = new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+".replace_supertypes", typesToString(this.types));
+		Component translation = Component.translatable("operation."+Reference.ModInfo.MOD_ID+".replace_supertypes", typesToString(this.types));
 		return condition == null ? translation : condition.translate().append(translation);
 	}
 	
@@ -35,16 +34,16 @@ public class OperationReplaceSupertypes extends TypeOperation
 		if(this.condition != null)
 			json.add("Condition", this.condition.writeToJson(new JsonObject()));
 		json.addProperty("Name", getRegistryName().toString());
-		json.addProperty("Tag", writeToNBT(new CompoundNBT()).toString());
+		json.addProperty("Tag", writeToNBT(new CompoundTag()).toString());
 		return json;
 	}
 	
 	public void readFromJson(JsonObject json)
 	{
-		CompoundNBT tag = new CompoundNBT();
+		CompoundTag tag = new CompoundTag();
 		try
 		{
-			tag = JsonToNBT.getTagFromJson(json.get("Tag").getAsString());
+			tag = TagParser.parseTag(json.get("Tag").getAsString());
 		}
 		catch (CommandSyntaxException e){ }
 		if(!tag.isEmpty())

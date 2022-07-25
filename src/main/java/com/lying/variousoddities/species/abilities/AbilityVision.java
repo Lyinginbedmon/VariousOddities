@@ -4,16 +4,16 @@ import java.util.Collection;
 
 import com.lying.variousoddities.utility.VOHelper;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -55,17 +55,17 @@ public abstract class AbilityVision extends ToggledAbility
 		if(event.getLookingEntity() != null && event.getLookingEntity() instanceof LivingEntity)
 		{
 			LivingEntity mob = (LivingEntity)event.getLookingEntity();
-			LivingEntity entity = event.getEntityLiving();
+			LivingEntity entity = event.getEntity();
 			
-			if(ignoreForTargeted && mob instanceof MobEntity && ((MobEntity)mob).getAttackTarget() == entity)
+			if(ignoreForTargeted && mob instanceof Monster && ((Monster)mob).getTarget() == entity)
 				return;
 			
 			// Light level affects visibility IF the looking entity does not have Night Vision
-			if(!mob.isPotionActive(Effects.NIGHT_VISION))
+			if(!mob.hasEffect(MobEffects.NIGHT_VISION))
 			{
-				World world = entity.getEntityWorld();
-				BlockPos eyePos = entity.getPosition().add(0D, entity.getEyeHeight(), 0D);
-				int light = Math.max(world.getLightFor(LightType.BLOCK, eyePos), VOHelper.getSkyLight(eyePos, world));
+				Level world = entity.getLevel();
+				BlockPos eyePos = entity.blockPosition().offset(0D, entity.getEyeHeight(), 0D);
+				int light = Math.max(world.getBrightness(LightLayer.BLOCK, eyePos), VOHelper.getSkyLight(eyePos, world));
 				
 				double mod = Math.sin(((double)(light + 5) / (double)(14 + 5)) * 1.5D);
 				event.modifyVisibility(mod);
@@ -76,14 +76,14 @@ public abstract class AbilityVision extends ToggledAbility
 				event.modifyVisibility(0.07D / event.getVisibilityModifier());
 			
 			// Vision abilities confer guaranteed vision
-			if(entity.isPotionActive(Effects.GLOWING) || canMobSeeEntity(mob, entity))
+			if(entity.hasEffect(MobEffects.GLOWING) || canMobSeeEntity(mob, entity))
 				event.modifyVisibility(1D / event.getVisibilityModifier());
 			
 			ignoreForTargeted = true;
 		}
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
 		compound.putDouble("Max", this.range);
@@ -91,7 +91,7 @@ public abstract class AbilityVision extends ToggledAbility
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		this.range = compound.getDouble("Max");

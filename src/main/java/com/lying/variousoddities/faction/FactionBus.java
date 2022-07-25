@@ -1,18 +1,17 @@
 package com.lying.variousoddities.faction;
 
-import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.api.event.PlayerTradeEvent;
 import com.lying.variousoddities.config.ConfigVO;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.EntityPredicates;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
@@ -28,15 +27,16 @@ public class FactionBus
 			{
 				public boolean apply(Entity input)
 				{
-					if(!input.isAlive()) return false;
-					return input instanceof LivingEntity && FactionReputation.getFaction((LivingEntity)input) != null;
+					if(!input.isAlive())
+						return false;
+					return input instanceof Mob && FactionReputation.getFaction((Mob)input) != null;
 				}
 			};
 	private static final Predicate<Entity> MOB_FACTIONS = new Predicate<Entity>()
 			{
 				public boolean apply(Entity input)
 				{
-					return input instanceof LivingEntity && FactionBus.ALL_FACTIONS.apply(input);
+					return input instanceof Mob && FactionBus.ALL_FACTIONS.apply(input);
 				}
 			};
 	
@@ -46,9 +46,9 @@ public class FactionBus
 //		if(!shouldFire()) return;
 //		
 //		Entity trueSource = event.getSource().getTrueSource();
-//		if(trueSource != null && trueSource instanceof PlayerEntity && !EntityPredicates.CAN_AI_TARGET.test(trueSource))
-//			if(event.getEntityLiving().getRNG().nextInt(3) == 0)
-//				FactionReputation.changePlayerReputation((PlayerEntity)trueSource, event.getEntityLiving(), -1);
+//		if(trueSource != null && trueSource instanceof Player && !EntityPredicates.CAN_AI_TARGET.test(trueSource))
+//			if(event.getEntityLiving().getRandom().nextInt(3) == 0)
+//				FactionReputation.changePlayerReputation((Player)trueSource, event.getEntityLiving(), -1);
 //	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
@@ -56,9 +56,9 @@ public class FactionBus
 	{
 		if(!shouldFire()) return;
 		
-		Entity trueSource = event.getSource().getTrueSource();
-		if(trueSource != null && trueSource instanceof PlayerEntity && !EntityPredicates.CAN_AI_TARGET.test(trueSource) && event.getAmount() > 0F)
-			ReputationChange.HURT.applyTo((PlayerEntity)trueSource, event.getEntityLiving(), event.getEntityLiving().getRNG());
+		Entity trueSource = event.getSource().getEntity();
+		if(trueSource != null && trueSource instanceof Player && !EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(trueSource) && event.getAmount() > 0F)
+			ReputationChange.HURT.applyTo((Player)trueSource, event.getEntity(), event.getEntity().getRandom());
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
@@ -66,44 +66,44 @@ public class FactionBus
 	{
 		if(!shouldFire()) return;
 		
-		Entity trueSource = event.getSource().getTrueSource();
-		if(trueSource != null && trueSource instanceof PlayerEntity)
+		Entity trueSource = event.getSource().getEntity();
+		if(trueSource != null && trueSource instanceof Player)
 		{
-			LivingEntity victim = event.getEntityLiving();
+			LivingEntity victim = event.getEntity();
 			
 			// Decrement reputation with the victim's faction if there is at least one witness
-			String victimFaction = FactionReputation.getFaction(event.getEntityLiving());
+			String victimFaction = FactionReputation.getFaction(event.getEntity());
 			if(victimFaction != null)
 			{
-				for(Entity living : victim.getEntityWorld().getEntitiesInAABBexcluding(victim, victim.getBoundingBox().grow(32D), ALL_FACTIONS))
+				for(Entity living : victim.getLevel().getEntities(victim, victim.getBoundingBox().inflate(32D), ALL_FACTIONS))
 				{
-					LivingEntity livingBase = (LivingEntity)living;
-					if(victimFaction.equals(FactionReputation.getFaction(livingBase)) && livingBase.canEntityBeSeen(victim))
+					Mob livingBase = (Mob)living;
+					if(victimFaction.equals(FactionReputation.getFaction(livingBase)) && livingBase.hasLineOfSight(victim))
 					{
-						ReputationChange.KILL.applyTo((PlayerEntity)trueSource, victim, victim.getRNG());
+						ReputationChange.KILL.applyTo((Player)trueSource, victim, victim.getRandom());
 						break;
 					}
 				}
 			}
 			
 			// Increment reputation of victim's attack target OR one mob fleeing from the victim, for saving their life
-			if(victim instanceof MobEntity && ((MobEntity)victim).getAttackTarget() != null)
+			if(victim instanceof Mob && ((Mob)victim).getTarget() != null)
 			{
-				LivingEntity attackTarget = ((MobEntity)victim).getAttackTarget();
+				LivingEntity attackTarget = ((Mob)victim).getTarget();
 				String attackFaction = FactionReputation.getFaction(attackTarget);
 				if(attackFaction != null)
 				{
-					ReputationChange.PROTECT.applyTo((PlayerEntity)trueSource, attackTarget, victim.getRNG());
+					ReputationChange.PROTECT.applyTo((Player)trueSource, attackTarget, victim.getRandom());
 					return;
 				}
 			}
 			
-			for(Entity living : victim.getEntityWorld().getEntitiesInAABBexcluding(victim, victim.getBoundingBox().grow(32D), MOB_FACTIONS))
+			for(Entity living : victim.getLevel().getEntities(victim, victim.getBoundingBox().inflate(32D), MOB_FACTIONS))
 			{
-				LivingEntity livingBase = (LivingEntity)living;
-				if(FactionReputation.getFaction(livingBase) != null && livingBase.getRevengeTarget() == victim && livingBase.canEntityBeSeen(victim))
+				Mob livingBase = (Mob)living;
+				if(FactionReputation.getFaction(livingBase) != null && livingBase.getLastHurtByMob() == victim && livingBase.hasLineOfSight(victim))
 				{
-					ReputationChange.KILL.applyTo((PlayerEntity)trueSource, victim, victim.getRNG());
+					ReputationChange.KILL.applyTo((Player)trueSource, victim, victim.getRandom());
 					break;
 				}
 			}
@@ -116,8 +116,8 @@ public class FactionBus
 		if(!shouldFire()) return;
 		
 		LivingEntity trader = event.getTrader();
-		if(trader != null && trader.getRNG().nextInt(3) == 0)
-			ReputationChange.TRADE.applyTo(event.getPlayer(), trader, trader.getRNG());
+		if(trader != null && trader.getRandom().nextInt(3) == 0)
+			ReputationChange.TRADE.applyTo(event.getEntity(), trader, trader.getRandom());
 	}
 	
 	@SubscribeEvent
@@ -125,15 +125,15 @@ public class FactionBus
 	{
 		if(!shouldFire()) return;
 		
-		LivingEntity mob = event.getEntityLiving();
-		if(mob != null && mob instanceof MobEntity)
+		LivingEntity mob = event.getEntity();
+		if(mob != null && mob instanceof Mob)
 		{
-			MobEntity living = (MobEntity)mob;
+			Mob living = (Mob)mob;
 			String faction = FactionReputation.getFaction(living);
 			if(living.getHealth() < living.getMaxHealth() && faction != null)
-				for(PlayerEntity player : living.getEntityWorld().getEntitiesWithinAABB(PlayerEntity.class, living.getBoundingBox().grow(8D), EntityPredicates.CAN_AI_TARGET))
-					if(living.getEntitySenses().canSee(player) && player != living.getRevengeTarget())
-						ReputationChange.HEAL.applyTo(player, faction, mob.getRNG(), mob);
+				for(Player player : living.getLevel().getEntitiesOfClass(Player.class, living.getBoundingBox().inflate(8D), EntitySelector.NO_CREATIVE_OR_SPECTATOR))
+					if(living.hasLineOfSight(player) && player != living.getLastHurtByMob())
+						ReputationChange.HEAL.applyTo(player, faction, mob.getRandom(), mob);
 		}
 	}
 	
@@ -159,7 +159,7 @@ public class FactionBus
 			this(val, val);
 		}
 		
-		public int volume(Random rand)
+		public int volume(RandomSource rand)
 		{
 			if(max != min)
 				return min + rand.nextInt(max - min);
@@ -167,12 +167,12 @@ public class FactionBus
 				return min;
 		}
 		
-		public void applyTo(PlayerEntity player, LivingEntity mob, Random rand)
+		public void applyTo(Player player, LivingEntity mob, RandomSource rand)
 		{
 			applyTo(player, FactionReputation.getFaction(mob), rand, mob);
 		}
 		
-		public void applyTo(PlayerEntity player, String faction, Random rand, @Nullable LivingEntity mob)
+		public void applyTo(Player player, String faction, RandomSource rand, @Nullable LivingEntity mob)
 		{
 			FactionReputation.changePlayerReputation(player, faction, this, volume(rand), mob);
 		}

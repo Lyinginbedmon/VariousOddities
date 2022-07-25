@@ -12,39 +12,39 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.init.VOTileEntities;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.tileentity.BeaconTileEntity;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.phys.AABB;
 
-@Mixin(BeaconTileEntity.class)
+@Mixin(BeaconBlockEntity.class)
 public class BeaconTileEntityMixin
 {
 	@Shadow
 	private int levels;
 	@Shadow
-	private Effect primaryEffect;
+	private MobEffect primaryEffect;
 	@Shadow
-	private Effect secondaryEffect;
+	private MobEffect secondaryEffect;
 	
 	@Inject(method = "addEffectsToPlayers()V", at = @At("HEAD"))
 	private void addEffects(final CallbackInfo ci)
 	{
-		BeaconTileEntity tile = (BeaconTileEntity)(Object)this;
-		World world = tile.getWorld();
-		if(primaryEffect == null || world == null || world.isRemote)
+		BeaconBlockEntity tile = (BeaconBlockEntity)(Object)this;
+		Level world = tile.getLevel();
+		if(primaryEffect == null || world == null || world.isClientSide)
 			return;
 		
 		double range = (double)(levels * 10 + 10);
 		int amplifier = levels >= 4 && primaryEffect == secondaryEffect ? 1 : 0;
 		int duration = (9 + levels * 2) * 20;
-		AxisAlignedBB area = new AxisAlignedBB(tile.getPos()).grow(range).expand(0D, tile.getWorld().getHeight(), 0D);
+		AABB area = new AABB(tile.getBlockPos()).inflate(range).inflate(0D, tile.getLevel().getHeight(), 0D);
 		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
-		world.loadedTileEntityList.forEach((tileEntity) -> 
+		world.loadedBlockEntityList.forEach((tileEntity) -> 
 		{
 			BlockPos pos = tileEntity.getPos();
 			if(tileEntity.getType() == VOTileEntities.PHYLACTERY && area.contains(pos.getX(), pos.getY(), pos.getZ()))
@@ -55,12 +55,12 @@ public class BeaconTileEntityMixin
 		for(TileEntityPhylactery phylactery : phylacteries)
 		{
 			LivingEntity owner = phylactery.getOwner();
-			if(owner == null || owner.getType() == EntityType.PLAYER && area.contains(owner.getPositionVec()) || owner.getEntityWorld().getDimensionKey() != world.getDimensionKey())
+			if(owner == null || owner.getType() == EntityType.PLAYER && area.contains(owner.position()) || owner.getLevel().dimension() != world.dimension())
 				continue;
 			
-			owner.addPotionEffect(new EffectInstance(primaryEffect, duration, amplifier, true, true));
+			owner.addEffect(new MobEffectInstance(primaryEffect, duration, amplifier, true, true));
 			if(hasSecondary)
-				owner.addPotionEffect(new EffectInstance(secondaryEffect, duration, amplifier, true, true));
+				owner.addEffect(new MobEffectInstance(secondaryEffect, duration, amplifier, true, true));
 		}
 	}
 }

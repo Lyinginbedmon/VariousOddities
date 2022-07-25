@@ -10,11 +10,10 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSyncTypesCustom
 {
@@ -24,7 +23,7 @@ public class PacketSyncTypesCustom
 	public PacketSyncTypesCustom(){ }
 	public PacketSyncTypesCustom(LivingEntity entity, List<EnumCreatureType> typesIn)
 	{
-		this.entityID = entity.getUniqueID();
+		this.entityID = entity.getUUID();
 		this.types = typesIn;
 	}
 	
@@ -53,14 +52,14 @@ public class PacketSyncTypesCustom
 		NetworkEvent.Context context = cxt.get();
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(player != null)
 			{
-				World world = player.getEntityWorld();
+				Level world = player.getLevel();
 				
 				LivingEntity entity = null;
-				for(LivingEntity living : world.getEntitiesWithinAABB(LivingEntity.class, player.getBoundingBox().grow(64D, 64D, 64D)))
-					if(living.getUniqueID().equals(msg.entityID))
+				for(LivingEntity living : world.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(64D, 64D, 64D)))
+					if(living.getUUID().equals(msg.entityID))
 					{
 						entity = living;
 						break;

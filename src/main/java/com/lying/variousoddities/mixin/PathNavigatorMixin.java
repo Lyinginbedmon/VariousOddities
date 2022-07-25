@@ -11,17 +11,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.condition.Conditions;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
-@Mixin(PathNavigator.class)
+@Mixin(PathNavigation.class)
 public class PathNavigatorMixin
 {
 	@Shadow
-	protected MobEntity entity;
+	protected Mob entity;
 	
 	@Shadow
 	public boolean hasPath() { return false; }
@@ -40,14 +40,14 @@ public class PathNavigatorMixin
 			return;
 		
 		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID, 8D);
-		terrorisers.removeIf((terroriser) -> { return terroriser.getDistance(entity) > 8D || !entity.getEntitySenses().canSee(terroriser); });
+		terrorisers.removeIf((terroriser) -> { return terroriser.distanceTo(entity) > 8D || !entity.hasLineOfSight(terroriser); });
 		if(terrorisers.isEmpty())
 			return;
 		
-		Vector3d currentPos = entity.getPositionVec();
-		Vector3d nodePos = getPath().getPosition(entity);
-		Vector3d direction = nodePos.subtract(currentPos).normalize();
-		terrorisers.removeIf((terroriser) -> { return terroriser.getDistanceSq(currentPos) < terroriser.getDistanceSq(currentPos.add(direction)); });
+		Vec3 currentPos = entity.position();
+		Vec3 nodePos = getPath().getNextEntityPos(entity);
+		Vec3 direction = nodePos.subtract(currentPos).normalize();
+		terrorisers.removeIf((terroriser) -> { return terroriser.distanceToSqr(currentPos) < terroriser.distanceToSqr(currentPos.add(direction)); });
 		
 		if(!terrorisers.isEmpty())
 			clearPath();

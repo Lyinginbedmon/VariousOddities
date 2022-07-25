@@ -15,45 +15,33 @@ import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
+import com.mojang.math.Vector3d;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.FollowOwnerGoal;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.OwnerHurtByTargetGoal;
-import net.minecraft.entity.ai.goal.OwnerHurtTargetGoal;
-import net.minecraft.entity.ai.goal.SitGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.particles.ItemParticleData;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -61,7 +49,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Abstract class defining the shared properties between all wolves raised and bred by goblins.
  * @author Lying
  */
-public abstract class AbstractGoblinWolf extends TameableEntity
+public abstract class AbstractGoblinWolf extends TamableAnimal
 {
 	protected static final DataParameter<Integer> GENETICS	= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
 	
@@ -86,7 +74,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     private int goblinTimer = 0;
     private int eatTicks = 0;
 	
-	protected AbstractGoblinWolf(EntityType<? extends AbstractGoblinWolf> type, World worldIn)
+	protected AbstractGoblinWolf(EntityType<? extends AbstractGoblinWolf> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
@@ -110,7 +98,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0D, 10.0F, 2.0F, false));
 		this.goalSelector.addGoal(8, new EntityAIWargWander(this, 1.0D));
 		this.goalSelector.addGoal(9, new EntityAIGoblinWolfBeg(this, 8F));
-		this.goalSelector.addGoal(10, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+		this.goalSelector.addGoal(10, new LookAtGoal(this, Player.class, 8.0F));
 		this.goalSelector.addGoal(10, new LookRandomlyGoal(this));
 		
 		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
@@ -124,25 +112,25 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 		applyGeneticAI();
 	}
 	
-    public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<? extends Monster> animal, IWorld level, SpawnReason reason, BlockPos pos, Random random)
     {
-        return world.getDifficulty() != Difficulty.PEACEFUL && CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
+        return level.getDifficulty() != Difficulty.PEACEFUL && CreatureEntity.canSpawnOn(animal, level, reason, pos, random);
     }
     
-    public void writeAdditional(CompoundNBT compound)
+    public void writeAdditional(CompoundTag compound)
     {
     	super.writeAdditional(compound);
     	compound.putInt("Genes", getDataManager().get(GENETICS).intValue());
-    	CompoundNBT display = new CompoundNBT();
+    	CompoundTag display = new CompoundTag();
     		display.putInt("Color", getColor());
     	compound.put("Display", display);
     }
     
-    public void readAdditional(CompoundNBT compound)
+    public void readAdditional(CompoundTag compound)
     {
-    	super.readAdditional(compound);
+    	super.readAdditionalSaveData(compound);
     	setGenetics(compound.getInt("Genes"));
-    	CompoundNBT display = compound.getCompound("Display");
+    	CompoundTag display = compound.getCompound("Display");
     		setColor(display.getInt("Color"));
     }
     
@@ -162,7 +150,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 	}
     private void openJaw()
     {
-        if(!this.world.isRemote)
+        if(!this.level.isClientSide)
         {
             this.openJawCounter = 1;
             setJawOpen(true);
@@ -172,22 +160,22 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     protected SoundEvent getAmbientSound()
     {
     	openJaw();
-        if(getRNG().nextInt(3) == 0)
-        	return (isTamed() && getHealth() < 10.0F) ? SoundEvents.ENTITY_WOLF_WHINE : SoundEvents.ENTITY_WOLF_PANT;
+        if(getRandom().nextInt(3) == 0)
+        	return (isTame() && getHealth() < 10.0F) ? SoundEvents.WOLF_WHINE : SoundEvents.WOLF_PANT;
         else
-        	return SoundEvents.ENTITY_WOLF_AMBIENT;
+        	return SoundEvents.WOLF_AMBIENT;
     }
     
     protected SoundEvent getHurtSound(DamageSource damageSourceIn)
     {
     	openJaw();
-        return SoundEvents.ENTITY_WOLF_HURT;
+        return SoundEvents.WOLF_HURT;
     }
     
     protected SoundEvent getDeathSound()
     {
     	openJaw();
-        return SoundEvents.ENTITY_WOLF_DEATH;
+        return SoundEvents.WOLF_DEATH;
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -215,7 +203,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public float getTailRotation()
     {
-        if(getAttackTarget() != null)
+        if(getTarget() != null)
         	return 1.5393804F;
         else
         {
@@ -239,19 +227,19 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     {
         super.tick();
         
-        if(isInWaterRainOrBubbleColumn())
+        if(isInWaterRainOrBubble())
         {
         	this.isWet = true;
-        	if(this.isShaking && !getEntityWorld().isRemote)
+        	if(this.isShaking && !getLevel().isClientSide)
         	{
-        		this.getEntityWorld().setEntityState(this, (byte)56);
+        		this.getLevel().setEntityState(this, (byte)56);
         		resetShaking();
         	}
         }
         else if((this.isWet || this.isShaking) && this.isShaking)
         {
         	if(this.timeShaking == 0F)
-        		playSound(SoundEvents.ENTITY_WOLF_SHAKE, this.getSoundVolume(), (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F);
+        		playSound(SoundEvents.WOLF_SHAKE, this.getSoundVolume(), (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
         	
         	this.prevTimeShaking = this.timeShaking;
         	this.timeShaking += 0.05F;
@@ -267,9 +255,9 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         		Vector3d motion = this.getMotion();
         		do
         		{
-        			double randX = getPosX() + ((getRNG().nextDouble() * 2D - 1D) - getWidth() * 0.5D);
-        			double randZ = getPosZ() + ((getRNG().nextDouble() * 2D - 1D) - getWidth() * 0.5D);
-        			this.world.addParticle(ParticleTypes.SPLASH, randX, (double)(getPosY() + 0.8F), randZ, motion.x, motion.y, motion.z);
+        			double randX = getX() + ((getRandom().nextDouble() * 2D - 1D) - getBbWidth() * 0.5D);
+        			double randZ = getZ() + ((getRandom().nextDouble() * 2D - 1D) - getBbWidth() * 0.5D);
+        			this.level.addParticle(ParticleTypes.SPLASH, randX, (double)(getY() + 0.8F), randZ, motion.x, motion.y, motion.z);
         		}
         		while(--i > 0);
         	}
@@ -278,7 +266,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public boolean isTameable()
     {
-    	return !this.isTamed() && this.goblinTimer == 0;
+    	return !this.isTame() && this.goblinTimer == 0;
     }
     
     private void resetShaking()
@@ -308,36 +296,36 @@ public abstract class AbstractGoblinWolf extends TameableEntity
         else{ this.jawOpenness += (-this.jawOpenness) * 0.1F - 0.05F; }
         this.jawOpenness = Math.max(0F, Math.min(1F, this.jawOpenness));
         
-        if(!this.getEntityWorld().isRemote && this.isWet && !this.isShaking && !this.hasPath() && this.onGround)
+        if(!this.getLevel().isClientSide && this.isWet && !this.isShaking && !this.hasPath() && this.onGround)
         {
         	resetShaking();
         	this.isShaking = true;
-        	this.getEntityWorld().setEntityState(this, (byte)8);
+        	this.getLevel().setEntityState(this, (byte)8);
         }
         
         // Tameability affected by interaction with goblins
-        if(!this.getEntityWorld().isRemote && this.goblinTimer > 0 && --this.goblinTimer%Reference.Values.TICKS_PER_SECOND == 0)
-        	if(!getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, this.getBoundingBox().grow(8, 4, 8)).isEmpty())
+        if(!this.getLevel().isClientSide && this.goblinTimer > 0 && --this.goblinTimer%Reference.Values.TICKS_PER_SECOND == 0)
+        	if(!getLevel().getEntitiesOfClass(EntityGoblin.class, this.getBoundingBox().inflate(8, 4, 8)).isEmpty())
         		setGoblinSight(Reference.Values.TICKS_PER_DAY);
         
         // Eating held food
-        if(!this.getEntityWorld().isRemote && this.isAlive() && this.getHealth() < this.getMaxHealth() && this.isServerWorld())
+        if(!this.getLevel().isClientSide && this.isAlive() && this.getHealth() < this.getMaxHealth() && this.isServerLevel())
         {
         	++this.eatTicks;
-        	ItemStack heldItem = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND);
+        	ItemStack heldItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
         	if(this.canEatItem(heldItem))
         		if(this.eatTicks > 600)
         		{
         			heal(heldItem.getItem().getFood().getHealing());
-        			ItemStack heldItemUsed = heldItem.onItemUseFinish(getEntityWorld(), this);
+        			ItemStack heldItemUsed = heldItem.onItemUse(getLevel(), this);
         			if(!heldItemUsed.isEmpty())
-        				this.setItemStackToSlot(EquipmentSlotType.MAINHAND, heldItemUsed);
+        				this.setItemSlot(EquipmentSlot.MAINHAND, heldItemUsed);
         			this.eatTicks = 0;
         		}
-        		else if(this.eatTicks > 560 && this.rand.nextFloat() < 0.1F)
+        		else if(this.eatTicks > 560 && this.random.nextFloat() < 0.1F)
         		{
-        			this.playSound(this.getEatSound(heldItem), 1F, 1F);
-        			this.getEntityWorld().setEntityState(this, (byte)45);
+        			this.playSound(this.getEatingSound(heldItem), 1F, 1F);
+        			this.getLevel().setEntityState(this, (byte)45);
         		}
         }
     }
@@ -346,7 +334,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public boolean canEatItem(ItemStack itemStackIn)
     {
-    	return itemStackIn.getItem().isFood() && this.getAttackTarget() == null;
+    	return itemStackIn.getItem().isFood() && this.getTarget() == null;
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -360,12 +348,12 @@ public abstract class AbstractGoblinWolf extends TameableEntity
 	    		this.prevTimeShaking = 0F;
 	    		break;
 	    	case 45:
-	    		ItemStack heldItem = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND);
+	    		ItemStack heldItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
 	    		if(!heldItem.isEmpty())
 	    			for(int i = 0; i < 8; ++i)
 	    			{
-	    				Vector3d pos = (new Vector3d(((double)this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D)).rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F)).rotateYaw(-this.rotationYaw * ((float)Math.PI / 180F));
-	    				this.world.addParticle(new ItemParticleData(ParticleTypes.ITEM, heldItem), this.getPosX() + this.getLookVec().x / 2.0D, this.getPosY(), this.getPosZ() + this.getLookVec().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
+	    				Vector3d pos = (new Vector3d(((double)this.random.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D)).rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F)).rotateYaw(-this.rotationYaw * ((float)Math.PI / 180F));
+	    				this.level.addParticle(new ItemParticleData(ParticleTypes.ITEM, heldItem), this.getX() + this.getLookVec().x / 2.0D, this.getPosY(), this.getZ() + this.getLookVec().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
 	    			}
 	    		break;
 	    	case 56:
@@ -408,12 +396,12 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     public void setAttackTarget(@Nullable LivingEntity target)
     {
-    	if(!isTamed() && target != null)
+    	if(!isTame() && target != null)
     	{
         	if(target.getType() == VOEntities.GOBLIN)
         		return;
         	
-        	if(target.isAlive() && isSitting())
+        	if(target.isAlive() && isOrderedToSit())
         		func_233687_w_(false);
     	}
     	
@@ -422,9 +410,9 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     
     protected void spawnDrops(DamageSource source)
     {
-    	for(EquipmentSlotType slot : EquipmentSlotType.values())
+    	for(EquipmentSlot slot : EquipmentSlot.values())
     	{
-    		ItemStack heldStack = getItemStackFromSlot(slot);
+    		ItemStack heldStack = getItemBySlot(slot);
     		if(!heldStack.isEmpty())
     		{
     			entityDropItem(heldStack);
@@ -436,9 +424,9 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
-    	setColor(getRNG().nextInt(3));
+    	setColor(getRandom().nextInt(3));
 		return spawnDataIn;
     }
     
@@ -479,7 +467,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	}
     	
     	/** Returns a random cross of the given genetics, with additional random mutation */
-    	public static Genetics cross(Genetics genesA, Genetics genesB, Random rand)
+    	public static Genetics cross(Genetics genesA, Genetics genesB, RandomSource rand)
     	{
     		int val = 0;
     		for(int i=0; i<8; i++)
@@ -498,7 +486,7 @@ public abstract class AbstractGoblinWolf extends TameableEntity
     	}
     	
     	/** Returns a random set of genes, suitable for a goblin-bred wolf */
-    	public static Genetics random(Random rand)
+    	public static Genetics random(RandomSource rand)
     	{
     		int val = 0;
     		for(int i=0; i<8; i++)

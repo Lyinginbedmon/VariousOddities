@@ -2,44 +2,38 @@ package com.lying.variousoddities.block;
 
 import java.util.Random;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BlockPhylacteryBase extends VOBlock
 {
 	public static final IntegerProperty POWER = IntegerProperty.create("power", 0, 15);
 	protected static final VoxelShape SHAPE = Block.makeCuboidShape(3.0D, 0.0D, 3.0D, 13.0D, 14.0D, 13.0D);
 	
-	public BlockPhylacteryBase(AbstractBlock.Properties properties)
+	public BlockPhylacteryBase(BlockBehaviour.Properties properties)
 	{
 		super(properties.notSolid().setOpaque(VOBlock::isntSolid).hardnessAndResistance(25.0F, 1200.0F));
 		this.setDefaultState(getDefaultState().with(POWER, 0));
 	}
 	
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context)
+	public VoxelShape getShape(BlockState state, Level worldIn, BlockPos pos, ISelectionContext context)
 	{
 		return SHAPE;
 	}
 	
-	public boolean isValidPosition(BlockState state, IWorldReader worldIn, BlockPos pos)
+	public boolean isValidPosition(BlockState state, Level worldIn, BlockPos pos)
 	{
-		return hasEnoughSolidSide(worldIn, pos.down(), Direction.UP);
+		return hasEnoughSolidSide(worldIn, pos.below(), Direction.UP);
 	}
 	
 	public BlockRenderType getRenderType(BlockState state)
@@ -51,61 +45,61 @@ public class BlockPhylacteryBase extends VOBlock
 	
 	public boolean hasComparatorInputOverride(BlockState state) { return true; }
 	
-	public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+	public int getStrongPower(BlockState blockState, Level blockAccess, BlockPos pos, Direction side)
 	{
-		return blockState.get(POWER);
+		return blockState.getValue(POWER);
 	}
 	
-	public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
+	public int getWeakPower(BlockState blockState, Level blockAccess, BlockPos pos, Direction side)
 	{
 		return getStrongPower(blockState, blockAccess, pos, side);
 	}
 	
-	public int getComparatorInputOverride(BlockState blockState, World worldIn, BlockPos pos)
+	public int getComparatorInputOverride(BlockState blockState, Level worldIn, BlockPos pos)
 	{
 		return getStrongPower(blockState, worldIn, pos, Direction.UP);
 	}
 	
-	public void powerBlock(BlockState state, World world, BlockPos pos, int power)
+	public void powerBlock(BlockState state, Level world, BlockPos pos, int power)
 	{
-		world.setBlockState(pos, state.with(POWER, power), 3);
-		world.notifyNeighborsOfStateChange(pos, this);
+		world.setBlock(pos, state.setValue(POWER, power), 3);
+		world.updateNeighborsAt(pos, this);
 		if(power != 0)
-			world.getPendingBlockTicks().scheduleTick(pos, this, 20);
+			world.scheduleTick(pos, state.getBlock(), 20);
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void onBlockClicked(BlockState state, World worldIn, BlockPos pos, PlayerEntity player)
+	public void onBlockClicked(BlockState state, Level worldIn, BlockPos pos, Player player)
 	{
 		powerBlock(state, worldIn, pos, 15);
 		super.onBlockClicked(state, worldIn, pos, player);
 	}
 	
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handin, BlockRayTraceResult hit)
+	public ActionResultType onBlockActivated(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handin, BlockHitResult hit)
 	{
-		if(state.get(POWER) > 5)
+		if(state.getValue(POWER) > 5)
 			return ActionResultType.CONSUME;
 		
 		powerBlock(state, worldIn, pos, 5);
-		return ActionResultType.func_233537_a_(worldIn.isRemote);
+		return ActionResultType.func_233537_a_(worldIn.isClientSide);
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving)
+	public void onReplaced(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving)
 	{
-		if(!isMoving && !state.isIn(newState.getBlock()))
+		if(!isMoving && !state.is(newState.getBlock()))
 		{
-			if(state.get(POWER) > 0)
-				worldIn.notifyNeighborsOfStateChange(pos, this);
+			if(state.getValue(POWER) > 0)
+				worldIn.updateNeighborsAt(pos, this);
 			
 			super.onReplaced(state, worldIn, pos, newState, isMoving);
 		}
 	}
 	
-	public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand)
+	public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, Random rand)
 	{
-		if(state.get(POWER) > 0)
-			powerBlock(state, worldIn, pos, state.get(POWER) - 1);
+		if(state.getValue(POWER) > 0)
+			powerBlock(state, worldIn, pos, state.getValue(POWER) - 1);
 	}
 	
 	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder)

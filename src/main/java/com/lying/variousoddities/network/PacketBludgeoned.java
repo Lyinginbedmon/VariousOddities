@@ -6,11 +6,11 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.SoundEvents;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketBludgeoned
 {
@@ -40,11 +40,11 @@ public class PacketBludgeoned
 		NetworkEvent.Context context = cxt.get();
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
-			PlayerEntity player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
-			for(LivingEntity entity : player.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, player.getBoundingBox().grow(16D)))
-				if(entity.getUniqueID().equals(msg.entityID))
+			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			for(LivingEntity entity : player.getLevel().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(16D)))
+				if(entity.getUUID().equals(msg.entityID))
 				{
-					entity.playSound(msg.knockedOut ? SoundEvents.ENTITY_PLAYER_ATTACK_CRIT : SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, 1F, 0.5F + entity.getRNG().nextFloat());
+					entity.playSound(msg.knockedOut ? SoundEvents.PLAYER_ATTACK_CRIT : SoundEvents.PLAYER_ATTACK_STRONG, 1F, 0.5F + entity.getRandom().nextFloat());
 					break;
 				}
 		}

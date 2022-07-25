@@ -2,15 +2,14 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Monster;
 
 public class AbilityBlind extends AbilityStatusEffect
 {
@@ -18,11 +17,11 @@ public class AbilityBlind extends AbilityStatusEffect
 	
 	public AbilityBlind()
 	{
-		super(REGISTRY_NAME, new EffectInstance(Effects.BLINDNESS, Reference.Values.TICKS_PER_SECOND * 5, 4, false, false));
+		super(REGISTRY_NAME, new MobEffectInstance(MobEffects.BLINDNESS, Reference.Values.TICKS_PER_SECOND * 5, 4, false, false));
 	}
 	
 	public ResourceLocation getMapName(){ return REGISTRY_NAME; }
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+getMapName()); }
+	public Component translatedName(){ return Component.translatable("ability."+getMapName()); }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
@@ -30,14 +29,14 @@ public class AbilityBlind extends AbilityStatusEffect
 	
 	public static boolean isMobBlind(LivingEntity mob)
 	{
-		return mob.isPotionActive(Effects.BLINDNESS) || AbilityRegistry.hasAbility(mob, REGISTRY_NAME);
+		return mob.hasEffect(MobEffects.BLINDNESS) || AbilityRegistry.hasAbility(mob, REGISTRY_NAME);
 	}
 	
 	public static boolean canMobDetectEntity(LivingEntity mob, LivingEntity entity)
 	{
 		// If mob's vision of entity is compromised...
-		double followRange = mob instanceof MobEntity ? mob.getAttributeValue(Attributes.FOLLOW_RANGE) : 4D;
-		if(entity.isInvisible() && mob.getDistanceSq(entity) > followRange || isMobBlind(mob))
+		double followRange = mob instanceof Monster ? mob.getAttributeValue(Attributes.FOLLOW_RANGE) : 4D;
+		if(entity.isInvisible() && mob.distanceToSqr(entity) > followRange || isMobBlind(mob))
 		{
 			// Check if vision abilities can compensate
 			return AbilityVision.canMobSeeEntity(mob, entity);
@@ -49,7 +48,7 @@ public class AbilityBlind extends AbilityStatusEffect
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityBlind();
 		}

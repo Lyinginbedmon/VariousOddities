@@ -12,14 +12,14 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 
 public abstract class AbilityGaze extends ActivatedAbility
@@ -35,7 +35,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public Type getType() { return Type.ATTACK; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
 		if(this.range > 0)
@@ -46,7 +46,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		if(compound.contains("Range"))
@@ -70,11 +70,11 @@ public abstract class AbilityGaze extends ActivatedAbility
 					return true;
 				
 				// Is target look vector close enough to ability owner?
-				Vector3d lookVec = living.getLook(1.0F).normalize();
-				Vector3d eyeVec = living.getEyePosition(1F);
-				AxisAlignedBB box = owner.getBoundingBox();
+				Vec3 lookVec = living.getLookAngle().normalize();
+				Vec3 eyeVec = living.getEyePosition(1F);
+				AABB box = owner.getBoundingBox();
 				
-				Vector3d lookEnd = eyeVec.add(lookVec.scale(range));
+				Vec3 lookEnd = eyeVec.add(lookVec.scale(range));
 				return box.intersects(Math.min(eyeVec.x, lookEnd.x), Math.min(eyeVec.y, lookEnd.y), Math.min(eyeVec.z, lookEnd.z), Math.max(eyeVec.x, lookEnd.x), Math.max(eyeVec.y, lookEnd.y), Math.max(eyeVec.z, lookEnd.z));
 			}
 		}
@@ -124,7 +124,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 			this.condition = conditionIn;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			super.writeToNBT(compound);
 			if(isDurationVariable())
@@ -137,7 +137,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			super.readFromNBT(compound);
 			if(compound.contains("Duration"))
@@ -161,16 +161,16 @@ public abstract class AbilityGaze extends ActivatedAbility
 				return false;
 			else
 			{
-				int duration = isDurationVariable() ? owner.getRNG().nextInt(this.durationMin, this.durationMax) : this.durationMax;
-				data.addCondition(new ConditionInstance(condition, duration, owner.getUniqueID()));
-				if(entity instanceof MobEntity)
+				int duration = isDurationVariable() ? owner.getRandom().nextInt(this.durationMin, this.durationMax) : this.durationMax;
+				data.addCondition(new ConditionInstance(condition, duration, owner.getUUID()));
+				if(entity instanceof Mob)
 				{
-					MobEntity mob = (MobEntity)entity;
-					if(mob.getAttackTarget() == owner)
-						mob.setAttackTarget((LivingEntity)null);
+					Mob mob = (Mob)entity;
+					if(mob.getTarget() == owner)
+						mob.setTarget((LivingEntity)null);
 					
-					if(mob.getRevengeTarget() == owner)
-						mob.setRevengeTarget((LivingEntity)null);
+					if(mob.getLastHurtByMob() == owner)
+						mob.setLastHurtByMob((LivingEntity)null);
 				}
 			}
 			
@@ -193,17 +193,17 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 		{
-			return entity.addPotionEffect(new EffectInstance(VOPotions.PETRIFYING, Reference.Values.TICKS_PER_SECOND * 10, 4));
+			return entity.addEffect(new MobEffectInstance(VOPotions.PETRIFYING, Reference.Values.TICKS_PER_SECOND * 10, 4));
 		}
 		
 		public static class Builder extends Ability.Builder
 		{
 			public Builder(){ super(REGISTRY_NAME); }
 			
-			public Ability create(CompoundNBT compound)
+			public Ability create(CompoundTag compound)
 			{
 				Petrify petrify = new Petrify();
-				CompoundNBT nbt = petrify.writeToNBT(new CompoundNBT());
+				CompoundTag nbt = petrify.writeToNBT(new CompoundTag());
 				nbt.merge(compound);
 				petrify.readFromNBT(nbt);
 				return petrify;
@@ -226,10 +226,10 @@ public abstract class AbilityGaze extends ActivatedAbility
 		{
 			public Builder(){ super(REGISTRY_NAME); }
 			
-			public Ability create(CompoundNBT compound)
+			public Ability create(CompoundTag compound)
 			{
 				Charm charm = new Charm();
-				CompoundNBT nbt = charm.writeToNBT(new CompoundNBT());
+				CompoundTag nbt = charm.writeToNBT(new CompoundTag());
 				nbt.merge(compound);
 				charm.readFromNBT(nbt);
 				return charm;
@@ -252,10 +252,10 @@ public abstract class AbilityGaze extends ActivatedAbility
 		{
 			public Builder(){ super(REGISTRY_NAME); }
 			
-			public Ability create(CompoundNBT compound)
+			public Ability create(CompoundTag compound)
 			{
 				Dominate dominate = new Dominate();
-				CompoundNBT nbt = dominate.writeToNBT(new CompoundNBT());
+				CompoundTag nbt = dominate.writeToNBT(new CompoundTag());
 				nbt.merge(compound);
 				dominate.readFromNBT(nbt);
 				return dominate;

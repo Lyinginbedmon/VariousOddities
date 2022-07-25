@@ -6,9 +6,9 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSyncAir
 {
@@ -41,7 +41,7 @@ public class PacketSyncAir
 			return;
 		}
 		
-		PlayerEntity sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+		Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 		if(sender != null)
 		{
 			LivingData data = LivingData.forEntity(sender);

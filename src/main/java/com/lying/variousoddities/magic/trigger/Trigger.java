@@ -10,9 +10,9 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.magic.trigger.TriggerAudible.TriggerAudibleChat;
 import com.lying.variousoddities.magic.trigger.TriggerAudible.TriggerAudibleSound;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
 
 public abstract class Trigger
 {
@@ -38,7 +38,7 @@ public abstract class Trigger
 	
 	public String toString()
 	{
-		String name = getTranslated(inverted()).getUnformattedComponentText();
+		String name = getTranslated(inverted()).getString();
 		for(Trigger trigger : getVariables())
 			name += trigger.toString();
 		return name;
@@ -55,20 +55,20 @@ public abstract class Trigger
 		for(int i=0; i<(inset * 2); i++)
 			step += " ";
 		
-		VariousOddities.log.info(step + getTranslated(inverted()).getUnformattedComponentText());
+		VariousOddities.log.info(step + getTranslated(inverted()).getString());
 		for(Trigger trigger : getVariables())
 			trigger.print(inset + 1);
 	}
 	
-	public abstract ITextComponent getTranslated(boolean inverted);
+	public abstract Component getTranslated(boolean inverted);
 	
 	/** Reads variable-specific data from the given NBT compound */
-	public void readFromNBT(CompoundNBT compound){ }
+	public void readFromNBT(CompoundTag compound){ }
 	
 	/** Writes variable-specific data to the given NBT compound.<br>
 	 * Should NOT be used for storing the trigger itself!
 	 */
-	public CompoundNBT writeToNBT(CompoundNBT compound){ return compound; }
+	public CompoundTag writeToNBT(CompoundTag compound){ return compound; }
 	
 	public abstract Collection<? extends Trigger> possibleVariables();
 	
@@ -81,7 +81,7 @@ public abstract class Trigger
 	public List<? extends Trigger> getVariables(){ return NO_VARIABLES; }
 	
 	/** Constructs a trigger from the given NBT compound, if it contains a Type string */
-	public static Trigger createTriggerFromNBT(CompoundNBT compound)
+	public static Trigger createTriggerFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("Type"))
 			return readTriggerFromNBT(compound.getString("Type"), compound);
@@ -90,7 +90,7 @@ public abstract class Trigger
 	
 	/** Constructs a trigger of the given type from the given NBT compound */
 	@SuppressWarnings("deprecation")
-	public static Trigger readTriggerFromNBT(String nameIn, CompoundNBT compound)
+	public static Trigger readTriggerFromNBT(String nameIn, CompoundTag compound)
 	{
 		if(CLASS_MAP.containsKey(nameIn))
 		{
@@ -106,14 +106,14 @@ public abstract class Trigger
 			if(instance != null)
 			{
 				instance.setInverted(compound.contains("Inverted") ? compound.getBoolean("Inverted") : false);
-				instance.readFromNBT(compound.contains("Data") ? compound.getCompound("Data") : new CompoundNBT());
+				instance.readFromNBT(compound.contains("Data") ? compound.getCompound("Data") : new CompoundTag());
 				
 				if(compound.contains("Variables") && !instance.possibleVariables().isEmpty())
 				{
-					ListNBT variableData = compound.getList("Variables", 10);
+					ListTag variableData = compound.getList("Variables", 10);
 					for(int i=0; i<variableData.size(); i++)
 					{
-						CompoundNBT data = variableData.getCompound(i);
+						CompoundTag data = variableData.getCompound(i);
 						Trigger variable = createTriggerFromNBT(data);
 						if(variable != null)
 							instance.addVariable(variable);
@@ -126,17 +126,17 @@ public abstract class Trigger
 	}
 	
 	/** Stores the given trigger in the given NBT compound in a format that can be read later */
-	public static CompoundNBT writeTriggerToNBT(Trigger triggerIn, CompoundNBT compound)
+	public static CompoundTag writeTriggerToNBT(Trigger triggerIn, CompoundTag compound)
 	{
 		compound.putString("Type", triggerIn.type());
 		compound.putBoolean("Inverted", triggerIn.inverted());
-		compound.put("Data", triggerIn.writeToNBT(new CompoundNBT()));
+		compound.put("Data", triggerIn.writeToNBT(new CompoundTag()));
 		
 		if(!triggerIn.possibleVariables().isEmpty() && !triggerIn.getVariables().isEmpty())
 		{
-			ListNBT variableData = new ListNBT();
+			ListTag variableData = new ListTag();
 			for(Trigger variable : triggerIn.getVariables())
-				variableData.add(writeTriggerToNBT(variable, new CompoundNBT()));
+				variableData.add(writeTriggerToNBT(variable, new CompoundTag()));
 			compound.put("Variables", variableData);
 		}
 		

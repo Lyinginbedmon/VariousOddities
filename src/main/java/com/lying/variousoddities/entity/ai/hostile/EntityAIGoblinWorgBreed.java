@@ -7,24 +7,24 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 
 public class EntityAIGoblinWorgBreed extends Goal
 {
-	private final CreatureEntity theGoblin;
-	private final World theWorld;
-	private final PathNavigator theNavigator;
+	private final Mob theGoblin;
+	private final Level theWorld;
+	private final PathNavigation theNavigator;
 	
 	private final Predicate<EntityWorg> searchPredicate = new Predicate<EntityWorg>()
 			{
 				public boolean apply(EntityWorg input)
 				{
-					return input.isAlive() && input.getGrowingAge() == 0 && !input.isInLove() && !input.isTamed() && (input.getAttackTarget() == null || !input.getAttackTarget().isAlive());
+					return input.isAlive() && input.getAge() == 0 && !input.isInLove() && !input.isTame() && (input.getTarget() == null || !input.getTarget().isAlive());
 				}
 			};
 	private EntityWorg worgA, worgB;
@@ -32,17 +32,17 @@ public class EntityAIGoblinWorgBreed extends Goal
 	private int breedingTimer = Reference.Values.TICKS_PER_SECOND * 2;
 	private State currentState = null;
 	
-	public EntityAIGoblinWorgBreed(CreatureEntity creatureIn)
+	public EntityAIGoblinWorgBreed(Mob creatureIn)
 	{
 		theGoblin = creatureIn;
-		theWorld = creatureIn.getEntityWorld();
-		theNavigator = creatureIn.getNavigator();
+		theWorld = creatureIn.getLevel();
+		theNavigator = creatureIn.getNavigation();
         setMutexFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		List<EntityWorg> eligibleWorgs = theWorld.<EntityWorg>getEntitiesWithinAABB(EntityWorg.class, theGoblin.getBoundingBox().grow(8), searchPredicate);
+		List<EntityWorg> eligibleWorgs = theWorld.<EntityWorg>getEntitiesOfClass(EntityWorg.class, theGoblin.getBoundingBox().inflate(8), searchPredicate);
 		if(eligibleWorgs.size() > 6) return false;
 		
 		// Find Worg A
@@ -66,7 +66,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 			for(EntityWorg worg : eligibleWorgs)
 			{
 				double distance = worgA.getDistanceSq(worg);
-				Path path = worgA.getNavigator().getPathToEntity(worg, 10);
+				Path path = worgA.getNavigation().getPathToEntity(worg, 10);
 				if(distance < minDist && path != null)
 				{
 					worgB = worg;
@@ -75,7 +75,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 			}
 		}
 		
-		return worgA != null && worgB != null && theGoblin.getRNG().nextInt(500) == 0;
+		return worgA != null && worgB != null && theGoblin.getRandom().nextInt(500) == 0;
 	}
 	
 	public boolean shouldContinueExecuting()
@@ -131,10 +131,10 @@ public class EntityAIGoblinWorgBreed extends Goal
 				{
 					if(--breedingTimer <= 0)
 					{
-						theGoblin.swingArm(Hand.MAIN_HAND);
+						theGoblin.swingArm(InteractionHand.MAIN_HAND);
 						worgA.setInLove(null);
 						worgA.func_233687_w_(false);
-						worgA.getNavigator().tryMoveToEntityLiving(worgB, 1D);
+						worgA.getNavigation().tryMoveToEntityLiving(worgB, 1D);
 						currentState = State.MOVING_TO_B;
 					}
 				}
@@ -164,10 +164,10 @@ public class EntityAIGoblinWorgBreed extends Goal
 				{
 					if(--breedingTimer <= 0)
 					{
-						theGoblin.swingArm(Hand.MAIN_HAND);
+						theGoblin.swingArm(InteractionHand.MAIN_HAND);
 						worgB.setInLove(null);
 						worgB.func_233687_w_(false);
-						worgB.getNavigator().tryMoveToEntityLiving(worgA, 1D);
+						worgB.getNavigation().tryMoveToEntityLiving(worgA, 1D);
 						currentState = null;
 					}
 				}

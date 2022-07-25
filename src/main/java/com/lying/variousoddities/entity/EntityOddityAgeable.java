@@ -6,16 +6,12 @@ import java.util.List;
 import com.lying.variousoddities.entity.ai.controller.EntityController;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 
-public abstract class EntityOddityAgeable extends AgeableEntity
+public abstract class EntityOddityAgeable extends AgeableMob
 {
     protected static final DataParameter<Integer> AGE		= EntityDataManager.<Integer>createKey(EntityOddityAgeable.class, DataSerializers.VARINT);
     protected static final DataParameter<Boolean> IN_LOVE	= EntityDataManager.<Boolean>createKey(EntityOddityAgeable.class, DataSerializers.BOOLEAN);
@@ -29,7 +25,7 @@ public abstract class EntityOddityAgeable extends AgeableEntity
 	private EntityController activeController = null;
 	
 	@SuppressWarnings("rawtypes")
-	protected EntityOddityAgeable(EntityType<? extends AgeableEntity> type, World worldIn)
+	protected EntityOddityAgeable(EntityType<? extends AgeableMob> type, Level worldIn)
 	{
 		super(type, worldIn);
 		
@@ -102,7 +98,7 @@ public abstract class EntityOddityAgeable extends AgeableEntity
     public void tick()
     {
     	super.tick();
-    	if(!getEntityWorld().isRemote)
+    	if(!getLevel().isClientSide)
     		getDataManager().set(AGE, getGrowingAge());
     }
     
@@ -112,16 +108,16 @@ public abstract class EntityOddityAgeable extends AgeableEntity
 	    
 	    if(isInLove())
 	    {
-		    double d0 = this.rand.nextGaussian() * 0.02D;
-		    double d1 = this.rand.nextGaussian() * 0.02D;
-		    double d2 = this.rand.nextGaussian() * 0.02D;
-		    this.world.addParticle(ParticleTypes.HEART, this.getPosXRandom(1.0D), this.getPosYRandom() + 0.5D, this.getPosZRandom(1.0D), d0, d1, d2);
+		    double d0 = this.random.nextGaussian() * 0.02D;
+		    double d1 = this.random.nextGaussian() * 0.02D;
+		    double d2 = this.random.nextGaussian() * 0.02D;
+		    this.level.addParticle(ParticleTypes.HEART, this.getPosXRandom(1.0D), this.getPosYRandom() + 0.5D, this.getPosZRandom(1.0D), d0, d1, d2);
 	    }
     }
     
     public int getGrowingAge()
     {
-    	if(getEntityWorld().isRemote)
+    	if(getLevel().isClientSide)
     		return getDataManager().get(AGE).intValue();
     	else
     		return super.getGrowingAge();

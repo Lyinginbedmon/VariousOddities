@@ -20,33 +20,21 @@ import com.lying.variousoddities.init.VOSoundEvents;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.SpeciesRegistry;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.MoveTowardsRestrictionGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
+import net.minecraft.world.level.Level;
 
 public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
@@ -54,28 +42,28 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
     public static final DataParameter<Boolean> 	EARS = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
     public static final DataParameter<Boolean>	VIOLENT = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
     public static final DataParameter<Integer> 	COLOR = EntityDataManager.<Integer>createKey(EntityGoblin.class, DataSerializers.VARINT);
-    public static final DataParameter<CompoundNBT>	CARRYING = EntityDataManager.<CompoundNBT>createKey(EntityGoblin.class, DataSerializers.COMPOUND_NBT);
+    public static final DataParameter<CompoundTag>	CARRYING = EntityDataManager.<CompoundTag>createKey(EntityGoblin.class, DataSerializers.COMPOUND_NBT);
     public static final DataParameter<Optional<BlockPos>>	NEST = EntityDataManager.<Optional<BlockPos>>createKey(EntityGoblin.class, DataSerializers.OPTIONAL_BLOCK_POS);
     
     private EntityAIOperateRoom operateRoomTask;
     
     private GoblinType goblinType = GoblinType.BASIC;
     
-	public EntityGoblin(EntityType<? extends EntityGoblin> type, World worldIn)
+	public EntityGoblin(EntityType<? extends EntityGoblin> type, Level worldIn)
 	{
 		super(type, worldIn);
-		this.goblinType = GoblinType.getRandomType(getRNG());
+		this.goblinType = GoblinType.getRandomType(getRandom());
 	}
 	
 	protected void registerData()
 	{
 		super.registerData();
-		Random rand = new Random(this.getUniqueID().getLeastSignificantBits());
-		getDataManager().register(NOSE, rand.nextBoolean());
-		getDataManager().register(EARS, rand.nextBoolean());
-		getDataManager().register(VIOLENT, rand.nextInt(16) > 0);
-		getDataManager().register(COLOR, rand.nextInt(3));
-		getDataManager().register(CARRYING, new CompoundNBT());
+		Random random = new Random(this.getUUID().getLeastSignificantBits());
+		getDataManager().register(NOSE, random.nextBoolean());
+		getDataManager().register(EARS, random.nextBoolean());
+		getDataManager().register(VIOLENT, random.nextInt(16) > 0);
+		getDataManager().register(COLOR, random.nextInt(3));
+		getDataManager().register(CARRYING, new CompoundTag());
 		getDataManager().register(NEST, Optional.empty());
 	}
 	
@@ -102,7 +90,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
     
     public ResourceLocation defaultSpecies(){ return SpeciesRegistry.SPECIES_GOBLIN; }
     
-    public static boolean canSpawnAt(EntityType<? extends CreatureEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<? extends CreatureEntity> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
     {
 	    return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
     }
@@ -139,17 +127,17 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	public boolean isCarrying(){ return !getDataManager().get(CARRYING).isEmpty(); }
 	public EntityGoblin getOtherParent()
 	{
-		EntityGoblin child = VOEntities.GOBLIN.create(getEntityWorld());
+		EntityGoblin child = VOEntities.GOBLIN.create(getLevel());
 		child.readAdditional(getDataManager().get(CARRYING));
 		return child;
 	}
 	public void setCarryingFrom(EntityGoblin parent)
 	{
 		if(parent == null)
-			getDataManager().set(CARRYING, new CompoundNBT());
+			getDataManager().set(CARRYING, new CompoundTag());
 		else
 		{
-			CompoundNBT parentData = new CompoundNBT();
+			CompoundTag parentData = new CompoundTag();
 			parent.writeAdditional(parentData);
 			getDataManager().set(CARRYING, parentData);
 		}
@@ -165,10 +153,10 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
      */
 	public float getAgeProgress(){ return 0F; }
 	
-	public void writeAdditional(CompoundNBT compound)
+	public void writeAdditional(CompoundTag compound)
 	{
 		super.writeAdditional(compound);
-		CompoundNBT displayData = new CompoundNBT();
+		CompoundTag displayData = new CompoundTag();
 			displayData.putInt("Color", getColor());
 			displayData.putBoolean("Nose", getNose());
 			displayData.putBoolean("Ears", getEars());
@@ -177,15 +165,15 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		compound.putInt("Type", getGoblinType().ordinal());
 		compound.put("Mate", getDataManager().get(CARRYING));
 		if(getNestSite() != null)
-			compound.put("Nest", NBTUtil.writeBlockPos(getNestSite()));
+			compound.put("Nest", NbtUtils.writeBlockPos(getNestSite()));
 	}
 	
-	public void readAdditional(CompoundNBT compound)
+	public void readAdditionalSaveData(CompoundTag compound)
 	{
-		super.readAdditional(compound);
+		super.readAdditionalSaveData(compound);
 		if(compound.contains("Display", 10))
 		{
-			CompoundNBT displayData = compound.getCompound("Display");
+			CompoundTag displayData = compound.getCompound("Display");
 			getDataManager().set(COLOR, displayData.getInt("Color"));
 			setNose(displayData.getBoolean("Nose"));
 			setEars(displayData.getBoolean("Ears"));
@@ -212,33 +200,33 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
         return VOSoundEvents.ENTITY_GOBLIN_DEATH;
     }
 	
-    protected float getSoundVolume(){ return this.isChild() ? super.getSoundVolume() * 0.3F : super.getSoundVolume(); }
+    protected float getSoundVolume(){ return this.isBaby() ? super.getSoundVolume() * 0.3F : super.getSoundVolume(); }
     
     public void livingTick()
     {
     	/** If goblin has just become an adult OR is pregnant, set growing age to max */
-    	boolean child = isChild();
+    	boolean child = isBaby();
     	super.livingTick();
-    	if(isCarrying() || isChild() != child)
-    		setGrowingAge(72000);
+    	if(isCarrying() || isBaby() != child)
+    		setAge(72000);
     	
-    	if(isChild())
+    	if(isBaby())
     	{
-    		if(isViolent() && getRNG().nextInt(Reference.Values.TICKS_PER_MINUTE) == 0)
+    		if(isViolent() && getRandom().nextInt(Reference.Values.TICKS_PER_MINUTE) == 0)
     			setViolent(false);
     	}
     }
 	
-	public AgeableEntity func_241840_a(ServerWorld worldIn, AgeableEntity parent)
+	public AgeableMob getBreedOffspring(ServerLevel worldIn, AgeableMob parent)
 	{
 		EntityGoblin child = VOEntities.GOBLIN.create(worldIn);
 		
 		if(parent.getType() == VOEntities.GOBLIN)
 		{
 			EntityGoblin partner = (EntityGoblin)parent;
-			child.setColor(rand.nextBoolean() ? partner.getColor() : getColor());
-			child.setEars(rand.nextBoolean() ? partner.getEars() : getEars());
-			child.setNose(rand.nextBoolean() ? partner.getNose() : getNose());
+			child.setColor(random.nextBoolean() ? partner.getColor() : getColor());
+			child.setEars(random.nextBoolean() ? partner.getEars() : getEars());
+			child.setNose(random.nextBoolean() ? partner.getNose() : getNose());
 			
 			child.setViolent(false);
 		}
@@ -246,9 +234,9 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		return child;
 	}
 	
-	public void setAttackTarget(@Nullable LivingEntity entitylivingbaseIn)
+	public void setTarget(@Nullable LivingEntity entitylivingbaseIn)
 	{
-		super.setAttackTarget(entitylivingbaseIn);
+		super.setTarget(entitylivingbaseIn);
 		if(entitylivingbaseIn != null)
 		{
 			EntityGroup group = GroupHandler.getEntityMemberGroup(this);
@@ -271,9 +259,9 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	public boolean isNoDespawnRequired(){ return true; }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
-    	setGrowingAge(Reference.Values.TICKS_PER_DAY + getRNG().nextInt(Reference.Values.TICKS_PER_DAY * 2));
+    	setAge(Reference.Values.TICKS_PER_DAY + getRandom().nextInt(Reference.Values.TICKS_PER_DAY * 2));
 		return spawnDataIn;
     }
 	
@@ -299,12 +287,12 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 			return values()[par1Int];
 		}
 		
-		public static GoblinType getRandomType(Random rand)
+		public static GoblinType getRandomType(RandomSource random)
 		{
 			return BASIC;
 //			List<GoblinType> seed = new ArrayList<GoblinType>();
 //			for(GoblinType type : values()) for(int i=0; i<type.spawnWeight; i++) seed.add(type);
-//			return seed.get(rand.nextInt(seed.size()));
+//			return seed.get(random.nextInt(seed.size()));
 		}
 	}
 }

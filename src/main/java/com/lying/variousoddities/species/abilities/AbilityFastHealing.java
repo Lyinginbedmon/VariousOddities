@@ -3,12 +3,11 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityFastHealing extends Ability
@@ -31,20 +30,20 @@ public class AbilityFastHealing extends Ability
 		return healing.rate < rate ? -1 : healing.rate > rate ? 1 : 0;
 	}
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".fast_healing", (int)rate); }
+	public Component translatedName(){ return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".fast_healing", (int)rate); }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
 	public Type getType(){ return Type.DEFENSE; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putFloat("Rate", this.rate);
 		compound.putInt("Ticks", this.ticksSinceHeal);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.rate = compound.getFloat("Rate");
 		this.ticksSinceHeal = compound.getInt("Ticks");
@@ -55,10 +54,10 @@ public class AbilityFastHealing extends Ability
 		bus.addListener(this::onLivingUpdate);
 	}
 	
-	public void onLivingUpdate(LivingUpdateEvent event)
+	public void onLivingUpdate(LivingTickEvent event)
 	{
 		// Increase tick time if damage is > 0, then heal and reset tick time
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		if(AbilityRegistry.hasAbility(entity, getMapName()))
 		{
 			AbilityFastHealing ability = (AbilityFastHealing)AbilityRegistry.getAbilityByName(entity, getMapName());
@@ -83,7 +82,7 @@ public class AbilityFastHealing extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			float rate = compound.contains("Rate", 5) ? compound.getFloat("Rate") : 2;
 			return new AbilityFastHealing(rate);

@@ -3,19 +3,19 @@ package com.lying.variousoddities.api.world.settlement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 
 /**
  * Interface class describing a type of settlement to be used by mobs.<br>
@@ -75,13 +75,13 @@ public interface Settlement
 	 * Called by the SettlementManager during instantiation.
 	 * @param worldIn
 	 */
-	void setWorld(World worldIn);
+	void setWorld(Level worldIn);
 	
 	default boolean hasTitle(){ return getTitle() != null; }
 	
-	ITextComponent getTitle();
+	Component getTitle();
 	
-	void setTitle(ITextComponent textComponent);
+	void setTitle(Component textComponent);
 	
 	default int getTitleRange(){ return 5; }
 	
@@ -272,18 +272,18 @@ public interface Settlement
 	 * Writes internal data of the settlement to NBT.<br>
 	 * Does NOT include rooms, custom name, AI, or invulnerability, which are stored by SettlementManager.
 	 */
-	CompoundNBT writeToNBT(CompoundNBT compound);
-	void readFromNBT(CompoundNBT compound);
+	CompoundTag writeToNBT(CompoundTag compound);
+	void readFromNBT(CompoundTag compound);
 	
-	public static ListNBT roomsToList(Collection<? extends BoxRoom> roomsIn)
+	public static ListTag roomsToList(Collection<? extends BoxRoom> roomsIn)
 	{
-		ListNBT rooms = new ListNBT();
+		ListTag rooms = new ListTag();
 		for(BoxRoom room : roomsIn)
-			rooms.add(room.writeToNBT(new CompoundNBT()));
+			rooms.add(room.writeToNBT(new CompoundTag()));
 		return rooms;
 	}
 	
-	public static List<BoxRoom> listToRooms(ListNBT roomsIn)
+	public static List<BoxRoom> listToRooms(ListTag roomsIn)
 	{
 		List<BoxRoom> rooms = new ArrayList<>();
 		for(int i=0; i<roomsIn.size(); i++)
@@ -295,7 +295,7 @@ public interface Settlement
 	 * Writes all information necessary client-side to the given NBTTagCompound.<br>
 	 * This is usually a simplified version of writeToNBT.
 	 */
-	public default CompoundNBT writeClientData(CompoundNBT compound)
+	public default CompoundTag writeClientData(CompoundTag compound)
 	{
 		if(hasCustomName())
 			compound.putString("CustomName", getCustomName());
@@ -309,7 +309,8 @@ public interface Settlement
 	 * @param randIn
 	 * @return
 	 */
-	default boolean updateRooms(ServerWorld worldIn, Random randIn)
+	@SuppressWarnings("deprecation")
+	default boolean updateRooms(ServerLevel worldIn, RandomSource randIn)
 	{
 		boolean canUpdate = false;
 		if(hasRooms())

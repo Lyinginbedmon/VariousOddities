@@ -6,16 +6,16 @@ import javax.annotation.Nonnull;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 
 public class ConditionInstance
 {
 	private Condition condition;
 	private UUID originID = null;
 	private int ticksRemaining;
-	private CompoundNBT storage = new CompoundNBT();
+	private CompoundTag storage = new CompoundTag();
 	
 	public ConditionInstance(Condition conditionIn)
 	{
@@ -39,22 +39,22 @@ public class ConditionInstance
 	
 	public UUID originUUID() { return this.originID; }
 	
-	public CompoundNBT storage() { return this.storage; }
+	public CompoundTag storage() { return this.storage; }
 	
-	public void setStorage(@Nonnull CompoundNBT compound) { this.storage = compound; }
+	public void setStorage(@Nonnull CompoundTag compound) { this.storage = compound; }
 	
-	public final CompoundNBT write(CompoundNBT compound)
+	public final CompoundTag write(CompoundTag compound)
 	{
-		compound.putString("Condition", condition.getRegistryName().toString());
+		compound.putString("Condition", condition().getKey().toString());
 		compound.putInt("TicksRemaining", ticksRemaining);
 		if(originID != null)
-			compound.putUniqueId("UUID", originID);
+			compound.putUUID("UUID", originID);
 		if(!storage.isEmpty())
 			compound.put("Storage", storage);
 		return compound;
 	}
 	
-	public static final ConditionInstance read(CompoundNBT compound)
+	public static final ConditionInstance read(CompoundTag compound)
 	{
 		if(compound.contains("Condition", 8))
 		{
@@ -69,8 +69,8 @@ public class ConditionInstance
 			else
 				instance = new ConditionInstance(condition);
 			
-			if(compound.hasUniqueId("UUID"))
-				instance.originID = compound.getUniqueId("UUID");
+			if(compound.hasUUID("UUID"))
+				instance.originID = compound.getUUID("UUID");
 			
 			if(compound.contains("Storage", 10))
 				instance.storage = compound.getCompound("Storage");

@@ -323,7 +323,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 							int textX = 0;
 							for(ITextProperties line : messageLines)
 							{
-								int length = font.getStringWidth(line.getString());
+								int length = font.getStringWidth(line.getSerializedName());
 								if(length > 80)
 									textX = Math.min(textX, length - 80);
 							}
@@ -332,7 +332,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 							int textY = (int)(messageLines.size() * font.FONT_HEIGHT * -0.5D);
 							for(ITextProperties line : messageLines)
 							{
-								drawCenteredString(matrixStack, font, line.getString(), textX, textY, textCol);
+								drawCenteredString(matrixStack, font, line.getSerializedName(), textX, textY, textCol);
 								textY += font.FONT_HEIGHT;
 							}
 						matrixStack.pop();

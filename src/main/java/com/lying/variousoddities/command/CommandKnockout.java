@@ -6,11 +6,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.arguments.EntityArgument;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 
 public class CommandKnockout extends CommandBase
 {
@@ -18,46 +19,46 @@ public class CommandKnockout extends CommandBase
 	
 	private static final String ENTITY = "target";
 	
-	public static void register(CommandDispatcher<CommandSource> dispatcher)
+	public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
 	{
-		LiteralArgumentBuilder<CommandSource> literal = newLiteral("knockout").requires((source) -> { return source.hasPermissionLevel(2); } )
+		LiteralArgumentBuilder<CommandSourceStack> literal = Commands.literal("knockout").requires((source) -> { return source.hasPermission(2); } )
 				.executes((source) -> { return knockOutSelf(source.getSource()); })
-					.then(newArgument(ENTITY, EntityArgument.entity())
+					.then(Commands.argument(ENTITY, EntityArgument.entity())
 							.executes((source) -> { return knockOutTarget(source.getSource(), EntityArgument.getEntity(source, ENTITY)); }));
 		
 		dispatcher.register(literal);
 	}
 	
-	private static int knockOutSelf(CommandSource source)
+	private static int knockOutSelf(CommandSourceStack source)
 	{
 		try
 		{
-			return knockOutTarget(source, source.asPlayer());
+			return knockOutTarget(source, source.getPlayer());
 		}
 		catch (CommandSyntaxException e)
 		{
-			source.sendErrorMessage(new TranslationTextComponent(translationSlug+"failed", source.getName()));
+			source.sendErrorMessage(Component.translatable(translationSlug+"failed", source.getDisplayName()));
 			return 0;
 		}
 	}
 	
-	private static int knockOutTarget(CommandSource source, Entity entity)
+	private static int knockOutTarget(CommandSourceStack source, Entity entity)
 	{
 		if(entity == null)
 		{
-			source.sendErrorMessage(new TranslationTextComponent(translationSlug+"invalid"));
+			source.sendErrorMessage(Component.translatable(translationSlug+"invalid"));
 			return 0;
 		}
 		else if(entity instanceof LivingEntity)
 		{
-			if(entity.attackEntityFrom(VODamageSource.BLUDGEON, Float.MAX_VALUE))
+			if(entity.hurt(VODamageSource.BLUDGEON, Float.MAX_VALUE))
 			{
-				source.sendFeedback(new TranslationTextComponent(translationSlug+"success", entity.getDisplayName()), true);
+				source.sendFeedback(Component.translatable(translationSlug+"success", entity.getDisplayName()), true);
 				return 15;
 			}
 		}
 		
-		source.sendErrorMessage(new TranslationTextComponent(translationSlug+"failed", source.getName()));
+		source.sendErrorMessage(Component.translatable(translationSlug+"failed", source.getDisplayName()));
 		return 0;
 	}
 }

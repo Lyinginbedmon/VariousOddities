@@ -25,23 +25,23 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.math.Matrix4f;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.entity.player.Player;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.entity.player.Player;
 
 public class ScreenSelectSpecies extends Screen
 {
@@ -62,7 +62,7 @@ public class ScreenSelectSpecies extends Screen
 	private static final float TEX_SIZE = 128F;
 	private static final float ICON_TEX = 16F / TEX_SIZE;
 	
-	private final PlayerEntity player;
+	private final Player player;
 	
 	private SpeciesList speciesList;
 	private List<Species> selectableSpecies = Lists.newArrayList();
@@ -77,7 +77,7 @@ public class ScreenSelectSpecies extends Screen
 	
 	private AbilityList abilityList;
 	
-	public ScreenSelectSpecies(PlayerEntity playerIn, int power, boolean random)
+	public ScreenSelectSpecies(Player playerIn, int power, boolean random)
 	{
 		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
@@ -86,7 +86,7 @@ public class ScreenSelectSpecies extends Screen
 		setCurrentSpecies(Species.HUMAN);
 	}
 	
-	public ScreenSelectSpecies(PlayerEntity playerIn, int power, boolean random, @Nullable Species initialIn)
+	public ScreenSelectSpecies(Player playerIn, int power, boolean random, @Nullable Species initialIn)
 	{
 		this(playerIn, power, random);
 		setCurrentSpecies(initialIn);

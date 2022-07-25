@@ -21,20 +21,18 @@ import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 public class Species
 {
 	public static final Species HUMAN = new Species(new ResourceLocation("human"))
-			.setDisplayName(new TranslationTextComponent("species."+Reference.ModInfo.MOD_ID+".human"))
+			.setDisplayName(Component.translatable("species."+Reference.ModInfo.MOD_ID+".human"))
 			.addType(EnumCreatureType.HUMANOID);
 	private static final UUID UUID_SPECIES = UUID.fromString("d5da3b78-e6ca-4d2e-878b-0e7c3c57a668");
 	private ResourceLocation registryName;
@@ -46,7 +44,7 @@ public class Species
 	private final List<EnumCreatureType> types = Lists.newArrayList();
 	private boolean playerSelectable = true;
 	
-	private ITextComponent customName = null;
+	private Component customName = null;
 	
 	private Species(){ }
 	public Species(ResourceLocation name)
@@ -59,16 +57,16 @@ public class Species
 	
 	public final ResourceLocation getRegistryName(){ return this.registryName; }
 	
-	public ITextComponent getDisplayName()
+	public Component getDisplayName()
 	{
 		if(this.customName != null)
 			return this.customName;
 		String path = this.registryName.getPath();
 		path = (path.substring(0, 1).toUpperCase() + path.substring(1)).replace('_', ' ');
-		return new StringTextComponent(path);
+		return Component.literal(path);
 	}
 	
-	public Species setDisplayName(ITextComponent nameIn)
+	public Species setDisplayName(Component nameIn)
 	{
 		this.customName = nameIn;
 		return this;
@@ -83,7 +81,7 @@ public class Species
 	
 	public Species setPower(@Nonnull int par1Int)
 	{
-		this.power = MathHelper.clamp(par1Int, 0, 10);
+		this.power = Mth.clamp(par1Int, 0, 10);
 		return this;
 	}
 	
@@ -140,27 +138,27 @@ public class Species
 	
 	public Types getTypes(){ return new Types(this.types); }
 	
-	public CompoundNBT storeInNBT(CompoundNBT nbt)
+	public CompoundTag storeInNBT(CompoundTag nbt)
 	{
 		nbt.putString("Name", this.getRegistryName().toString());
 		nbt.putInt("Power", getPower());
 		nbt.putBoolean("PlayerSelectable", isPlayerSelectable());
 		
 		if(customName != null)
-			nbt.putString("CustomName", ITextComponent.Serializer.toJson(this.customName));
+			nbt.putString("CustomName", Component.Serializer.toJson(this.customName));
 		
 		if(origin != null)
 			nbt.putString("Dimension", origin.toString());
 		
-		ListNBT types = new ListNBT();
+		ListTag types = new ListTag();
 			for(EnumCreatureType type : this.types)
-				types.add(StringNBT.valueOf(type.getString()));
+				types.add(StringTag.valueOf(type.getSerializedName()));
 			nbt.put("Types", types);
 		
-		ListNBT abilities = new ListNBT();
+		ListTag abilities = new ListTag();
 			for(Ability ability : this.abilities)
 			{
-				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				CompoundTag abilityData = ability.writeAtomically(new CompoundTag());
 				if(abilityData.contains("UUID"))
 					abilityData.remove("UUID");
 				abilities.add(abilityData);
@@ -169,7 +167,7 @@ public class Species
 		return nbt;
 	}
 	
-	public static Species createFromNBT(CompoundNBT nbt)
+	public static Species createFromNBT(CompoundTag nbt)
 	{
 		ResourceLocation registryName = new ResourceLocation(nbt.getString("Name"));
 		Species species = new Species(registryName);
@@ -182,7 +180,7 @@ public class Species
 			String s = nbt.getString("CustomName");
 			try
 			{
-				species.setDisplayName(ITextComponent.Serializer.getComponentFromJson(s));
+				species.setDisplayName(Component.Serializer.fromJson(s));
 			}
 			catch (Exception exception)
 			{
@@ -195,7 +193,7 @@ public class Species
 		
 		if(nbt.contains("Types", 9))
 		{
-			ListNBT typeList = nbt.getList("Types", 8);
+			ListTag typeList = nbt.getList("Types", 8);
 			for(int i=0; i<typeList.size(); i++)
 			{
 				EnumCreatureType type = EnumCreatureType.fromName(typeList.getString(i));
@@ -206,12 +204,12 @@ public class Species
 		
 		if(nbt.contains("Abilities", 9))
 		{
-			ListNBT abilityList = nbt.getList("Abilities", 10);
+			ListTag abilityList = nbt.getList("Abilities", 10);
 			for(int i=0; i<abilityList.size(); i++)
 			{
 				try
 				{
-					CompoundNBT data = abilityList.getCompound(i);
+					CompoundTag data = abilityList.getCompound(i);
 					Ability ability = AbilityRegistry.getAbility(data);
 					if(ability != null)
 						species.addAbility(ability);
@@ -231,20 +229,20 @@ public class Species
 		json.addProperty("PlayerSelectable", isPlayerSelectable());
 		
 		if(this.customName != null)
-			json.addProperty("CustomName", ITextComponent.Serializer.toJson(this.customName));
+			json.addProperty("CustomName", Component.Serializer.toJson(this.customName));
 		
 		if(origin != null)
 			json.addProperty("Dimension", origin.toString());
 		
 		JsonArray types = new JsonArray();
 			for(EnumCreatureType type : this.types)
-				types.add(type.getString());
+				types.add(type.getSerializedName());
 		json.add("Types", types);
 		
 		JsonArray abilities = new JsonArray();
 			for(Ability ability : this.abilities)
 			{
-				CompoundNBT abilityData = ability.writeAtomically(new CompoundNBT());
+				CompoundTag abilityData = ability.writeAtomically(new CompoundTag());
 				if(abilityData.contains("UUID"))
 					abilityData.remove("UUID");
 				abilities.add(abilityData.toString());
@@ -273,7 +271,7 @@ public class Species
 			String s = object.get("CustomName").getAsString();
 			try
 			{
-				species.setDisplayName(ITextComponent.Serializer.getComponentFromJson(s));
+				species.setDisplayName(Component.Serializer.fromJson(s));
 			}
 			catch (Exception exception)
 			{
@@ -302,7 +300,7 @@ public class Species
 			{
 				try
 				{
-					CompoundNBT data = JsonToNBT.getTagFromJson(abilityList.get(i).getAsString());
+					CompoundTag data = TagParser.parseTag(abilityList.get(i).getAsString());
 					Ability ability = AbilityRegistry.getAbility(data);
 					if(ability != null)
 						species.addAbility(ability);
@@ -332,7 +330,7 @@ public class Species
 		}
 		
 		public ResourceLocation getRegistryName(){ return this.registryName; }
-		public ITextComponent getDisplayName(){ return SpeciesRegistry.getSpecies(getRegistryName()).getDisplayName(); }
+		public Component getDisplayName(){ return SpeciesRegistry.getSpecies(getRegistryName()).getDisplayName(); }
 		
 		private SpeciesInstance addOriginDimension(@Nullable ResourceLocation dimension){ this.originDimension = dimension; return this; }
 		private SpeciesInstance addTypes(Collection<EnumCreatureType> typesIn){ this.types.addAll(typesIn); return this; }
@@ -345,37 +343,37 @@ public class Species
 			return mapIn;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Name", getRegistryName().toString());
 			
 			if(originDimension != null)
 				compound.putString("Dimension", this.originDimension.toString());
 			
-			ListNBT types = new ListNBT();
+			ListTag types = new ListTag();
 				for(EnumCreatureType type : this.types)
-					types.add(StringNBT.valueOf(type.getString()));
+					types.add(StringTag.valueOf(type.getSerializedName()));
 			compound.put("Types", types);
 			
-			ListNBT abilities = new ListNBT();
+			ListTag abilities = new ListTag();
 				for(Ability ability : this.abilities)
-					abilities.add(ability.writeAtomically(new CompoundNBT()));
+					abilities.add(ability.writeAtomically(new CompoundTag()));
 			compound.put("Abilities", abilities);
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			if(compound.contains("Dimension", 8))
 				this.originDimension = new ResourceLocation(compound.getString("Dimension"));
 			
 			this.types.clear();
-			ListNBT typeList = compound.getList("Types", 8);
+			ListTag typeList = compound.getList("Types", 8);
 			for(int i=0; i<typeList.size(); i++)
 				this.types.add(EnumCreatureType.fromName(typeList.getString(i)));
 			
 			this.abilities.clear();
-			ListNBT abilityList = compound.getList("Abilities", 10);
+			ListTag abilityList = compound.getList("Abilities", 10);
 			for(int i=0; i<abilityList.size(); i++)
 				this.abilities.add(AbilityRegistry.getAbility(abilityList.getCompound(i)).setSourceId(UUID_SPECIES));
 		}

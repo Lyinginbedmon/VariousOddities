@@ -2,8 +2,8 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 
 public class AbilityImmunityCrits extends Ability
 {
@@ -21,6 +21,6 @@ public class AbilityImmunityCrits extends Ability
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
-		public Ability create(CompoundNBT compound){ return new AbilityImmunityCrits(); }
+		public Ability create(CompoundTag compound){ return new AbilityImmunityCrits(); }
 	}
 }

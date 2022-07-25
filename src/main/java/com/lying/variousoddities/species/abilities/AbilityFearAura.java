@@ -8,9 +8,9 @@ import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.AbilityGaze.AbilityGazeControl;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 
 public class AbilityFearAura extends AbilityGazeControl
@@ -26,10 +26,10 @@ public class AbilityFearAura extends AbilityGazeControl
 	
 	public List<LivingEntity> getValidTargets(LivingEntity entity)
 	{
-		List<LivingEntity> targets = entity.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(range, 4D, range), this::canAffect);
+		List<LivingEntity> targets = entity.getLevel().getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox().inflate(range, 4D, range), this::canAffect);
 		List<LivingEntity> realTargets = Lists.newArrayList();
 		for(LivingEntity target : targets)
-			if(target != entity && !entity.isPassenger(target) && !target.isPassenger(entity) && isValidTarget(target, entity))
+			if(target != entity && !entity.hasPassenger(target) && !target.hasPassenger(entity) && isValidTarget(target, entity))
 				realTargets.add(target);
 		return realTargets;
 	}
@@ -64,10 +64,10 @@ public class AbilityFearAura extends AbilityGazeControl
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			AbilityFearAura fear = new AbilityFearAura();
-			CompoundNBT nbt = fear.writeToNBT(new CompoundNBT());
+			CompoundTag nbt = fear.writeToNBT(new CompoundTag());
 			nbt.merge(compound);
 			fear.readFromNBT(nbt);
 			return fear;

@@ -12,15 +12,13 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
 
 public class TypeOperation extends TemplateOperation
 {
@@ -46,50 +44,50 @@ public class TypeOperation extends TemplateOperation
 	
 	public TypeOperation setCondition(Condition conditionIn){ this.condition = conditionIn; return this; }
 	
-	public ITextComponent translate()
+	public Component translate()
 	{
-		ITextComponent translation = null;
+		Component translation = null;
 		String translationBase = "operation."+Reference.ModInfo.MOD_ID+".type.";
 		switch(this.action)
 		{
 			case ADD:
-				translation = new TranslationTextComponent(translationBase+"add", typesToString(this.types));
+				translation = Component.translatable(translationBase+"add", typesToString(this.types));
 				break;
 			case REMOVE:
-				translation = new TranslationTextComponent(translationBase+"remove", typesToString(this.types));
+				translation = Component.translatable(translationBase+"remove", typesToString(this.types));
 				break;
 			case REMOVE_ALL:
-				translation = new TranslationTextComponent(translationBase+"remove_all."+(removalType ? "supertypes" : "subtypes"));
+				translation = Component.translatable(translationBase+"remove_all."+(removalType ? "supertypes" : "subtypes"));
 				break;
 			case SET:
-				translation = new TranslationTextComponent(translationBase+"set", (new Types(Arrays.asList(this.types)).toHeader()));
+				translation = Component.translatable(translationBase+"set", (new Types(Arrays.asList(this.types)).toHeader()));
 				break;
 		}
 		
 		return condition == null ? translation : condition.translate().append(translation);
 	}
 	
-	protected static StringTextComponent typesToString(EnumCreatureType... types)
+	protected static MutableComponent typesToString(EnumCreatureType... types)
 	{
-		StringTextComponent text = new StringTextComponent("[");
+		MutableComponent text = Component.literal("[");
 		for(int i=0; i<types.length; i++)
 		{
 			text.append(types[i].getTranslated(true));
 			if(i < types.length - 1)
-				text.append(new StringTextComponent(", "));
+				text.append(Component.literal(", "));
 		}
-		text.append(new StringTextComponent("]"));
+		text.append(Component.literal("]"));
 		return text;
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(this.types != null)
 		{
-			ListNBT typeList = new ListNBT();
+			ListTag typeList = new ListTag();
 			for(EnumCreatureType type : types)
 				if(type != null)
-					typeList.add(StringNBT.valueOf(type.getString()));
+					typeList.add(StringTag.valueOf(type.getSerializedName()));
 			
 			compound.put("Types", typeList);
 		}
@@ -98,11 +96,11 @@ public class TypeOperation extends TemplateOperation
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("Types", 9))
 		{
-			ListNBT typeList = compound.getList("Types", 8);
+			ListTag typeList = compound.getList("Types", 8);
 			this.types = new EnumCreatureType[typeList.size()];
 			for(int i=0; i<typeList.size(); i++)
 			{
@@ -200,11 +198,11 @@ public class TypeOperation extends TemplateOperation
 		
 		public JsonObject writeToJson(JsonObject json)
 		{
-			json.addProperty("Style", this.style.getString());
+			json.addProperty("Style", this.style.getSerializedName());
 			
 			JsonArray typesList = new JsonArray();
 			for(EnumCreatureType type : types)
-				typesList.add(type.getString());
+				typesList.add(type.getSerializedName());
 			json.add("Types", typesList);
 			return json;
 		}
@@ -258,24 +256,24 @@ public class TypeOperation extends TemplateOperation
 			return false;
 		}
 		
-		public IFormattableTextComponent translate()
+		public MutableComponent translate()
 		{
-			return new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+".type.condition."+this.style.getString(), typesToString(this.types.toArray(new EnumCreatureType[0])));
+			return Component.translatable("operation."+Reference.ModInfo.MOD_ID+".type.condition."+this.style.getSerializedName(), typesToString(this.types.toArray(new EnumCreatureType[0])));
 		}
 		
-		public static enum Style implements IStringSerializable
+		public static enum Style implements StringRepresentable
 		{
 			AND,	// All of
 			OR,		// Any of
 			XOR,	// Only one of
 			NOR;	// None of
 			
-			public String getString(){ return name().toLowerCase(); }
+			public String getSerializedName(){ return name().toLowerCase(); }
 			
 			public static Style fromString(String nameIn)
 			{
 				for(Style style : values())
-					if(style.getString().equalsIgnoreCase(nameIn))
+					if(style.getSerializedName().equalsIgnoreCase(nameIn))
 						return style;
 				return AND;
 			}

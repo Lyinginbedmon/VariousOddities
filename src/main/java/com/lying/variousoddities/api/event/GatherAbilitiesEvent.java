@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 
 import com.lying.variousoddities.species.abilities.Ability;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingEvent;
 
 public class GatherAbilitiesEvent extends LivingEvent

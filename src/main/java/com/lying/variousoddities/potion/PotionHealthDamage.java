@@ -2,12 +2,12 @@ package com.lying.variousoddities.potion;
 
 import java.util.UUID;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifierManager;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.potion.EffectType;
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public class PotionHealthDamage extends PotionVO implements IStackingPotion
 {
@@ -15,23 +15,23 @@ public class PotionHealthDamage extends PotionVO implements IStackingPotion
 	
 	public PotionHealthDamage()
 	{
-		this("health_damage", DAMAGE_UUID, 3146242);
+		this(DAMAGE_UUID, 3146242);
 	}
 	
-	protected PotionHealthDamage(String nameIn, UUID modifierID, int colorIn)
+	protected PotionHealthDamage(UUID modifierID, int colorIn)
 	{
-		super(nameIn, EffectType.HARMFUL, colorIn);
-		addAttributesModifier(Attributes.MAX_HEALTH, modifierID.toString(), -1D, AttributeModifier.Operation.ADDITION);
+		super(MobEffectCategory.HARMFUL, colorIn);
+		addAttributeModifier(Attributes.MAX_HEALTH, modifierID.toString(), -1D, AttributeModifier.Operation.ADDITION);
 	}
 	
-	public void applyAttributesModifiersToEntity(LivingEntity entityLivingBaseIn, AttributeModifierManager attributeMapIn, int amplifier)
+	public void addAttributeModifiers(LivingEntity entityLivingBaseIn, AttributeMap attributeMapIn, int amplifier)
 	{
-		super.applyAttributesModifiersToEntity(entityLivingBaseIn, attributeMapIn, amplifier);
+		super.addAttributeModifiers(entityLivingBaseIn, attributeMapIn, amplifier);
 		float max = entityLivingBaseIn.getMaxHealth();
 		if(max <= 0)
 		{
-			if(!entityLivingBaseIn.attackEntityFrom(DamageSource.STARVE, Float.MAX_VALUE))
-				entityLivingBaseIn.attackEntityFrom(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
+			if(!entityLivingBaseIn.hurt(DamageSource.STARVE, Float.MAX_VALUE))
+				entityLivingBaseIn.hurt(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
 		}
 		else if(entityLivingBaseIn.getHealth() > max)
 			entityLivingBaseIn.setHealth(max);

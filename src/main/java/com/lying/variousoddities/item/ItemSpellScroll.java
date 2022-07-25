@@ -1,9 +1,8 @@
 package com.lying.variousoddities.item;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class ItemSpellScroll extends ItemSpellContainer
 {
@@ -16,7 +15,7 @@ public class ItemSpellScroll extends ItemSpellContainer
 	
 	public ItemSpellScroll(Item.Properties properties, String nameIn)
 	{
-		super(properties.maxStackSize(8).maxDamage(0));
+		super(properties.stacksTo(8).durability(0));
 		this.itemName = nameIn;
 	}
 	
@@ -58,11 +57,11 @@ public class ItemSpellScroll extends ItemSpellContainer
 //		return EnumLootType.getLootType(stack.getItem());
 //	}
 	
-	public ITextComponent getDisplayName(ItemStack stack)
+	public Component getName(ItemStack stack)
     {
 		String prefix = this.itemName;
 		if(this.itemName.equals("spell_scroll") && getContainedSpells(stack).length > 1) prefix = "compound_spell_scroll";
-		return new TranslationTextComponent("item.varodd:"+prefix+".name", getLocalisedSpellName(stack));
+		return Component.translatable("item.varodd:"+prefix+".name", getLocalisedSpellName(stack));
     }
     
 //    @SideOnly(Side.CLIENT)

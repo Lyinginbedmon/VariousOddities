@@ -8,13 +8,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.lying.variousoddities.client.special.BlindRender;
 import com.lying.variousoddities.utility.VOBusClient;
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -45,7 +41,7 @@ public class WorldRendererMixin
 	@Inject(method = "renderEntity(Lnet/minecraft/entity/Entity;DDDFLcom/mojang/blaze3d/matrix/MatrixStack;Lnet/minecraft/client/renderer/IRenderTypeBuffer;)V", at = @At("HEAD"), cancellable = true)
 	private void renderEntity(Entity entityIn, double x, double y, double z, float f, MatrixStack stack, IRenderTypeBuffer buffer, CallbackInfo ci)
 	{
-		PlayerEntity player = Minecraft.getInstance().player;
+		Player player = Minecraft.getInstance().player;
 		if(BlindRender.playerIsBlind())
 			if(entityIn == player) return;
 			else if(!Minecraft.getInstance().isEntityGlowing(entityIn))

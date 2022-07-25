@@ -1,26 +1,36 @@
 package com.lying.variousoddities.init;
 
 import com.lying.variousoddities.api.EnumArgumentChecked;
-import com.lying.variousoddities.command.*;
+import com.lying.variousoddities.command.CommandAbilities;
+import com.lying.variousoddities.command.CommandFaction;
+import com.lying.variousoddities.command.CommandKnockout;
+import com.lying.variousoddities.command.CommandSettlement;
+import com.lying.variousoddities.command.CommandSpecies;
+import com.lying.variousoddities.command.CommandTypes;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.brigadier.CommandDispatcher;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.arguments.ArgumentTypes;
-import net.minecraft.command.arguments.IArgumentSerializer;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class VOCommands
 {
 	/** Registers custom commands */
-    public static void onCommandRegister(RegisterCommandsEvent event)
+    public static void init()
     {
-    	CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
+    	CommandDispatcher<CommandSourceStack> dispatcher = null;
+		try
+		{
+			dispatcher = Commands.getDispatcher();
+		}
+		catch (Exception e){ }
+		if(dispatcher == null)
+			return;
+		
     	CommandSettlement.register(dispatcher);
     	CommandTypes.register(dispatcher);
     	CommandFaction.register(dispatcher);
-    	CommandSpawns.register(dispatcher);
     	CommandAbilities.register(dispatcher);
     	CommandSpecies.register(dispatcher);
     	CommandKnockout.register(dispatcher);

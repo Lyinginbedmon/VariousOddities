@@ -10,15 +10,14 @@ import com.lying.variousoddities.species.templates.AbilityOperation;
 import com.lying.variousoddities.species.templates.TemplateOperation;
 import com.lying.variousoddities.species.templates.TemplateOperation.Operation;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityStartingItem extends Ability
@@ -32,7 +31,7 @@ public class AbilityStartingItem extends Ability
 		super(REGISTRY_NAME);
 	}
 	
-	public AbilityStartingItem(ListNBT stackList)
+	public AbilityStartingItem(ListTag stackList)
 	{
 		this(listToStacks(stackList));
 	}
@@ -50,61 +49,65 @@ public class AbilityStartingItem extends Ability
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public ResourceLocation getMapName() { return new ResourceLocation(Reference.ModInfo.MOD_ID, "starts_with_"+namingStack().getItem().getRegistryName().getPath()); }
+	public ResourceLocation getMapName() 
+	{
+		ResourceLocation itemName = Registry.ITEM.getKey(namingStack().getItem());
+		return new ResourceLocation(Reference.ModInfo.MOD_ID, "starts_with_"+itemName.getPath());
+	}
 	
 	public ItemStack namingStack() { return this.itemStacks[0]; }
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability." + Reference.ModInfo.MOD_ID + ".starting_item", namingStack().getDisplayName());
+		return Component.translatable("ability." + Reference.ModInfo.MOD_ID + ".starting_item", namingStack().getDisplayName());
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+":starting_item.desc", stacksToList());
+		return Component.translatable("ability."+Reference.ModInfo.MOD_ID+":starting_item.desc", stacksToList());
 	}
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
-		ListNBT items = new ListNBT();
+		ListTag items = new ListTag();
 		for(ItemStack stack : this.itemStacks)
-			items.add(stack.write(new CompoundNBT()));
+			items.add(stack.save(new CompoundTag()));
 		compound.put("Items", items);
 		
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		if(compound.contains("Items", 9))
 			this.itemStacks = listToStacks(compound.getList("Items", 10));
 	}
 	
-	private static ItemStack[] listToStacks(ListNBT listIn)
+	private static ItemStack[] listToStacks(ListTag listIn)
 	{
 		if(listIn == null || listIn.size() == 0)
 			return new ItemStack[] {ItemStack.EMPTY};
 		
 		ItemStack[] itemStacks = new ItemStack[listIn.size()];
 		for(int i=0; i<listIn.size(); i++)
-			itemStacks[i] = ItemStack.read(listIn.getCompound(i)).copy();
+			itemStacks[i] = ItemStack.of(listIn.getCompound(i)).copy();
 		
 		return itemStacks;
 	}
 	
-	private ITextComponent stacksToList()
+	private Component stacksToList()
 	{
-		IFormattableTextComponent list = new StringTextComponent("[");
+		MutableComponent list = Component.literal("[");
 		for(int i=0; i<this.itemStacks.length; i++)
 		{
 			ItemStack stack = this.itemStacks[i];
 			if(stack.getCount() > 1)
-				list.appendString(String.valueOf(stack.getCount()) + "x ");
+				list.append(String.valueOf(stack.getCount()) + "x ");
 			list.append(this.itemStacks[i].getDisplayName());
 			if(i < this.itemStacks.length - 1)
-				list.appendString(", ");
+				list.append(", ");
 		}
-		list.appendString("]");
+		list.append("]");
 		return list;
 	}
 	
@@ -116,8 +119,8 @@ public class AbilityStartingItem extends Ability
 	
 	public void onSpeciesSelected(SpeciesEvent.SpeciesSelected event)
 	{
-		PlayerEntity player = (PlayerEntity)event.getEntityLiving();
-		if(player.getEntityWorld().isRemote)
+		Player player = (Player)event.getEntity();
+		if(player.getLevel().isClientSide)
 			return;
 		
 		Abilities abilities = LivingData.forEntity(player).getAbilities();
@@ -128,8 +131,8 @@ public class AbilityStartingItem extends Ability
 	
 	public void onTemplateAdded(SpeciesEvent.TemplateApplied event)
 	{
-		PlayerEntity player = (PlayerEntity)event.getEntityLiving();
-		if(player.getEntityWorld().isRemote)
+		Player player = (Player)event.getEntity();
+		if(player.getLevel().isClientSide)
 			return;
 		
 		Template template = VORegistries.TEMPLATES.get(event.getTemplate());
@@ -146,17 +149,17 @@ public class AbilityStartingItem extends Ability
 		}
 	}
 	
-	private static void addItemsFromAbility(AbilityStartingItem ability, PlayerEntity player)
+	private static void addItemsFromAbility(AbilityStartingItem ability, Player player)
 	{
 		for(ItemStack stack : ability.itemStacks)
-			player.addItemStackToInventory(stack.copy());
+			player.addItem(stack.copy());
 	}
 	
 	public static class Builder extends Ability.Builder
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			return new AbilityStartingItem(compound.getList("Items", 10));
 		}

@@ -5,11 +5,11 @@ import java.util.Collection;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 
 public abstract class TriggerAudible extends Trigger
 {
@@ -27,20 +27,20 @@ public abstract class TriggerAudible extends Trigger
 			message = messageIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"audible_chat" + (inverted ? "_inverted" : ""), message); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"audible_chat" + (inverted ? "_inverted" : ""), message); }
 		
 		public boolean applyToChat(String chatMessage)
 		{
 			return (chatMessage.length() > 0 && message.length() == 0) || chatMessage.equals(message);
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Message", message);
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			message = compound.getString("Message");
 		}
@@ -53,25 +53,27 @@ public abstract class TriggerAudible extends Trigger
 		public String type(){ return "sound"; }
 		
 		public TriggerAudibleSound(){ }
+		@SuppressWarnings("deprecation")
 		public TriggerAudibleSound(SoundEvent soundIn)
 		{
-			sound = soundIn.getRegistryName();
+			sound = Registry.SOUND_EVENT.getKey(soundIn);
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"audible_sound" + (inverted ? "_inverted" : ""), sound == null ? "" : sound.getNamespace()); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"audible_sound" + (inverted ? "_inverted" : ""), sound == null ? "" : sound.getNamespace()); }
 		
+		@SuppressWarnings("deprecation")
 		public boolean applyToSound(SoundEvent heardSound)
 		{
-			return sound == null || heardSound.getRegistryName().equals(sound);
+			return sound == null || Registry.SOUND_EVENT.getKey(heardSound).equals(sound);
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Sound", sound.toString());
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			sound = new ResourceLocation(compound.getString("Sound"));
 		}

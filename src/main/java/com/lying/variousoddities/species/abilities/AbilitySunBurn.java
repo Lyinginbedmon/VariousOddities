@@ -2,17 +2,17 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySunBurn extends Ability
@@ -42,13 +42,13 @@ public class AbilitySunBurn extends Ability
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		compound.putBoolean("HelmetProtects", this.helmetProtects);
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		this.helmetProtects = compound.getBoolean("HelmetProtects");
 	}
@@ -58,25 +58,25 @@ public class AbilitySunBurn extends Ability
 		bus.addListener(this::onLivingUpdate);
 	}
 	
-	public void onLivingUpdate(LivingUpdateEvent event)
+	public void onLivingUpdate(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		if(AbilityRegistry.hasAbility(entity, getMapName()) && !(entity.getType() == EntityType.SKELETON || entity.getType() == EntityType.ZOMBIE))
 		{
 			AbilitySunBurn sunburn = (AbilitySunBurn)AbilityRegistry.getAbilityByName(entity, getMapName());
-			boolean shouldBurn = isInDaylight(entity) && !(entity.isPotionActive(Effects.FIRE_RESISTANCE) || entity.isInvulnerableTo(DamageSource.ON_FIRE));
+			boolean shouldBurn = isInDaylight(entity) && !(entity.hasEffect(MobEffects.FIRE_RESISTANCE) || entity.isInvulnerableTo(DamageSource.ON_FIRE));
 			if(shouldBurn)
 			{
-				ItemStack helmet = entity.getItemStackFromSlot(EquipmentSlotType.HEAD);
+				ItemStack helmet = entity.getItemBySlot(EquipmentSlot.HEAD);
 				if(sunburn.helmetProtects && !helmet.isEmpty())
 				{
-					if(helmet.isDamageable())
+					if(helmet.isDamageableItem())
 					{
-						helmet.setDamage(helmet.getDamage() + entity.getRNG().nextInt(2));
-						if(helmet.getDamage() >= helmet.getMaxDamage())
+						helmet.setDamageValue(helmet.getDamageValue() + entity.getRandom().nextInt(2));
+						if(helmet.getDamageValue() >= helmet.getMaxDamage())
 						{
-							entity.sendBreakAnimation(EquipmentSlotType.HEAD);
-							entity.setItemStackToSlot(EquipmentSlotType.HEAD, ItemStack.EMPTY);
+							entity.broadcastBreakEvent(EquipmentSlot.HEAD);
+							entity.setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
 						}
 					}
 					
@@ -84,22 +84,23 @@ public class AbilitySunBurn extends Ability
 				}
 				
 				if(shouldBurn)
-				  	 entity.setFire(8);
+				  	 entity.setSecondsOnFire(8);
 			}
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private static boolean isInDaylight(LivingEntity entity)
 	{
-		World world = entity.getEntityWorld();
-		if(world.isDaytime() && !world.isRemote)
+		Level world = entity.getLevel();
+		if(world.isDay() && !world.isClientSide)
 		{
-			float light = entity.getBrightness();
+			float light = entity.getLightLevelDependentMagicValue();
 			BlockPos position = 
-					(entity.getRidingEntity() != null && entity.getRidingEntity().getType() == EntityType.BOAT) ? 
-							(new BlockPos(entity.getPosX(), (double)Math.round(entity.getPosY()), entity.getPosZ())).up() : 
-							new BlockPos(entity.getPosX(), (double)Math.round(entity.getPosY()), entity.getPosZ());
-			return light > 0.5F && entity.getRNG().nextFloat() * 30F < (light - 0.4F) * 2F && world.canSeeSky(position);
+					(entity.getVehicle() != null && entity.getVehicle().getType() == EntityType.BOAT) ? 
+							(new BlockPos(entity.getX(), (double)Math.round(entity.getY()), entity.getZ())).above() : 
+							new BlockPos(entity.getX(), (double)Math.round(entity.getY()), entity.getZ());
+			return light > 0.5F && entity.getRandom().nextFloat() * 30F < (light - 0.4F) * 2F && world.canSeeSky(position);
 		}
 		return false;
 	}
@@ -108,6 +109,6 @@ public class AbilitySunBurn extends Ability
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound){ return new AbilitySunBurn(compound.getBoolean("HelmetProtects")); }
+		public Ability create(CompoundTag compound){ return new AbilitySunBurn(compound.getBoolean("HelmetProtects")); }
 	}
 }

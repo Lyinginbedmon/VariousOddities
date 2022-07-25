@@ -5,7 +5,7 @@ import javax.annotation.Nonnull;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.Cancelable;
 
@@ -15,7 +15,7 @@ public class PlayerChangeConditionEvent extends PlayerEvent
 	private final BodyCondition oldBody, newBody;
 	private final SoulCondition oldSoul, newSoul;
 	
-	public PlayerChangeConditionEvent(@Nonnull PlayerEntity player, BodyCondition oldBodyIn, BodyCondition newBodyIn, SoulCondition oldSoulIn, SoulCondition newSoulIn)
+	public PlayerChangeConditionEvent(@Nonnull Player player, BodyCondition oldBodyIn, BodyCondition newBodyIn, SoulCondition oldSoulIn, SoulCondition newSoulIn)
 	{
 		super(player);
 		this.oldBody = oldBodyIn;
@@ -24,12 +24,12 @@ public class PlayerChangeConditionEvent extends PlayerEvent
 		this.newSoul = newSoulIn;
 	}
 	
-	public PlayerChangeConditionEvent(PlayerEntity player, BodyCondition oldBodyIn, BodyCondition newBodyIn)
+	public PlayerChangeConditionEvent(Player player, BodyCondition oldBodyIn, BodyCondition newBodyIn)
 	{
 		this(player, oldBodyIn, newBodyIn, null, null);
 	}
 	
-	public PlayerChangeConditionEvent(PlayerEntity player, SoulCondition oldSoulIn, SoulCondition newSoulIn)
+	public PlayerChangeConditionEvent(Player player, SoulCondition oldSoulIn, SoulCondition newSoulIn)
 	{
 		this(player, null, null, oldSoulIn, newSoulIn);
 	}

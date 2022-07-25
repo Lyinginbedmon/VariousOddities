@@ -5,8 +5,8 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.faction.FactionBus.ReputationChange;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.Cancelable;
 
@@ -15,7 +15,7 @@ public class ReputationEvent extends PlayerEvent
 	private final String faction;
 	private final LivingEntity sourceMob;
 	
-	public ReputationEvent(PlayerEntity playerIn, String factionIn, @Nullable LivingEntity sourceIn)
+	public ReputationEvent(Player playerIn, String factionIn, @Nullable LivingEntity sourceIn)
 	{
 		super(playerIn);
 		faction = factionIn;
@@ -38,7 +38,7 @@ public class ReputationEvent extends PlayerEvent
 	{
 		private int currentRep;
 		
-		public Get(PlayerEntity playerIn, String factionIn, int repIn, LivingEntity sourceIn)
+		public Get(Player playerIn, String factionIn, int repIn, LivingEntity sourceIn)
 		{
 			super(playerIn, factionIn, sourceIn);
 			currentRep = repIn;
@@ -61,7 +61,7 @@ public class ReputationEvent extends PlayerEvent
 		private final EnumAttitude oldAttitude;
 		private final EnumAttitude newAttitude;
 		
-		public Attitude(PlayerEntity playerIn, String factionIn, EnumAttitude oldAtt, EnumAttitude newAtt)
+		public Attitude(Player playerIn, String factionIn, EnumAttitude oldAtt, EnumAttitude newAtt)
 		{
 			super(playerIn, factionIn, null);
 			oldAttitude = oldAtt;
@@ -91,7 +91,7 @@ public class ReputationEvent extends PlayerEvent
 		private int repChange;
 		private final ReputationChange cause;
 		
-		public Change(PlayerEntity playerIn, String factionIn, int repIn, int changeIn, @Nullable LivingEntity sourceIn, ReputationChange causeIn)
+		public Change(Player playerIn, String factionIn, int repIn, int changeIn, @Nullable LivingEntity sourceIn, ReputationChange causeIn)
 		{
 			super(playerIn, factionIn, sourceIn);
 			currentRep = repIn;

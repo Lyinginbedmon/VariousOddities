@@ -11,16 +11,16 @@ import com.lying.variousoddities.magic.trigger.TriggerAudible.TriggerAudibleChat
 import com.lying.variousoddities.magic.trigger.TriggerAudible.TriggerAudibleSound;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class EffectTrigger
 {
@@ -47,7 +47,7 @@ public class EffectTrigger
 		
 	}
 	
-	public EffectTrigger(CompoundNBT compound)
+	public EffectTrigger(CompoundTag compound)
 	{
 		if(compound.contains("Time"))
 			variableTime = (TriggerTime)Trigger.createTriggerFromNBT(compound.getCompound("Time"));
@@ -60,10 +60,10 @@ public class EffectTrigger
 		
 		if(compound.contains("Entities"))
 		{
-			ListNBT entities = compound.getList("Entities", 10);
+			ListTag entities = compound.getList("Entities", 10);
 			for(int i=0; i<entities.size(); i++)
 			{
-				CompoundNBT triggerData = entities.getCompound(i);
+				CompoundTag triggerData = entities.getCompound(i);
 				TriggerEntity trigger = (TriggerEntity)Trigger.createTriggerFromNBT(triggerData);
 				if(trigger != null)
 					variableEntities.add(trigger);
@@ -75,10 +75,10 @@ public class EffectTrigger
 		
 		if(compound.contains("Blocks"))
 		{
-			ListNBT blocks = compound.getList("Blocks", 10);
+			ListTag blocks = compound.getList("Blocks", 10);
 			for(int i=0; i<blocks.size(); i++)
 			{
-				CompoundNBT triggerData = blocks.getCompound(i);
+				CompoundTag triggerData = blocks.getCompound(i);
 				TriggerBlock trigger = (TriggerBlock)Trigger.createTriggerFromNBT(triggerData);
 				if(trigger != null)
 					variableBlocks.add(trigger);
@@ -91,7 +91,7 @@ public class EffectTrigger
 	
 	public void print()
 	{
-		VariousOddities.log.info(new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"base").getUnformattedComponentText());
+		VariousOddities.log.info(Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"base").getString());
 		if(variableTime != null)
 			variableTime.print();
 		if(variableChat != null)
@@ -108,7 +108,7 @@ public class EffectTrigger
 	
 	public String toString()
 	{
-		String name = new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"base").getUnformattedComponentText();
+		String name = Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"base").getString();
 		
 		List<String> variables = new ArrayList<>();
 		if(variableTime != null)
@@ -139,7 +139,7 @@ public class EffectTrigger
 	 * Applies the given context to this trigger's variables.<br>
 	 * Returns true if all variables are met.
 	 */
-	public boolean applyToContext(Collection<Entity> visibleEntities, SoundEvent heardSound, String chatMessage, World world)
+	public boolean applyToContext(Collection<Entity> visibleEntities, SoundEvent heardSound, String chatMessage, Level world)
 	{
 		if(variableTime != null && variableTime.applyToTime(world.getGameTime()) == variableTime.inverted())
 			return false;
@@ -205,30 +205,30 @@ public class EffectTrigger
 	
 	public Collection<? extends Trigger> possibleVariables(){ return possibleVariables; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		if(variableTime != null)
-			compound.put("Time", Trigger.writeTriggerToNBT(variableTime, new CompoundNBT()));
+			compound.put("Time", Trigger.writeTriggerToNBT(variableTime, new CompoundTag()));
 		
 		if(variableChat != null)
-			compound.put("Chat", Trigger.writeTriggerToNBT(variableChat, new CompoundNBT()));
+			compound.put("Chat", Trigger.writeTriggerToNBT(variableChat, new CompoundTag()));
 		
 		if(variableSound != null)
-			compound.put("Sound", Trigger.writeTriggerToNBT(variableSound, new CompoundNBT()));
+			compound.put("Sound", Trigger.writeTriggerToNBT(variableSound, new CompoundTag()));
 		
 		if(!variableEntities.isEmpty())
 		{
-			ListNBT entities = new ListNBT();
+			ListTag entities = new ListTag();
 			for(TriggerEntity trigger : variableEntities)
-				entities.add(Trigger.writeTriggerToNBT(trigger, new CompoundNBT()));
+				entities.add(Trigger.writeTriggerToNBT(trigger, new CompoundTag()));
 			compound.put("Entities", entities);
 		}
 		
 		if(!variableBlocks.isEmpty())
 		{
-			ListNBT blocks = new ListNBT();
+			ListTag blocks = new ListTag();
 			for(TriggerBlock trigger : variableBlocks)
-				blocks.add(Trigger.writeTriggerToNBT(trigger, new CompoundNBT()));
+				blocks.add(Trigger.writeTriggerToNBT(trigger, new CompoundTag()));
 			compound.put("Blocks", blocks);
 		}
 		
@@ -237,33 +237,33 @@ public class EffectTrigger
 	
 	public static class TriggerContext
 	{
-		private World world;
+		private Level world;
 		private Collection<Entity> visibleEntities = new ArrayList<>();
 		private SoundEvent heardSound;
 		private String chatMessage;
 		
 		public static TriggerContext buildContextForEntity(Entity ent, double range)
 		{
-			Vector3d eyePos = new Vector3d(ent.getPosX(), ent.getPosY() + (ent instanceof LivingEntity ? ent.getEyeHeight() : ent.getHeight() / 2F), ent.getPosZ());
-			return buildContextForPosition(eyePos, ent.getEntityWorld(), range);
+			Vec3 eyePos = new Vec3(ent.getX(), ent.getY() + (ent instanceof LivingEntity ? ent.getEyeHeight() : ent.getBbHeight() / 2F), ent.getZ());
+			return buildContextForPosition(eyePos, ent.getLevel(), range);
 		}
 		
-		public static TriggerContext buildContextForPosition(BlockPos pos, World world, double range)
+		public static TriggerContext buildContextForPosition(BlockPos pos, Level world, double range)
 		{
-			return buildContextForPosition(new Vector3d(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D), world, range);
+			return buildContextForPosition(new Vec3(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D), world, range);
 		}
 		
-		public static TriggerContext buildContextForPosition(Vector3d pos, World world, double range)
+		public static TriggerContext buildContextForPosition(Vec3 pos, Level world, double range)
 		{
 			TriggerContext context = new TriggerContext();
 			context.world = world;
-			AxisAlignedBB bounds = new AxisAlignedBB(pos.x - range, pos.y - range, pos.z - range, pos.x + range, pos.y + range, pos.z + range);
-			for(Entity ent : world.getEntitiesWithinAABB(Entity.class, bounds))
+			AABB bounds = new AABB(pos.x - range, pos.y - range, pos.z - range, pos.x + range, pos.y + range, pos.z + range);
+			for(Entity ent : world.getEntitiesOfClass(Entity.class, bounds))
 			{
 				if(ent.isInvisible())
 					continue;
 				
-				Vector3d entCore = new Vector3d(ent.getPosX(), ent.getPosY() + ent.getHeight() / 2D, ent.getPosZ());
+				Vec3 entCore = new Vec3(ent.getX(), ent.getY() + ent.getBbHeight() / 2D, ent.getZ());
 				if(pos.distanceTo(entCore) > range)
 					continue;
 				

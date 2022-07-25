@@ -1,6 +1,7 @@
 package com.lying.variousoddities.species.templates;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -10,31 +11,28 @@ import javax.annotation.Nonnull;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.registries.ForgeRegistryEntry;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.LivingEntity;
 
 public abstract class TemplateOperation
 {
+	private static final Map<ResourceLocation, TemplateOperation.Builder> OPERATIONS_MAP = new HashMap<>();
+	
 	protected UUID templateID;
 	protected Operation action;
 	
-	private IFormattableTextComponent customText = null;
+	private MutableComponent customText = null;
 	
 	public TemplateOperation(Operation actionIn)
 	{
@@ -45,17 +43,17 @@ public abstract class TemplateOperation
 	
 	public void setTemplateID(UUID uuidIn){ this.templateID = uuidIn;  }
 	
-	public ITextComponent translate(){ return hasCustomDisplay() ? getCustomDisplay() : new TranslationTextComponent("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
+	public Component translate(){ return hasCustomDisplay() ? getCustomDisplay() : Component.translatable("operation."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
 	
 	public boolean hasCustomDisplay(){ return this.customText != null; }
-	public IFormattableTextComponent getCustomDisplay(){ return this.customText; }
-	protected TemplateOperation setCustomDisplay(IFormattableTextComponent textComponent){ this.customText = textComponent; return this; }
+	public MutableComponent getCustomDisplay(){ return this.customText; }
+	protected TemplateOperation setCustomDisplay(MutableComponent textComponent){ this.customText = textComponent; return this; }
 	
 	public Operation action(){ return this.action; }
 	
 	public boolean canStackWith(TemplateOperation operationB){ return false; }
 	
-	public List<ITextComponent> stackAsList(List<TemplateOperation> operations){ return Lists.newArrayList(translate()); }
+	public List<Component> stackAsList(List<TemplateOperation> operations){ return Lists.newArrayList(translate()); }
 	
 	public void applyToEntity(LivingEntity entity){ }
 	
@@ -65,51 +63,54 @@ public abstract class TemplateOperation
 	
 	public void applyToAbilities(Map<ResourceLocation, Ability> abilityMap){ }
 	
-	public abstract CompoundNBT writeToNBT(CompoundNBT compound);
+	public abstract CompoundTag writeToNBT(CompoundTag compound);
 	
-	public abstract void readFromNBT(CompoundNBT compound);
+	public abstract void readFromNBT(CompoundTag compound);
 	
 	public JsonObject writeToJson(JsonObject json)
 	{
-		json.addProperty("Action", this.action.getString());
+		json.addProperty("Action", this.action.getSerializedName());
 		json.addProperty("Name", getRegistryName().toString());
-		json.addProperty("Tag", writeToNBT(new CompoundNBT()).toString());
+		json.addProperty("Tag", writeToNBT(new CompoundTag()).toString());
 		return json;
 	}
 	
 	public void readFromJson(JsonObject json)
 	{
 		this.action = Operation.fromString(json.get("Action").getAsString());
-		CompoundNBT tag = new CompoundNBT();
+		CompoundTag tag = new CompoundTag();
 		try
 		{
-			tag = JsonToNBT.getTagFromJson(json.get("Tag").getAsString());
+			tag = TagParser.parseTag(json.get("Tag").getAsString());
 		}
 		catch (CommandSyntaxException e){ }
 		if(!tag.isEmpty())
 			readFromNBT(tag);
 	}
 	
-	public static abstract class Builder extends ForgeRegistryEntry<TemplateOperation.Builder>
+	public static abstract class Builder
 	{
-		public Builder(@Nonnull ResourceLocation registryName){ setRegistryName(registryName); }
+		private final ResourceLocation registryName;
+		
+		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }
 		
 		public abstract TemplateOperation create();
+		
+		public ResourceLocation getRegistryName() { return registryName; }
 	}
 	
-	public static void onRegisterOperations(RegistryEvent.Register<Builder> event)
+	public static void init()
 	{
-		IForgeRegistry<Builder> registry = event.getRegistry();
-		
-		registry.register(new TypeOperation.Builder());
-		registry.register(new AbilityOperation.Builder());
-		registry.register(new CompoundOperation.Builder());
-		registry.register(new OperationReplaceSupertypes.Builder());
-		
-		VariousOddities.log.info("Initialised "+registry.getEntries().size()+" template operations");
-		if(ConfigVO.GENERAL.verboseLogs())
-			for(ResourceLocation name : registry.getKeys())
-				VariousOddities.log.info("#   "+name.toString());
+		register(new TypeOperation.Builder());
+		register(new AbilityOperation.Builder());
+		register(new CompoundOperation.Builder());
+		register(new OperationReplaceSupertypes.Builder());
+	}
+	
+	private static void register(TemplateOperation.Builder builderIn)
+	{
+		VORegistries.OPERATIONS.register(builderIn.getRegistryName().toString(), () -> builderIn);
+		OPERATIONS_MAP.put(builderIn.getRegistryName(), builderIn);
 	}
 	
 	public static TemplateOperation getFromJson(JsonObject json)
@@ -117,9 +118,9 @@ public abstract class TemplateOperation
 		if(json.has("Name"))
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
-			if(VORegistries.OPERATIONS.containsKey(registryName))
+			if(OPERATIONS_MAP.containsKey(registryName))
 			{
-				TemplateOperation operation = VORegistries.OPERATIONS.getValue(registryName).create();
+				TemplateOperation operation = OPERATIONS_MAP.get(registryName).create();
 				operation.readFromJson(json);
 				return operation;
 			}
@@ -129,19 +130,19 @@ public abstract class TemplateOperation
 		return null;
 	}
 	
-	public static enum Operation implements IStringSerializable
+	public static enum Operation implements StringRepresentable
 	{
 		ADD,
 		REMOVE,
 		REMOVE_ALL,
 		SET;
 		
-		public String getString(){ return name().toLowerCase(); }
+		public String getSerializedName(){ return name().toLowerCase(); }
 		
 		public static Operation fromString(String nameIn)
 		{
 			for(Operation operation : values())
-				if(operation.getString().equalsIgnoreCase(nameIn))
+				if(operation.getSerializedName().equalsIgnoreCase(nameIn))
 					return operation;
 			return null;
 		}

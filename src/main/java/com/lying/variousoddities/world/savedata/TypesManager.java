@@ -18,19 +18,18 @@ import com.lying.variousoddities.network.PacketTypesData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 public class TypesManager extends WorldSavedData
 {
@@ -39,7 +38,7 @@ public class TypesManager extends WorldSavedData
 	private Map<EnumCreatureType, List<ResourceLocation>> typeToMob = new HashMap<>();
 	private Map<ResourceLocation, List<EnumCreatureType>> mobTypeCache = new HashMap<>();
 	
-	private ServerWorld world = null;
+	private ServerLevel world = null;
 	
 	public TypesManager()
 	{
@@ -51,16 +50,16 @@ public class TypesManager extends WorldSavedData
 		super(nameIn);
 	}
 	
-	public void read(CompoundNBT compound)
+	public void read(CompoundTag compound)
 	{
 		typeToMob.clear();
-		ListNBT mobs = compound.getList("Mobs", 10);
+		ListTag mobs = compound.getList("Mobs", 10);
 		for(int i=0; i<mobs.size(); i++)
 		{
-			CompoundNBT typ = mobs.getCompound(i);
+			CompoundTag typ = mobs.getCompound(i);
 			EnumCreatureType type = EnumCreatureType.fromName(typ.getString("Type"));
 			
-			ListNBT entr = typ.getList("Entries", 8);
+			ListTag entr = typ.getList("Entries", 8);
 			List<ResourceLocation> entries = new ArrayList<>();
 			for(int j=0; j<entr.size(); j++)
 				entries.add(new ResourceLocation(entr.getString(j)));
@@ -69,16 +68,16 @@ public class TypesManager extends WorldSavedData
 		}
 	}
 	
-	public CompoundNBT write(CompoundNBT compound)
+	public CompoundTag write(CompoundTag compound)
 	{
-		ListNBT mobs = new ListNBT();
+		ListTag mobs = new ListTag();
 		for(EnumCreatureType type : typeToMob.keySet())
 		{
-			CompoundNBT typ = new CompoundNBT();
-			typ.putString("Type", type.getString());
-			ListNBT entries = new ListNBT();
+			CompoundTag typ = new CompoundTag();
+			typ.putString("Type", type.getSerializedName());
+			ListTag entries = new ListTag();
 			for(ResourceLocation entry : typeToMob.get(type))
-				entries.add(StringNBT.valueOf(entry.toString()));
+				entries.add(StringTag.valueOf(entry.toString()));
 			typ.put("Entries", entries);
 			
 			mobs.add(typ);
@@ -88,17 +87,17 @@ public class TypesManager extends WorldSavedData
 	}
 	
 	@Nullable
-	public static TypesManager get(@Nonnull World worldIn)
+	public static TypesManager get(@Nonnull Level worldIn)
 	{
 		if(worldIn == null)
 			return null;
-		else if(worldIn.isRemote)
+		else if(worldIn.isClientSide)
 			return VariousOddities.proxy.getTypesManager();
 		else
 		{
-			ServerWorld world = (ServerWorld)worldIn;
+			ServerLevel world = (ServerLevel)worldIn;
 			MinecraftServer server = world.getServer();
-			ServerWorld overWorld = server.getWorld(World.OVERWORLD);
+			ServerLevel overWorld = server.getLevel(Level.OVERWORLD);
 			TypesManager manager = (TypesManager)overWorld.getSavedData().get(TypesManager::new, DATA_NAME);
 			if(manager == null)
 			{
@@ -110,14 +109,14 @@ public class TypesManager extends WorldSavedData
 		}
 	}
 	
-	public void notifyPlayer(PlayerEntity player)
+	public void notifyPlayer(Player player)
 	{
-		PacketHandler.sendTo((ServerPlayerEntity)player, new PacketTypesData(write(new CompoundNBT())));
+		PacketHandler.sendTo((ServerPlayer)player, new PacketTypesData(write(new CompoundTag())));
 	}
 	
-	public void notifyPlayers(ServerWorld world)
+	public void notifyPlayers(ServerLevel world)
 	{
-		PacketHandler.sendToAll(world, new PacketTypesData(write(new CompoundNBT())));
+		PacketHandler.sendToAll(world, new PacketTypesData(write(new CompoundTag())));
 	}
 	
 	public void clearCaches()
@@ -156,7 +155,7 @@ public class TypesManager extends WorldSavedData
 	
 	public List<EnumCreatureType> getMobTypes(EntityType<?> typeIn)
 	{
-		return getMobTypes(typeIn.getRegistryName());
+		return getMobTypes(new ResourceLocation(typeIn.toString()));
 	}
 	public List<EnumCreatureType> getMobTypes(ResourceLocation registryName)
 	{
@@ -165,7 +164,7 @@ public class TypesManager extends WorldSavedData
 
 		List<EnumCreatureType> types = new ArrayList<>();
 		
-		Optional<EntityType<?>> entityType = EntityType.byKey(registryName.toString());
+		Optional<EntityType<?>> entityType = EntityType.byString(registryName.toString());
 		if(entityType.isPresent() && world != null)
 		{
 			Entity object = entityType.get().create(world);

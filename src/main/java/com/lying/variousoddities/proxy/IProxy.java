@@ -8,8 +8,8 @@ import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 
 public interface IProxy 
@@ -22,17 +22,17 @@ public interface IProxy
 	
 	public default Map<String, Integer> getReputation(){ return new HashMap<String, Integer>(); }
 	public default void setReputation(Map<String, Integer> repIn){ }
-	public default void setReputation(CompoundNBT compound)
+	public default void setReputation(CompoundTag compound)
 	{
 		Map<String, Integer> reputation = new HashMap<>();
 		if(compound != null)
-			for(String faction : compound.keySet())
+			for(String faction : compound.getAllKeys())
 				if(compound.contains(faction, 3))
 					reputation.put(faction, compound.getInt(faction));
 		setReputation(reputation);
 	}
 	
-	public default SettlementManager getSettlementManager(World worldIn){ return null; }
-	public default ScentsManager getScentsManager(World worldIn){ return null; }
+	public default SettlementManager getSettlementManager(Level worldIn){ return null; }
+	public default ScentsManager getScentsManager(Level worldIn){ return null; }
 	public default SpellManager getSpells(){ return null; }
 }

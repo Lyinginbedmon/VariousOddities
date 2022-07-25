@@ -12,46 +12,41 @@ import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.init.VOEntities;
 
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.passive.CatEntity;
-import net.minecraft.entity.passive.OcelotEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.entity.animal.Ocelot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 public class EntityRatGiant extends AbstractRat
 {
-	public EntityRatGiant(EntityType<? extends EntityRatGiant> type, World worldIn)
+	public EntityRatGiant(EntityType<? extends EntityRatGiant> type, Level worldIn)
 	{
 		super(type, worldIn, 1);
 	}
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
     {
-        return MobEntity.func_233666_p_()
+        return Mob.func_233666_p_()
         		.createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)
         		.createMutableAttribute(Attributes.ARMOR, 0.0D)
         		.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D)
         		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
     }
 	
-    public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+    public static boolean canSpawnAt(EntityType<? extends Mob> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
     {
-        return world.getDifficulty() != Difficulty.PEACEFUL && world.getLight(pos) < 8 && AbstractRat.canSpawnAt(animal, world, reason, pos, random);
+        return world.getDifficulty() != Difficulty.PEACEFUL && world.getLightEmission(pos) < 8 && AbstractRat.canSpawnAt(animal, world, reason, pos, random);
     }
     
     public void registerGoals()
@@ -61,9 +56,9 @@ public class EntityRatGiant extends AbstractRat
     	if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
     	{
 		    this.targetSelector.addGoal(1, new HurtByTargetGoal(this, AbstractRat.class));
-	        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<OcelotEntity>(this, OcelotEntity.class, true));
-	        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<CatEntity>(this, CatEntity.class, true));
-	        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<PlayerEntity>(this, PlayerEntity.class, true));
+	        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<Ocelot>(this, Ocelot.class, true));
+	        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<Cat>(this, Cat.class, true));
+	        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<Player>(this, Player.class, true));
     	}
     }
     
@@ -73,7 +68,7 @@ public class EntityRatGiant extends AbstractRat
 	 */
 	public int getRandomBreed()
 	{
-		return this.getRNG().nextInt(5) == 0 ? 3 : 2;
+		return this.getRandom().nextInt(5) == 0 ? 3 : 2;
 	}
 	
 	protected EntitySize getStandingSize()
@@ -86,9 +81,9 @@ public class EntityRatGiant extends AbstractRat
 		return EntitySize.fixed(0.9F, 0.5F);
 	}
 	
-	public void setAttackTarget(@Nullable LivingEntity entitylivingbaseIn)
+	public void setTarget(@Nullable LivingEntity entitylivingbaseIn)
 	{
-		super.setAttackTarget(entitylivingbaseIn);
+		super.setTarget(entitylivingbaseIn);
 		if(entitylivingbaseIn != null)
 		{
 			EntityGroup group = GroupHandler.getEntityMemberGroup(this);
@@ -102,17 +97,17 @@ public class EntityRatGiant extends AbstractRat
 	}
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     	if(reason == SpawnReason.SPAWNER)
-	    	for(int i=0; i<getRNG().nextInt(4); i++)
+	    	for(int i=0; i<getRandom().nextInt(4); i++)
 	    	{
-	    		EntityRat rat = VOEntities.RAT.create(getEntityWorld());
+	    		EntityRat rat = VOEntities.RAT.create(getLevel());
 	    		rat.setMinion(true);
 	    		rat.setBreed(getBreed());
-	    		rat.setLocationAndAngles(getPosX(), getPosY(), getPosZ(), getRNG().nextFloat() * 360F, 0F);
-	    		getEntityWorld().addEntity(rat);
+	    		rat.setLocationAndAngles(getX(), getY(), getZ(), getRandom().nextFloat() * 360F, 0F);
+	    		getLevel().addFreshEntity(rat);
 	    	}
 		return spawnDataIn;
     }

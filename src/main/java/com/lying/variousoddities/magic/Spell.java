@@ -3,7 +3,6 @@ package com.lying.variousoddities.magic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.api.entity.IMobSpellcaster;
@@ -15,16 +14,17 @@ import com.lying.variousoddities.utility.VOHelper;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.Team;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -40,7 +40,7 @@ public abstract class Spell implements IMagicEffect
 	public Collection<String> getDescription()
 	{
 		ArrayList<String> description = new ArrayList<String>();
-		description.add(new TranslationTextComponent("magic."+Reference.ModInfo.MOD_PREFIX+getSimpleName()+".info").getUnformattedComponentText());
+		description.add(Component.translatable("magic."+Reference.ModInfo.MOD_PREFIX+getSimpleName()+".info").getString());
 		return description;
 	}
 	
@@ -54,12 +54,12 @@ public abstract class Spell implements IMagicEffect
 		return feetIn * 0.3048;
 	}
 	
-	public static int rollDie(int dieSize, Random rand)
+	public static int rollDie(int dieSize, RandomSource rand)
 	{
 		return 1 + rand.nextInt(dieSize);
 	}
 	
-	public static int rollDice(int dieCount, int dieSize, Random rand)
+	public static int rollDice(int dieCount, int dieSize, RandomSource rand)
 	{
 		int tally = 0;
 		for(int i=0; i<dieCount; i++) tally += rollDie(dieSize, rand);
@@ -73,7 +73,7 @@ public abstract class Spell implements IMagicEffect
 	 * @param targetIn
 	 * @return
 	 */
-	public boolean canAffectEntity(SpellData spellData, World world, Entity targetIn)
+	public boolean canAffectEntity(SpellData spellData, Level world, Entity targetIn)
 	{
 		if(MagicEffects.isInsideAntiMagic(targetIn)) return false;
 		
@@ -92,13 +92,13 @@ public abstract class Spell implements IMagicEffect
 			// Apply any spell resistance
 			if(!(isWillingTarget(targetIn, spellOwner) || targetIn == spellOwner))
 				if(allowsSpellResistance() && SR > 0)
-					if(spellData.casterLevel() + Spell.rollDie(20, targetIn.getEntityWorld().rand) < SR)
+					if(spellData.casterLevel() + Spell.rollDie(20, targetIn.getLevel().random) < SR)
 						return false;
 		}
 		return !MinecraftForge.EVENT_BUS.post(new SpellAffectEntityEvent(spellData, world, targetIn));
 	}
 	
-	public boolean canAffectSpell(SpellData spellData, World world, SpellData targetIn)
+	public boolean canAffectSpell(SpellData spellData, Level world, SpellData targetIn)
 	{
 		if(MagicEffects.isInsideAntiMagic(world, targetIn.posX, targetIn.posY, targetIn.posZ)) return false;
 		return !MinecraftForge.EVENT_BUS.post(new SpellAffectSpellEvent(spellData, world, targetIn));
@@ -119,14 +119,14 @@ public abstract class Spell implements IMagicEffect
 		if(entityIn instanceof ItemEntity)
 			SR = Math.max(SR, getSRFromItem(((ItemEntity)entityIn).getItem()));
 		
-//		if(entityIn instanceof PlayerEntity)
+//		if(entityIn instanceof Player)
 //		{
-//			IItemHandler inv = BaublesApi.getBaublesHandler((PlayerEntity)entityIn);
+//			IItemHandler inv = BaublesApi.getBaublesHandler((Player)entityIn);
 //			for(int slot=0; slot<inv.getSlots(); slot++)
 //				SR = Math.max(SR, getSRFromItem(inv.getStackInSlot(slot)));
 //		}
 		
-		for(ItemStack armor : entityIn.getArmorInventoryList())
+		for(ItemStack armor : entityIn.getArmorSlots())
 			SR = Math.max(SR, getSRFromItem(armor));
 		
 		SpellResistanceEvent event = new SpellResistanceEvent(entityIn, SR);
@@ -161,7 +161,7 @@ public abstract class Spell implements IMagicEffect
 		return false;
 	}
 	
-	public static SpellData getTargetSpell(PlayerEntity player)
+	public static SpellData getTargetSpell(Player player)
 	{
 		return getTargetSpell(player, player.getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue());
 	}
@@ -173,17 +173,17 @@ public abstract class Spell implements IMagicEffect
 	
 	public static SpellData getTargetSpell(LivingEntity caster, double range, Predicate<SpellData> exclude)
 	{
-		Vector3d headPos = new Vector3d(caster.getPosX(), caster.getPosY() + caster.getEyeHeight(), caster.getPosZ());
-		Vector3d lookVec = caster.getLookVec();
+		Vec3 headPos = new Vec3(caster.getX(), caster.getY() + caster.getEyeHeight(), caster.getZ());
+		Vec3 lookVec = caster.getLookAngle();
 		
-		World world = caster.getEntityWorld();
+		Level world = caster.getLevel();
 		SpellData bestGuess = null;
 		double smallestDist = Double.MAX_VALUE;
-		for(SpellData spell : SpellManager.get(world).getSpellsWithin(world, caster.getBoundingBox().grow(range)))
+		for(SpellData spell : SpellManager.get(world).getSpellsWithin(world, caster.getBoundingBox().inflate(range)))
 		{
 			if(exclude != null && exclude.apply(spell)) continue;
-			double distToEnt = headPos.distanceTo(new Vector3d(spell.posX, spell.posY + 0.25D, spell.posZ));
-			Vector3d posAtDist = headPos.add(new Vector3d(lookVec.x * distToEnt, lookVec.y * distToEnt, lookVec.z * distToEnt));
+			double distToEnt = headPos.distanceTo(new Vec3(spell.posX, spell.posY + 0.25D, spell.posZ));
+			Vec3 posAtDist = headPos.add(new Vec3(lookVec.x * distToEnt, lookVec.y * distToEnt, lookVec.z * distToEnt));
 			
 			if(spell.getBoundingBox().contains(posAtDist) && smallestDist > distToEnt)
 			{

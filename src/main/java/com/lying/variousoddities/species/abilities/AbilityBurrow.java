@@ -5,26 +5,25 @@ import java.util.List;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "burrow");
-	private static final List<Material> DIRT_BLOCKS = Arrays.asList(Material.EARTH, Material.ORGANIC, Material.SNOW_BLOCK, Material.ICE, Material.SAND);
+	private static final List<Material> DIRT_BLOCKS = Arrays.asList(Material.DIRT, Material.PLANT, Material.SNOW, Material.ICE, Material.SAND);
 	
 	private boolean canBurrowStone = false;
 	private boolean leavesTunnel = false;
@@ -54,9 +53,9 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 	
 	public Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability.varodd.burrow."+(isActive() ? "active" : "inactive")); }
+	public Component translatedName(){ return Component.translatable("ability.varodd.burrow."+(isActive() ? "active" : "inactive")); }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
 		if(canBurrowStone)
@@ -66,7 +65,7 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		canBurrowStone = compound.getBoolean("AllowStone");
@@ -79,7 +78,7 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 	{
 		if(entity.getType() == EntityType.PLAYER)
 		{
-			PlayerEntity player = (PlayerEntity)entity;
+			Player player = (Player)entity;
 			if(!this.isActive)
 			{
 				// Set crawling pose
@@ -100,31 +99,31 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 		bus.addListener(this::tunnelBlocks);
 	}
 	
-	public void tunnelBlocks(LivingUpdateEvent event)
+	public void tunnelBlocks(LivingTickEvent event)
 	{
-		LivingEntity living = event.getEntityLiving();
+		LivingEntity living = event.getEntity();
 		if(AbilityRegistry.hasAbility(living, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(living, REGISTRY_NAME).isActive())
 		{
 			living.setPose(Pose.SWIMMING);
 			AbilityBurrow burrow = (AbilityBurrow)AbilityRegistry.getAbilityByName(living, REGISTRY_NAME);
 			if(burrow.leavesTunnel)
 			{
-				for(int i=0; i<Math.ceil(living.getHeight()); i++)
+				for(int i=0; i<Math.ceil(living.getBbHeight()); i++)
 				{
-					BlockPos pos = living.getPosition().add(0, i, 0);
-					if(burrow.canPhase(living.getEntityWorld(), pos, living))
-						living.getEntityWorld().destroyBlock(pos, true, living);
+					BlockPos pos = living.blockPosition().offset(0, i, 0);
+					if(burrow.canPhase(living.getLevel(), pos, living))
+						living.getLevel().destroyBlock(pos, true, living);
 				}
 			}
 		}
 	}
 	
-	public boolean isPhaseable(IBlockReader worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(BlockGetter worldIn, BlockPos pos, LivingEntity entity)
 	{
 		BlockState state = worldIn.getBlockState(pos);
 		Material material = state.getMaterial();
-		if(((canBurrowStone && material == Material.ROCK) || DIRT_BLOCKS.contains(material)) && state.getHarvestLevel() <= 1)
-			return entity.getPosition().getY() <= pos.getY() || entity.isSneaking();
+		if(((canBurrowStone && material == Material.STONE) || DIRT_BLOCKS.contains(material)) && state.getHarvestLevel() <= 1)
+			return entity.blockPosition().getY() <= pos.getY() || entity.isCrouching();
 		return false;
 	}
 	
@@ -132,7 +131,7 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public ToggledAbility createAbility(CompoundNBT compound)
+		public ToggledAbility createAbility(CompoundTag compound)
 		{
 			return new AbilityBurrow(compound.getBoolean("AllowStone"), compound.getBoolean("MineBlocks"));
 		}

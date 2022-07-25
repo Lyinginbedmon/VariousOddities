@@ -8,16 +8,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
 
-import net.minecraft.entity.EntityPredicate;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.TargetGoal;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 
 @Mixin(TargetGoal.class)
 public class TargetGoalMixin
 {
 	@Shadow
-	protected MobEntity goalOwner;
+	protected Mob goalOwner;
 	
 	@Shadow
 	protected LivingEntity target;

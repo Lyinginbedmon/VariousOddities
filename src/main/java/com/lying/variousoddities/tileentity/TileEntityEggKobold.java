@@ -5,8 +5,8 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOTileEntities;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 
 public class TileEntityEggKobold extends TileEntityEgg
 {
@@ -18,10 +18,10 @@ public class TileEntityEggKobold extends TileEntityEgg
 	public int getInitialHatchTime(){ return Reference.Values.TICKS_PER_MINUTE * 20; }
 	public int getHatchingTime(){ return Reference.Values.TICKS_PER_MINUTE; }
 	
-	public LivingEntity getHatchling(World worldIn)
+	public LivingEntity getHatchling(Level worldIn)
 	{
-		EntityKobold baby = VOEntities.KOBOLD.create(world);
-		baby.setGrowingAge(-6000);
+		EntityKobold baby = VOEntities.KOBOLD.create(worldIn);
+		baby.setAge(-6000);
 		return baby;
 	}
 }

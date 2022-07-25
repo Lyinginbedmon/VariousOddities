@@ -7,15 +7,14 @@ import java.util.List;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Triggers corresponding to a given visible entity
@@ -40,7 +39,7 @@ public class TriggerEntity extends Trigger
 		return true;
 	}
 	
-	public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"entity" + (inverted ? "_inverted" : "")); }
+	public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"entity" + (inverted ? "_inverted" : "")); }
 	
 	public Collection<? extends Trigger> possibleVariables(){ return possibleVariables; }
 	
@@ -63,7 +62,7 @@ public class TriggerEntity extends Trigger
 			entityType = typeIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_type" + (inverted ? "_inverted" : ""), entityType == null ? "anything" : entityType.toString()); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_type" + (inverted ? "_inverted" : ""), entityType == null ? "anything" : entityType.toString()); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
@@ -71,16 +70,16 @@ public class TriggerEntity extends Trigger
 		{
 			if(entityType == null)
 				return true;
-			return visibleEntity.getType().getRegistryName().equals(entityType);
+			return EntityType.getKey(visibleEntity.getType()).equals(entityType);
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Type", entityType.toString());
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			entityType = new ResourceLocation(compound.getString("Type"));
 		}
@@ -101,7 +100,7 @@ public class TriggerEntity extends Trigger
 			entityName = nameIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_name" + (inverted ? "_inverted" : ""), entityName); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_name" + (inverted ? "_inverted" : ""), entityName); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return NO_VARIABLES; }
 		
@@ -110,7 +109,7 @@ public class TriggerEntity extends Trigger
 			if(visibleEntity instanceof LivingEntity)
 			{
 //				LivingEntity entity = (LivingEntity)visibleEntity;
-//				ItemStack helmet = entity.getItemStackFromSlot(EquipmentSlotType.HEAD); 
+//				ItemStack helmet = entity.getItemStackFromSlot(EquipmentSlot.HEAD); 
 //				if(!helmet.isEmpty() && helmet.getItem() == VOItems.HOOD && ItemHatHood.getIsUp(helmet))
 //					return false;
 				
@@ -119,19 +118,19 @@ public class TriggerEntity extends Trigger
 					LivingEntity living = (LivingEntity)visibleEntity;
 					return living.hasCustomName() && living.getCustomName().equals(entityName);
 				}
-				else if(visibleEntity instanceof PlayerEntity)
+				else if(visibleEntity.getType() == EntityType.PLAYER)
 					return visibleEntity.getName().equals(entityName);
 			}
 			return false;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Name", entityName);
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
 			entityName = compound.getString("Name");
 		}
@@ -145,17 +144,17 @@ public class TriggerEntity extends Trigger
 		private static final List<Trigger> possibleVariables = Arrays.asList(new Trigger[]{new TriggerItem()});
 		
 		List<TriggerItem> variables = new ArrayList<>();
-		EquipmentSlotType slot = EquipmentSlotType.HEAD;
+		EquipmentSlot slot = EquipmentSlot.HEAD;
 		
 		public String type(){ return "entity_equipment"; }
 		
 		public TriggerEntityEquipment(){ }
-		public TriggerEntityEquipment(EquipmentSlotType slotIn)
+		public TriggerEntityEquipment(EquipmentSlot slotIn)
 		{
 			slot = slotIn;
 		}
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_equipment" + (inverted ? "_inverted" : ""), slot.name()); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_equipment" + (inverted ? "_inverted" : ""), slot.name()); }
 		
 		public Collection<? extends Trigger> possibleVariables(){ return possibleVariables; }
 		
@@ -169,7 +168,7 @@ public class TriggerEntity extends Trigger
 				return false;
 			
 			LivingEntity living = (LivingEntity)visibleEntity;
-			return testItem(living.getItemStackFromSlot(slot));
+			return testItem(living.getItemBySlot(slot));
 		}
 		
 		protected boolean testItem(ItemStack stack)
@@ -184,15 +183,15 @@ public class TriggerEntity extends Trigger
 			return false;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Slot", slot.getName());
 			return compound;
 		}
 		
-		public void readFromNBT(CompoundNBT compound)
+		public void readFromNBT(CompoundTag compound)
 		{
-			slot = EquipmentSlotType.fromString(compound.getString("Slot"));
+			slot = EquipmentSlot.valueOf(compound.getString("Slot"));
 		}
 	}
 	
@@ -205,7 +204,7 @@ public class TriggerEntity extends Trigger
 		
 		public TriggerEntityHeldItem(){ }
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_held_item" + (inverted ? "_inverted" : "")); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_held_item" + (inverted ? "_inverted" : "")); }
 		
 		public boolean applyToEntity(Entity visibleEntity)
 		{
@@ -213,7 +212,7 @@ public class TriggerEntity extends Trigger
 				return false;
 			
 			LivingEntity living = (LivingEntity)visibleEntity;
-			return testItem(living.getItemStackFromSlot(EquipmentSlotType.MAINHAND)) || testItem(living.getItemStackFromSlot(EquipmentSlotType.OFFHAND));
+			return testItem(living.getItemBySlot(EquipmentSlot.MAINHAND)) || testItem(living.getItemBySlot(EquipmentSlot.OFFHAND));
 		}
 	}
 	
@@ -226,13 +225,13 @@ public class TriggerEntity extends Trigger
 		
 		public TriggerEntityMount(){ }
 		
-		public ITextComponent getTranslated(boolean inverted){ return new TranslationTextComponent("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_mount" + (inverted ? "_inverted" : "")); }
+		public Component getTranslated(boolean inverted){ return Component.translatable("trigger."+Reference.ModInfo.MOD_PREFIX+"entity_mount" + (inverted ? "_inverted" : "")); }
 		
 		public boolean applyToEntity(Entity visibleEntity)
 		{
-			if(visibleEntity.getRidingEntity() != null)
+			if(visibleEntity.getVehicle() != null)
 			{
-				Entity mount = visibleEntity.getRidingEntity();
+				Entity mount = visibleEntity.getVehicle();
 				for(TriggerEntity variable : variables)
 					if(variable.applyToEntity(mount) == variable.inverted())
 						return false;

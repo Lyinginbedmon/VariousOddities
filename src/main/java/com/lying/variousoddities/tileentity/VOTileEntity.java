@@ -2,47 +2,45 @@ package com.lying.variousoddities.tileentity;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SUpdateTileEntityPacket;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
-public abstract class VOTileEntity extends TileEntity
+public abstract class VOTileEntity extends BlockEntity
 {
-	public VOTileEntity(TileEntityType<?> type)
+	public VOTileEntity(BlockEntityType<?> type)
 	{
 		super(type);
 	}
 	
 	@Nonnull
-	public CompoundNBT write(CompoundNBT tag)
+	public CompoundTag write(CompoundTag tag)
 	{
-		CompoundNBT compound = super.write(tag);
+		CompoundTag compound = super.write(tag);
 		writePacketNBT(compound);
 		return compound;
 	}
 	
 	@Nonnull
-	public final CompoundNBT getUpdateTag()
+	public final CompoundTag getUpdateTag()
 	{
-		return write(new CompoundNBT());
+		return write(new CompoundTag());
 	}
 	
-	public void read(BlockState state, CompoundNBT compound)
+	public void read(BlockState state, CompoundTag compound)
 	{
 		super.read(state, compound);
 		readPacketNBT(compound);
 	}
 	
-	public void writePacketNBT(CompoundNBT compound){ }
+	public void writePacketNBT(CompoundTag compound){ }
 	
-	public void readPacketNBT(CompoundNBT compound){ }
+	public void readPacketNBT(CompoundTag compound){ }
 	
 	public final SUpdateTileEntityPacket getUpdatePacket()
 	{
-		CompoundNBT tag = new CompoundNBT();
+		CompoundTag tag = new CompoundTag();
 		writePacketNBT(tag);
 		return new SUpdateTileEntityPacket(pos, -999, tag);
 	}

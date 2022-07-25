@@ -18,17 +18,16 @@ import com.lying.variousoddities.world.settlement.SettlementGoblin;
 import com.lying.variousoddities.world.settlement.SettlementKobold;
 import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 
 public abstract class SettlementManager extends WorldSavedData
@@ -39,7 +38,7 @@ public abstract class SettlementManager extends WorldSavedData
 	private static final Map<ResourceLocation, Class<? extends Settlement>> CLASS_MAP = new HashMap<>();
 	
 	public Map<Integer, Settlement> settlements = new HashMap<>();
-	protected World world;
+	protected Level world;
 	
 	public SettlementManager()
 	{
@@ -50,7 +49,7 @@ public abstract class SettlementManager extends WorldSavedData
 		super(nameIn);
 	}
 	
-	public void setWorld(World worldIn)
+	public void setWorld(Level worldIn)
 	{
 		this.world = worldIn;
 		if(worldIn != null && !isEmpty())
@@ -59,7 +58,7 @@ public abstract class SettlementManager extends WorldSavedData
 	
 	public DimensionType getDim()
 	{
-		return this.world == null ? null : this.world.getDimensionType();
+		return this.world == null ? null : this.world.dimensionType();
 	}
 	
 	/**
@@ -72,10 +71,10 @@ public abstract class SettlementManager extends WorldSavedData
 	public abstract void notifyObservers();
 	
 	/** Notifies the given player of all settlements in this world */
-	public abstract void notifyObserver(PlayerEntity par1Player);
+	public abstract void notifyObserver(Player par1Player);
 	
 	/** Notifies the given player of the given settlement */
-	public abstract void notifyObserver(PlayerEntity par1Player, int index, @Nullable Settlement settlement);
+	public abstract void notifyObserver(Player par1Player, int index, @Nullable Settlement settlement);
 	
 	/** Register a settlement using its typeName() */
 	public static boolean registerSettlement(Settlement settlement)
@@ -124,7 +123,7 @@ public abstract class SettlementManager extends WorldSavedData
 	
 	/** Creates a new settlement, with no rooms, from the given type name and storage NBT. */
 	@SuppressWarnings("deprecation")
-	public static Settlement createSettlementFromNBT(ResourceLocation nameIn, CompoundNBT compound)
+	public static Settlement createSettlementFromNBT(ResourceLocation nameIn, CompoundTag compound)
 	{
 		if(CLASS_MAP.containsKey(nameIn))
 		{
@@ -145,22 +144,22 @@ public abstract class SettlementManager extends WorldSavedData
 		return null;
 	}
 	
-	public CompoundNBT write(CompoundNBT compound)
+	public CompoundTag write(CompoundTag compound)
 	{
-		ListNBT settlementList = new ListNBT();
+		ListTag settlementList = new ListTag();
 		for(int index : settlements.keySet())
-			settlementList.add(settlementToNBT(index, getSettlementByIndex(index), new CompoundNBT()));
+			settlementList.add(settlementToNBT(index, getSettlementByIndex(index), new CompoundTag()));
 		compound.put("Settlements", settlementList);
 		return compound;
 	}
 	
-	public void read(CompoundNBT compound)
+	public void read(CompoundTag compound)
 	{
 		this.settlements.clear();
-		ListNBT settlements = compound.getList("Settlements", 10);
+		ListTag settlements = compound.getList("Settlements", 10);
 		for(int i=0; i<settlements.size(); i++)
 		{
-			CompoundNBT data = settlements.getCompound(i);
+			CompoundTag data = settlements.getCompound(i);
 			int index = data.getInt("Index");
 			Settlement settlement = NBTToSettlement(data);
 			if(settlement != null && index >= 0)
@@ -168,13 +167,13 @@ public abstract class SettlementManager extends WorldSavedData
 		}
 	}
 	
-	public static SettlementManager get(World worldIn)
+	public static SettlementManager get(Level worldIn)
 	{
-		if(worldIn.isRemote)
+		if(worldIn.isClientSide)
 			return VariousOddities.proxy.getSettlementManager(worldIn);
 		else
 		{
-			SettlementManagerServer instance = ((ServerWorld)worldIn).getSavedData().getOrCreate(SettlementManagerServer::new, SettlementManager.DATA_NAME);
+			SettlementManagerServer instance = ((ServerLevel)worldIn).getSavedData().getOrCreate(SettlementManagerServer::new, SettlementManager.DATA_NAME);
 			instance.setWorld(worldIn);
 			return instance;
 		}
@@ -186,7 +185,7 @@ public abstract class SettlementManager extends WorldSavedData
 		for(Settlement settlement : this.settlements.values())
 			if(settlement.hasRooms() && settlement.getTitleRange() >= 0)
 				for(BoxRoom room : settlement.getRooms())
-					if(room.getBounds().grow(settlement.getTitleRange()).contains(new Vector3d(pos.getX(), pos.getY(), pos.getZ())))
+					if(room.getBounds().inflate(settlement.getTitleRange()).contains(new Vec3(pos.getX(), pos.getY(), pos.getZ())))
 						return settlement;
 		return null;
 	}
@@ -197,7 +196,7 @@ public abstract class SettlementManager extends WorldSavedData
 	 * Stores the client-relevant settlement information, including rooms and index, to NBT data.<br>
 	 * Used when transmitting the settlement to clients.
 	 */
-	public static CompoundNBT settlementToClientNBT(int index, Settlement settlement, CompoundNBT compound)
+	public static CompoundTag settlementToClientNBT(int index, Settlement settlement, CompoundTag compound)
 	{
 		compound.putInt("Index", index);
 		if(settlement != null)
@@ -209,28 +208,28 @@ public abstract class SettlementManager extends WorldSavedData
 	 * Stores the full settlement information, including rooms and index, to NBT data.<br>
 	 * Used when storing the settlement in world data.
 	 */
-	public static CompoundNBT settlementToNBT(int index, Settlement settlement, CompoundNBT compound)
+	public static CompoundTag settlementToNBT(int index, Settlement settlement, CompoundTag compound)
 	{
 		compound.putInt("Index", index);
 		settlementToNBT(settlement, compound);
 		return compound;
 	}
 	
-	public static CompoundNBT settlementToClientNBT(Settlement settlement, CompoundNBT compound)
+	public static CompoundTag settlementToClientNBT(Settlement settlement, CompoundTag compound)
 	{
 		compound.putString("Type", getTypeBySettlement(settlement).toString());
 		if(settlement.hasCustomName())
 			compound.putString("CustomName", settlement.getCustomName());
 		
-		CompoundNBT display = new CompoundNBT();
+		CompoundTag display = new CompoundTag();
 			if(settlement.hasTitle())
-				display.putString("Title", ITextComponent.Serializer.toJson(settlement.getTitle()));
+				display.putString("Title", Component.Serializer.toJson(settlement.getTitle()));
 			display.putInt("Range", settlement.getTitleRange());
 		compound.put("Display", display);
 		
 		if(settlement.hasRooms())
 			compound.put("Rooms", Settlement.roomsToList(settlement.getRooms()));
-		compound.put("Tag", settlement.writeClientData(new CompoundNBT()));
+		compound.put("Tag", settlement.writeClientData(new CompoundTag()));
 		return compound;
 	}
 	
@@ -238,7 +237,7 @@ public abstract class SettlementManager extends WorldSavedData
 	 * Stores the full settlement information, including rooms and index, to NBT data.<br>
 	 * Used when storing the settlement in world data.
 	 */
-	public static CompoundNBT settlementToNBT(Settlement settlement, CompoundNBT compound)
+	public static CompoundTag settlementToNBT(Settlement settlement, CompoundTag compound)
 	{
 		compound.putString("Type", getTypeBySettlement(settlement).toString());
 		if(settlement.hasNoAI())
@@ -248,25 +247,25 @@ public abstract class SettlementManager extends WorldSavedData
 		if(settlement.hasCustomName())
 			compound.putString("CustomName", settlement.getCustomName());
 		
-		CompoundNBT display = new CompoundNBT();
+		CompoundTag display = new CompoundTag();
 			if(settlement.hasTitle())
-				display.putString("Title", ITextComponent.Serializer.toJson(settlement.getTitle()));
+				display.putString("Title", Component.Serializer.toJson(settlement.getTitle()));
 			display.putInt("Range", settlement.getTitleRange());
 		compound.put("Display", display);
 		
-		compound.put("Tag", settlement.writeToNBT(new CompoundNBT()));
+		compound.put("Tag", settlement.writeToNBT(new CompoundTag()));
 		if(settlement.hasRooms())
 			compound.put("Rooms", Settlement.roomsToList(settlement.getRooms()));
 		return compound;
 	}
 	
 	/** Recreates a settlement from NBT data, including rooms */
-	public static Settlement NBTToSettlement(CompoundNBT data)
+	public static Settlement NBTToSettlement(CompoundTag data)
 	{
 		if(!data.contains("Type", 8))
 			return null;
 		ResourceLocation type = new ResourceLocation(data.getString("Type"));
-		CompoundNBT storage = data.contains("Tag", 10) ? data.getCompound("Tag") : new CompoundNBT();
+		CompoundTag storage = data.contains("Tag", 10) ? data.getCompound("Tag") : new CompoundTag();
 		Settlement settlement = createSettlementFromNBT(type, storage);
 		if(settlement != null)
 		{
@@ -277,9 +276,9 @@ public abstract class SettlementManager extends WorldSavedData
 			if(data.contains("CustomName", 8))
 				settlement.setCustomName(data.getString("CustomName"));
 			
-			CompoundNBT display = data.getCompound("Display");
+			CompoundTag display = data.getCompound("Display");
 			if(display.contains("Title"))
-				settlement.setTitle(ITextComponent.Serializer.getComponentFromJsonLenient(display.getString("Title")));
+				settlement.setTitle(Component.Serializer.fromJsonLenient(display.getString("Title")));
 			settlement.setTitleRange(display.getInt("Range"));
 			
 			if(data.contains("Rooms"))
@@ -293,7 +292,7 @@ public abstract class SettlementManager extends WorldSavedData
 		return settlements.values();
 	}
 	
-	public Settlement getSettlementAt(Vector3d pos)
+	public Settlement getSettlementAt(Vec3 pos)
 	{
 		return getSettlementAt(new BlockPos(pos.x, pos.y, pos.z));
 	}
@@ -401,7 +400,7 @@ public abstract class SettlementManager extends WorldSavedData
 		int index = getIndexBySettlement(settlementIn);
 		if(index >= 0)
 		{
-			if(world != null && !world.isRemote)
+			if(world != null && !world.isClientSide)
 				settlementIn.invalidate();
 			
 			settlements.remove(index);

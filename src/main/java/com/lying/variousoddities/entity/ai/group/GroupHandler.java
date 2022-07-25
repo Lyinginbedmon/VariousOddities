@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.google.common.base.Predicate;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraftforge.event.TickEvent.WorldTickEvent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraftforge.event.TickEvent.LevelTickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -36,7 +36,7 @@ public class GroupHandler
 		return null;
 	}
 	
-	public static EntityGroup getEntityMemberGroup(MobEntity entity)
+	public static EntityGroup getEntityMemberGroup(Mob entity)
 	{
 		return getGroup(new Predicate<EntityGroup>()
 		{
@@ -53,7 +53,7 @@ public class GroupHandler
 	}
 	
 	@SubscribeEvent
-	public static void onWorldTickEvent(WorldTickEvent event)
+	public static void onWorldTickEvent(LevelTickEvent event)
 	{
 		List<EntityGroup> groups = new ArrayList<>();
 		groups.addAll(GROUPS);
@@ -66,15 +66,15 @@ public class GroupHandler
 	@SubscribeEvent
 	public static void onLivingHurtEvent(LivingHurtEvent event)
 	{
-		if(!GROUPS.isEmpty() && event.getEntityLiving() instanceof MobEntity)
+		if(!GROUPS.isEmpty() && event.getEntity() instanceof Mob)
 		{
-			MobEntity victim = (MobEntity)event.getEntityLiving();
+			Mob victim = (Mob)event.getEntity();
 			DamageSource source = event.getSource();
 			LivingEntity attacker = null;
 			if(source.getTrueSource() != null && source.getTrueSource() instanceof LivingEntity)
 				attacker = (LivingEntity)source.getTrueSource();
 			
-			EntityGroup group = getEntityMemberGroup((MobEntity)event.getEntityLiving());
+			EntityGroup group = getEntityMemberGroup((Mob)event.getEntity());
 			if(group != null && attacker != null)
 				group.onMemberHarmed(event, victim, attacker);
 		}
@@ -84,7 +84,7 @@ public class GroupHandler
 	public static void onLivingDeathEvent(LivingDeathEvent event)
 	{
 		for(EntityGroup group : GROUPS)
-			if(group.isTracking(event.getEntityLiving()))
+			if(group.isTracking(event.getEntity()))
 				group.onEntityKilled(event);
 	}
 }

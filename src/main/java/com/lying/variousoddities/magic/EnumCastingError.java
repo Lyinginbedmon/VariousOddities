@@ -1,6 +1,6 @@
 package com.lying.variousoddities.magic;
 
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
 
 public enum EnumCastingError
 {
@@ -18,6 +18,6 @@ public enum EnumCastingError
 	
 	private final String translationBase = "enum.varodd:casting_error.";
 	
-	public String getTranslated(){ return new TranslationTextComponent(translationBase+getSimpleName()+".name").getUnformattedComponentText(); }
+	public String getTranslated(){ return Component.translatable(translationBase+getSimpleName()+".name").getString(); }
 	private String getSimpleName(){ return this.name().toLowerCase(); }
 }

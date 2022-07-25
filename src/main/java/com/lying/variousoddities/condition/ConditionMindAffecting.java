@@ -4,7 +4,7 @@ import com.lying.variousoddities.magic.IMagicEffect.MagicSchool;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.species.abilities.AbilityResistanceSpell;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 
 public class ConditionMindAffecting extends Condition
 {
@@ -27,6 +27,6 @@ public class ConditionMindAffecting extends Condition
 	
 	public boolean canAffect(LivingEntity entity)
 	{
-		return entity.isNonBoss() && AbilityResistanceSpell.canSpellAffectMob(entity, school, descriptor);
+		return entity.canChangeDimensions() && AbilityResistanceSpell.canSpellAffectMob(entity, school, descriptor);
 	}
 }

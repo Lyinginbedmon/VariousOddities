@@ -12,16 +12,15 @@ import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.brigadier.StringReader;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 public class FactionManager extends WorldSavedData
 {
@@ -40,15 +39,15 @@ public class FactionManager extends WorldSavedData
 		super(name);
 	}
 	
-	public static FactionManager get(World worldIn)
+	public static FactionManager get(Level worldIn)
 	{
-		if(worldIn.isRemote)
+		if(worldIn.isClientSide)
 			return null;
 		else
 		{
-			ServerWorld world = (ServerWorld)worldIn;
+			ServerLevel world = (ServerLevel)worldIn;
 			MinecraftServer server = world.getServer();
-			ServerWorld overWorld = server.getWorld(World.OVERWORLD);
+			ServerLevel overWorld = server.getLevel(Level.OVERWORLD);
 			FactionManager manager = (FactionManager)overWorld.getSavedData().get(FactionManager::new, DATA_NAME);
 			if(manager == null)
 			{
@@ -105,18 +104,18 @@ public class FactionManager extends WorldSavedData
 		return null;
 	}
 	
-	public CompoundNBT write(CompoundNBT compound)
+	public CompoundTag write(CompoundTag compound)
 	{
-		ListNBT list = new ListNBT();
+		ListTag list = new ListTag();
 		for(Faction faction : factions.values())
-			list.add(faction.writeToNBT(new CompoundNBT()));
+			list.add(faction.writeToNBT(new CompoundTag()));
 		compound.put("Factions", list);
 		return compound;
 	}
 	
-	public void read(CompoundNBT compound)
+	public void read(CompoundTag compound)
 	{
-		ListNBT list = compound.getList("Factions", 10);
+		ListTag list = compound.getList("Factions", 10);
 		for(int i=0; i<list.size(); i++)
 		{
 			Faction faction = Faction.readFromNBT(list.getCompound(i));
@@ -129,17 +128,17 @@ public class FactionManager extends WorldSavedData
 	{
 		if(entity instanceof IFactionMob)
 			return getFaction(((IFactionMob)entity).getFactionName());
-		else if(entity.getType() == EntityType.PLAYER && PlayerData.forPlayer((PlayerEntity)entity) != null)
-			return getFaction(PlayerData.forPlayer((PlayerEntity)entity).reputation.factionName());
+		else if(entity.getType() == EntityType.PLAYER && PlayerData.forPlayer((Player)entity) != null)
+			return getFaction(PlayerData.forPlayer((Player)entity).reputation.factionName());
 		return null;
 	}
 	
 	public static String defaultsToString()
 	{
-		CompoundNBT comp = new CompoundNBT();
-		ListNBT list = new ListNBT();
+		CompoundTag comp = new CompoundTag();
+		ListTag list = new ListTag();
 		for(Faction faction : DEFAULT_FACTIONS.values())
-			list.add(faction.writeToNBT(new CompoundNBT()));
+			list.add(faction.writeToNBT(new CompoundTag()));
 		comp.put("Factions", list);
 		return comp.toString();
 	}
@@ -149,10 +148,10 @@ public class FactionManager extends WorldSavedData
 		this.factions.clear();
 		
 		StringReader values = new StringReader(par1String);
-		ListNBT factionList = null;
+		ListTag factionList = null;
 		try
 		{
-			CompoundNBT comp = new JsonToNBT(values).readStruct();
+			CompoundTag comp = TagParser.parseTag(values.readString());
 			factionList = comp.getList("Factions", 10);
 		}
 		catch(Exception e){ VariousOddities.log.error("Config error: Malformed faction settings"); }
@@ -211,16 +210,16 @@ public class FactionManager extends WorldSavedData
 			return relations;
 		}
 		
-		public CompoundNBT writeToNBT(CompoundNBT compound)
+		public CompoundTag writeToNBT(CompoundTag compound)
 		{
 			compound.putString("Name", this.name);
 			compound.putInt("InitialRep", this.startingRep);
 			if(!relations.isEmpty())
 			{
-				ListNBT relationMap = new ListNBT();
+				ListTag relationMap = new ListTag();
 				for(String faction : relations.keySet())
 				{
-					CompoundNBT data = new CompoundNBT();
+					CompoundTag data = new CompoundTag();
 						data.putString("Name", faction);
 						data.putInt("Rep", relations.get(faction));
 					relationMap.add(data);
@@ -230,17 +229,17 @@ public class FactionManager extends WorldSavedData
 			return compound;
 		}
 		
-		public static Faction readFromNBT(CompoundNBT compound)
+		public static Faction readFromNBT(CompoundTag compound)
 		{
 			String name = compound.getString("Name");
 			int rep = compound.getInt("InitialRep");
 			Faction faction = new Faction(name, rep);
 			if(compound.contains("Relations", 9))
 			{
-				ListNBT relationMap = compound.getList("Relations", 10);
+				ListTag relationMap = compound.getList("Relations", 10);
 				for(int i=0; i<relationMap.size(); i++)
 				{
-					CompoundNBT data = relationMap.getCompound(i);
+					CompoundTag data = relationMap.getCompound(i);
 					faction.addRelation(data.getString("Name"), data.getInt("Rep"));
 				}
 			}

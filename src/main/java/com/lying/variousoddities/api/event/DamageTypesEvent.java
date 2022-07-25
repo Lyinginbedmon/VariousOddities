@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import com.lying.variousoddities.species.abilities.DamageType;
 
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.eventbus.api.Event;
 
 public class DamageTypesEvent extends Event

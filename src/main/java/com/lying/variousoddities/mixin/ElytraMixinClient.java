@@ -12,14 +12,13 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.network.play.client.CEntityActionPacket;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-@Mixin(ClientPlayerEntity.class)
+@Mixin(LocalPlayer.class)
 public class ElytraMixinClient extends PlayerEntityMixin
 {
 	boolean isElytraFlying = false;
@@ -33,14 +32,14 @@ public class ElytraMixinClient extends PlayerEntityMixin
 	@Inject(method = "livingTick()V", at = @At("TAIL"))
 	public void livingTickEnd(final CallbackInfo ci)
 	{
-		ClientPlayerEntity living = (ClientPlayerEntity)(Object)this;
+		LocalPlayer living = (LocalPlayer)(Object)this;
 		if(isElytraFlying && canElytraFly() && !isElytraFlying() && !isSneaking() && !isOnGround())
-			living.connection.sendPacket(new CEntityActionPacket(living, CEntityActionPacket.Action.START_FALL_FLYING));
+			living.connection.send(new CEntityActionPacket(living, CEntityActionPacket.Action.START_FALL_FLYING));
 	}
 	
 	private boolean canElytraFly()
 	{
-		ClientPlayerEntity living = (ClientPlayerEntity)(Object)this;
+		LocalPlayer living = (LocalPlayer)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(living);
 		return abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive() && Abilities.canBonusJump(living);
 	}

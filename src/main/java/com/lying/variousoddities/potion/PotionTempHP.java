@@ -1,32 +1,32 @@
 package com.lying.variousoddities.potion;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierManager;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.EffectType;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
 
 public class PotionTempHP extends PotionVO implements IStackingPotion
 {
 	public PotionTempHP()
 	{
-		super("temp_health", EffectType.BENEFICIAL, 16738895);
+		super(MobEffectCategory.BENEFICIAL, 16738895);
 	}
 	
-	public EffectInstance stackInstances(EffectInstance applied, EffectInstance existing, LivingEntity living)
+	public MobEffectInstance stackInstances(MobEffectInstance applied, MobEffectInstance existing, LivingEntity living)
 	{
 		int existingHP = Math.min((int)living.getAbsorptionAmount(), existing.getAmplifier() + 1);
-		return new EffectInstance(applied.getPotion(), applied.getDuration(), (existingHP + applied.getAmplifier() + 1) - 1, applied.isAmbient(), applied.doesShowParticles());
+		return new MobEffectInstance(applied.getEffect(), applied.getDuration(), (existingHP + applied.getAmplifier() + 1) - 1, applied.isAmbient(), applied.isVisible());
 	}
 	
-	public void removeAttributesModifiersFromEntity(LivingEntity entityLivingBaseIn, AttributeModifierManager attributeMapIn, int amplifier)
+	public void removeAttributeModifiers(LivingEntity entityLivingBaseIn, AttributeMap attributeMapIn, int amplifier)
 	{
 		entityLivingBaseIn.setAbsorptionAmount(entityLivingBaseIn.getAbsorptionAmount() - (float)(amplifier + 1));
-		super.removeAttributesModifiersFromEntity(entityLivingBaseIn, attributeMapIn, amplifier);
+		super.removeAttributeModifiers(entityLivingBaseIn, attributeMapIn, amplifier);
 	}
 	
-	public void applyAttributesModifiersToEntity(LivingEntity entityLivingBaseIn, AttributeModifierManager attributeMapIn, int amplifier)
+	public void addAttributeModifiers(LivingEntity entityLivingBaseIn, AttributeMap attributeMapIn, int amplifier)
 	{
 		entityLivingBaseIn.setAbsorptionAmount(entityLivingBaseIn.getAbsorptionAmount() + (float)(amplifier + 1));
-		super.applyAttributesModifiersToEntity(entityLivingBaseIn, attributeMapIn, amplifier);
+		super.addAttributeModifiers(entityLivingBaseIn, attributeMapIn, amplifier);
 	}
 }

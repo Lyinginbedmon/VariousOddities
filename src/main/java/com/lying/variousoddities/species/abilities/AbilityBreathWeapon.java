@@ -1,7 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -13,35 +12,33 @@ import com.lying.variousoddities.reference.Reference;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.command.arguments.ParticleArgument;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.commands.arguments.ParticleArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityBreathWeapon extends ActivatedAbility
@@ -54,7 +51,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	private DamageType damage;
 	private Pair<Float, Float> dmgAmount;
-	private BlockState blockToPlace = Blocks.AIR.getDefaultState();
+	private BlockState blockToPlace = Blocks.AIR.defaultBlockState();
 	
 	private int duration = Reference.Values.TICKS_PER_SECOND * 3;
 	
@@ -74,11 +71,11 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	// TODO Add comparator function for breath weapons
 	
-	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "breath_weapon_"+damage.getString()); }
+	public ResourceLocation getMapName(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "breath_weapon_"+damage.getSerializedName()); }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".breath_weapon", (int)distance, type.translated(damage)); }
+	public Component translatedName(){ return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".breath_weapon", (int)distance, type.translated(damage)); }
 	
-	public ITextComponent description(){ return new TranslationTextComponent("ability.varodd:breath_weapon.desc", damage.getTranslated()); }
+	public Component description(){ return Component.translatable("ability.varodd:breath_weapon.desc", damage.getTranslated()); }
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
@@ -88,15 +85,15 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	public Type getType(){ return Ability.Type.ATTACK; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		super.writeToNBT(compound);
-		compound.putString("Type", this.type.getString());
+		compound.putString("Type", this.type.getSerializedName());
 		compound.putInt("Duration", this.duration);
 		compound.putDouble("Distance", this.distance);
 		
-		CompoundNBT damageData = new CompoundNBT();
-			damageData.putString("Type", damage.getString());
+		CompoundTag damageData = new CompoundTag();
+			damageData.putString("Type", damage.getSerializedName());
 			if(dmgAmount.getLeft() == dmgAmount.getRight())
 				damageData.putFloat("Amount", dmgAmount.getLeft());
 			else
@@ -105,21 +102,21 @@ public class AbilityBreathWeapon extends ActivatedAbility
 				damageData.putFloat("Max", Math.max(dmgAmount.getLeft(), dmgAmount.getRight()));
 			}
 			if(blockToPlace.getBlock() != Blocks.AIR)
-				damageData.put("BlockToPlace", NBTUtil.writeBlockState(this.blockToPlace));
+				damageData.put("BlockToPlace", NbtUtils.writeBlockState(this.blockToPlace));
 		compound.put("Damage", damageData);
 		
 		compound.putString("Particle", this.particle.getParameters());
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		super.readFromNBT(compound);
 		this.type = compound.contains("Type", 8) ? BreathType.fromString(compound.getString("Type")) : BreathType.CONE;
 		this.duration = compound.contains("Duration", 3) ? compound.getInt("Duration") : Reference.Values.TICKS_PER_SECOND * 6;
 		this.distance = compound.contains("Distance", 6) ? compound.getDouble("Distance") : 8.0D;
 		
-		CompoundNBT damageData = compound.getCompound("Damage");
+		CompoundTag damageData = compound.getCompound("Damage");
 		this.damage = damageData.contains("Type", 8) ? DamageType.fromString(damageData.getString("Type")) : DamageType.FIRE;
 		if(damageData.contains("Amount", 5))
 			this.dmgAmount = Pair.of(damageData.getFloat("Amount"), damageData.getFloat("Amount"));
@@ -130,9 +127,9 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		
 		if(damageData.contains("BlockToPlace", 10))
 		{
-			this.blockToPlace = NBTUtil.readBlockState(damageData.getCompound("BlockToPlace"));
+			this.blockToPlace = NbtUtils.readBlockState(damageData.getCompound("BlockToPlace"));
 			if(this.blockToPlace == null)
-				this.blockToPlace = Blocks.AIR.getDefaultState();
+				this.blockToPlace = Blocks.AIR.defaultBlockState();
 		}
 		
 		if(compound.contains("Particle", 8))
@@ -183,34 +180,34 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		bus.addListener(this::performBreathWeapon);
 	}
 	
-	public void performBreathWeapon(LivingUpdateEvent event)
+	public void performBreathWeapon(LivingTickEvent event)
 	{
-		LivingEntity entity = event.getEntityLiving();
+		LivingEntity entity = event.getEntity();
 		for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, REGISTRY_NAME))
 		{
 			AbilityBreathWeapon breath = (AbilityBreathWeapon)ability;
 			if(breath.isActive())
 			{
-				World world = entity.getEntityWorld();
-				Vector3d eyePos = new Vector3d(entity.getPosX(), entity.getPosYEye(), entity.getPosZ());
-				Vector3d direction = entity.getLookVec();
-				if(world.isRemote)
+				Level world = entity.getLevel();
+				Vec3 eyePos = new Vec3(entity.getX(), entity.getEyeY(), entity.getZ());
+				Vec3 direction = entity.getLookAngle();
+				if(world.isClientSide)
 				{
 					breath.type.makeParticles(world, breath.particle, eyePos, direction, breath.distance);
 					if(breath.activeTicks%Reference.Values.TICKS_PER_SECOND == 0)
-						entity.playSound(SoundEvents.ENTITY_ENDER_DRAGON_SHOOT, 1F, 0.5F + entity.getRNG().nextFloat() * 0.5F);
+						entity.playSound(SoundEvents.ENDER_DRAGON_SHOOT, 1F, 0.5F + entity.getRandom().nextFloat() * 0.5F);
 				}
 				else
 				{
-					List<UUID> ignoreList = Lists.newArrayList(entity.getUniqueID());
+					List<UUID> ignoreList = Lists.newArrayList(entity.getUUID());
 					
 					if(breath.activeTicks-- > 0)
 						switch(breath.type)
 						{
 							case CONE:
-								for(int i=0; i<entity.getRNG().nextInt(4) + 1; i++)
+								for(int i=0; i<entity.getRandom().nextInt(4) + 1; i++)
 								{
-									Vector3d dir = direction.rotatePitch((float)Math.toRadians(entity.getRNG().nextInt(10) - 5)).rotateYaw((float)Math.toRadians(entity.getRNG().nextInt(90) - 45));
+									Vec3 dir = direction.rotatePitch((float)Math.toRadians(entity.getRandom().nextInt(10) - 5)).rotateYaw((float)Math.toRadians(entity.getRandom().nextInt(90) - 45));
 									ignoreList.addAll(shootLine(world, eyePos, dir, breath, entity, activeTicks%Reference.Values.TICKS_PER_SECOND == 0, ignoreList));
 								}
 								break;
@@ -225,41 +222,41 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		}
 	}
 	
-	public List<UUID> shootLine(World world, Vector3d eyePos, Vector3d direction, AbilityBreathWeapon breath, LivingEntity entity, boolean damage, List<UUID> ignoreEntities)
+	public List<UUID> shootLine(Level world, Vec3 eyePos, Vec3 direction, AbilityBreathWeapon breath, LivingEntity entity, boolean damage, List<UUID> ignoreEntities)
 	{
 		double distance = breath.distance;
-		Vector3d maxPos = eyePos.add(direction.mul(new Vector3d(distance, distance, distance)));
-		RayTraceResult trace = world.rayTraceBlocks(new RayTraceContext(eyePos, maxPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, null));
-		if(trace.getType() != RayTraceResult.Type.MISS)
-			distance = eyePos.distanceTo(trace.getHitVec());
+		Vec3 maxPos = eyePos.add(direction.multiply(new Vec3(distance, distance, distance)));
+		HitResult trace = world.clip(new ClipContext(eyePos, maxPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, null));
+		if(trace.getType() != HitResult.Type.MISS)
+			distance = eyePos.distanceTo(trace.getLocation());
 		
-		if(trace.getType() == RayTraceResult.Type.BLOCK && breath.blockToPlace.getBlock() != Blocks.AIR)
+		if(trace.getType() == HitResult.Type.BLOCK && breath.blockToPlace.getBlock() != Blocks.AIR)
 		{
-			if(world.rand.nextInt(10) == 0)
+			if(world.random.nextInt(10) == 0)
 			{
-				BlockRayTraceResult traceResult = (BlockRayTraceResult)trace;
-				BlockPos hitPos = traceResult.getPos();
+				BlockHitResult traceResult = (BlockHitResult)trace;
+				BlockPos hitPos = traceResult.getBlockPos();
 				tryToPlaceBlock(world, hitPos, breath.blockToPlace, traceResult);
 			}
 		}
 		
 		List<UUID> hits = Lists.newArrayList();
 		if(damage)
-			for(LivingEntity hit : world.getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(distance)))
+			for(LivingEntity hit : world.getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox().inflate(distance)))
 			{
-				if(hit == entity || ignoreEntities.contains(hit.getUniqueID()) || !canAbilityAffectEntity(hit, entity))
+				if(hit == entity || ignoreEntities.contains(hit.getUUID()) || !canAbilityAffectEntity(hit, entity))
 					continue;
 				
-				double distFromEye = eyePos.distanceTo(new Vector3d(hit.getPosX(), hit.getPosY() + (hit.getHeight() / 2), hit.getPosZ()));
-				Vector3d posAtHit = eyePos.add(direction.mul(distFromEye, distFromEye, distFromEye));
+				double distFromEye = eyePos.distanceTo(new Vec3(hit.getX(), hit.getY() + (hit.getBbHeight() / 2), hit.getZ()));
+				Vec3 posAtHit = eyePos.add(direction.multiply(distFromEye, distFromEye, distFromEye));
 				if(hit.getBoundingBox().contains(posAtHit))
 				{
 					// Damage hit entity
 					float amount = Math.min(breath.dmgAmount.getLeft(), breath.dmgAmount.getRight());
 					float range = Math.max(breath.dmgAmount.getLeft(), breath.dmgAmount.getRight()) - amount;
-					amount += entity.getRNG().nextFloat() * range;
+					amount += entity.getRandom().nextFloat() * range;
 					
-					amount *= Math.max(0.1F, 1 - ((hit.getDistance(entity)) / breath.distance));
+					amount *= Math.max(0.1F, 1 - ((hit.distanceTo(entity)) / breath.distance));
 					
 					DamageSource source = null;
 					switch(breath.damage)
@@ -277,13 +274,13 @@ public class AbilityBreathWeapon extends ActivatedAbility
 						case PSYCHIC:	source = VODamageSource.PSYCHIC; break;
 						case SONIC:		source = VODamageSource.SONIC; break;
 						default:
-							source = DamageSource.causeMobDamage(entity);
+							source = DamageSource.mobAttack(entity);
 							break;
 					}
 					if(source != null)
-						hit.attackEntityFrom(source, amount);
+						hit.hurt(source, amount);
 					
-					hits.add(hit.getUniqueID());
+					hits.add(hit.getUUID());
 				}
 			}
 		
@@ -291,78 +288,78 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	}
 	
 	@SuppressWarnings("deprecation")
-	public boolean tryToPlaceBlock(World world, BlockPos pos, BlockState stateToPlace, BlockRayTraceResult trace)
+	public boolean tryToPlaceBlock(Level world, BlockPos pos, BlockState stateToPlace, BlockHitResult trace)
 	{
-		if(!world.getGameRules().getBoolean(GameRules.MOB_GRIEFING))
+		if(!world.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING))
 			return false;
 		
 		BlockState stateAtPos = world.getBlockState(pos);
-		ItemStack itemStack = new ItemStack(Item.getItemFromBlock(stateToPlace.getBlock()));
-		BlockItemUseContext context = new BlockItemUseContext(new ItemUseContext(world, (PlayerEntity)null, Hand.MAIN_HAND, itemStack, trace));
+		ItemStack itemStack = new ItemStack(Item.byBlock(stateToPlace.getBlock()));
+		BlockPlaceContext context = new BlockPlaceContext(new BlockPlaceContext(world, (Player)null, InteractionHand.MAIN_HAND, itemStack, trace));
 		
 		// Try to place at the block hit
-		if(stateAtPos.isReplaceable(context))
+		if(stateAtPos.canBeReplaced(context))
 		{
-			world.setBlockState(pos, stateToPlace, 11);
+			world.setBlock(pos, stateToPlace, 11);
 			return true;
 		}
 		
 		// Try to place at the neighbour of the block hit in the direction of the hit
-		pos = pos.offset(trace.getFace());
+		pos = pos.relative(trace.getDirection());
 		stateAtPos = world.getBlockState(pos);
-		if(stateAtPos.isReplaceable(context))
+		if(stateAtPos.canBeReplaced(context))
 		{
-			world.setBlockState(pos, stateToPlace, 11);
+			world.setBlock(pos, stateToPlace, 11);
 			return true;
 		}
 		return false;
 	}
 	
-	public static enum BreathType implements IStringSerializable
+	public static enum BreathType implements StringRepresentable
 	{
 		LINE,
 		CONE;
 		
-		public String getString(){ return name().toLowerCase(); }
+		public String getSerializedName(){ return name().toLowerCase(); }
 		public static BreathType fromString(String str)
 		{
 			for(BreathType type : values())
-				if(type.getString().equalsIgnoreCase(str))
+				if(type.getSerializedName().equalsIgnoreCase(str))
 					return type;
 			return CONE;
 		}
 		
-		public ITextComponent translated(DamageType type)
+		public Component translated(DamageType type)
 		{
-			return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".breath_weapon."+getString(), type.getTranslated());
+			return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".breath_weapon."+getSerializedName(), type.getTranslated());
 		}
 		
-		public void makeParticles(World world, IParticleData particleType, Vector3d origin, Vector3d direction, double distance)
+		public void makeParticles(Level world, IParticleData particleType, Vec3 origin, Vec3 direction, double distance)
 		{
-			if(distance <= 0D || !world.isRemote)
+			if(distance <= 0D || !world.isClientSide)
 				return;
 			
-			Random rand = world.rand;
+			RandomSource random = world.random;
 			switch(this)
 			{
 				case LINE:
-					Vector3d maxPos = origin.add(direction.mul(new Vector3d(distance, distance, distance)));
-					RayTraceResult trace = world.rayTraceBlocks(new RayTraceContext(origin, maxPos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, null));
-					if(trace.getType() != RayTraceResult.Type.MISS)
-						distance = origin.distanceTo(trace.getHitVec());
+					Vec3 maxPos = origin.add(direction.multiply(new Vec3(distance, distance, distance)));
+					HitResult trace = world.clip(new ClipContext(origin, maxPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, null));
+					if(trace.getType() != HitResult.Type.MISS)
+						distance = origin.distanceTo(trace.getLocation());
 					
-					for(int i=0; i<world.rand.nextInt(Math.max(6, 20 * (int)(distance / 6D))); i++)
+					for(int i=0; i<world.random.nextInt(Math.max(6, 20 * (int)(distance / 6D))); i++)
 					{
-						double mult = rand.nextDouble() * distance;
-						Vector3d pos = origin.add(direction.mul(mult, mult, mult));
+						double mult = random.nextDouble() * distance;
+						Vec3 pos = origin.add(direction.multiply(mult, mult, mult));
 						double speed = 0.05D;
-						world.addOptionalParticle(particleType, true, pos.x, pos.y, pos.z, (rand.nextDouble() - 0.5D) * speed, (rand.nextDouble() - 0.5D) * speed, (rand.nextDouble() - 0.5D) * speed);
+						world.addOptionalParticle(particleType, true, pos.x, pos.y, pos.z, (random.nextDouble() - 0.5D) * speed, (random.nextDouble() - 0.5D) * speed, (random.nextDouble() - 0.5D) * speed);
 					}
 					break;
 				case CONE:
-					for(int i=0; i<rand.nextInt(4) + 1; i++)
+					for(int i=0; i<random.nextInt(4) + 1; i++)
 					{
-						Vector3d dir = direction.rotatePitch((float)Math.toRadians(rand.nextInt(10) - 5)).rotateYaw((float)Math.toRadians(rand.nextInt(90) - 45));
+						Vec3 dir = direction.rotatePitch((float)Math.toRadians(random.nextInt(10) - 5)).rotateYaw((float)Math.toRadians(random.nextInt(90) - 45));
 						LINE.makeParticles(world, particleType, origin, dir, distance);
 					}
 					break;
@@ -374,12 +371,12 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			BreathType type = compound.contains("Type", 8) ? BreathType.fromString(compound.getString("Type")) : BreathType.CONE;
 			double distance = compound.contains("Distance", 6) ? compound.getDouble("Distance") : 8.0D;
 			
-			CompoundNBT damageData = compound.getCompound("Damage");
+			CompoundTag damageData = compound.getCompound("Damage");
 			DamageType damage = damageData.contains("Type", 8) ? DamageType.fromString(damageData.getString("Type")) : DamageType.FIRE;
 			Pair<Float, Float> dmgAmount;
 			if(damageData.contains("Amount", 5))
@@ -398,7 +395,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 				weapon.activeTicks = compound.getInt("Active");
 			
 			if(damageData.contains("BlockToPlace", 10))
-				weapon.setBlock(NBTUtil.readBlockState(damageData.getCompound("BlockToPlace")));
+				weapon.setBlock(NbtUtils.readBlockState(damageData.getCompound("BlockToPlace")));
 			
 			if(compound.contains("Particle", 8))
 			{

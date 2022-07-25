@@ -1,6 +1,7 @@
 package com.lying.variousoddities.species.templates;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -8,32 +9,30 @@ import javax.annotation.Nonnull;
 
 import com.google.gson.JsonObject;
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.registries.ForgeRegistryEntry;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 
 public abstract class TemplatePrecondition
 {
+	private static final Map<ResourceLocation, TemplatePrecondition.Builder> PRECONDITIONS_MAP = new HashMap<>();
+	
 	protected UUID templateID;
 	
 	public abstract ResourceLocation getRegistryName();
 	
 	public void setTemplateID(UUID uuidIn){ this.templateID = uuidIn;  }
 	
-	public ITextComponent translate(){ return new TranslationTextComponent("precondition."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
+	public MutableComponent translate(){ return Component.translatable("precondition."+Reference.ModInfo.MOD_ID+"."+getRegistryName().getPath()); }
 	
 	/**
 	 * Tests the given entity for meeting this precondition
@@ -53,18 +52,18 @@ public abstract class TemplatePrecondition
 	
 	protected boolean testAbilities(Map<ResourceLocation, Ability> abilities){ return true; }
 	
-	public abstract CompoundNBT writeToNBT(CompoundNBT compound);
+	public abstract CompoundTag writeToNBT(CompoundTag compound);
 	
-	public abstract void readFromNBT(CompoundNBT compound);
+	public abstract void readFromNBT(CompoundTag compound);
 	
 	public static TemplatePrecondition getFromJson(JsonObject json)
 	{
 		if(json.has("Name"))
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
-			if(VORegistries.PRECONDITIONS.containsKey(registryName))
+			if(PRECONDITIONS_MAP.containsKey(registryName))
 			{
-				TemplatePrecondition operation = VORegistries.PRECONDITIONS.getValue(registryName).create();
+				TemplatePrecondition operation = PRECONDITIONS_MAP.get(registryName).create();
 				operation.readFromJson(json);
 				return operation;
 			}
@@ -77,39 +76,42 @@ public abstract class TemplatePrecondition
 	public JsonObject writeToJson(JsonObject json)
 	{
 		json.addProperty("Name", getRegistryName().toString());
-		json.addProperty("Tag", writeToNBT(new CompoundNBT()).toString());
+		json.addProperty("Tag", writeToNBT(new CompoundTag()).toString());
 		return json;
 	}
 	
 	public void readFromJson(JsonObject json)
 	{
-		CompoundNBT tag = new CompoundNBT();
+		CompoundTag tag = new CompoundTag();
 		try
 		{
-			tag = JsonToNBT.getTagFromJson(json.get("Tag").getAsString());
+			tag = TagParser.parseTag(json.get("Tag").getAsString());
 		}
 		catch (CommandSyntaxException e){ }
 		if(!tag.isEmpty())
 			readFromNBT(tag);
 	}
 	
-	public static void onRegisterPreconditions(RegistryEvent.Register<Builder> event)
+	public static void init()
 	{
-		IForgeRegistry<Builder> registry = event.getRegistry();
-		
-		registry.register(new AbilityPrecondition.Builder());
-		registry.register(new TypePrecondition.Builder());
-		
-		VariousOddities.log.info("Initialised "+registry.getEntries().size()+" template preconditions");
-		if(ConfigVO.GENERAL.verboseLogs())
-			for(ResourceLocation name : registry.getKeys())
-				VariousOddities.log.info("#   "+name.toString());
+		register(new AbilityPrecondition.Builder());
+		register(new TypePrecondition.Builder());
 	}
 	
-	public static abstract class Builder extends ForgeRegistryEntry<TemplatePrecondition.Builder>
+	private static void register(TemplatePrecondition.Builder builderIn)
 	{
-		public Builder(@Nonnull ResourceLocation registryName){ setRegistryName(registryName); }
+		VORegistries.PRECONDITIONS.register(builderIn.getRegistryName().toString(), () -> builderIn);
+		PRECONDITIONS_MAP.put(builderIn.getRegistryName(), builderIn);
+	}
+	
+	public static abstract class Builder
+	{
+		private final ResourceLocation registryName;
+		
+		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }
 		
 		public abstract TemplatePrecondition create();
+		
+		public ResourceLocation getRegistryName() { return registryName; }
 	}
 }

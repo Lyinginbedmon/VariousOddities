@@ -11,9 +11,9 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 
 /** A template operation containing a set of sub operations */
 public class CompoundOperation extends TemplateOperation
@@ -29,8 +29,8 @@ public class CompoundOperation extends TemplateOperation
 	
 	public ResourceLocation getRegistryName(){ return REGISTRY_NAME; }
 	
-	public CompoundNBT writeToNBT(CompoundNBT compound){ return compound; }
-	public void readFromNBT(CompoundNBT compound){ }
+	public CompoundTag writeToNBT(CompoundTag compound){ return compound; }
+	public void readFromNBT(CompoundTag compound){ }
 	
 	@Override
 	public JsonObject writeToJson(JsonObject json)

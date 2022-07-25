@@ -12,18 +12,16 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 
 public abstract class Ability
 {
@@ -44,8 +42,8 @@ public abstract class Ability
 		}
 	};
 	
-	private ITextComponent displayName = null;
-	private ITextComponent description = null;
+	private Component displayName = null;
+	private Component description = null;
 	private Nature customNature = null;
 	private final ResourceLocation registryName;
 	private UUID sourceId = null;
@@ -55,7 +53,7 @@ public abstract class Ability
 		this.registryName = registryNameIn;
 	}
 	
-	public Ability clone(){ return AbilityRegistry.getAbility(writeAtomically(new CompoundNBT())); }
+	public Ability clone(){ return AbilityRegistry.getAbility(writeAtomically(new CompoundTag())); }
 	
 	public final ResourceLocation getRegistryName(){ return this.registryName; }
 	
@@ -93,7 +91,7 @@ public abstract class Ability
 	
 	public boolean hasCustomName(){ return this.displayName != null; }
 	
-	public Ability setDisplayName(ITextComponent nameIn)
+	public Ability setDisplayName(Component nameIn)
 	{
 		if(nameIn != null)
 			this.displayName = nameIn;
@@ -104,7 +102,7 @@ public abstract class Ability
 	
 	public boolean hasCustomDesc() { return this.description != null; }
 	
-	public Ability setCustomDesc(ITextComponent descIn)
+	public Ability setCustomDesc(Component descIn)
 	{
 		if(descIn != null)
 			this.description = descIn;
@@ -115,58 +113,58 @@ public abstract class Ability
 	
 	public void setCustomNature(Nature natureIn){ this.customNature = natureIn; }
 	
-	public ITextComponent getDisplayName()
+	public Component getDisplayName()
 	{
-		IFormattableTextComponent name = (IFormattableTextComponent)(hasCustomName() ? this.displayName : translatedName());
+		MutableComponent name = (MutableComponent)(hasCustomName() ? this.displayName : translatedName());
 		if(isTemporary())
-			name.modifyStyle((style) -> { return style.applyFormatting(TextFormatting.ITALIC); });
+			name.withStyle((style) -> { return style.applyFormat(ChatFormatting.ITALIC); });
 		return name;
 	}
 	
-	public ITextComponent translatedName()
+	public Component translatedName()
 	{
-		return new TranslationTextComponent("ability."+getMapName());
+		return Component.translatable("ability."+getMapName());
 	}
 	
-	public ITextComponent getDescription()
+	public Component getDescription()
 	{
 		return hasCustomDesc() ? this.description : description();
 	}
 	
-	public ITextComponent description()
+	public Component description()
 	{
-		return new TranslationTextComponent("ability."+getRegistryName()+".desc");
+		return Component.translatable("ability."+getRegistryName()+".desc");
 	}
 	
 	/** Writes all data needed to reinstantiate this ability to NBT */
-	public final CompoundNBT writeAtomically(CompoundNBT compound)
+	public final CompoundTag writeAtomically(CompoundTag compound)
 	{
 		compound.putString("Name", getRegistryName().toString());
 		if(this.sourceId != null)
 			compound.putString("UUID", this.sourceId.toString());
 		
 		if(hasCustomName())
-			compound.putString("CustomName", ITextComponent.Serializer.toJson(this.displayName));
+			compound.putString("CustomName", Component.Serializer.toJson(this.displayName));
 		
 		if(hasCustomDesc())
-			compound.putString("CustomDesc", ITextComponent.Serializer.toJson(this.description));
+			compound.putString("CustomDesc", Component.Serializer.toJson(this.description));
 		
 		if(this.customNature != null)
-			compound.putString("CustomNature", this.customNature.getString());
+			compound.putString("CustomNature", this.customNature.getSerializedName());
 		
-		CompoundNBT tag = writeToNBT(new CompoundNBT());
+		CompoundTag tag = writeToNBT(new CompoundTag());
 		if(!tag.isEmpty())
-			compound.put("Tag", writeToNBT(new CompoundNBT()));
+			compound.put("Tag", writeToNBT(new CompoundTag()));
 		return compound;
 	}
 	
 	/** Writes instance-specific data for this ability to NBT */
-	public CompoundNBT writeToNBT(CompoundNBT compound)
+	public CompoundTag writeToNBT(CompoundTag compound)
 	{
 		return compound;
 	}
 	
-	public void readFromNBT(CompoundNBT compound)
+	public void readFromNBT(CompoundTag compound)
 	{
 		
 	}
@@ -186,11 +184,15 @@ public abstract class Ability
 	
 	protected abstract Nature getDefaultNature();
 	
-	public static abstract class Builder extends ForgeRegistryEntry<Ability.Builder>
+	public static abstract class Builder
 	{
-		public Builder(@Nonnull ResourceLocation registryName){ setRegistryName(registryName); }
+		private final ResourceLocation registryName;
 		
-		public abstract Ability create(CompoundNBT compound);
+		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }
+		
+		public abstract Ability create(CompoundTag compound);
+		
+		public ResourceLocation getRegistryName() { return registryName; }
 	}
 	
 	public static enum Type
@@ -207,10 +209,10 @@ public abstract class Ability
 			this.texIndex = index;
 		}
 		
-		public ITextComponent translated(){ return new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".ability_type."+name().toLowerCase()); }
+		public Component translated(){ return Component.translatable("enum."+Reference.ModInfo.MOD_ID+".ability_type."+name().toLowerCase()); }
 	}
 	
-	public static enum Nature implements IStringSerializable
+	public static enum Nature implements StringRepresentable
 	{
 		SUPERNATURAL(false),
 		EXTRAORDINARY(true),
@@ -223,18 +225,18 @@ public abstract class Ability
 			this.useInAntiMagic = useInAntiMagic;
 		}
 		
-		public String getString(){ return this.name().toLowerCase(); }
+		public String getSerializedName(){ return this.name().toLowerCase(); }
 		
 		public static Nature fromString(String nameIn)
 		{
 			for(Nature nature : values())
-				if(nature.getString().equalsIgnoreCase(nameIn))
+				if(nature.getSerializedName().equalsIgnoreCase(nameIn))
 					return nature;
 			return EXTRAORDINARY;
 		}
 		
 		public boolean canBeUsedInAntiMagic(){ return this.useInAntiMagic; }
 		
-		public ITextComponent translated(){ return new TranslationTextComponent("enum."+Reference.ModInfo.MOD_ID+".ability_nature."+getString()); }
+		public Component translated(){ return Component.translatable("enum."+Reference.ModInfo.MOD_ID+".ability_nature."+getSerializedName()); }
 	}
 }

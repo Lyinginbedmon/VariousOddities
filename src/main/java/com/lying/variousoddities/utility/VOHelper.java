@@ -11,29 +11,27 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Predicate;
 
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.controller.LookController;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.DyeColor;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.control.LookControl;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
 
 public class VOHelper
@@ -93,7 +91,7 @@ public class VOHelper
 	
 	public static boolean isCreativeOrSpectator(@Nullable LivingEntity player)
 	{
-		return player != null && (player.getType() == EntityType.PLAYER && ((PlayerEntity)player).abilities.isCreativeMode || player.isSpectator());
+		return player != null && (player.getType() == EntityType.PLAYER && ((Player)player).isCreative() || player.isSpectator());
 	}
     
     /** Returns the modulus of the given value, accounting for errors in Java's function when dealing with negative values */
@@ -104,50 +102,50 @@ public class VOHelper
     	return xMod;
     }
 	
-	public static Vector3d getVectorForRotation(float pitch, float yaw)
+	public static Vec3 getVectorForRotation(float pitch, float yaw)
 	{
-        float f = MathHelper.cos(-yaw * 0.017453292F - (float)Math.PI);
-        float f1 = MathHelper.sin(-yaw * 0.017453292F - (float)Math.PI);
-        float f2 = -MathHelper.cos(-pitch * 0.017453292F);
-        float f3 = MathHelper.sin(-pitch * 0.017453292F);
-        return new Vector3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+        float f = Mth.cos(-yaw * 0.017453292F - (float)Math.PI);
+        float f1 = Mth.sin(-yaw * 0.017453292F - (float)Math.PI);
+        float f2 = -Mth.cos(-pitch * 0.017453292F);
+        float f3 = Mth.sin(-pitch * 0.017453292F);
+        return new Vec3((double)(f1 * f2), (double)f3, (double)(f * f2));
 	}
 	
 	public static LivingEntity getEntityLookTarget(@Nullable LivingEntity entityIn)
 	{
 		if(entityIn == null) return null;
-		return getEntityLookTarget(entityIn, (entityIn instanceof PlayerEntity ? ((PlayerEntity)entityIn).getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue() : 5D));
+		return getEntityLookTarget(entityIn, (entityIn instanceof Player ? ((Player)entityIn).getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue() : 5D));
 	}
 	
 	public static LivingEntity getEntityLookTarget(LivingEntity entityIn, double range)
 	{
-		if(entityIn == null || entityIn.getEntityWorld() == null || range < 0D) return null;
+		if(entityIn == null || entityIn.getLevel() == null || range < 0D) return null;
 		
-		Vector3d headPos = entityIn.getEyePosition(1F);
-		Vector3d lookVec = entityIn.getLookVec();
-		if(entityIn instanceof MobEntity)
+		Vec3 headPos = entityIn.getEyePosition(1F);
+		Vec3 lookVec = entityIn.getLookAngle();
+		if(entityIn instanceof Monster)
 		{
-			MobEntity living = (MobEntity)entityIn;
-			LookController helper = living.getLookController();
+			Monster living = (Monster)entityIn;
+			LookControl helper = living.getLookControl();
 			
-			lookVec = new Vector3d(helper.getLookPosX(), helper.getLookPosY(), helper.getLookPosZ());
+			lookVec = new Vec3(helper.getWantedX(), helper.getWantedY(), helper.getWantedZ());
 			lookVec = lookVec.subtract(headPos).normalize();
 		}
 		
 		LivingEntity bestGuess = null;
 		double smallestDist = Double.MAX_VALUE;
-		for(LivingEntity nearby : entityIn.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, entityIn.getBoundingBox().grow(range), new Predicate<LivingEntity>()
+		for(LivingEntity nearby : entityIn.getLevel().getEntitiesOfClass(LivingEntity.class, entityIn.getBoundingBox().inflate(range), new Predicate<LivingEntity>()
 				{
 					public boolean apply(LivingEntity input)
 					{
-						Vector3d lookEnd = headPos.add(entityIn.getLookVec().mul(range, range, range));
-						return entityIn.canEntityBeSeen(input) && input.getBoundingBox().intersects(headPos, lookEnd);
+						Vec3 lookEnd = headPos.add(entityIn.getLookAngle().multiply(range, range, range));
+						return entityIn.hasLineOfSight(input) && input.getBoundingBox().intersects(headPos, lookEnd);
 					}
 				}))
 		{
 			if(nearby == entityIn) continue;
 			
-			double distToEnt = entityIn.getDistance(nearby);
+			double distToEnt = entityIn.distanceTo(nearby);
 			if(smallestDist > distToEnt)
 			{
 				bestGuess = nearby;
@@ -212,18 +210,18 @@ public class VOHelper
 		return fragments;
 	}
 	
-	public static List<ITextProperties> getWrappedText(ITextComponent text, FontRenderer font, int maxWidth)
+	public static List<FormattedText> getWrappedText(Component text, Font font, int maxWidth)
 	{
 		Style style = text.getStyle();
-        List<ITextProperties> wrappedTextLines = new ArrayList<>();
-        for(ITextProperties line : font.getCharacterManager().func_238362_b_(text, maxWidth, style))
+        List<FormattedText> wrappedTextLines = new ArrayList<>();
+        for(FormattedText line : font.getSplitter().splitLines(text, maxWidth, style))
             wrappedTextLines.add(line);
 		return wrappedTextLines;
 	}
 	
 	public static String obfuscateStringRandomly(String sentence, long seed, int odds, boolean preserveSpaces)
 	{
-		return obfuscateStringRandomly(sentence, TextFormatting.GRAY + "", seed, odds, preserveSpaces);
+		return obfuscateStringRandomly(sentence, ChatFormatting.GRAY + "", seed, odds, preserveSpaces);
 	}
 	/**
 	 * Returns the given sentence with characters randomly obfuscated according to the given RNG seed and odds.
@@ -244,7 +242,7 @@ public class VOHelper
 		{
 			String letter = sentence.charAt(index) + "";
 			boolean shouldObfuscate = rand.nextFloat() < percentageObfuscated && (preserveSpaces ? !letter.equals(" ") : true);
-			if(shouldObfuscate) obfuscated += TextFormatting.OBFUSCATED + "" + letter + TextFormatting.RESET + defaultFormatting;
+			if(shouldObfuscate) obfuscated += ChatFormatting.OBFUSCATED + "" + letter + ChatFormatting.RESET + defaultFormatting;
 			else obfuscated += letter;
 		}
 		return obfuscated;
@@ -253,7 +251,7 @@ public class VOHelper
     /**
      * Creates a Vec3 using the pitch and yaw of the entities rotation.
      */
-	public static Vector3d getVectorForRotation(float yaw)
+	public static Vec3 getVectorForRotation(float yaw)
     {
     	return getVectorForRotation(0F, yaw);
     }
@@ -321,15 +319,15 @@ public class VOHelper
      * Returns a list of all contiguous replaceable blocks around the given point.<br>
      * Note: Higher maximum distances will dramatically increase CPU load.
      */
-    public static List<BlockPos> getReplaceableVolumeAround(BlockPos origin, World world, int maxDist)
+    public static List<BlockPos> getReplaceableVolumeAround(BlockPos origin, Level world, int maxDist)
     {
     	return getReplaceableVolumeAround(origin, world, maxDist, new IVolumePredicate()
     		{
-    			public boolean test(BlockPos pos, IWorld world){ return true; }
+    			public boolean test(BlockPos pos, Level world){ return true; }
     		});
     }
     
-    public static List<BlockPos> getReplaceableVolumeAround(BlockPos origin, World world, int maxDist, IVolumePredicate predicateIn)
+    public static List<BlockPos> getReplaceableVolumeAround(BlockPos origin, Level world, int maxDist, IVolumePredicate predicateIn)
     {
     	List<BlockPos> currentSet = new ArrayList<>();
     	List<BlockPos> nextSet = new ArrayList<>();
@@ -354,8 +352,8 @@ public class VOHelper
 	    	{
 	    		for(Direction face : Direction.values())
 	    		{
-	    			BlockPos offset = pos.offset(face);
-	    			if(offset.distanceSq(origin) > (maxDist * maxDist))
+	    			BlockPos offset = pos.relative(face);
+	    			if(offset.distSqr(origin) > (maxDist * maxDist))
 	    				continue;
 	    			
 	    			if(isBlockReplaceable(offset, world) && predicateIn.test(offset, world) && !(nextSet.contains(offset) || volume.contains(offset)))
@@ -375,87 +373,42 @@ public class VOHelper
     @FunctionalInterface
     public interface IVolumePredicate
     {
-       boolean test(BlockPos pos, IWorld world);
+       boolean test(BlockPos pos, Level world);
     }
     
-    private static boolean isBlockReplaceable(BlockPos pos, World world)
+    private static boolean isBlockReplaceable(BlockPos pos, Level world)
     {
-    	return world.isAirBlock(pos) || world.getBlockState(pos).getMaterial().isReplaceable();
+    	return world.isEmptyBlock(pos) || world.getBlockState(pos).getMaterial().isReplaceable();
     }
     
-    public static PlayerEntity getPlayerEntityByName(World worldIn, String playerName)
+    public static Player getPlayerEntityByName(Level worldIn, String playerName)
     {
-    	for(PlayerEntity player : worldIn.getPlayers())
-    		if(player.getName().getUnformattedComponentText().equals(playerName))
+    	for(Player player : worldIn.players())
+    		if(player.getName().getString().equals(playerName))
     			return player;
     	return null;
     }
-    
-    public static void addRotationToEntityHead(@Nullable LivingEntity entity, double yaw, double pitch)
-    {
-    	if(entity == null)
-    		return;
-    	
-        double pitchAdj = pitch * 0.15D;
-        double yawAdj = yaw * 0.15D;
-        entity.rotationPitch = (float)((double)entity.rotationPitch + pitchAdj);
-        entity.rotationYaw = (float)((double)entity.rotationYaw + yawAdj);
-        entity.rotationPitch = MathHelper.clamp(entity.rotationPitch, -90.0F, 90.0F);
-        
-        entity.prevRotationPitch = (float)((double)entity.prevRotationPitch + pitchAdj);
-        entity.prevRotationYaw = (float)((double)entity.prevRotationYaw + yawAdj);
-        entity.prevRotationPitch = MathHelper.clamp(entity.prevRotationPitch, -90.0F, 90.0F);
-        
-        if(entity.getRidingEntity() != null)
-        	entity.getRidingEntity().applyOrientationToEntity(entity);
-    }
-    
-    public static void copyRotationFrom(Entity from, Entity to)
-    {
-    	to.rotationPitch = from.rotationPitch;
-    	to.rotationYaw = from.rotationYaw;
-		
-		to.prevRotationPitch = from.prevRotationPitch;
-		to.prevRotationYaw = from.prevRotationYaw;
-		
-		if(to instanceof LivingEntity && from instanceof LivingEntity)
-		{
-			LivingEntity livingTo = (LivingEntity)to;
-			LivingEntity livingFrom = (LivingEntity)from;
-			
-			livingTo.rotationYawHead = livingFrom.rotationYawHead;
-			livingTo.prevRotationYawHead = livingFrom.prevRotationYawHead;
-			
-			livingTo.renderYawOffset = livingFrom.renderYawOffset;
-			livingTo.prevRenderYawOffset = livingFrom.prevRenderYawOffset;
-			
-			livingTo.limbSwing = livingFrom.limbSwing;
-			livingTo.limbSwingAmount = livingFrom.limbSwingAmount;
-			livingTo.prevLimbSwingAmount = livingFrom.prevLimbSwingAmount;
-		}
-    }
-    
 	
 	public static double getMobAttackReachSqr(LivingEntity attacker, LivingEntity attackTarget)
 	{
-		return (double)(attacker.getWidth() * 2.0F * attacker.getWidth() * 2.0F + attackTarget.getWidth());
+		return (double)(attacker.getBbWidth() * 2.0F * attacker.getBbWidth() * 2.0F + attackTarget.getBbWidth());
 	}
 	
-	public static int getSkyLight(BlockPos pos, World world)
+	public static int getSkyLight(BlockPos pos, Level world)
 	{
-		if(!world.getDimensionType().hasSkyLight())
+		if(!world.dimensionType().hasSkyLight())
 			return 0;
 		
-		int light = world.getLightFor(LightType.SKY, pos) - world.getSkylightSubtracted();
+		int light = world.getBrightness(LightLayer.SKY, pos) - world.getSkyDarken();
 		if(light > 0)
 		{
-			float sunAngle = world.getCelestialAngleRadians(1.0F);
+			float sunAngle = world.getSunAngle(1.0F);
 		    float f1 = sunAngle < (float)Math.PI ? 0.0F : ((float)Math.PI * 2F);
 		    sunAngle = sunAngle + (f1 - sunAngle) * 0.2F;
-		    light = Math.round((float)light * MathHelper.cos(sunAngle));
+		    light = Math.round((float)light * Mth.cos(sunAngle));
 		}
 		
-		return MathHelper.clamp(light, 0, 15);
+		return Mth.clamp(light, 0, 15);
 	}
 	
 	private static final Map<EntityType<?>, String> SKULL_MAP = new HashMap<>();
@@ -475,11 +428,11 @@ public class VOHelper
 		else
 		{
 			ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
-			CompoundNBT data = new CompoundNBT();
+			CompoundTag data = new CompoundTag();
 			if(SKULL_MAP.containsKey(entity.getType()))
 				data.putString("SkullOwner", SKULL_MAP.get(entity.getType()));
 			else if(entity.getType() == EntityType.PLAYER)
-				data.put("SkullOwner", NBTUtil.writeGameProfile(new CompoundNBT(), ((PlayerEntity)entity).getGameProfile()));
+				data.put("SkullOwner", NbtUtils.writeGameProfile(new CompoundTag(), ((Player)entity).getGameProfile()));
 			stack.setTag(data);
 			return stack;
 		}

@@ -1,5 +1,6 @@
 package com.lying.variousoddities.client.gui;
 
+import java.lang.annotation.ElementType;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -20,28 +21,16 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 import com.lying.variousoddities.utility.VOHelper;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.math.Matrix4f;
 
-import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.client.gui.ForgeIngameGui;
 
 @OnlyIn(Dist.CLIENT)
 public class GuiHandler
@@ -52,7 +41,7 @@ public class GuiHandler
 	
 	public static Minecraft mc;
 	public static IProfiler profiler;
-	public static PlayerEntity player;
+	public static Player player;
 	
 	private static final double ICON_SIZE = 9D;
 	private static final float TEX_SIZE = 128F;
@@ -133,7 +122,7 @@ public class GuiHandler
 	{
 		if(!CURTAIL_EXCEPTIONS.contains(event.getType()))
 		{
-			PlayerEntity localPlayer = Minecraft.getInstance().player;
+			Player localPlayer = Minecraft.getInstance().player;
 			if(!PlayerData.isPlayerNormalFunction(localPlayer) && !VOHelper.isCreativeOrSpectator(localPlayer))
 				event.setCanceled(true);
 		}

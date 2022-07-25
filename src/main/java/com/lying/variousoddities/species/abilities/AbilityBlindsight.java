@@ -2,15 +2,14 @@ package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 public class AbilityBlindsight extends AbilityVision
 {
@@ -39,18 +38,18 @@ public class AbilityBlindsight extends AbilityVision
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
-	public ITextComponent translatedName(){ return new TranslationTextComponent("ability."+Reference.ModInfo.MOD_ID+".blindsight", (int)range); }
+	public Component translatedName(){ return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".blindsight", (int)range); }
 	
 	public boolean testEntity(Entity entity, LivingEntity player)
 	{
 		if(canAbilityAffectEntity(entity, player))
 			return false;
 		
-		Vector3d eyePos = new Vector3d(player.getPosX(), player.getPosYEye(), player.getPosZ());
+		Vec3 eyePos = new Vec3(player.getX(), player.getEyeY(), player.getZ());
 		for(int i=5; i>0; i--)
 		{
-			Vector3d pos = new Vector3d(entity.getPosX(), entity.getPosY() + (double)i / 5 * entity.getHeight(), entity.getPosZ());
-			if(player.getEntityWorld().rayTraceBlocks(new RayTraceContext(eyePos, pos, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, player)).getType() == BlockRayTraceResult.Type.MISS)
+			Vec3 pos = new Vec3(entity.getX(), entity.getY() + (double)i / 5 * entity.getBbHeight(), entity.getZ());
+			if(player.getLevel().clip(new ClipContext(eyePos, pos, ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, player)).getType() == BlockHitResult.Type.MISS)
 				return true;
 		}
 		return false;
@@ -60,7 +59,7 @@ public class AbilityBlindsight extends AbilityVision
 	{
 		public Builder(){ super(REGISTRY_NAME); }
 		
-		public Ability create(CompoundNBT compound)
+		public Ability create(CompoundTag compound)
 		{
 			Ability ability = new AbilityBlindsight();
 			ability.readFromNBT(compound);

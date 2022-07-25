@@ -5,14 +5,12 @@ import java.util.List;
 
 import com.lying.variousoddities.entity.ai.controller.EntityController;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.Level;
 
-public abstract class EntityOddity extends CreatureEntity
+public abstract class EntityOddity extends Mob
 {
     /** A list of EntityControllers able to influence this entity */
 	@SuppressWarnings("rawtypes")
@@ -22,7 +20,7 @@ public abstract class EntityOddity extends CreatureEntity
 	private EntityController activeController = null;
 	
 	@SuppressWarnings("rawtypes")
-	protected EntityOddity(EntityType<? extends EntityOddity> type, World worldIn)
+	protected EntityOddity(EntityType<? extends EntityOddity> type, Level worldIn)
 	{
 		super(type, worldIn);
 		
@@ -32,7 +30,7 @@ public abstract class EntityOddity extends CreatureEntity
 	
     public static AttributeModifierMap.MutableAttribute getAttributes()
     {
-        return MobEntity.func_233666_p_()
+        return Mob.func_233666_p_()
         		.createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)
         		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.275F);
     }

@@ -10,8 +10,8 @@ import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.world.savedata.FactionManager;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ConfigVO
@@ -263,7 +263,7 @@ public class ConfigVO
 				}
 			}
 			
-			public boolean isOddityAIEnabled(EntityType<?> type){ return isOddityAIEnabled(type.getRegistryName()); }
+			public boolean isOddityAIEnabled(EntityType<?> type){ return isOddityAIEnabled(type.getDescriptionId()); }
 			public boolean isOddityAIEnabled(ResourceLocation registry){ return isOddityAIEnabled(registry.getPath()); }
 			public boolean isOddityAIEnabled(String mobName)
 			{
@@ -310,7 +310,7 @@ public class ConfigVO
 			}
 			
 			public boolean odditySpawnsEnabled(){ return naturalSpawnsCache; }
-			public boolean isOdditySpawnEnabled(EntityType<?> type){ return isOdditySpawnEnabled(type.getRegistryName()); }
+			public boolean isOdditySpawnEnabled(EntityType<?> type){ return isOdditySpawnEnabled(type.getDescriptionId()); }
 			public boolean isOdditySpawnEnabled(ResourceLocation registry){ return isOdditySpawnEnabled(registry.getPath()); }
 			public boolean isOdditySpawnEnabled(String mobName)
 			{

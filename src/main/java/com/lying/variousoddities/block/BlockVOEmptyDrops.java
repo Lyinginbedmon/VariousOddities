@@ -2,16 +2,16 @@ package com.lying.variousoddities.block;
 
 import java.util.Random;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.material.MaterialColor;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MaterialColor;
 
 public class BlockVOEmptyDrops extends VOBlock
 {
-	public BlockVOEmptyDrops(String nameIn, AbstractBlock.Properties properties)
+	public BlockVOEmptyDrops(String nameIn, BlockBehaviour.Properties properties)
 	{
 		super(properties);
 	}

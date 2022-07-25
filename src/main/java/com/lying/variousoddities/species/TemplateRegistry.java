@@ -54,13 +54,10 @@ import com.lying.variousoddities.species.templates.TypePrecondition;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
-import net.minecraft.client.resources.JsonReloadListener;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.ItemStack;
 
 public class TemplateRegistry extends JsonReloadListener
 {
@@ -200,7 +197,7 @@ public class TemplateRegistry extends JsonReloadListener
 		
 		addTemplate(new Template(TEMPLATE_FIENDISH, UUID_FIENDISH)
 				.setPower(2)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".fiendish"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".fiendish"))
 				.addPrecondition(TypePrecondition.isCorporeal())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.ABERRATION, EnumCreatureType.ANIMAL, EnumCreatureType.DRAGON, EnumCreatureType.FEY, EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.OOZE, EnumCreatureType.PLANT, EnumCreatureType.VERMIN))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
@@ -211,7 +208,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityResistance(5, DamageType.FIRE))));
 		addTemplate(new Template(TEMPLATE_CELESTIAL, UUID_CELESTIAL)
 				.setPower(2)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".celestial"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".celestial"))
 				.addPrecondition(TypePrecondition.isCorporeal())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.ABERRATION, EnumCreatureType.ANIMAL, EnumCreatureType.DRAGON, EnumCreatureType.FEY, EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MAGICAL_BEAST, EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.OOZE, EnumCreatureType.PLANT, EnumCreatureType.VERMIN))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
@@ -223,7 +220,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityResistance(5, DamageType.LIGHTNING))));
 		addTemplate(new Template(TEMPLATE_ZOMBIE, UUID_ZOMBIE)
 				.setPower(1)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".zombie"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".zombie"))
 				.addPrecondition(TypePrecondition.isCorporeal())
 				.addPrecondition(TypePrecondition.isLiving())
 				.addPrecondition(TypePrecondition.isNoneOf(EnumCreatureType.OOZE, EnumCreatureType.PLANT))
@@ -236,7 +233,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilitySunBurn())));
 		addTemplate(new Template(TEMPLATE_LICH, UUID_LICH)
 				.setPower(4)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".lich"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".lich"))
 				.addPrecondition(TypePrecondition.isLiving())
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.HUMANOID))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
@@ -246,11 +243,11 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.LIGHTNING, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityResistanceSpell(MagicSubType.MIND_AFFECTING)))
-				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new EffectInstance(VOPotions.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(new TranslationTextComponent("ability.varodd:lich_touch"))))
+				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new MobEffectInstance(VOPotions.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(Component.translatable("ability.varodd:lich_touch"))))
 				.addOperation(AbilityOperation.add(new AbilityStartingItem(new ItemStack(VOBlocks.PHYLACTERY)))));
 		addTemplate(new Template(TEMPLATE_WINGED, UUID_WINGED)
 				.setPower(2)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".winged"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".winged"))
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.ANIMAL, EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID, EnumCreatureType.VERMIN))
 				.addPrecondition(AbilityPrecondition.hasNo(new AbilityFlight(Grade.AVERAGE)))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.MAGICAL_BEAST).setCondition(new Condition(Style.OR, EnumCreatureType.ANIMAL, EnumCreatureType.VERMIN)))
@@ -258,7 +255,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityFlight(Grade.AVERAGE))));
 		addTemplate(new Template(TEMPLATE_REPTILIAN, UUID_REPTILIAN)
 				.setPower(2)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".reptilian"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".reptilian"))
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.GIANT, EnumCreatureType.HUMANOID))
 				.addPrecondition(TypePrecondition.isNoneOf(EnumCreatureType.AQUATIC, EnumCreatureType.REPTILE))
 				.addOperation(new TypeOperation(Operation.ADD, EnumCreatureType.REPTILE))
@@ -270,7 +267,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityHoldBreath())));
 		addTemplate(new Template(TEMPLATE_INSECTILE, UUID_INSECTILE)
 				.setPower(2)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".insectile"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".insectile"))
 				.addPrecondition(TypePrecondition.isAnyOf(EnumCreatureType.GIANT, EnumCreatureType.HUMANOID, EnumCreatureType.MONSTROUS_HUMANOID))
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.ABERRATION))
 				.addOperation(AbilityOperation.add(true, new AbilityNaturalArmour(2D)))
@@ -279,14 +276,14 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(true, new AbilityTremorsense(16D))));
 		addTemplate(new Template(TEMPLATE_NECROPOLITAN, UUID_NECROPOLITAN)
 				.setPower(0)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".necropolitan"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".necropolitan"))
 				.addPrecondition(TypePrecondition.isHumanShaped())
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
 				.addOperation(AbilityOperation.loseCon())
 				.addOperation(AbilityOperation.add(new AbilityNaturalRegen())));
 		addTemplate(new Template(TEMPLATE_VAMPIRE, UUID_VAMPIRE)
 				.setPower(8)
-				.setDisplayName(new TranslationTextComponent("template."+Reference.ModInfo.MOD_ID+".vampire"))
+				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".vampire"))
 				.addPrecondition(TypePrecondition.isHumanShaped())
 				.addOperation(new OperationReplaceSupertypes(EnumCreatureType.UNDEAD))
 				.addOperation(AbilityOperation.loseCon())

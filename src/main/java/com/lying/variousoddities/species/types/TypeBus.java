@@ -16,19 +16,19 @@ import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerEntity.SleepResult;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.util.DamageSource;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Player.BedSleepingProblem;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -43,14 +43,14 @@ public class TypeBus
 	public static boolean shouldFire(){ return ConfigVO.MOBS.typeSettings.typesMatter(); }
 	
 	@SubscribeEvent
-	public static void onPlayerLogInEvent(EntityJoinWorldEvent event)
+	public static void onPlayerLogInEvent(EntityJoinLevelEvent event)
 	{
 		if(event.getEntity().getType() == EntityType.PLAYER)
 		{
-			World world = event.getWorld();
-			if(world != null && !world.isRemote)
+			Level world = event.getLevel();
+			if(world != null && !world.isClientSide)
 			{
-				ServerPlayerEntity player = (ServerPlayerEntity)event.getEntity();
+				ServerPlayer player = (ServerPlayer)event.getEntity();
 				TypesManager manager = TypesManager.get(world);
 				if(manager != null)
 					manager.notifyPlayer(player);
@@ -77,16 +77,16 @@ public class TypeBus
 	public static void onSleepEvent(PlayerSleepInBedEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getPlayer() != null && event.getPos() != null)
+		if(event.getEntity() != null && event.getPos() != null)
 		{
-			PlayerEntity player = event.getPlayer();
+			Player player = event.getEntity();
 			if(!ActionSet.fromTypes(player, EnumCreatureType.getCreatureTypes(player)).sleeps())
 			{
-				event.setResult(SleepResult.NOT_POSSIBLE_NOW);
-				if(!player.getEntityWorld().isRemote)
+				event.setResult(BedSleepingProblem.NOT_POSSIBLE_NOW);
+				if(!player.getLevel().isClientSide)
 				{
-					ServerPlayerEntity playerServer = (ServerPlayerEntity)player;
-					playerServer.func_242111_a(playerServer.getServerWorld().getDimensionKey(), event.getPos(), 0.0F, true, true);
+					ServerPlayer playerServer = (ServerPlayer)player;
+					playerServer.setRespawnPosition(playerServer.getLevel().dimension(), event.getPos(), 0.0F, true, true);
 				}
 				return;
 			}
@@ -100,7 +100,7 @@ public class TypeBus
 		if(!shouldFire()) return;
 		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
 		{
-			if(AbilityRegistry.hasAbility(event.getEntityLiving(), AbilityImmunityCrits.REGISTRY_NAME))
+			if(AbilityRegistry.hasAbility(event.getEntity(), AbilityImmunityCrits.REGISTRY_NAME))
 			{
 				event.setDamageModifier(1.0F);
 				event.setResult(Result.DENY);
@@ -113,10 +113,10 @@ public class TypeBus
 	public static void onLivingAttackEvent(LivingAttackEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
+		if(event.getEntity() != null && event.getEntity().isAlive())
 		{
-			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(event.getEntityLiving());
-			ActionSet actions = ActionSet.fromTypes(event.getEntityLiving(), types);
+			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(event.getEntity());
+			ActionSet actions = ActionSet.fromTypes(event.getEntity(), types);
 			DamageSource source = event.getSource();
 			
 			// Creatures that don't need to breathe cannot drown or suffocate
@@ -133,7 +133,7 @@ public class TypeBus
 			}
 			else if(event.getAmount() > 0F)
 			{
-				DamageResistanceEvent resistanceEvent = new DamageResistanceEvent(source, event.getEntityLiving());
+				DamageResistanceEvent resistanceEvent = new DamageResistanceEvent(source, event.getEntity());
 				MinecraftForge.EVENT_BUS.post(resistanceEvent);
 				DamageResist resistance = resistanceEvent.getResistance();
 				if(resistance == DamageResist.IMMUNE)
@@ -147,10 +147,10 @@ public class TypeBus
 	public static void onLivingHurtEvent(LivingHurtEvent event)
 	{
 		if(!shouldFire()) return;
-		if(event.getEntityLiving() != null && event.getEntityLiving().isAlive())
+		if(event.getEntity() != null && event.getEntity().isAlive())
 		{
-			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(event.getEntityLiving());
-			ActionSet actions = ActionSet.fromTypes(event.getEntityLiving(), types);
+			List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(event.getEntity());
+			ActionSet actions = ActionSet.fromTypes(event.getEntity(), types);
 			
 			DamageSource source = event.getSource();
 			// Creatures that don't need to breathe cannot drown or suffocate
@@ -173,7 +173,7 @@ public class TypeBus
 			}
 			else
 			{
-				DamageResistanceEvent resistanceEvent = new DamageResistanceEvent(source, event.getEntityLiving());
+				DamageResistanceEvent resistanceEvent = new DamageResistanceEvent(source, event.getEntity());
 				MinecraftForge.EVENT_BUS.post(resistanceEvent);
 				DamageResist resistance = resistanceEvent.getResistance();
 				switch(resistance)
@@ -188,22 +188,23 @@ public class TypeBus
 	}
 	
 	/** Modifies damage received according to configured creature types */
+	@SuppressWarnings("deprecation")
 	@SubscribeEvent
 	public static void onLivingDamageEvent(LivingDamageEvent event)
 	{
 		if(!shouldFire()) return;
 		
-		if(!EnumCreatureType.getTypes(event.getEntityLiving()).isUndead()) return;
+		if(!EnumCreatureType.getTypes(event.getEntity()).isUndead()) return;
 		
-		if(event.getSource().getTrueSource() != null && event.getSource().getTrueSource() instanceof LivingEntity)
+		if(event.getSource().getEntity() != null && event.getSource().getEntity() instanceof LivingEntity)
 		{
-			LivingEntity livingSource = (LivingEntity)event.getSource().getTrueSource();
-			if(!livingSource.getHeldItemMainhand().isEmpty() && livingSource.getHeldItemMainhand().isEnchanted())
+			LivingEntity livingSource = (LivingEntity)event.getSource().getEntity();
+			if(!livingSource.getMainHandItem().isEmpty() && livingSource.getMainHandItem().isEnchanted())
 			{
-				CreatureAttribute actualType = event.getEntityLiving().getCreatureAttribute();
-				List<CreatureAttribute> configTypes = EnumCreatureType.getTypes(event.getEntityLiving()).getAttributes();
+				MobType actualType = event.getEntity().getMobType();
+				List<MobType> configTypes = EnumCreatureType.getTypes(event.getEntity()).getAttributes();
 				
-				Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(livingSource.getHeldItemMainhand());
+				Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(livingSource.getMainHandItem());
 				
 				float configMod = 0.0F;
 				float appliedMod = 0.0F;
@@ -211,13 +212,13 @@ public class TypeBus
 				{
 					int level = enchantments.get(enchant);
 					// Calculate the modifier that has already been applied when this event is called
-					appliedMod += enchant.calcDamageByCreature(level, actualType);
+					appliedMod += enchant.getDamageBonus(level, actualType);
 					
 					// Only apply the highest modifier, to avoid applying multiple applicable modifiers at once (with Sharpness, for instance)
 					float maxMod = 0.0F;
-					for(CreatureAttribute attribute : configTypes)
+					for(MobType attribute : configTypes)
 					{
-						float mod = enchant.calcDamageByCreature(level, attribute);
+						float mod = enchant.getDamageBonus(level, attribute);
 						if(mod > maxMod) maxMod = mod;
 					}
 					
@@ -235,11 +236,11 @@ public class TypeBus
 	public static void onBreakSpeedEvent(BreakSpeed event)
 	{
 		if(!shouldFire()) return;
-		PlayerEntity player = event.getPlayer();
-		if(player.getEntityWorld().isRemote) return;
+		Player player = event.getEntity();
+		if(player.getLevel().isClientSide) return;
 		
 		if(TypesManager.isMobOfType(player, EnumCreatureType.AQUATIC) || TypesManager.isMobOfType(player, EnumCreatureType.WATER))
-			if(player.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(player))
+			if(player.getEyeInFluidType() == Fluids.WATER.getFluidType() && !EnchantmentHelper.hasAquaAffinity(player))
 				event.setNewSpeed(event.getNewSpeed() * 5F);
 		
 //		if(TypesManager.isMobOfType(player, EnumCreatureType.EARTH) && (event.getState().getMaterial() == Material.ROCK || event.getState().getMaterial() == Material.EARTH))
