@@ -49,6 +49,7 @@ public class AbilityStartingItem extends Ability
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
 	
+	@SuppressWarnings("deprecation")
 	public ResourceLocation getMapName() 
 	{
 		ResourceLocation itemName = Registry.ITEM.getKey(namingStack().getItem());

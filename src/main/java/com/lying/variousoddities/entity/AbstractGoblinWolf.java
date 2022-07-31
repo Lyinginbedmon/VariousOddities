@@ -31,6 +31,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -42,6 +43,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -112,9 +114,9 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
 		applyGeneticAI();
 	}
 	
-    public static boolean canSpawnAt(EntityType<? extends Monster> animal, IWorld level, SpawnReason reason, BlockPos pos, Random random)
+	public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason)
     {
-        return level.getDifficulty() != Difficulty.PEACEFUL && CreatureEntity.canSpawnOn(animal, level, reason, pos, random);
+        return level.getDifficulty() != Difficulty.PEACEFUL && super.checkSpawnRules(world, reason);
     }
     
     public void writeAdditional(CompoundTag compound)

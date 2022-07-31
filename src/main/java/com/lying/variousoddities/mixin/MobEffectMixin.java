@@ -13,7 +13,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 
 @Mixin(MobEffect.class)
-public class EffectMixin
+public class MobEffectMixin
 {
 	@Inject(method = "performEffect", at = @At("HEAD"), cancellable = true)
 	public void performEffect(LivingEntity living, int amplifier, final CallbackInfo ci)

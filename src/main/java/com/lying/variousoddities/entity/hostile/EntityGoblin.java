@@ -32,6 +32,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
 import net.minecraft.world.level.Level;
@@ -82,18 +83,13 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
     	addController(new ControllerGoblin.ControllerGoblinWorgTamer(2, this));
     	addController(new ControllerGoblin.ControllerGoblinBasic(5, this));
 	}
-	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return EntityOddity.getAttributes();
+        return EntityOddity.createAttributes();
     }
     
     public ResourceLocation defaultSpecies(){ return SpeciesRegistry.SPECIES_GOBLIN; }
-    
-    public static boolean canSpawnAt(EntityType<? extends CreatureEntity> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
-    {
-	    return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
-    }
 	
 	public EntityAIOperateRoom getOperateRoomTask()
 	{

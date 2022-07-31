@@ -9,6 +9,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.species.abilities.Ability;
 
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
@@ -23,13 +24,13 @@ public class PacketAbilityRemove
 		mapName = nameIn;
 	}
 	
-	public static PacketAbilityRemove decode(PacketBuffer par1Buffer)
+	public static PacketAbilityRemove decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketAbilityRemove packet = new PacketAbilityRemove(par1Buffer.readResourceLocation());
 		return packet;
 	}
 	
-	public static void encode(PacketAbilityRemove msg, PacketBuffer par1Buffer)
+	public static void encode(PacketAbilityRemove msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeResourceLocation(msg.mapName);
 	}

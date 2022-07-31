@@ -8,7 +8,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -32,20 +32,20 @@ public class PacketSyncLivingData
 	
 	public boolean isRequest(){ return dataNBT != null; }
 	
-	public static PacketSyncLivingData decode(PacketBuffer par1Buffer)
+	public static PacketSyncLivingData decode(FriendlyByteBuf par1Buffer)
 	{
-		PacketSyncLivingData packet = new PacketSyncLivingData(par1Buffer.readUniqueId());
+		PacketSyncLivingData packet = new PacketSyncLivingData(par1Buffer.readUUID());
 		if(par1Buffer.readBoolean())
-			packet.dataNBT = par1Buffer.readCompoundTag();
+			packet.dataNBT = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncLivingData msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncLivingData msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.entityID);
+		par1Buffer.writeUUID(msg.entityID);
 		par1Buffer.writeBoolean(msg.isRequest());
 		if(msg.isRequest())
-			par1Buffer.writeCompoundTag(msg.dataNBT);
+			par1Buffer.writeNbt(msg.dataNBT);
 	}
 	
 	public static void handle(PacketSyncLivingData msg, Supplier<NetworkEvent.Context> cxt)

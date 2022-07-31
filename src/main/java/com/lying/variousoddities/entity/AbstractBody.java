@@ -21,11 +21,14 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Inventory;
@@ -58,7 +61,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public void copyFrom(LivingEntity living, boolean withDropChances)
 	{
 		setBody(living, withDropChances);
-		setPositionAndRotation(living.getX(), living.getY(), living.getZ(), living.getYRot(), living.getXRot());
+		moveTo(living.getX(), living.getY(), living.getZ(), living.getYRot(), living.getXRot());
 		setMotion(living.getMotion());
 	}
 	
@@ -71,10 +74,10 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		getDataManager().register(SOUL_ID, Optional.<UUID>empty());
 	}
 	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return LivingEntity.registerAttributes()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 10.0D);
+        return LivingEntity.createLivingAttributes()
+        		.add(Attributes.MAX_HEALTH, 10.0D);
     }
 	
 	public void readAdditional(CompoundTag compound)
@@ -108,7 +111,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = this.bodyInventory.getStackInSlot(i);
 			if(!stack.isEmpty())
-				stack.write(stackData);
+				stack.save(stackData);
 			armourList.add(stackData);
 		}
 		compound.put("ArmorItems", armourList);
@@ -119,7 +122,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = this.bodyInventory.getStackInSlot(4+i);
 			if(!stack.isEmpty())
-				stack.write(stackData);
+				stack.save(stackData);
 			handList.add(stackData);
 		}
 		compound.put("HandItems", handList);
@@ -130,7 +133,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = this.bodyInventory.getStackInSlot(6+i);
 			if(!stack.isEmpty())
-				stack.write(stackData);
+				stack.save(stackData);
 			inventoryList.add(stackData);
 		}
 		compound.put("Inventory", inventoryList);
@@ -138,7 +141,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return compound;
 	}
 	
-	protected static CompoundTag writeInventoryToNBT(CompoundTag compound, IInventory armour, IInventory hands, IInventory bag)
+	protected static CompoundTag writeInventoryToNBT(CompoundTag compound, Inventory armour, Inventory hands, Inventory bag)
 	{
 		if(armour != null)
 			compound.put("ArmorItems", writeInventoryToList(new ListTag(), armour));
@@ -149,14 +152,14 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return compound;
 	}
 	
-	protected static ListTag writeInventoryToList(ListTag list, IInventory inv)
+	protected static ListTag writeInventoryToList(ListTag list, Inventory inv)
 	{
 		for(int i=0; i<inv.getSizeInventory(); i++)
 		{
 			CompoundTag stackData = new CompoundTag();
 			ItemStack stack = inv.getStackInSlot(i);
 			if(!stack.isEmpty())
-				stack.write(stackData);
+				stack.save(stackData);
 			list.add(stackData);
 		}
 		return list;
@@ -168,10 +171,10 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		armourList.addAll(compound.getList("HandItems", 10));
 		armourList.addAll(compound.getList("Inventory", 10));
 		for(int i=0; i<this.bodyInventory.getSizeInventory(); i++)
-			this.bodyInventory.setInventorySlotContents(i, ItemStack.read(armourList.getCompound(i)));
+			this.bodyInventory.setInventorySlotContents(i, ItemStack.of(armourList.getCompound(i)));
 	}
 	
-	public void onInventoryChanged(IInventory invBasic)
+	public void onInventoryChanged(Inventory invBasic)
 	{
 		if(!getLevel().isClientSide)
 			getDataManager().set(EQUIPMENT, writeInventoryToNBT(new CompoundTag()));
@@ -183,7 +186,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		 * Clear nearby mob attack targets if they were targetting the owner of this corpse<br>
 		 * This stops mobs attacking players they've already "killed"
 		 */
-		for(Monster entity : victim.getLevel().getEntitiesWithinAABB(Monster.class, victim.getBoundingBox().inflate(64D)))
+		for(Mob entity : victim.getLevel().getEntitiesOfClass(Mob.class, victim.getBoundingBox().inflate(64D)))
 			if(entity.getTarget() != null && entity.getTarget().equals(victim))
 				entity.setTarget(null);
 	}
@@ -264,7 +267,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
-				getDataManager().set(PROFILE, NBTUtil.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
+				getDataManager().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
 				data.putString("id", living.getEntityString());
@@ -338,13 +341,13 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		
 		if(entity != null)
 		{
-			entity.read(data);
+			entity.load(data);
 			
 			if(entity.getType() == VOEntities.DUMMY_BIPED)
 				((EntityDummyBiped)entity).setGameProfile(getGameProfile());
 			
 			for(EquipmentSlot slot : EquipmentSlot.values())
-				entity.setItemStackToSlot(slot, getItemStackFromSlot(slot));
+				entity.setItemSlot(slot, getItemStackFromSlot(slot));
 			
 			if(entity instanceof LivingEntity)
 				LivingData.forEntity((LivingEntity)entity).setPocketInventory(getPocketInventory());
@@ -435,7 +438,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			this.bodyInventory.setInventorySlotContents(i+6, inventory.get(i));
 	}
 	
-	public IInventory getInventory()
+	public Inventory getInventory()
 	{
 		if(getLevel().isClientSide)
 			readInventoryFromNBT(getDataManager().get(EQUIPMENT));
@@ -494,9 +497,9 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			if(player != null)
 			{
 				SoulCondition condition = PlayerData.forPlayer(player).getSoulCondition();
-				double dist = player.getDistance(this);
+				double dist = player.distanceTo(this);
 				if(dist > condition.getWanderRange() && condition.getWanderRange() >= 0)
-					player.setPositionAndUpdate(getPosX(), getPosY(), getPosZ());
+					player.moveTo(getX(), getY(), getZ());
 			}
 		}
 		
@@ -516,7 +519,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		return hasBody() ? BODY_SIZE : super.getSize(poseIn);
 	}
 	
-	public final ActionResultType processInitialInteract(Player player, Hand hand)
+	public final ActionResultType processInitialInteract(Player player, InteractionHand hand)
 	{
 		ItemStack heldStack = player.getHeldItem(hand);
 		if(!heldStack.isEmpty() && heldStack.getItem() instanceof SpawnEggItem)

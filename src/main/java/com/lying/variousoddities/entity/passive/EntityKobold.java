@@ -18,31 +18,32 @@ import com.lying.variousoddities.init.VOSoundEvents;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.MoveTowardsRestrictionGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.HandSide;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 
 public class EntityKobold extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
@@ -59,7 +60,7 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
     
     private EntityAIOperateRoom operateRoomTask;
     
-	public EntityKobold(EntityType<? extends EntityKobold> type, World worldIn)
+	public EntityKobold(EntityType<? extends EntityKobold> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
@@ -67,7 +68,7 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	protected void registerData()
 	{
 		super.registerData();
-		Random rand = new Random(this.getUniqueID().getLeastSignificantBits());
+		Random rand = new Random(this.getUUID().getLeastSignificantBits());
 		DataHelper.Booleans.registerBooleanByte(getDataManager(), HORNS, rand.nextBoolean());
 		DataHelper.Booleans.registerBooleanByte(getDataManager(), SNOUT, rand.nextBoolean());
 		getDataManager().register(COLOR, rand.nextInt(3));
@@ -80,7 +81,7 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	{
         this.goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 1.0D));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
 		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
 		
 	    this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
@@ -97,18 +98,12 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
         addController(new ControllerKobold.ControllerKoboldGuardian(1, this));
     }
 	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return EntityOddity.getAttributes();
+        return EntityOddity.createAttributes();
     }
     
     public ResourceLocation defaultSpecies(){ return SpeciesRegistry.SPECIES_KOBOLD; }
-    
-    public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
-    {
-	    BlockPos blockpos = pos.down();
-	    return reason == SpawnReason.SPAWNER || world.getBlockState(blockpos).canEntitySpawn(world, blockpos, animal);
-    }
     
     public boolean isNoDespawnRequired(){ return true; }
 	
@@ -126,7 +121,7 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	{
 		super.updateAITasks();
 		// Cease the mate-dependent part of mating if we haven't completed it by dawn
-		if(isInLove() && getEntityWorld().getDayTime() < 15000){ setInLove(false); return; }
+		if(isInLove() && getLevel().getDayTime() < 15000){ setInLove(false); return; }
 	}
 	
 	public boolean isInLove(){ return getDataManager().get(IN_LOVE).booleanValue(); }
@@ -135,7 +130,7 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	public void onMatingFinish()
 	{
 		setInLove(false);
-		setGrowingAge(6000);
+		setAge(6000);
 	}
     
     public void livingTick()
@@ -154,10 +149,10 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	
 	public HandSide getPrimaryHand()
 	{
-		return (new Random(getUniqueID().getLeastSignificantBits())).nextBoolean() ? HandSide.LEFT : HandSide.RIGHT;
+		return (new Random(getUUID().getLeastSignificantBits())).nextBoolean() ? HandSide.LEFT : HandSide.RIGHT;
 	}
 	
-	public AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_)
+	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
 	{
 		return null;
 	}
@@ -173,8 +168,8 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, GUARD);
 		if(par1Bool)
 		{
-			if(getHeldItemOffhand().isEmpty())
-				setHeldItem(Hand.OFF_HAND, Items.TORCH.getDefaultInstance());
+			if(getOffhandItem().isEmpty())
+				setItemInHand(InteractionHand.OFF_HAND, Items.TORCH.getDefaultInstance());
 		}
 	}
 	
@@ -228,10 +223,10 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 	
 	public boolean getHorns(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), HORNS); }
 	
-	public void writeAdditional(CompoundNBT compound)
+	public void writeAdditional(CompoundTag compound)
 	{
 		super.writeAdditional(compound);
-		CompoundNBT displayData = new CompoundNBT();
+		CompoundTag displayData = new CompoundTag();
 			displayData.putInt("Color", getColor());
 			displayData.putBoolean("Horns", getHorns());
 			displayData.putBoolean("Snout", getShortSnout());
@@ -241,12 +236,12 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		compound.putBoolean("IsGuard", isHatcheryGuardian());
 	}
 	
-	public void readAdditional(CompoundNBT compound)
+	public void readAdditional(CompoundTag compound)
 	{
 		super.readAdditional(compound);
 		if(compound.contains("Display", 10))
 		{
-			CompoundNBT displayData = compound.getCompound("Display");
+			CompoundTag displayData = compound.getCompound("Display");
 			getDataManager().set(COLOR, displayData.getInt("Color"));
 			DataHelper.Booleans.setBooleanByte(getDataManager(), displayData.getBoolean("Horns"), HORNS);
 			DataHelper.Booleans.setBooleanByte(getDataManager(), displayData.getBoolean("Snout"), SNOUT);

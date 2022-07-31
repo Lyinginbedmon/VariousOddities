@@ -7,33 +7,34 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.condition.Conditions;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
 public class EntityAIFrightened extends Goal
 {
-	protected final Mob entity;
+	protected final PathfinderMob entity;
 	private final double nearSpeed;
 	protected LivingEntity avoidTarget;
 	protected final float avoidDistance;
 	protected Path path;
 	protected final PathNavigation navigation;
 	
-	public EntityAIFrightened(Mob mobIn)
+	public EntityAIFrightened(PathfinderMob mobIn)
 	{
 		this(mobIn, 6F, 1.5D);
 	}
 	
-	public EntityAIFrightened(Mob entityIn, float distance, double nearSpeedIn)
+	public EntityAIFrightened(PathfinderMob entityIn, float distance, double nearSpeedIn)
 	{
 		this.entity = entityIn;
 		this.avoidDistance = distance;
 		this.nearSpeed = nearSpeedIn;
 		this.navigation = entityIn.getNavigation();
-		this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Goal.Flag.TARGET));
+		this.setFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Goal.Flag.TARGET));
 	}
 	
 	/**
@@ -47,7 +48,7 @@ public class EntityAIFrightened extends Goal
 			return false;
 		
 		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID, this.avoidDistance);
-		terrorisers.removeIf((terroriser) -> { return terroriser.getDistance(entity) > avoidDistance || !entity.hasLineOfSight(terroriser); });
+		terrorisers.removeIf((terroriser) -> { return terroriser.distanceTo(entity) > avoidDistance || !entity.hasLineOfSight(terroriser); });
 		if(terrorisers.isEmpty())
 			return false;
 		
@@ -55,7 +56,7 @@ public class EntityAIFrightened extends Goal
 		double closest = Double.MAX_VALUE;
 		for(LivingEntity terroriser : terrorisers)
 		{
-			double dist = terroriser.getDistanceSq(entity);
+			double dist = terroriser.distanceTo(entity);
 			if(dist < closest)
 			{
 				closest = dist;
@@ -65,13 +66,13 @@ public class EntityAIFrightened extends Goal
 		if(this.avoidTarget == null)
 			return false;
 		
-		Vec3 randomPos = RandomPositionGenerator.findRandomTargetBlockAwayFrom(this.entity, 16, 7, this.avoidTarget.getPositionVec());
+		Vec3 randomPos = DefaultRandomPos.getPosAway(this.entity, 16, 7, this.avoidTarget.position());
 		if(randomPos == null)
 			return false;
-		else if(this.avoidTarget.getDistanceSq(randomPos.x, randomPos.y, randomPos.z) < this.avoidTarget.getDistanceSq(this.entity))
+		else if(this.avoidTarget.distanceToSqr(randomPos.x, randomPos.y, randomPos.z) < this.avoidTarget.distanceToSqr(this.entity))
 			return false;
 		
-		this.path = this.navigation.getPathToPos(randomPos.x, randomPos.y, randomPos.z, 0);
+		this.path = this.navigation.createPath(randomPos.x, randomPos.y, randomPos.z, 0);
 		return this.path != null;
 	}
 	

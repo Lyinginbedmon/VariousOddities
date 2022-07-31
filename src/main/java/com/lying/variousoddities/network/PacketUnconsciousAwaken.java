@@ -8,7 +8,7 @@ import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
 import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
@@ -17,12 +17,12 @@ public class PacketUnconsciousAwaken
 {
 	public PacketUnconsciousAwaken(){ }
 	
-	public static PacketUnconsciousAwaken decode(PacketBuffer par1Buffer)
+	public static PacketUnconsciousAwaken decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketUnconsciousAwaken();
 	}
 	
-	public static void encode(PacketUnconsciousAwaken msg, PacketBuffer par1Buffer)
+	public static void encode(PacketUnconsciousAwaken msg, FriendlyByteBuf par1Buffer)
 	{
 		
 	}

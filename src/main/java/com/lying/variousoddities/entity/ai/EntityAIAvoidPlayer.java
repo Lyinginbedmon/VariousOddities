@@ -1,21 +1,21 @@
 package com.lying.variousoddities.entity.ai;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.ai.goal.AvoidEntityGoal;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.player.Player;
 
-public class EntityAIAvoidPlayer extends AvoidEntityGoal<PlayerEntity>
+public class EntityAIAvoidPlayer extends AvoidEntityGoal<Player>
 {
-	final CreatureEntity mob;
+	final PathfinderMob mob;
 	
-	public EntityAIAvoidPlayer(CreatureEntity entityIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn)
+	public EntityAIAvoidPlayer(PathfinderMob entityIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn)
 	{
-		super(entityIn, PlayerEntity.class, avoidDistanceIn, farSpeedIn, nearSpeedIn);
+		super(entityIn, Player.class, avoidDistanceIn, farSpeedIn, nearSpeedIn);
 		mob = entityIn;
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		return mob.getAttackTarget() == null && super.shouldExecute();
+		return mob.getTarget() == null && super.canUse();
 	}
 }

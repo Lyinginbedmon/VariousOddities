@@ -5,16 +5,16 @@ import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.faction.FactionReputation;
 import com.lying.variousoddities.faction.FactionReputation.EnumAttitude;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.event.entity.living.EntityTeleportEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.entity.EntityTeleportEvent;
 
 public interface IChangeling extends IFactionMob
 {
@@ -102,17 +102,17 @@ public interface IChangeling extends IFactionMob
         return ItemStack.areItemStackTagsEqual(stack1, stack2);
     }
 	
-	public static EnumAttitude getChangelingAttitude(PlayerEntity par1Player, LivingEntity par2Entity)
+	public static EnumAttitude getChangelingAttitude(Player par1Player, LivingEntity par2Entity)
 	{
 		return FactionReputation.getPlayerAttitude(par1Player, ((IFactionMob)par2Entity).getFactionName(), par2Entity);
 	}
 	
-	public static boolean shouldReveal(PlayerEntity par1Player, LivingEntity par2Entity)
+	public static boolean shouldReveal(Player par1Player, LivingEntity par2Entity)
 	{
 		return getChangelingAttitude(par1Player, par2Entity) == EnumAttitude.HELPFUL;
 	}
 	
-	public static void addChangelingBehaviours(CreatureEntity creatureIn)
+	public static void addChangelingBehaviours(Mob creatureIn)
 	{
 		if(!(creatureIn instanceof IChangeling)) return;
 //		creatureIn.tasks.addTask(3, new EntityAIChangelingVisitHive(creatureIn));
@@ -138,20 +138,20 @@ public interface IChangeling extends IFactionMob
 		return null;
 	}
 	
-	public static void setChangelingAttributes(CreatureEntity creatureIn)
+	public static void setChangelingAttributes(Mob creatureIn)
 	{
         creatureIn.getAttribute(Attributes.FOLLOW_RANGE).setBaseValue(64.0D);
 	}
 	
-	public static boolean teleportTo(CreatureEntity theMob, double x, double y, double z)
+	public static boolean teleportTo(Mob theMob, double x, double y, double z)
 	{
 		EntityTeleportEvent.EnderEntity event = new EntityTeleportEvent.EnderEntity(theMob, x, y, z);
         if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event)) return false;
         boolean success = false;//theMob.attemptTeleport(event.getTargetX(), event.getTargetY(), event.getTargetZ());
         if(success)
         {
-            theMob.getEntityWorld().playSound((PlayerEntity)null, theMob.prevPosX, theMob.prevPosY, theMob.prevPosZ, SoundEvents.ENTITY_ENDERMAN_TELEPORT, theMob.getSoundCategory(), 1.0F, 1.0F);
-            theMob.playSound(SoundEvents.ENTITY_ENDERMAN_TELEPORT, 1.0F, 1.0F);
+            theMob.getLevel().playSound((Player)null, theMob.prevPosX, theMob.prevPosY, theMob.prevPosZ, SoundEvents.ENDERMAN_TELEPORT, theMob.getSoundSource(), 1.0F, 1.0F);
+            theMob.playSound(SoundEvents.ENDERMAN_TELEPORT, 1.0F, 1.0F);
         }
         return success;
 	}

@@ -6,7 +6,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -20,14 +20,14 @@ public class PacketSyncAir
 		air = airIn;
 	}
 	
-	public static PacketSyncAir decode(PacketBuffer par1Buffer)
+	public static PacketSyncAir decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketSyncAir packet = new PacketSyncAir();
 		packet.air = par1Buffer.readInt();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncAir msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncAir msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeInt(msg.air);
 	}

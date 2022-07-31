@@ -1,7 +1,5 @@
 package com.lying.variousoddities.entity;
 
-import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
@@ -10,7 +8,6 @@ import com.lying.variousoddities.entity.ai.hostile.EntityAIRatGnawing;
 import com.lying.variousoddities.entity.ai.hostile.EntityAIRatStand;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.client.renderer.EffectInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -19,16 +16,21 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public abstract class AbstractRat extends Mob
+public abstract class AbstractRat extends PathfinderMob
 {
 	public static final DataParameter<Byte>		EYES		= EntityDataManager.<Byte>createKey(AbstractRat.class, DataSerializers.BYTE);
 	public static final DataParameter<Integer>	STAND_TIME	= EntityDataManager.<Integer>createKey(AbstractRat.class, DataSerializers.VARINT);
@@ -60,16 +62,16 @@ public abstract class AbstractRat extends Mob
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
 		this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
 		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
-		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 		
 	    if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
 	    	this.goalSelector.addGoal(3, new EntityAIRatGnawing(this, 6, 100));
 	}
 	
-	protected abstract EntitySize getStandingSize();
-	protected abstract EntitySize getCrouchingSize();
+	protected abstract EntityDimensions getStandingSize();
+	protected abstract EntityDimensions getCrouchingSize();
 	
-	protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn)
+	protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn)
 	{
 		switch(poseIn)
 		{
@@ -85,7 +87,7 @@ public abstract class AbstractRat extends Mob
 		return ImmutableList.of(Pose.CROUCHING, Pose.STANDING);
 	}
 	
-	public EntitySize getSize(Pose pose)
+	public EntityDimensions getSize(Pose pose)
 	{
 		switch(pose)
 		{
@@ -131,11 +133,6 @@ public abstract class AbstractRat extends Mob
 	public void setEyesGlow(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, EYES); }
 	
 	public abstract int getRandomBreed();
-	
-    public static boolean canSpawnAt(EntityType<? extends Mob> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
-    {
-        return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
-    }
     
     public void writeAdditional(CompoundTag compound)
     {
@@ -180,7 +177,7 @@ public abstract class AbstractRat extends Mob
 		if(super.attackEntityAsMob(entityIn))
 		{
 	    	if(entityIn instanceof LivingEntity && this.getRatBreed() == EnumRatBreed.PLAGUE)
-	    		((LivingEntity)entityIn).addPotionEffect(new EffectInstance(Effects.POISON, 10, ratSize()));
+	    		((LivingEntity)entityIn).addEffect(new MobEffectInstance(MobEffects.POISON, 10, ratSize()));
 			
 			return true;
 		}
@@ -212,7 +209,7 @@ public abstract class AbstractRat extends Mob
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	int random = getRandomBreed();
 		setBreed(random);

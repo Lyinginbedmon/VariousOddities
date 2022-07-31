@@ -6,39 +6,45 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class BlockPhylacteryBase extends VOBlock
 {
 	public static final IntegerProperty POWER = IntegerProperty.create("power", 0, 15);
-	protected static final VoxelShape SHAPE = Block.makeCuboidShape(3.0D, 0.0D, 3.0D, 13.0D, 14.0D, 13.0D);
+	protected static final VoxelShape SHAPE = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 14.0D, 13.0D);
 	
 	public BlockPhylacteryBase(BlockBehaviour.Properties properties)
 	{
 		super(properties.notSolid().setOpaque(VOBlock::isntSolid).hardnessAndResistance(25.0F, 1200.0F));
-		this.setDefaultState(getDefaultState().with(POWER, 0));
+		this.registerDefaultState(defaultBlockState().setValue(POWER, 0));
 	}
 	
-	public VoxelShape getShape(BlockState state, Level worldIn, BlockPos pos, ISelectionContext context)
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context)
 	{
 		return SHAPE;
 	}
 	
-	public boolean isValidPosition(BlockState state, Level worldIn, BlockPos pos)
+	public boolean canSurvive(BlockState state, LevelReader worldIn, BlockPos pos)
 	{
-		return hasEnoughSolidSide(worldIn, pos.below(), Direction.UP);
+		return canSupportCenter(worldIn, pos.below(), Direction.UP);
 	}
 	
-	public BlockRenderType getRenderType(BlockState state)
+	public RenderShape getRenderShape(BlockState state)
 	{
-		return BlockRenderType.MODEL;
+		return RenderShape.MODEL;
 	}
 	
 	public boolean canProvidePower(BlockState state) { return true; }
@@ -69,19 +75,19 @@ public class BlockPhylacteryBase extends VOBlock
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void onBlockClicked(BlockState state, Level worldIn, BlockPos pos, Player player)
+	public void attack(BlockState state, Level worldIn, BlockPos pos, Player player)
 	{
 		powerBlock(state, worldIn, pos, 15);
-		super.onBlockClicked(state, worldIn, pos, player);
+		super.attack(state, worldIn, pos, player);
 	}
 	
-	public ActionResultType onBlockActivated(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handin, BlockHitResult hit)
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handin, BlockHitResult hit)
 	{
 		if(state.getValue(POWER) > 5)
-			return ActionResultType.CONSUME;
+			return InteractionResult.CONSUME;
 		
 		powerBlock(state, worldIn, pos, 5);
-		return ActionResultType.func_233537_a_(worldIn.isClientSide);
+		return InteractionResult.sidedSuccess(worldIn.isClientSide);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -102,7 +108,7 @@ public class BlockPhylacteryBase extends VOBlock
 			powerBlock(state, worldIn, pos, state.getValue(POWER) - 1);
 	}
 	
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder)
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
 	{
 		builder.add(POWER);
 	}

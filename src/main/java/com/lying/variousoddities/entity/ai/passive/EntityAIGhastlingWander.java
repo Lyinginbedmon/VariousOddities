@@ -1,27 +1,27 @@
 package com.lying.variousoddities.entity.ai.passive;
 
 import java.util.EnumSet;
-import java.util.Random;
 
 import com.lying.variousoddities.entity.ai.MovementControllerGhastling;
 import com.lying.variousoddities.entity.passive.EntityGhastling;
 import com.lying.variousoddities.entity.passive.EntityGhastling.Emotion;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.ai.controller.MovementController;
-import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.WalkNodeProcessor;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIGhastlingWander extends Goal
 {
-	private final World world;
+	private final Level world;
 	private final EntityGhastling creature;
 	private MovementControllerGhastling controller;
 	
@@ -32,18 +32,18 @@ public class EntityAIGhastlingWander extends Goal
 	
 	public EntityAIGhastlingWander(EntityGhastling entity, float probIn)
 	{
-		this.world = entity.getEntityWorld();
+		this.world = entity.getLevel();
 		this.creature = entity;
-		this.probability = MathHelper.clamp(probIn, 0F, 1F);
-		setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+		this.probability = Mth.clamp(probIn, 0F, 1F);
+		setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(this.creature.getEmotion() == Emotion.SLEEP || this.creature.isSitting())
+		if(this.creature.getEmotion() == Emotion.SLEEP || this.creature.isOrderedToSit())
 			return false;
 		
-		if(this.creature.getRNG().nextFloat() <= probability)
+		if(this.creature.getRandom().nextFloat() <= probability)
 			return false;
 		
 		MovementController moveHelper = this.creature.getMoveHelper();
@@ -61,24 +61,24 @@ public class EntityAIGhastlingWander extends Goal
 		return false;
 	}
 	
-	public boolean shouldContinueExecuting(){ return false; }
+	public boolean canContinueToUse(){ return false; }
 	
-	public void startExecuting()
+	public void start()
 	{
-		LivingEntity owner = this.creature.isTamed() ? this.creature.getOwner() : null;
+		LivingEntity owner = this.creature.isTame() ? this.creature.getOwner() : null;
 		double ownerDist =  owner != null ? owner.getDistanceSq(this.creature) : Double.MAX_VALUE;
 		
 		if(owner != null && ownerDist > (16D * 16D))
 			tryTeleportToOwner();
-		else if(this.creature.getRNG().nextInt(16) == 0)
+		else if(this.creature.getRandom().nextInt(16) == 0)
 		{
 			int attempts = 50;
-			Vector3d dest = null;
+			Vec3 dest = null;
 			do
 			{
 				dest = getRandomPosition();
 				
-				AxisAlignedBB bounds = this.creature.getBoundingBox().offset(dest);
+				AABB bounds = this.creature.getBoundingBox().move(dest);
 				if(!this.world.hasNoCollisions(this.creature, bounds))
 					dest = null;
 				else if(owner != null && owner.getDistanceSq(dest) > RANGE_MAX && owner.getDistanceSq(dest) > (ownerDist * 0.75D))
@@ -93,13 +93,13 @@ public class EntityAIGhastlingWander extends Goal
 			this.controller.clearMotion();;
 	}
 	
-	private Vector3d getRandomPosition()
+	private Vec3 getRandomPosition()
 	{
-		Random rand = this.creature.getRNG();
-		double x = this.creature.getPosX() + ((rand.nextDouble() * 2D - 1D) * RANGE);
-		double y = this.creature.getPosY() + ((rand.nextDouble() * 2D - 1D) * RANGE);
-		double z = this.creature.getPosZ() + ((rand.nextDouble() * 2D - 1D) * RANGE);
-		return new Vector3d(x, y, z);
+		RandomSource rand = this.creature.getRandom();
+		double x = this.creature.getX() + ((rand.nextDouble() * 2D - 1D) * RANGE);
+		double y = this.creature.getY() + ((rand.nextDouble() * 2D - 1D) * RANGE);
+		double z = this.creature.getZ() + ((rand.nextDouble() * 2D - 1D) * RANGE);
+		return new Vec3(x, y, z);
 	}
 	
 	private void setMoveTo(double x, double y, double z)
@@ -109,8 +109,8 @@ public class EntityAIGhastlingWander extends Goal
 	
 	private void tryTeleportToOwner()
 	{
-		Random rand = this.creature.getRNG();
-		BlockPos dest = this.creature.getOwner().getPosition();
+		RandomSource rand = this.creature.getRandom();
+		BlockPos dest = this.creature.getOwner().blockPosition();
 		for(int i=0; i<10; i++)
 		{
 			int x = (int)(((rand.nextDouble() - 0.5D) * 2D) * 3);
@@ -139,8 +139,8 @@ public class EntityAIGhastlingWander extends Goal
 			return false;
 		else
 		{
-			BlockPos blockpos = pos.subtract(this.creature.getPosition());
-			return this.world.hasNoCollisions(this.creature, this.creature.getBoundingBox().offset(blockpos));
+			BlockPos blockpos = pos.subtract(this.creature.blockPosition());
+			return this.world.hasNoCollisions(this.creature, this.creature.getBoundingBox().move(blockpos));
 		}
 	}
 }

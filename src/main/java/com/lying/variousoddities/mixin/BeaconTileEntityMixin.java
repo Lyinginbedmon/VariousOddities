@@ -44,7 +44,7 @@ public class BeaconTileEntityMixin
 		int duration = (9 + levels * 2) * 20;
 		AABB area = new AABB(tile.getBlockPos()).inflate(range).inflate(0D, tile.getLevel().getHeight(), 0D);
 		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
-		world.loadedBlockEntityList.forEach((tileEntity) -> 
+		world.loadedBlockEntityList.forEach((tileEntity) -> // FIXME Requires accessor in Level
 		{
 			BlockPos pos = tileEntity.getPos();
 			if(tileEntity.getType() == VOTileEntities.PHYLACTERY && area.contains(pos.getX(), pos.getY(), pos.getZ()))

@@ -1,14 +1,14 @@
 package com.lying.variousoddities.entity.ai;
 
-import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIWargWander extends WaterAvoidingRandomWalkingGoal
 {
 	private final boolean idleWander;
 	
-	public EntityAIWargWander(CreatureEntity creature, double speedIn)
+	public EntityAIWargWander(PathfinderMob creature, double speedIn)
 	{
 		super(creature, speedIn);
 		this.idleWander = true;
@@ -21,11 +21,11 @@ public class EntityAIWargWander extends WaterAvoidingRandomWalkingGoal
 			if(idleWander && this.creature.getIdleTime() >= 100)
 				return false;
 			
-			if(this.creature.getRNG().nextInt(this.executionChance) != 0)
+			if(this.creature.getRandom().nextInt(this.executionChance) != 0)
 				return false;
 		}
 		
-		Vector3d dest = this.getPosition();
+		Vec3 dest = this.position();
 		if(dest == null)
 			return false;
 		else

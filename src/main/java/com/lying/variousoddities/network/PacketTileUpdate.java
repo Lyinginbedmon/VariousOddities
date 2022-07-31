@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
@@ -21,18 +21,18 @@ public class PacketTileUpdate
 		data = tile.saveWithFullMetadata();
 	}
 	
-	public static PacketTileUpdate decode(PacketBuffer par1Buffer)
+	public static PacketTileUpdate decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketTileUpdate packet = new PacketTileUpdate();
 		packet.pos = par1Buffer.readBlockPos();
-		packet.data = par1Buffer.readCompoundTag();
+		packet.data = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketTileUpdate msg, PacketBuffer par1Buffer)
+	public static void encode(PacketTileUpdate msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeBlockPos(msg.pos);
-		par1Buffer.writeCompoundTag(msg.data);
+		par1Buffer.writeNbt(msg.data);
 	}
 	
 	public static void handle(PacketTileUpdate msg, Supplier<NetworkEvent.Context> cxt)

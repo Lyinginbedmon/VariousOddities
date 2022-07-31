@@ -6,7 +6,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
@@ -17,12 +17,12 @@ public class PacketAbilityCooldown
 {
 	public PacketAbilityCooldown(){ }
 	
-	public static PacketAbilityCooldown decode(PacketBuffer par1Buffer)
+	public static PacketAbilityCooldown decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketAbilityCooldown();
 	}
 	
-	public static void encode(PacketAbilityCooldown msg, PacketBuffer par1Buffer)
+	public static void encode(PacketAbilityCooldown msg, FriendlyByteBuf par1Buffer)
 	{
 		
 	}

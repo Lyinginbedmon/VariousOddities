@@ -4,42 +4,41 @@ import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.init.VOItems;
 import com.mojang.datafixers.util.Pair;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.PlayerContainer;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
 
-public class ContainerPlayerBody extends Container
+public class ContainerPlayerBody extends InventoryMenu
 {
 	private static final ResourceLocation[] ARMOR_SLOT_TEXTURES = new ResourceLocation[]{
-			PlayerContainer.EMPTY_ARMOR_SLOT_BOOTS, 
-			PlayerContainer.EMPTY_ARMOR_SLOT_LEGGINGS, 
-			PlayerContainer.EMPTY_ARMOR_SLOT_CHESTPLATE, 
-			PlayerContainer.EMPTY_ARMOR_SLOT_HELMET};
-	private static final EquipmentSlotType[] VALID_EQUIPMENT_SLOTS = new EquipmentSlotType[]{EquipmentSlotType.HEAD, EquipmentSlotType.CHEST, EquipmentSlotType.LEGS, EquipmentSlotType.FEET};
+			InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS, 
+			InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS, 
+			InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE, 
+			InventoryMenu.EMPTY_ARMOR_SLOT_HELMET};
+	private static final EquipmentSlot[] VALID_EQUIPMENT_SLOTS = new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	
-	public static ContainerPlayerBody fromNetwork(int windowId, PlayerInventory inv, PacketBuffer buf)
+	public static ContainerPlayerBody fromNetwork(int windowId, Inventory inv, FriendlyByteBuf buf)
 	{
-		PlayerEntity player = inv.player;
+		Player player = inv.player;
 		double range = player.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
-		Vector3d eyeStart = player.getEyePosition(0F);
-		Vector3d eyeEnd = eyeStart.add(player.getLook(0F).mul(range, range, range));
+		Vec3 eyeStart = player.getEyePosition(0F);
+		Vec3 eyeEnd = eyeStart.add(player.getLookAngle().multiply(range, range, range));
 		
 		AbstractBody likelyBody = null;
 		double minDist = Double.MAX_VALUE;
-		for(AbstractBody body : player.getEntityWorld().getEntitiesWithinAABB(AbstractBody.class, player.getBoundingBox().grow(range)))
+		for(AbstractBody body : player.getLevel().getEntitiesOfClass(AbstractBody.class, player.getBoundingBox().inflate(range)))
 		{
-			double dist = body.getDistance(player);
+			double dist = body.distanceTo(player);
 			if(body.getBoundingBox().intersects(eyeStart, eyeEnd))
 				if(dist < minDist)
 				{
@@ -49,22 +48,22 @@ public class ContainerPlayerBody extends Container
 		}
 		
 		if(likelyBody != null && likelyBody.isPlayer() && likelyBody.getSoul() != null)
-			return new ContainerPlayerBody(windowId, inv, ((PlayerEntity)likelyBody.getSoul()).inventory, likelyBody);
+			return new ContainerPlayerBody(windowId, inv, ((Player)likelyBody.getSoul()).getInventory(), likelyBody);
 		return null;
 	}
 	
 	public final AbstractBody theBody;
-	private final PlayerInventory bodyInventory;
+	private final Inventory bodyInventory;
 	
-	public ContainerPlayerBody(int windowId, PlayerInventory playerInventory, PlayerInventory bodyInventory, final AbstractBody bodyIn)
+	public ContainerPlayerBody(int windowId, Inventory playerInventory, Inventory bodyInventory, final AbstractBody bodyIn)
 	{
 		super(VOItems.CONTAINER_PLAYER_BODY, windowId);
 		this.theBody = bodyIn;
 		this.bodyInventory = bodyInventory;
 		
-		PlayerEntity player = playerInventory.player;
-		PlayerEntity player2 = bodyInventory.player;
-		bodyInventory.openInventory(player);
+		Player player = playerInventory.player;
+		Player player2 = bodyInventory.player;
+		bodyInventory.startOpen(player);
 		
 		// Body inventory
 		for(int i1 = 0; i1 < 3; ++i1)
@@ -81,14 +80,14 @@ public class ContainerPlayerBody extends Container
 					@OnlyIn(Dist.CLIENT)
 					public Pair<ResourceLocation, ResourceLocation> getBackground()
 					{
-						return Pair.of(PlayerContainer.LOCATION_BLOCKS_TEXTURE, PlayerContainer.EMPTY_ARMOR_SLOT_SHIELD);
+						return Pair.of(InventoryMenu.BLOCK_ATLAS, InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD);
 					}
 				});
 		
 		// Body armour
 		for(int k = 0; k < 4; ++k)
 		{
-			final EquipmentSlotType equipmentslottype = VALID_EQUIPMENT_SLOTS[k];
+			final EquipmentSlot equipmentslottype = VALID_EQUIPMENT_SLOTS[k];
 			this.addSlot(new Slot(bodyInventory, 39 - k, -10, k * 18)
 			{
 				/**
@@ -100,7 +99,7 @@ public class ContainerPlayerBody extends Container
 				/**
 				 * Check if the stack is allowed to be placed in this slot, used for armor slots as well as furnace fuel.
 				 */
-				public boolean isItemValid(ItemStack stack)
+				public boolean mayPlace(ItemStack stack)
 				{
 					return stack.canEquip(equipmentslottype, player2);
 				}
@@ -108,16 +107,16 @@ public class ContainerPlayerBody extends Container
 				/**
 				 * Return whether this slot's stack can be taken from this slot.
 				 */
-				public boolean canTakeStack(PlayerEntity playerIn)
+				public boolean mayPickup(Player playerIn)
 				{
-					ItemStack itemstack = this.getStack();
-					return !itemstack.isEmpty() && !playerIn.isCreative() && EnchantmentHelper.hasBindingCurse(itemstack) ? false : super.canTakeStack(playerIn);
+					ItemStack itemstack = this.getItem();
+					return !itemstack.isEmpty() && !playerIn.isCreative() && EnchantmentHelper.hasBindingCurse(itemstack) ? false : super.mayPickup(playerIn);
 				}
 				
 				@OnlyIn(Dist.CLIENT)
 				public Pair<ResourceLocation, ResourceLocation> getBackground()
 				{
-					return Pair.of(PlayerContainer.LOCATION_BLOCKS_TEXTURE, ARMOR_SLOT_TEXTURES[equipmentslottype.getIndex()]);
+					return Pair.of(InventoryMenu.BLOCK_ATLAS, ARMOR_SLOT_TEXTURES[equipmentslottype.getIndex()]);
 				}
 			});
 		}
@@ -132,50 +131,50 @@ public class ContainerPlayerBody extends Container
 			this.addSlot(new Slot(playerInventory, j1, 8 + j1 * 18, 142));
 	}
 	
-	public boolean canInteractWith(PlayerEntity playerIn)
+	public boolean canInteractWith(Player playerIn)
 	{
-		return theBody.isAlive() && playerIn.isAlive() && playerIn.getDistance(theBody) <= playerIn.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
+		return theBody.isAlive() && playerIn.isAlive() && playerIn.distanceTo(theBody) <= playerIn.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
 	}
 	
-	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index)
+	public ItemStack transferStackInSlot(Player playerIn, int index)
 	{
 		ItemStack itemStack = ItemStack.EMPTY;
-		Slot slot = this.inventorySlots.get(index);
-		if(slot != null && slot.getHasStack())
+		Slot slot = this.slots.get(index);
+		if(slot != null && slot.hasItem())
 		{
-			ItemStack stackInSlot = slot.getStack();
+			ItemStack stackInSlot = slot.getItem();
 			itemStack = stackInSlot.copy();
 			
-			int slots = this.bodyInventory.getSizeInventory();
+			int slots = this.bodyInventory.getContainerSize();
 			// Transfer from body slots to main inventory
 			if(index < slots)
 			{
-				if(!this.mergeItemStack(stackInSlot, slots, this.inventorySlots.size(), true))
+				if(!this.moveItemStackTo(stackInSlot, slots, this.slots.size(), true))
 					return ItemStack.EMPTY;
 			}
 			// Equipment slots
-			else if(getSlot(0).isItemValid(stackInSlot) && !getSlot(0).getHasStack())
+			else if(getSlot(0).mayPlace(stackInSlot) && !getSlot(0).hasItem())
 			{
-				if(!mergeItemStack(stackInSlot, 0, 1, false))
+				if(!moveItemStackTo(stackInSlot, 0, 1, false))
 					return ItemStack.EMPTY;
 			}
-			else if(getSlot(1).isItemValid(stackInSlot) && !getSlot(1).getHasStack())
+			else if(getSlot(1).mayPlace(stackInSlot) && !getSlot(1).hasItem())
 			{
-				if(!mergeItemStack(stackInSlot, 1, 2, false))
+				if(!moveItemStackTo(stackInSlot, 1, 2, false))
 					return ItemStack.EMPTY;
 			}
-			else if(getSlot(2).isItemValid(stackInSlot) && !getSlot(2).getHasStack())
+			else if(getSlot(2).mayPlace(stackInSlot) && !getSlot(2).hasItem())
 			{
-				if(!mergeItemStack(stackInSlot, 2, 3, false))
+				if(!moveItemStackTo(stackInSlot, 2, 3, false))
 					return ItemStack.EMPTY;
 			}
-			else if(getSlot(3).isItemValid(stackInSlot) && !getSlot(3).getHasStack())
+			else if(getSlot(3).mayPlace(stackInSlot) && !getSlot(3).hasItem())
 			{
-				if(!mergeItemStack(stackInSlot, 3, 4, false))
+				if(!moveItemStackTo(stackInSlot, 3, 4, false))
 					return ItemStack.EMPTY;
 			}
 			// Body inventory
-			else if(!mergeItemStack(stackInSlot, 4, 12, true))
+			else if(!moveItemStackTo(stackInSlot, 4, 12, true))
 				return ItemStack.EMPTY;
 			else
 			{
@@ -184,31 +183,31 @@ public class ContainerPlayerBody extends Container
 				
 				if(index >= invStart && index < hotStart)
 				{
-					if(!this.mergeItemStack(stackInSlot, slots, invStart, false))
+					if(!this.moveItemStackTo(stackInSlot, slots, invStart, false))
 						return ItemStack.EMPTY;
 				}
 				else if(index >= slots && index < hotStart)
 				{
-					if(!this.mergeItemStack(stackInSlot, invStart, hotStart, false))
+					if(!this.moveItemStackTo(stackInSlot, invStart, hotStart, false))
 						return ItemStack.EMPTY;
 				}
-				else if(!this.mergeItemStack(stackInSlot, invStart, invStart, false))
+				else if(!this.moveItemStackTo(stackInSlot, invStart, invStart, false))
 					return ItemStack.EMPTY;
 				
 				return ItemStack.EMPTY;
 			}
 			
 			if(stackInSlot.isEmpty())
-				slot.putStack(ItemStack.EMPTY);
+				slot.set(ItemStack.EMPTY);
 			else
-				slot.onSlotChanged();
+				slot.setChanged();
 		}
 		return itemStack;
 	}
 	
-	public void onContainerClosed(PlayerEntity playerIn)
+	public void removed(Player playerIn)
 	{
-		super.onContainerClosed(playerIn);
-		this.bodyInventory.closeInventory(playerIn);
+		super.removed(playerIn);
+		this.bodyInventory.stopOpen(playerIn);
 	}
 }

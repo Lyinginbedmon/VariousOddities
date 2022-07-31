@@ -1,6 +1,5 @@
 package com.lying.variousoddities.entity;
 
-import java.util.Random;
 import java.util.UUID;
 
 import com.lying.variousoddities.item.ItemSpellContainer;
@@ -9,8 +8,8 @@ import com.lying.variousoddities.magic.MagicEffects;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -39,7 +38,7 @@ public class EntitySpell extends Entity
 	public EntitySpell(EntityType<EntitySpell> typeIn, Level worldIn, double x, double y, double z)
 	{
 		super(typeIn, worldIn);
-		setPosition(x, y, z);
+		setPos(x, y, z);
 	}
 	
 	public EntitySpell(EntityType<EntitySpell> typeIn, Level worldIn, ItemStack stackIn, double x, double y, double z)
@@ -59,19 +58,14 @@ public class EntitySpell extends Entity
 		getDataManager().register(SPELL_ID, -1);
 		getDataManager().register(SPELLDATA, new CompoundTag());
 	}
-    
-    public static boolean canSpawnAt(EntityType<?> animal, Level level, SpawnReason reason, BlockPos pos, Random random)
-    {
-	    return true;
-    }
 	
 	protected void readAdditional(CompoundTag compound)
 	{
-		ItemStack item = ItemStack.read(compound.getCompound("Item"));
+		ItemStack item = ItemStack.of(compound.getCompound("Item"));
         setItem(item);
         if(getItem().isEmpty())
     	{
-        	setDead();
+        	setRemoved(Entity.RemovalReason.DISCARDED);
         	return;
     	}
         if(compound.contains("SpellID"))
@@ -103,14 +97,14 @@ public class EntitySpell extends Entity
 	
 	protected void writeAdditional(CompoundTag compound)
 	{
-		compound.put("Item", this.getItem().write(new CompoundTag()));
+		compound.put("Item", this.getItem().save(new CompoundTag()));
 		compound.putInt("SpellID", getSpellID());
 	}
 	
 	public void setSpell(SpellData dataIn)
 	{
 		setSpellID(dataIn.getID());
-		setPositionAndRotation(dataIn.getPos().x, dataIn.getPos().y, dataIn.getPos().z, dataIn.yaw(), dataIn.pitch());
+		moveTo(dataIn.getPos().x, dataIn.getPos().y, dataIn.getPos().z, dataIn.yaw(), dataIn.pitch());
 	}
 	
 	public void setSpellID(int par1Int)
@@ -137,7 +131,7 @@ public class EntitySpell extends Entity
 //    	getDataManager().setDirty(ITEM);
     }
 	
-    public ActionResultType processInitialInteract(Player player, Hand hand)
+    public ActionResultType processInitialInteract(Player player, InteractionHand hand)
     {
     	if(!player.getLevel().isClientSide)
     	{
@@ -157,7 +151,7 @@ public class EntitySpell extends Entity
 		
 		SpellData data = getSpell();
 		if(data == null || data.isDead())
-			this.setDead();
+			setRemoved(Entity.RemovalReason.DISCARDED);
 	}
     
     /**
@@ -179,7 +173,7 @@ public class EntitySpell extends Entity
         {
             if(!this.isAlive()) return false;
             onDeath(source);
-            setDead();
+            setRemoved(Entity.RemovalReason.KILLED);
             return true;
         }
         

@@ -14,15 +14,15 @@ import com.lying.variousoddities.species.Species.SpeciesInstance;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.species.Template;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSpeciesSelected
 {
@@ -44,17 +44,17 @@ public class PacketSpeciesSelected
 		this.selectedTemplates = templatesIn;
 	}
 	
-	public static PacketSpeciesSelected decode(PacketBuffer par1Buffer)
+	public static PacketSpeciesSelected decode(FriendlyByteBuf par1Buffer)
 	{
-		UUID player = par1Buffer.readUniqueId();
+		UUID player = par1Buffer.readUUID();
 		
-		CompoundNBT data = par1Buffer.readCompoundTag();
+		CompoundTag data = par1Buffer.readNbt();
 		boolean types = data.getBoolean("KeepTypes");
 		if(data.contains("Species", 8))
 		{
 			ResourceLocation species = new ResourceLocation(data.getString("Species"));
 			
-			ListNBT templates = data.getList("Templates", 8);
+			ListTag templates = data.getList("Templates", 8);
 
 	    	List<ResourceLocation> templateNames = Lists.newArrayList();
 	    	for(int i=0; i<templates.size(); i++)
@@ -66,22 +66,22 @@ public class PacketSpeciesSelected
 			return new PacketSpeciesSelected(player, null, types);
 	}
 	
-	public static void encode(PacketSpeciesSelected msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSpeciesSelected msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.playerID);
+		par1Buffer.writeUUID(msg.playerID);
 		
-		CompoundNBT data = new CompoundNBT();
+		CompoundTag data = new CompoundTag();
 		data.putBoolean("KeepTypes", msg.keepTypes);
 		if(msg.selectedSpecies != null)
 		{
 			data.putString("Species", msg.selectedSpecies.toString());
 			
-			ListNBT templates = new ListNBT();
+			ListTag templates = new ListTag();
 			for(ResourceLocation template : msg.selectedTemplates)
-				templates.add(StringNBT.valueOf(template.toString()));
+				templates.add(StringTag.valueOf(template.toString()));
 			data.put("Templates", templates);
 		}
-		par1Buffer.writeCompoundTag(data);
+		par1Buffer.writeNbt(data);
 	}
 	
 	public static void handle(PacketSpeciesSelected msg, Supplier<NetworkEvent.Context> cxt)
@@ -89,8 +89,8 @@ public class PacketSpeciesSelected
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
-			World world = context.getSender().getEntityWorld();
-			PlayerEntity player = world.getPlayerByUuid(msg.playerID);
+			Level world = context.getSender().getLevel();
+			Player player = world.getPlayerByUUID(msg.playerID);
 			if(player != null)
 			{
 				LivingData data = LivingData.forEntity(player);

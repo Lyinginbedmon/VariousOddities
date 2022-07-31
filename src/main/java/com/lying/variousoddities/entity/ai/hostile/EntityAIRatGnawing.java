@@ -7,32 +7,32 @@ import java.util.List;
 
 import com.lying.variousoddities.entity.AbstractRat;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.CropsBlock;
-import net.minecraft.block.StemBlock;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.StemBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIRatGnawing extends Goal
 {
-	private final World theWorld;
+	private final Level theWorld;
 	private final AbstractRat theRat;
 	
 	private final int maxSearchAttempts;
 	private final int range;
 	
 	private BlockPos gnawSite;
-	private PathNavigator theNavigator;
+	private PathNavigation theNavigator;
 	
 	private int breakingTime;
 	private int breakingProgPrev = -1;
@@ -54,28 +54,28 @@ public class EntityAIRatGnawing extends Goal
 	public EntityAIRatGnawing(AbstractRat par1Rat, int par2Range, int par2Tries)
 	{
 		theRat = par1Rat;
-		theWorld = par1Rat.getEntityWorld();
+		theWorld = par1Rat.getLevel();
 		range = par2Range;
 		maxSearchAttempts = par2Tries;
-		theNavigator = par1Rat.getNavigator();
-		setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.JUMP, Goal.Flag.LOOK));
+		theNavigator = par1Rat.getNavigation();
+		setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.JUMP, Goal.Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(!theWorld.getGameRules().getBoolean(GameRules.MOB_GRIEFING) || theRat.getAttackTarget() != null)
+		if(!theWorld.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) || theRat.getTarget() != null)
 			return false;
 		
 		gnawSite = getGnawSite();
-		return this.theRat.getRNG().nextInt(200) == 0 && gnawSite != null;
+		return this.theRat.getRandom().nextInt(200) == 0 && gnawSite != null;
 	}
 	
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
-		return theRat.getAttackTarget() == null && gnawSite != null;
+		return theRat.getTarget() == null && gnawSite != null;
 	}
 	
-	public void resetTask()
+	public void stop()
 	{
 		gnawSite = null;
 		pathingAbandon = 0;
@@ -83,11 +83,11 @@ public class EntityAIRatGnawing extends Goal
 		breakingProgPrev = -1;
 	}
 	
-	public void startExecuting()
+	public void start()
 	{
 		theRat.getLookController().setLookPosition(gnawSite.getX() + 0.5D, gnawSite.getY() + 0.5D, gnawSite.getZ() + 0.5D, 10F, theRat.getVerticalFaceSpeed());
 		if(getDistanceTo(gnawSite) > 0.75D)
-			theNavigator.tryMoveToXYZ(gnawSite.getX(), gnawSite.getY(), gnawSite.getZ(), 1D);
+			theNavigator.moveTo(gnawSite.getX(), gnawSite.getY(), gnawSite.getZ(), 1D);
 	}
 	
 	public void tick()
@@ -99,21 +99,21 @@ public class EntityAIRatGnawing extends Goal
 		}
 		
 		theRat.getLookController().setLookPosition(gnawSite.getX() + 0.5D, gnawSite.getY() + 0.5D, gnawSite.getZ() + 0.5D, 10F, theRat.getVerticalFaceSpeed());
-		switch((getDistanceTo(gnawSite) > Math.max(1.0D, theRat.getWidth())) ? 0 : 1)
+		switch((getDistanceTo(gnawSite) > Math.max(1.0D, theRat.getBbWidth())) ? 0 : 1)
 		{
 			case 0: // Approaching
-				if(theNavigator.noPath())
+				if(theNavigator.isDone())
 				{
 					if(pathingAbandon++ >= 60)
 						gnawSite = null;
 					else if(canPathTo(gnawSite))
-						theNavigator.setPath(theRat.getNavigator().getPathToPos(gnawSite, (int)theRat.getAttributeValue(Attributes.FOLLOW_RANGE)), 1D);
+						theNavigator.moveTo(theRat.getNavigation().createPath(gnawSite, (int)theRat.getAttributeValue(Attributes.FOLLOW_RANGE)), 1D);
 					else
 						gnawSite = null;
 				}
 				break;
 			case 1: // Gnawing
-				theRat.getNavigator().clearPath();
+				theRat.getNavigation().stop();
 				
 				BlockState theBlock = theWorld.getBlockState(gnawSite);
 				int timeToBreak = (int)Math.max(20, theBlock.getBlockHardness(theWorld, gnawSite) * 80);
@@ -129,7 +129,7 @@ public class EntityAIRatGnawing extends Goal
 		        if(this.breakingTime >= timeToBreak)
 		        {
 		        	if(shouldHeal(theWorld.getBlockState(gnawSite).getBlock()))
-		        		this.theRat.addPotionEffect(new EffectInstance(Effects.REGENERATION, 100, 0));
+		        		this.theRat.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
 		        	
 		            this.theWorld.destroyBlock(gnawSite, false);
 		            gnawSite = null;
@@ -140,11 +140,11 @@ public class EntityAIRatGnawing extends Goal
 	
 	private BlockPos getGnawSite()
 	{
-		BlockPos ratPos = theRat.getPosition();
+		BlockPos ratPos = theRat.blockPosition();
 		if(isGnawable(theWorld.getBlockState(ratPos)))
 			return ratPos;
 		
-		BlockPos ratEyePos = new BlockPos(theRat.getPosX(), theRat.getPosYEye(), theRat.getPosZ());
+		BlockPos ratEyePos = new BlockPos(theRat.getX(), theRat.getEyeY(), theRat.getZ());
 		if(isGnawable(theWorld.getBlockState(ratEyePos)))
 			return ratEyePos;
 		
@@ -159,7 +159,7 @@ public class EntityAIRatGnawing extends Goal
 			double posY = randomDouble() * 0.5;
 			double posZ = randomDouble();
 			
-			BlockPos testPos = ratPos.add(posX, posY, posZ);
+			BlockPos testPos = ratPos.offset(posX, posY, posZ);
 			if(!tested.contains(testPos) && isGnawable(theWorld.getBlockState(testPos)) && canPathTo(testPos))
 				return testPos;
 			
@@ -173,13 +173,13 @@ public class EntityAIRatGnawing extends Goal
 	
 	private int randomDouble()
 	{
-		return theRat.getRNG().nextInt(range) - (range / 2);
+		return theRat.getRandom().nextInt(range) - (range / 2);
 	}
 	
 	private double getDistanceTo(BlockPos par1BlockPos)
 	{
-		Vector3d ratPos = theRat.getPositionVec().add(0D, theRat.getHeight() / 2D, 0D);
-		Vector3d gnawPos = new Vector3d(par1BlockPos.getX() + 0.5D, par1BlockPos.getY() + 0.5D, par1BlockPos.getZ() + 0.5D);
+		Vec3 ratPos = theRat.position().add(0D, theRat.getBbHeight() / 2D, 0D);
+		Vec3 gnawPos = new Vec3(par1BlockPos.getX() + 0.5D, par1BlockPos.getY() + 0.5D, par1BlockPos.getZ() + 0.5D);
 		return ratPos.distanceTo(gnawPos);
 	}
 	
@@ -209,6 +209,6 @@ public class EntityAIRatGnawing extends Goal
 	
 	private boolean canPathTo(BlockPos par1BlockPos)
 	{
-		return theRat.getNavigator().getPathToPos(par1BlockPos, (int)theRat.getAttributeValue(Attributes.FOLLOW_RANGE)) != null;
+		return theRat.getNavigation().createPath(par1BlockPos, (int)theRat.getAttributeValue(Attributes.FOLLOW_RANGE)) != null;
 	}
 }

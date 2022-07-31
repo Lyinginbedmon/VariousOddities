@@ -9,7 +9,7 @@ import com.lying.variousoddities.species.Species;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -29,16 +29,16 @@ public class PacketSyncSpecies
 		VariousOddities.log.info("Sending species to client, "+data.size()+" species");
 	}
 	
-	public static PacketSyncSpecies decode(PacketBuffer par1Buffer)
+	public static PacketSyncSpecies decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketSyncSpecies packet = new PacketSyncSpecies();
-		packet.speciesData = par1Buffer.readCompoundTag();
+		packet.speciesData = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncSpecies msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncSpecies msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeCompoundTag(msg.speciesData);
+		par1Buffer.writeNbt(msg.speciesData);
 	}
 	
 	public static void handle(PacketSyncSpecies msg, Supplier<NetworkEvent.Context> cxt)

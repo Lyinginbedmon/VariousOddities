@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 public class PacketMobLoseTrack
@@ -18,12 +18,12 @@ public class PacketMobLoseTrack
 		duration = ticksIn;
 	}
 	
-	public static PacketMobLoseTrack decode(PacketBuffer par1Buffer)
+	public static PacketMobLoseTrack decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketMobLoseTrack(par1Buffer.readInt());
 	}
 	
-	public static void encode(PacketMobLoseTrack msg, PacketBuffer par1Buffer)
+	public static void encode(PacketMobLoseTrack msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeInt(msg.duration);
 	}

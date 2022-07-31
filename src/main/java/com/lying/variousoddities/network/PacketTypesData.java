@@ -6,6 +6,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 public class PacketTypesData
@@ -18,16 +19,16 @@ public class PacketTypesData
 		data = dataIn;
 	}
 	
-	public static PacketTypesData decode(PacketBuffer par1Buffer)
+	public static PacketTypesData decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketTypesData packet = new PacketTypesData();
-		packet.data = par1Buffer.readCompoundTag();
+		packet.data = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketTypesData msg, PacketBuffer par1Buffer)
+	public static void encode(PacketTypesData msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeCompoundTag(msg.data);
+		par1Buffer.writeNbt(msg.data);
 	}
 	
 	public static void handle(PacketTypesData msg, Supplier<NetworkEvent.Context> cxt)

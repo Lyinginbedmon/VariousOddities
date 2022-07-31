@@ -13,27 +13,25 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplier;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.world.ForgeChunkManager;
 
-@SuppressWarnings("deprecation")
-public class BlockPhylacteryLich extends BlockPhylacteryBase implements ITileEntityProvider
+public class BlockPhylacteryLich extends BlockPhylacteryBase implements BlockEntitySupplier<TileEntityPhylactery>
 {
 	public BlockPhylacteryLich(BlockBehaviour.Properties properties)
 	{
 		super(properties);
 	}
 	
-	public TileEntity createNewTileEntity(Level reader)
-	{
-		return new TileEntityPhylactery();
-	}
+	public TileEntityPhylactery create(BlockPos p_155268_, BlockState p_155269_){ return new TileEntityPhylactery(); }
 	
-	public void onBlockPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)
+	public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)
 	{
-		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-		TileEntity tile = worldIn.getTileEntity(pos);
+		super.setPlacedBy(worldIn, pos, state, placer, stack);
+		BlockEntity tile = worldIn.getBlockEntity(pos);
 		if(tile instanceof TileEntityPhylactery)
 		{
 			if(worldIn.isClientSide) return;
@@ -44,9 +42,9 @@ public class BlockPhylacteryLich extends BlockPhylacteryBase implements ITileEnt
 		}
 	}
 	
-	public void onBlockHarvested(Level worldIn, BlockPos pos, BlockState state, Player player)
+	public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player)
 	{
-		TileEntity tile = worldIn.getTileEntity(pos);
+		BlockEntity tile = worldIn.getBlockEntity(pos);
 		if(tile instanceof TileEntityPhylactery)
 		{
 			if(!worldIn.isClientSide)
@@ -60,10 +58,12 @@ public class BlockPhylacteryLich extends BlockPhylacteryBase implements ITileEnt
 			if(!worldIn.isClientSide && player.isCreative())
 			{
 				ItemStack itemstack = new ItemStack(VOBlocks.PHYLACTERY);
-				CompoundTag tileData = phylacteryTile.write(new CompoundTag());
+				phylacteryTile.saveToItem(itemstack);
+				
+				// TODO Most probably broken
+				CompoundTag tileData = itemstack.getOrCreateTagElement("BlockEntityTag");
 				tileData.remove("TimeSincePlaced");
-				if(!tileData.isEmpty())
-					itemstack.setTagInfo("BlockEntityTag", tileData);
+				itemstack.addTagElement("BlockEntityTag", tileData);
 				
 				ItemEntity itementity = new ItemEntity(worldIn, (double)pos.getX() + 0.5D, (double)pos.getY() + 0.5D, (double)pos.getZ() + 0.5D, itemstack);
 				itementity.setDefaultPickUpDelay();
@@ -71,6 +71,6 @@ public class BlockPhylacteryLich extends BlockPhylacteryBase implements ITileEnt
 			}
 		}
 		
-		super.onBlockHarvested(worldIn, pos, state, player);
+		super.playerWillDestroy(worldIn, pos, state, player);
 	}
 }

@@ -10,6 +10,7 @@ import com.lying.variousoddities.init.VOEntities;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.animal.Cat;
@@ -24,14 +25,14 @@ public class EntityRat extends AbstractRat
 	{
 		super(type, worldIn, 0);
 	}
-	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return Mob.func_233666_p_()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 9.0D)
-        		.createMutableAttribute(Attributes.ARMOR, 4.0D)
-        		.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.265D)
-        		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.5D);
+        return Mob.createMobAttributes()
+        		.add(Attributes.MAX_HEALTH, 9.0D)
+        		.add(Attributes.ARMOR, 4.0D)
+        		.add(Attributes.MOVEMENT_SPEED, 0.265D)
+        		.add(Attributes.ATTACK_DAMAGE, 3.5D);
     }
     
 	protected void registerData()

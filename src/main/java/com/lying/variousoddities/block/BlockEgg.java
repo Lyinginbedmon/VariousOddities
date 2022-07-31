@@ -2,11 +2,11 @@ package com.lying.variousoddities.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplier;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-@SuppressWarnings("deprecation")
-public abstract class BlockEgg extends BlockEggBase implements ITileEntityProvider
+public abstract class BlockEgg<T extends BlockEntity> extends BlockEggBase implements BlockEntitySupplier<T>
 {
 	public BlockEgg(VoxelShape shapeIn, Properties properties)
 	{

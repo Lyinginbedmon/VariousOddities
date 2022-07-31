@@ -6,7 +6,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.entity.IMountInventory;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -16,12 +16,12 @@ public class PacketMountGui
 {
 	public PacketMountGui(){ }
 	
-	public static PacketMountGui decode(PacketBuffer par1Buffer)
+	public static PacketMountGui decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketMountGui();
 	}
 	
-	public static void encode(PacketMountGui msg, PacketBuffer par1Buffer)
+	public static void encode(PacketMountGui msg, FriendlyByteBuf par1Buffer)
 	{
 		
 	}

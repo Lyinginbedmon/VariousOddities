@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSpeciesOpenScreen
@@ -19,12 +19,12 @@ public class PacketSpeciesOpenScreen
 		this.randomise = random;
 	}
 	
-	public static PacketSpeciesOpenScreen decode(PacketBuffer par1Buffer)
+	public static PacketSpeciesOpenScreen decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketSpeciesOpenScreen(par1Buffer.readInt(), par1Buffer.readBoolean());
 	}
 	
-	public static void encode(PacketSpeciesOpenScreen msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSpeciesOpenScreen msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeInt(msg.targetPower);
 		par1Buffer.writeBoolean(msg.randomise);

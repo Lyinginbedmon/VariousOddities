@@ -16,6 +16,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.Cow;
@@ -71,13 +72,13 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		getDataManager().register(CARPET, -1);
 	}
 	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return Monster.func_233666_p_()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 40.0D)
-        		.createMutableAttribute(Attributes.ARMOR, 7.0D)
-        		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.3002F)
-        		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 12.0D);
+        return Monster.createMobAttributes()
+        		.add(Attributes.MAX_HEALTH, 40.0D)
+        		.add(Attributes.ARMOR, 7.0D)
+        		.add(Attributes.MOVEMENT_SPEED, (double)0.3002F)
+        		.add(Attributes.ATTACK_DAMAGE, 12.0D);
     }
 	
 	public void getAggressiveBehaviours()

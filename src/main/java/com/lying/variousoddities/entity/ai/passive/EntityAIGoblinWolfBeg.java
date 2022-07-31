@@ -4,43 +4,43 @@ import java.util.EnumSet;
 
 import com.lying.variousoddities.entity.AbstractGoblinWolf;
 
-import net.minecraft.entity.EntityPredicate;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.Tags.Items;
 
 public class EntityAIGoblinWolfBeg extends Goal
 {
 	private final AbstractGoblinWolf wolf;
-	private PlayerEntity player;
-	private final World world;
+	private Player player;
+	private final Level world;
 	private final float minDist;
 	private int timeout;
-	private final EntityPredicate playerPredicate;
+	private final TargetingConditions playerPredicate;
 	
 	public EntityAIGoblinWolfBeg(AbstractGoblinWolf wolfIn, float minDistance)
 	{
 		this.wolf = wolfIn;
-		this.world = wolfIn.getEntityWorld();
+		this.world = wolfIn.getLevel();
 		this.minDist = minDistance;
-		this.playerPredicate = (new EntityPredicate()).setDistance((double)minDistance).allowInvulnerable().allowFriendlyFire().setSkipAttackChecks();
-		this.setMutexFlags(EnumSet.of(Goal.Flag.LOOK));
+		this.playerPredicate = TargetingConditions.forNonCombat().range((double)minDistance);
+		this.setFlags(EnumSet.of(Goal.Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		this.player = this.world.getClosestPlayer(this.playerPredicate, this.wolf);
+		this.player = this.world.getNearestPlayer(this.playerPredicate, this.wolf);
 		return this.player == null ? false : this.hasTemptationItemInHand(this.player);
 	}
 	
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
 		if(!this.player.isAlive())
 			return false;
-		else if(this.wolf.getDistanceSq(this.player) > (this.minDist * this.minDist))
+		else if(this.wolf.distanceToSqr(this.player) > (this.minDist * this.minDist))
 			return false;
 		else
 			return this.timeout > 0 && this.hasTemptationItemInHand(this.player);
@@ -49,7 +49,7 @@ public class EntityAIGoblinWolfBeg extends Goal
 	public void startExecuting()
 	{
 		this.wolf.setBegging(true);
-		this.timeout = 40 + this.wolf.getRNG().nextInt(40);
+		this.timeout = 40 + this.wolf.getRandom().nextInt(40);
 	}
 	
 	public void resetTask()
@@ -58,12 +58,12 @@ public class EntityAIGoblinWolfBeg extends Goal
 		this.player = null;
 	}
 	
-	private boolean hasTemptationItemInHand(PlayerEntity player)
+	private boolean hasTemptationItemInHand(Player player)
 	{
-		for(Hand hand : Hand.values())
+		for(InteractionHand hand : InteractionHand.values())
 		{
-			ItemStack stack = player.getHeldItem(hand);
-			if(this.wolf.isTamed() && stack.getItem() == Items.BONE || this.wolf.isFoodItem(stack))
+			ItemStack stack = player.getItemInHand(hand);
+			if(this.wolf.isTame() && stack.is(Items.BONES) || this.wolf.isFoodItem(stack))
 				return true;
 		}
 		return false;

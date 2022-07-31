@@ -6,12 +6,12 @@ import java.util.List;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
@@ -19,7 +19,7 @@ public class EntityGroupKobold extends EntityGroup
 {
 	public boolean isObserved(LivingEntity entity)
 	{
-		return !entity.isPotionActive(Effects.INVISIBILITY) ? super.isObserved(entity) : false;
+		return !entity.hasEffect(MobEffects.INVISIBILITY) ? super.isObserved(entity) : false;
 	}
 	
 	/** Called every tick by the world to update group logic */
@@ -39,24 +39,24 @@ public class EntityGroupKobold extends EntityGroup
 	 */
 	public void reassignAttackers()
 	{
-		List<MobEntity> unoccupied = new ArrayList<>();
-		for(MobEntity entity : members.keySet())
-			if(entity.isAlive() && (entity.getAttackTarget() == null || !entity.getAttackTarget().isAlive()))
+		List<Mob> unoccupied = new ArrayList<>();
+		for(Mob entity : members.keySet())
+			if(entity.isAlive() && (entity.getTarget() == null || !entity.getTarget().isAlive()))
 				unoccupied.add(entity);
 		
-		for(MobEntity entity : unoccupied)
+		for(Mob entity : unoccupied)
 		{
-			BlockPos entPos = entity.getPosition();
-			PathNavigator navigator = entity.getNavigator();
+			BlockPos entPos = entity.blockPosition();
+			PathNavigation navigator = entity.getNavigation();
 			
 			LivingEntity nearest = null;
 			double minDist = Double.MAX_VALUE;
 			for(LivingEntity target : targets.keySet())
 			{
 				BlockPos targetPos = targets.get(target).location();
-				if(navigator.getPathToPos(targetPos, (int)entity.getAttribute(Attributes.FOLLOW_RANGE).getValue()) != null)
+				if(navigator.createPath(targetPos, (int)entity.getAttribute(Attributes.FOLLOW_RANGE).getValue()) != null)
 				{
-					double dist = targetPos.distanceSq(entPos);
+					double dist = targetPos.distSqr(entPos);
 					if(nearest == null || dist < minDist)
 					{
 						nearest = target;
@@ -68,11 +68,11 @@ public class EntityGroupKobold extends EntityGroup
 			if(nearest != null)
 			{
 				if(isObserved(nearest))
-					entity.setAttackTarget(nearest);
-				else if(navigator.noPath())
+					entity.setTarget(nearest);
+				else if(navigator.isDone())
 				{
 					BlockPos location = targets.get(nearest).location();
-					navigator.tryMoveToXYZ(location.getX(), location.getY(), location.getZ(), 1.0D);
+					navigator.moveTo(location.getX(), location.getY(), location.getZ(), 1.0D);
 				}
 			}
 		}
@@ -86,14 +86,14 @@ public class EntityGroupKobold extends EntityGroup
 		if(members.size() < (targets.size() * 3))
 		{
 			List<EntityKobold> kobolds = new ArrayList<>();
-			for(MobEntity member : members.keySet())
+			for(Mob member : members.keySet())
 				if(member.isAlive())
 				{
-					List<EntityKobold> nearby = member.getEntityWorld().getEntitiesWithinAABB(EntityKobold.class, member.getBoundingBox().grow(6, 2, 6), new Predicate<EntityKobold>()
+					List<EntityKobold> nearby = member.getLevel().getEntitiesOfClass(EntityKobold.class, member.getBoundingBox().inflate(6, 2, 6), new Predicate<EntityKobold>()
 					{
 						public boolean apply(EntityKobold input)
 						{
-							return input.isAlive() && !input.isChild() && isObserved(input) && input.getAttackTarget() == null && GroupHandler.getEntityMemberGroup(input) == null;
+							return input.isAlive() && !input.isBaby() && isObserved(input) && input.getTarget() == null && GroupHandler.getEntityMemberGroup(input) == null;
 						}
 					});
 					nearby.removeAll(kobolds);
@@ -110,10 +110,10 @@ public class EntityGroupKobold extends EntityGroup
 		}
 	}
 	
-	public void onMemberHarmed(LivingHurtEvent event, MobEntity victim, LivingEntity attacker)
+	public void onMemberHarmed(LivingHurtEvent event, Mob victim, LivingEntity attacker)
 	{
 		if(isObserved(victim))
-			if(attacker.isPotionActive(Effects.INVISIBILITY))
+			if(attacker.hasEffect(MobEffects.INVISIBILITY))
 				targets.put(attacker, new Sighting(victim));
 			else
 				addTarget(attacker);
@@ -121,7 +121,7 @@ public class EntityGroupKobold extends EntityGroup
 	
 	public void onEntityKilled(LivingDeathEvent event)
 	{
-		LivingEntity living = event.getEntityLiving();
+		LivingEntity living = event.getEntity();
 		if(isObserved(living))
 			super.onEntityKilled(event);
 	}

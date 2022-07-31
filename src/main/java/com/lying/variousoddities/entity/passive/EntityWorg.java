@@ -9,6 +9,7 @@ import com.lying.variousoddities.init.VOEntities;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
 import net.minecraft.world.entity.ai.goal.LeapAtTargetGoal;
@@ -34,14 +35,14 @@ public class EntityWorg extends AbstractGoblinWolf
 		super.registerData();
 		getDataManager().register(SPOOKED, false);
 	}
-	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return Monster.func_233666_p_()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 30.0D)
-        		.createMutableAttribute(Attributes.ARMOR, 4.0D)
-        		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.3F)
-        		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 10.0D);
+        return Monster.createMobAttributes()
+        		.add(Attributes.MAX_HEALTH, 30.0D)
+        		.add(Attributes.ARMOR, 4.0D)
+        		.add(Attributes.MOVEMENT_SPEED, (double)0.3F)
+        		.add(Attributes.ATTACK_DAMAGE, 10.0D);
     }
     
 	public void registerGoals()

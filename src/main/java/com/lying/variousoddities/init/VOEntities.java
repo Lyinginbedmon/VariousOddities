@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
@@ -32,105 +30,82 @@ import com.lying.variousoddities.entity.wip.EntityPatronWitch;
 import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class VOEntities
 {
-	private static final Map<EntityType<?>, EntityRegistry> TYPE_PROPERTIES_MAP = new HashMap<>();
-	private static final Map<EntityType<?>, EntityRegistry> MISC_PROPERTIES_MAP = new HashMap<>();
+	public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Reference.ModInfo.MOD_ID);
 	
     public static final List<EntityType<?>> ENTITIES = Lists.newArrayList();
     public static final List<EntityType<?>> ENTITIES_AI = Lists.newArrayList();
     public static final Map<EntityType<?>, Item> SPAWN_EGGS = new HashMap<>();
 	
-    public static final EntityType<EntitySpell> SPELL			= register("spell", EntitySpell::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntitySpell::canSpawnAt);
-    public static final EntityType<EntityBodyCorpse> CORPSE		= register("corpse", EntityBodyCorpse::new, EntityClassification.MISC, 0.75F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityBodyCorpse::canSpawnAt);
-    public static final EntityType<EntityBodyUnconscious> BODY	= register("body", EntityBodyUnconscious::new, EntityClassification.MISC, 0.75F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, EntityBodyUnconscious::canSpawnAt);
+    public static final EntityType<EntitySpell> SPELL			= register("spell", EntityType.Builder.<EntitySpell>of(EntitySpell::new, MobCategory.MISC).sized(0.5F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
+    public static final EntityType<EntityBodyCorpse> CORPSE		= register("corpse", EntityType.Builder.<EntityBodyCorpse>of(EntityBodyCorpse::new, MobCategory.MISC).sized(0.75F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
+    public static final EntityType<EntityBodyUnconscious> BODY	= register("body", EntityType.Builder.<EntityBodyUnconscious>of(EntityBodyUnconscious::new, MobCategory.MISC).sized(0.75F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
     
     // First release
-	public static final EntityType<EntityKobold> KOBOLD						= register("kobold",			EntityKobold::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityKobold::canSpawnAt, 16167425, 15826224);
-	public static final EntityType<EntityGoblin> GOBLIN						= register("goblin",			EntityGoblin::new, EntityClassification.CREATURE, 0.6F, 1.6F, EntityGoblin::canSpawnAt, 5349438, 8306542);
-	public static final EntityType<EntityRat> RAT							= register("rat",				EntityRat::new, EntityClassification.CREATURE, 0.3F, 0.2F, EntityRat::canSpawnAt, 6043662, 3679244);
-	public static final EntityType<EntityRatGiant> RAT_GIANT				= register("giant_rat",			EntityRatGiant::new, EntityClassification.MONSTER, 0.9F, 0.5F, EntityRatGiant::canSpawnAt, 6043662, 3679244);
-	public static final EntityType<EntityScorpion> SCORPION					= register("scorpion",			EntityScorpion::new, EntityClassification.CREATURE, 0.8F, 0.45F, EntityScorpion::canSpawnAt, 14704695, 14696759);
-	public static final EntityType<EntityScorpionGiant> SCORPION_GIANT		= register("giant_scorpion",	EntityScorpionGiant::new, EntityClassification.MONSTER, 1.8F, 1.85F, EntityScorpionGiant::canSpawnAt, 14704695, 6366997);
+	public static final EntityType<EntityKobold> KOBOLD						= register("kobold",			EntityType.Builder.<EntityKobold>of(EntityKobold::new, MobCategory.CREATURE).sized(0.6F, 1.6F).clientTrackingRange(10), 16167425, 15826224);
+	public static final EntityType<EntityGoblin> GOBLIN						= register("goblin",			EntityType.Builder.<EntityGoblin>of(EntityGoblin::new, MobCategory.CREATURE).sized(0.6F, 1.6F).clientTrackingRange(10), 5349438, 8306542);
+	public static final EntityType<EntityRat> RAT							= register("rat",				EntityType.Builder.<EntityRat>of(EntityRat::new, MobCategory.CREATURE).sized(0.3F, 0.2F).clientTrackingRange(10), 6043662, 3679244);
+	public static final EntityType<EntityRatGiant> RAT_GIANT				= register("giant_rat",			EntityType.Builder.<EntityRatGiant>of(EntityRatGiant::new, MobCategory.MONSTER).sized(0.9F, 0.5F).clientTrackingRange(10), 6043662, 3679244);
+	public static final EntityType<EntityScorpion> SCORPION					= register("scorpion",			EntityType.Builder.<EntityScorpion>of(EntityScorpion::new, MobCategory.CREATURE).sized(0.8F, 0.45F).clientTrackingRange(10), 14704695, 14696759);
+	public static final EntityType<EntityScorpionGiant> SCORPION_GIANT		= register("giant_scorpion",	EntityType.Builder.<EntityScorpionGiant>of(EntityScorpionGiant::new, MobCategory.MONSTER).sized(1.8F, 1.85F).clientTrackingRange(10), 14704695, 6366997);
 	
 	// Second release
-	public static final EntityType<EntityCrab> CRAB							= register("crab",				EntityCrab::new, EntityClassification.WATER_CREATURE, 0.6F, 0.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrab::canSpawnAt, 10489616, 16775294);
-	public static final EntityType<EntityCrabGiant> CRAB_GIANT				= register("giant_crab",		EntityCrabGiant::new, EntityClassification.MONSTER, 1.9F, 1.5F, PlacementType.NO_RESTRICTIONS, Heightmap.Type.OCEAN_FLOOR, EntityCrabGiant::canSpawnAt, 10489616, 16775294);
-	public static final EntityType<EntityWorg> WORG							= register("worg",				EntityWorg::new, EntityClassification.CREATURE, 0.7F, 1.0F, EntityWorg::canSpawnAt, 14670297, 3749941);
-	public static final EntityType<EntityWarg> WARG							= register("warg",				EntityWarg::new, EntityClassification.CREATURE, 0.85F, 1.35F, EntityWarg::canSpawnAt, 6898719, 1248261);
-	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityGhastling::new, EntityClassification.CREATURE, 0.95F, 0.95F, EntityGhastling::canSpawnAt, 16382457, 12369084);
+	public static final EntityType<EntityCrab> CRAB							= register("crab",				EntityType.Builder.<EntityCrab>of(EntityCrab::new, MobCategory.WATER_CREATURE).sized(0.6F, 0.5F).clientTrackingRange(10), 10489616, 16775294);//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR
+	public static final EntityType<EntityCrabGiant> CRAB_GIANT				= register("giant_crab",		EntityType.Builder.<EntityCrabGiant>of(EntityCrabGiant::new, MobCategory.MONSTER).sized(1.9F, 1.5F).clientTrackingRange(10), 10489616, 16775294);//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR
+	public static final EntityType<EntityWorg> WORG							= register("worg",				EntityType.Builder.<EntityWorg>of(EntityWorg::new, MobCategory.CREATURE).sized(0.7F, 1.0F).clientTrackingRange(10), 14670297, 3749941);
+	public static final EntityType<EntityWarg> WARG							= register("warg",				EntityType.Builder.<EntityWarg>of(EntityWarg::new, MobCategory.CREATURE).sized(0.85F, 1.35F).clientTrackingRange(10), 6898719, 1248261);
+	public static final EntityType<EntityGhastling> GHASTLING				= register("ghastling",			EntityType.Builder.<EntityGhastling>of(EntityGhastling::new, MobCategory.CREATURE).sized(0.95F, 0.95F).clientTrackingRange(10).fireImmune(), 16382457, 12369084);
 	
 	// WIP mobs to be fleshed out at a later date
-	public static final EntityType<EntityPatronKirin> PATRON_KIRIN			= register("patron_kirin",		EntityPatronKirin::new, EntityClassification.CREATURE, 0.6F, 1.999F, EntityPatronKirin::canSpawnAt, -1, 1);
-	public static final EntityType<EntityPatronWitch> PATRON_WITCH			= register("patron_witch",		EntityPatronWitch::new, EntityClassification.CREATURE, 0.6F, 1.8F, EntityPatronWitch::canSpawnAt, -1, 1);
-	public static final EntityType<EntityChangeling> CHANGELING				= register("changeling",		EntityChangeling::new, EntityClassification.CREATURE, 0.6F, 1.8F, EntityChangeling::canSpawnAt, -1, 1);
-	public static final EntityType<EntityMindFlayer> MIND_FLAYER			= register("mind_flayer",		EntityMindFlayer::new, EntityClassification.MONSTER, 0.6F, 1.8F, EntityMindFlayer::canSpawnAt, -1, -1);
+	public static final EntityType<EntityPatronKirin> PATRON_KIRIN			= register("patron_kirin",		EntityType.Builder.<EntityPatronKirin>of(EntityPatronKirin::new, MobCategory.CREATURE).sized(0.6F, 1.999F).clientTrackingRange(10), -1, 1);
+	public static final EntityType<EntityPatronWitch> PATRON_WITCH			= register("patron_witch",		EntityType.Builder.<EntityPatronWitch>of(EntityPatronWitch::new, MobCategory.CREATURE).sized(0.6F, 1.8F).clientTrackingRange(10), -1, 1);
+	public static final EntityType<EntityChangeling> CHANGELING				= register("changeling",		EntityType.Builder.<EntityChangeling>of(EntityChangeling::new, MobCategory.CREATURE).sized(0.6F, 1.8F).clientTrackingRange(10), -1, 1);
+	public static final EntityType<EntityMindFlayer> MIND_FLAYER			= register("mind_flayer",		EntityType.Builder.<EntityMindFlayer>of(EntityMindFlayer::new, MobCategory.MONSTER).sized(0.6F, 1.8F).clientTrackingRange(10), -1, -1);
 	
-	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityMarimo::new, EntityClassification.MISC, 0.5F, 0.5F, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityMarimo::canSpawnAt);
+	public static final EntityType<EntityMarimo> MARIMO	= register("marimo", EntityType.Builder.<EntityMarimo>of(EntityMarimo::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(8));//SpawnPlacements.Type.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES
 	
 	// Utility entities
-	public static final EntityType<EntityFireballGhastling> GHASTLING_FIREBALL	= register("ghastling_fireball", EntityFireballGhastling::new, EntityClassification.MISC, 0.3125F, 0.3125F, 4);
-	public static final EntityType<EntityDummyBiped> DUMMY_BIPED				= register("dummy_biped", EntityDummyBiped::new, EntityClassification.MISC, 0.6F, 1.8F, 4);
+	public static final EntityType<EntityFireballGhastling> GHASTLING_FIREBALL	= register("ghastling_fireball", EntityType.Builder.<EntityFireballGhastling>of(EntityFireballGhastling::new, MobCategory.MISC).sized(0.3125F, 0.3125F).noSummon().fireImmune().clientTrackingRange(4));
+	public static final EntityType<EntityDummyBiped> DUMMY_BIPED				= register("dummy_biped", EntityType.Builder.<EntityDummyBiped>of(EntityDummyBiped::new, MobCategory.MISC).sized(0.6F, 1.8F).noSummon().clientTrackingRange(4));
     
-	private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, int trackingRange)
+	private static <T extends Mob> EntityType<T> register(String name, EntityType.Builder<T> builder, int primaryColor, int secondaryColor)
 	{
-        ResourceLocation location = new ResourceLocation(Reference.ModInfo.MOD_ID, name);
-        EntityType<T> entity = EntityType.Builder.create(factory, type).size(width, height).setTrackingRange(trackingRange).setUpdateInterval(1).build(location.toString());
-        entity.setRegistryName(location);
-        
-        MISC_PROPERTIES_MAP.put(entity, new EntityRegistry(PlacementType.NO_RESTRICTIONS, Heightmap.Type.MOTION_BLOCKING, new IPlacementPredicate<T>()
-        {
-			public boolean test(EntityType<T> p_test_1_, IServerWorld p_test_2_, SpawnReason p_test_3_, BlockPos p_test_4_, Random p_test_5_)
-			{
-				return true;
-			}}));
-        return entity;
+		EntityType<T> type = register(name, builder);
+		VOItems.register(name, new ItemOddEgg(type, primaryColor, secondaryColor, new Item.Properties()));
+		return type;
 	}
 	
-    private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, PlacementType placeType1, Heightmap.Type placeType2, IPlacementPredicate<T> predicate)
-    {
-        ResourceLocation location = new ResourceLocation(Reference.ModInfo.MOD_ID, name);
-        EntityType<T> entity = EntityType.Builder.create(factory, type).size(width, height).setTrackingRange(64).setUpdateInterval(1).build(location.toString());
-        entity.setRegistryName(location);
-        ENTITIES.add(entity);
-        
-        TYPE_PROPERTIES_MAP.put(entity, new EntityRegistry(placeType1, placeType2, predicate));
-        
-        return entity;
-    }
-    
-    private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, IPlacementPredicate<T> predicate, int eggPrimary, int eggSecondary)
-    {
-    	return register(name, factory, type, width, height, PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, predicate, eggPrimary, eggSecondary);
-    }
-    
-    private static <T extends Entity> EntityType<T> register(String name, EntityType.IFactory<T> factory, EntityClassification type, float width, float height, PlacementType placeType1, Heightmap.Type placeType2, IPlacementPredicate<T> predicate, int eggPrimary, int eggSecondary)
-    {
-    	EntityType<T> entity = register(name, factory, type, width, height, placeType1, placeType2, predicate);
-        Item spawnEgg = new ItemOddEgg(entity, eggPrimary, eggSecondary, (new Item.Properties()));
-        spawnEgg.setRegistryName(new ResourceLocation(Reference.ModInfo.MOD_ID, name + "_spawn_egg"));
-        SPAWN_EGGS.put(entity, spawnEgg);
-        ENTITIES_AI.add(entity);
-        return entity;
-    }
+	private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder)
+	{
+		name = Reference.ModInfo.MOD_PREFIX + name;
+		EntityType<T> type = builder.build(name);
+		ForgeRegistries.ENTITY_TYPES.register(name, type);
+		ENTITIES.add(type);
+		return type;
+	}
+	
+	public static void init() {}
     
     public static List<ResourceLocation> getEntityNameList()
     {
     	List<ResourceLocation> names = new ArrayList<>();
     	for(EntityType<?> type : ENTITIES)
-    		names.add(type.getRegistryName());
+    		names.add(EntityType.getKey(type));
     	return names;
     }
     
@@ -138,80 +113,40 @@ public class VOEntities
     {
     	List<ResourceLocation> names = new ArrayList<>();
     	for(EntityType<?> type : ENTITIES_AI)
-    		names.add(type.getRegistryName());
+    		names.add(EntityType.getKey(type));
     	return names;
     }
     
     public static EntityType<?> getEntityTypeByName(String nameIn)
     {
     	for(EntityType<?> type : ENTITIES)
-    		if(type.getRegistryName().getPath().equalsIgnoreCase(nameIn))
+    		if(EntityType.getKey(type).getPath().equalsIgnoreCase(nameIn))
     			return type;
     	return null;
-    }
-    
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	@SubscribeEvent
-    public static void registerEntities(RegistryEvent.Register<EntityType<?>> event)
-    {
-    	for(EntityType entity : TYPE_PROPERTIES_MAP.keySet())
-    	{
-            Preconditions.checkNotNull(entity.getRegistryName(), "registryName");
-            event.getRegistry().register(entity);
-            
-            EntityRegistry registry = TYPE_PROPERTIES_MAP.get(entity);
-            EntitySpawnPlacementRegistry.register(entity, registry.placementType, registry.heightType, registry.placementPredicate);
-    	}
     }
     
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event)
     {
-    	event.put(DUMMY_BIPED, EntityDummyBiped.getAttributes().create());
-    	event.put(CORPSE, EntityBodyCorpse.getAttributes().create());
-    	event.put(BODY, EntityBodyCorpse.getAttributes().create());
-    	event.put(KOBOLD, EntityKobold.getAttributes().create());
-    	event.put(GOBLIN, EntityGoblin.getAttributes().create());
-    	event.put(MARIMO, EntityMarimo.getAttributes().create());
-    	event.put(RAT, EntityRat.getAttributes().create());
-    	event.put(RAT_GIANT, EntityRatGiant.getAttributes().create());
-    	event.put(SCORPION, EntityRat.getAttributes().create());
-    	event.put(SCORPION_GIANT, EntityRatGiant.getAttributes().create());
-    	event.put(CRAB, EntityCrab.getAttributes().create());
-    	event.put(CRAB_GIANT, EntityCrabGiant.getAttributes().create());
-    	event.put(WORG, EntityWorg.getAttributes().create());
-    	event.put(WARG, EntityWarg.getAttributes().create());
-    	event.put(GHASTLING, EntityGhastling.getAttributes().create());
+    	event.put(DUMMY_BIPED, EntityDummyBiped.createAttributes().build());
+    	event.put(CORPSE, EntityBodyCorpse.createAttributes().build());
+    	event.put(BODY, EntityBodyCorpse.createAttributes().build());
+    	event.put(KOBOLD, EntityKobold.createAttributes().build());
+    	event.put(GOBLIN, EntityGoblin.createAttributes().build());
+    	event.put(MARIMO, EntityMarimo.createAttributes().build());
+    	event.put(RAT, EntityRat.createAttributes().build());
+    	event.put(RAT_GIANT, EntityRatGiant.createAttributes().build());
+    	event.put(SCORPION, EntityRat.createAttributes().build());
+    	event.put(SCORPION_GIANT, EntityRatGiant.createAttributes().build());
+    	event.put(CRAB, EntityCrab.createAttributes().build());
+    	event.put(CRAB_GIANT, EntityCrabGiant.createAttributes().build());
+    	event.put(WORG, EntityWorg.createAttributes().build());
+    	event.put(WARG, EntityWarg.createAttributes().build());
+    	event.put(GHASTLING, EntityGhastling.createAttributes().build());
     	
-    	event.put(PATRON_KIRIN, EntityPatronKirin.getAttributes().create());
-    	event.put(PATRON_WITCH, EntityPatronWitch.getAttributes().create());
-    	event.put(CHANGELING, EntityChangeling.getAttributes().create());
-    	event.put(MIND_FLAYER, MobEntity.func_233666_p_().create());
-    }
-    
-    @SubscribeEvent
-    public static void registerSpawnEggs(RegistryEvent.Register<Item> event)
-    {
-        for (Item spawnEgg : SPAWN_EGGS.values())
-        {
-            Preconditions.checkNotNull(spawnEgg.getRegistryName(), "registryName");
-            event.getRegistry().register(spawnEgg);
-        }
-    }
-    
-    private static class EntityRegistry
-    {
-    	@SuppressWarnings("rawtypes")
-		IPlacementPredicate placementPredicate;
-    	PlacementType placementType;
-    	Heightmap.Type heightType;
-    	
-    	@SuppressWarnings("rawtypes")
-		public EntityRegistry(PlacementType placeType1, Heightmap.Type placeType2, IPlacementPredicate predicate)
-    	{
-    		this.placementType = placeType1;
-    		this.heightType = placeType2;
-    		this.placementPredicate = predicate;
-    	}
+    	event.put(PATRON_KIRIN, EntityPatronKirin.createAttributes().build());
+    	event.put(PATRON_WITCH, EntityPatronWitch.createAttributes().build());
+    	event.put(CHANGELING, EntityChangeling.createAttributes().build());
+    	event.put(MIND_FLAYER, Mob.createMobAttributes().build());
     }
 }

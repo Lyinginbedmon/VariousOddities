@@ -10,13 +10,16 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
 import com.mojang.math.Vector3d;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
@@ -25,6 +28,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.material.Fluids;
 
 public class EntityMarimo extends EntityOddity implements IMysticSource
 {
@@ -39,7 +44,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
 	public EntityMarimo(EntityType<? extends EntityMarimo> type, Level worldIn)
 	{
 		super(type, worldIn);
-		random = new Random(this.getUniqueID().getLeastSignificantBits());
+		random = new Random(this.getUUID().getLeastSignificantBits());
 	}
 	
 	public Iterable<ItemStack> getArmorInventoryList() { return Collections.emptyList(); }
@@ -50,21 +55,21 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
 	protected void registerData()
 	{
 		super.registerData();
-		random = new Random(this.getUniqueID().getLeastSignificantBits());
+		random = new Random(this.getUUID().getLeastSignificantBits());
 		
 		getDataManager().register(DYE_COLOR, DyeColor.GREEN.getId());
 		DataHelper.Booleans.registerBooleanByte(getDataManager(), MYSTIC, random.nextInt(50) == 0);
 		getDataManager().register(RECHARGE, 0);
 	}
 	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return MobEntity.func_233666_p_().createMutableAttribute(Attributes.MAX_HEALTH, 5.0D);
+        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 5.0D);
     }
     
-    public static boolean canSpawnAt(EntityType<?> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
+    public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason)
     {
-        return world.getBlockState(pos).getBlock() instanceof FlowingFluidBlock;
+        return world.getBlockState(blockPosition()).getFluidState().is(Fluids.WATER);
     }
     
     /**
@@ -89,7 +94,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     public ActionResultType applyPlayerInteraction(Player player, InteractionHand hand)
     {
         ItemStack itemstack = player.getHeldItem(hand);
-        if(itemstack.getItem() == Items.POTION && PotionUtils.getPotionFromItem(itemstack) == Potions.WATER)
+        if(itemstack.getItem() == Items.POTION && PotionUtils.getPotion(itemstack) == Potions.WATER)
         {
         	itemstack.shrink(1);
         	player.addItemStackToInventory(getItemStack());
@@ -119,10 +124,10 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     public void livingTick()
     {
     	super.livingTick();
-    	if(!this.isInWater() && !this.isInvulnerable() && this.hurtResistantTime == 0) this.attackEntityFrom(DamageSource.DROWN, 1.0F);
-    	else if(this.isInWater() && this.getHealth() < this.getMaxHealth() && getEntityWorld().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0) this.heal(1.0F);
+    	if(!this.isInWater() && !this.isInvulnerable() && this.hurtResistantTime == 0) this.hurt(DamageSource.DROWN, 1.0F);
+    	else if(this.isInWater() && this.getHealth() < this.getMaxHealth() && getLevel().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0) this.heal(1.0F);
     	
-    	if(this.isInWater() && this.isAlive() && !getEntityWorld().isRemote)
+    	if(this.isInWater() && this.isAlive() && !getLevel().isClientSide)
     	{
     		
     		if(this.random.nextInt(Reference.Values.TICKS_PER_SECOND * 5) == 0)
@@ -148,14 +153,14 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
         {
         	if(canProvidePower())
         	{
-		    	if(getEntityWorld().isRemote && getRNG().nextInt(50) == 0)
+		    	if(getLevel().isClientSide && getRNG().nextInt(50) == 0)
 		            for (int i = 0; i < 2; ++i)
-		            	getEntityWorld().addParticle(ParticleTypes.PORTAL, getPosX() + (this.random.nextDouble() - 0.5D) * (double)getWidth(), getPosY() + this.random.nextDouble() * (double)getHeight() - 0.25D, getPosZ() + (this.random.nextDouble() - 0.5D) * (double)getWidth(), (this.random.nextDouble() - 0.5D) * 2.0D, -this.random.nextDouble(), (this.random.nextDouble() - 0.5D) * 2.0D);
+		            	getLevel().addParticle(ParticleTypes.PORTAL, getPosX() + (this.random.nextDouble() - 0.5D) * (double)getWidth(), getPosY() + this.random.nextDouble() * (double)getHeight() - 0.25D, getPosZ() + (this.random.nextDouble() - 0.5D) * (double)getWidth(), (this.random.nextDouble() - 0.5D) * 2.0D, -this.random.nextDouble(), (this.random.nextDouble() - 0.5D) * 2.0D);
         	}
         	else
         	{
 		    	int charge = getDataManager().get(RECHARGE).intValue();
-		    	if(!getEntityWorld().isRemote && charge != 0)
+		    	if(!getLevel().isClientSide && charge != 0)
 		    	{
 		    		charge -= Math.signum(charge);
 		    		getDataManager().set(RECHARGE, charge);
@@ -170,7 +175,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     
     protected float limitAngle(float sourceAngle, float targetAngle, float maximumChange)
     {
-        float f = MathHelper.wrapDegrees(targetAngle - sourceAngle);
+        float f = Mth.wrapDegrees(targetAngle - sourceAngle);
         f = Math.max(-maximumChange, Math.min(maximumChange, f));
         
         float f1 = sourceAngle + f;

@@ -10,6 +10,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -27,24 +28,24 @@ public class PacketSyncTypesCustom
 		this.types = typesIn;
 	}
 	
-	public static PacketSyncTypesCustom decode(PacketBuffer par1Buffer)
+	public static PacketSyncTypesCustom decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketSyncTypesCustom packet = new PacketSyncTypesCustom();
-		packet.entityID = par1Buffer.readUniqueId();
+		packet.entityID = par1Buffer.readUUID();
 		
 		int count = par1Buffer.readInt();
 		for(int i=0; i<count; i++)
-			packet.types.add(par1Buffer.readEnumValue(EnumCreatureType.class));
+			packet.types.add(par1Buffer.readEnum(EnumCreatureType.class));
 		
 		return packet;
 	}
 	
-	public static void encode(PacketSyncTypesCustom msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncTypesCustom msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.entityID);
+		par1Buffer.writeUUID(msg.entityID);
 		
 		par1Buffer.writeInt(msg.types.size());
-		msg.types.forEach((type) -> { par1Buffer.writeEnumValue(type); });
+		msg.types.forEach((type) -> { par1Buffer.writeEnum(type); });
 	}
 	
 	public static void handle(PacketSyncTypesCustom msg, Supplier<NetworkEvent.Context> cxt)

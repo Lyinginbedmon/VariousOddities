@@ -53,7 +53,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
@@ -211,10 +211,10 @@ public class VOBusServer
 		}
 		
 		// Add special AI to mobs
-		if(theEntity instanceof Monster)
+		if(theEntity instanceof PathfinderMob)
 		{
-			Monster living = (Monster)theEntity;
-			living.goalSelector.addGoal(1, new EntityAIFrightened((Mob)living));
+			PathfinderMob living = (PathfinderMob)theEntity;
+			living.goalSelector.addGoal(1, new EntityAIFrightened(living));
 		}
 		
 		// Spook worgs
@@ -532,7 +532,7 @@ public class VOBusServer
 	{
 		List<EntityGoblin> nearbyGoblins = goblinIn.getLevel().getEntitiesOfClass(EntityGoblin.class, goblinIn.getBoundingBox().inflate(10));
 		for(EntityGoblin goblin : nearbyGoblins)
-			if(goblin.isAlive() && goblin.getGrowingAge() > 0)
-				goblin.setAge(Math.max(0, goblin.getGrowingAge() - amount));
+			if(goblin.isAlive() && goblin.getAge() > 0)
+				goblin.setAge(Math.max(0, goblin.getAge() - amount));
 	}
 }

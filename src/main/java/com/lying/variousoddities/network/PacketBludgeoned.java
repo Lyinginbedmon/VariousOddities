@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -24,14 +24,14 @@ public class PacketBludgeoned
 		knockedOut = knockedIn;
 	}
 	
-	public static PacketBludgeoned decode(PacketBuffer par1Buffer)
+	public static PacketBludgeoned decode(FriendlyByteBuf par1Buffer)
 	{
-		return new PacketBludgeoned(par1Buffer.readUniqueId(), par1Buffer.readBoolean());
+		return new PacketBludgeoned(par1Buffer.readUUID(), par1Buffer.readBoolean());
 	}
 	
-	public static void encode(PacketBludgeoned msg, PacketBuffer par1Buffer)
+	public static void encode(PacketBludgeoned msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.entityID);
+		par1Buffer.writeUUID(msg.entityID);
 		par1Buffer.writeBoolean(msg.knockedOut);
 	}
 	

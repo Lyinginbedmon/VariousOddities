@@ -8,7 +8,7 @@ import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -18,12 +18,12 @@ public class PacketDeadDeath
 {
 	public PacketDeadDeath(){ }
 	
-	public static PacketDeadDeath decode(PacketBuffer par1Buffer)
+	public static PacketDeadDeath decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketDeadDeath();
 	}
 	
-	public static void encode(PacketDeadDeath msg, PacketBuffer par1Buffer)
+	public static void encode(PacketDeadDeath msg, FriendlyByteBuf par1Buffer)
 	{
 		
 	}
@@ -57,11 +57,11 @@ public class PacketDeadDeath
 		{
 			Entity body = PlayerData.forPlayer(player).getBody(player.getLevel());
 			if(body != null && body.getType() == VOEntities.BODY)
-				body.onKillCommand();
+				body.kill();
 			else if(body == null)
 				VariousOddities.log.warn("Could not find corpse of player "+player.getDisplayName().getString()+" to despawn");
 		}
 		
-		player.onKillCommand();
+		player.kill();
 	}
 }

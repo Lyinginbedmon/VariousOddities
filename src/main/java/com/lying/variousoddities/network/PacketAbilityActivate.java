@@ -8,7 +8,7 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -24,14 +24,14 @@ public class PacketAbilityActivate
 		abilityName = mapName;
 	}
 	
-	public static PacketAbilityActivate decode(PacketBuffer par1Buffer)
+	public static PacketAbilityActivate decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketAbilityActivate packet = new PacketAbilityActivate();
 		packet.abilityName = par1Buffer.readResourceLocation();
 		return packet;
 	}
 	
-	public static void encode(PacketAbilityActivate msg, PacketBuffer par1Buffer)
+	public static void encode(PacketAbilityActivate msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeResourceLocation(msg.abilityName);
 	}

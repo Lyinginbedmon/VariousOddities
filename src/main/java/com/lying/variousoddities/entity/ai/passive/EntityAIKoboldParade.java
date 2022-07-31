@@ -6,25 +6,27 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.compress.utils.Lists;
+
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIKoboldParade extends Goal
 {
-	private final World world;
+	private final Level world;
 	private final EntityKobold kobold;
     private double speedModifier;
 	
@@ -37,26 +39,26 @@ public class EntityAIKoboldParade extends Goal
     
 	public EntityAIKoboldParade(EntityKobold entityIn, double speed)
 	{
-		this.world = entityIn.getEntityWorld();
+		this.world = entityIn.getLevel();
 		this.kobold = entityIn;
 		this.speedModifier = speed;
 		
-        this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 	
     /**
      * Returns whether the EntityAIBase should begin execution.
      */
-    public boolean shouldExecute()
+    public boolean canUse()
     {
 		this.paradeIndex = getParadeIndex(this.kobold);
-    	if(!isJune() || !world.isDaytime() || this.kobold.getAttackTarget() != null)
+    	if(!isJune() || !world.isDay() || this.kobold.getTarget() != null)
     		return false;
     	
-        if(!this.kobold.getLeashed())
+        if(!this.kobold.isLeashed())
         {
             this.paradeLeader = getBestLeader();
-            return !(paradeLeader == null || this.kobold.getDistanceSq(this.paradeLeader) < 6.0D);
+            return !(paradeLeader == null || this.kobold.distanceTo(this.paradeLeader) < 6.0D);
         }
         
         return false;
@@ -65,7 +67,7 @@ public class EntityAIKoboldParade extends Goal
     /**
      * Returns whether an in-progress EntityAIBase should continue executing
      */
-    public boolean shouldContinueExecuting()
+    public boolean canContinueToUse()
     {
         return timeToParade() && isValidParadeLeader(this.paradeLeader) && --paradeTime > 0;
     }
@@ -73,13 +75,13 @@ public class EntityAIKoboldParade extends Goal
     /**
      * Reset the task's internal state. Called when this task is interrupted by another one
      */
-    public void resetTask()
+    public void stop()
     {
         this.paradeLeader = null;
         this.paradeTime = 0;
     }
     
-    public void startExecuting()
+    public void start()
     {
     	this.paradeTime = (Reference.Values.TICKS_PER_SECOND * 15) + rand.nextInt(Reference.Values.TICKS_PER_MINUTE);
     }
@@ -92,29 +94,29 @@ public class EntityAIKoboldParade extends Goal
         if(isValidParadeLeader(this.paradeLeader))
         {
         	// Occasionally wave flag
-        	if(this.kobold.getHeldItemMainhand().isEmpty() || this.kobold.getHeldItemMainhand().getItem() instanceof ItemHeldFlag)
+        	if(this.kobold.getMainHandItem().isEmpty() || this.kobold.getMainHandItem().getItem() instanceof ItemHeldFlag)
 	        	if(!this.kobold.isSwingInProgress && rand.nextInt(Reference.Values.TICKS_PER_SECOND * 5) == 0)
-	        		this.kobold.swingArm(Hand.MAIN_HAND);
+	        		this.kobold.swing(InteractionHand.MAIN_HAND);
         	
         	// Move towards parade leader
-            double dist = (double)this.kobold.getDistance(paradeLeader);
+            double dist = (double)this.kobold.distanceTo(paradeLeader);
             if(dist > 4D)
             {
             	this.kobold.getLookController().setLookPositionWithEntity(this.paradeLeader, 10.0F, (float)this.kobold.getVerticalFaceSpeed());
             	
-            	Vector3d leaderPos = paradeLeader.getPositionVec();
-            	Vector3d koboldPos = this.kobold.getPositionVec();
-            	Vector3d direction = leaderPos.subtract(koboldPos).normalize();
+            	Vec3 leaderPos = paradeLeader.position();
+            	Vec3 koboldPos = this.kobold.position();
+            	Vec3 direction = leaderPos.subtract(koboldPos).normalize();
             	
-	            Vector3d position = direction.scale(Math.max(dist - 2.0D, 0.0D));
-	            this.kobold.getNavigator().tryMoveToXYZ(this.kobold.getPosX() + position.x, this.kobold.getPosY() + position.y, this.kobold.getPosZ() + position.z, this.speedModifier);
+	            Vec3 position = direction.scale(Math.max(dist - 2.0D, 0.0D));
+	            this.kobold.getNavigation().moveTo(this.kobold.getX() + position.x, this.kobold.getY() + position.y, this.kobold.getZ() + position.z, this.speedModifier);
             }
         }
     }
     
     public boolean timeToParade()
     {
-    	return isJune() && this.world.isDaytime();
+    	return isJune() && this.world.isDay();
     }
     
     public boolean isJune()
@@ -125,8 +127,8 @@ public class EntityAIKoboldParade extends Goal
     
     public int getParadeIndex(Entity entityIn)
     {
-    	Random rng = (new Random(entityIn.getUniqueID().getLeastSignificantBits()));
-    	if(entityIn instanceof PlayerEntity)
+    	Random rng = (new Random(entityIn.getUUID().getLeastSignificantBits()));
+    	if(entityIn instanceof Player)
     		return this.paradeIndex - rng.nextInt(INDEX_RANGE / 1000);
     	
     	return rng.nextInt(INDEX_RANGE);
@@ -136,9 +138,10 @@ public class EntityAIKoboldParade extends Goal
     {
     	LivingEntity leader = null;
     	
-    	AxisAlignedBB searchArea = this.kobold.getBoundingBox().grow(16.0D, 4.0D, 16.0D);
-    	List<LivingEntity> paraders = this.world.getEntitiesWithinAABB(EntityKobold.class, searchArea);
-    	paraders.addAll(this.world.getEntitiesWithinAABB(PlayerEntity.class, searchArea));
+    	AABB searchArea = this.kobold.getBoundingBox().inflate(16.0D, 4.0D, 16.0D);
+    	List<LivingEntity> paraders = Lists.newArrayList();
+    	paraders.addAll(world.getEntitiesOfClass(EntityKobold.class, searchArea));
+    	paraders.addAll(this.world.getEntitiesOfClass(Player.class, searchArea));
     	
     	paraders.removeIf(new Predicate<LivingEntity>()
     	{
@@ -153,7 +156,7 @@ public class EntityAIKoboldParade extends Goal
         for(LivingEntity parader : paraders)
         {
         	int index = getParadeIndex(parader);
-            double dist = this.kobold.getDistanceSq(parader);
+            double dist = this.kobold.distanceToSqr(parader);
             if((index >= closestIndex && dist <= paradeDistance) || leader == null)
             {
                 paradeDistance = dist;
@@ -167,13 +170,13 @@ public class EntityAIKoboldParade extends Goal
     
     public boolean isValidParadeLeader(LivingEntity entityIn)
     {
-    	if(entityIn == null || !entityIn.isAlive() || !world.canSeeSky(entityIn.getPosition())) return false;
+    	if(entityIn == null || !entityIn.isAlive() || !world.canSeeSky(entityIn.blockPosition())) return false;
     	
-    	if(entityIn instanceof PlayerEntity)
+    	if(entityIn instanceof Player)
     	{
-    		PlayerEntity player = (PlayerEntity)entityIn;
-    		ItemStack main = player.getHeldItem(Hand.MAIN_HAND);
-    		ItemStack off = player.getHeldItem(Hand.OFF_HAND);
+    		Player player = (Player)entityIn;
+    		ItemStack main = player.getItemInHand(InteractionHand.MAIN_HAND);
+    		ItemStack off = player.getItemInHand(InteractionHand.OFF_HAND);
     		
 			if(!main.isEmpty() && main.getItem() instanceof ItemHeldFlag)
 				return true;
@@ -182,9 +185,9 @@ public class EntityAIKoboldParade extends Goal
 			else
 				return false;
     	}
-    	else if(entityIn instanceof MobEntity)
+    	else if(entityIn instanceof Mob)
     	{
-    		if(((MobEntity)entityIn).getLeashed()) return false;
+    		if(((Mob)entityIn).isLeashed()) return false;
     	}
     	
     	return true;

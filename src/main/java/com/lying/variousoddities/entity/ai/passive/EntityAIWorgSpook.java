@@ -2,8 +2,8 @@ package com.lying.variousoddities.entity.ai.passive;
 
 import com.lying.variousoddities.entity.passive.EntityWorg;
 
-import net.minecraft.entity.ai.goal.PanicGoal;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
 
 public class EntityAIWorgSpook extends PanicGoal
 {
@@ -15,7 +15,7 @@ public class EntityAIWorgSpook extends PanicGoal
 		this.creature = entity;
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
 		if(this.creature.isSpooked())
 		{
@@ -27,29 +27,29 @@ public class EntityAIWorgSpook extends PanicGoal
 		return false;
 	}
 	
-	public void resetTask()
+	public void stop()
 	{
-		super.resetTask();
-		if(this.creature.getRNG().nextInt(3) == 0)
+		super.stop();
+		if(this.creature.getRandom().nextInt(3) == 0)
 			this.creature.unSpook();
 	}
 	
-	public void startExecuting()
+	public void start()
 	{
-		super.startExecuting();
-		if(this.creature.isSitting())
-			this.creature.func_233687_w_(false);
+		super.start();
+		if(this.creature.isOrderedToSit())
+			this.creature.setOrderedToSit(false);
 		makeWhine();
 	}
 	
 	public void tick()
 	{
-		if(this.creature.getRNG().nextInt(100) == 0)
+		if(this.creature.getRandom().nextInt(100) == 0)
 			makeWhine();
 	}
 	
 	public void makeWhine()
 	{
-    	this.creature.getEntityWorld().playSound(null, this.creature.getPosition(), SoundEvents.ENTITY_WOLF_HURT, this.creature.getSoundCategory(), 0.4F, 1.0F);
+    	this.creature.getLevel().playSound(null, this.creature.blockPosition(), SoundEvents.WOLF_HURT, this.creature.getSoundSource(), 0.4F, 1.0F);
 	}
 }

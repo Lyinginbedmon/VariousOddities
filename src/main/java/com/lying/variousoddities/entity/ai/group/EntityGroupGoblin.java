@@ -6,11 +6,11 @@ import java.util.List;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.potion.Effects;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
@@ -18,7 +18,7 @@ public class EntityGroupGoblin extends EntityGroup
 {
 	public boolean isObserved(LivingEntity entity)
 	{
-		return !entity.isPotionActive(Effects.INVISIBILITY) ? super.isObserved(entity) : false;
+		return !entity.hasEffect(MobEffects.INVISIBILITY) ? super.isObserved(entity) : false;
 	}
 	
 	/** Called every tick by the world to update group logic */
@@ -48,21 +48,21 @@ public class EntityGroupGoblin extends EntityGroup
 			targets.addAll(this.targets.keySet());
 			
 			for(LivingEntity target : targets)
-				for(LivingEntity nearby : target.getEntityWorld().getEntitiesWithinAABB(LivingEntity.class, target.getBoundingBox().grow(6, 2, 6), new Predicate<LivingEntity>()
+				for(LivingEntity nearby : target.getLevel().getEntitiesOfClass(Mob.class, target.getBoundingBox().inflate(6, 2, 6), new Predicate<LivingEntity>()
 					{
 						public boolean apply(LivingEntity input)
 						{
 							if(!input.isAlive() || !isObserved(input))
 								return false;
 							
-							boolean teammate = input.getType() == target.getType() && input.isOnSameTeam(target);
+							boolean teammate = input.getType() == target.getType() && input.getTeam().isAlliedTo(target.getTeam());
 							boolean pet = false;
-							if(input instanceof TameableEntity)
+							if(input instanceof TamableAnimal)
 							{
-								TameableEntity tameable = (TameableEntity)input;
-								pet = tameable.getOwnerId() != null && tameable.getOwnerId().equals(target.getUniqueID());
+								TamableAnimal tameable = (TamableAnimal)input;
+								pet = tameable.getOwnerUUID() != null && tameable.getOwnerUUID().equals(target.getUUID());
 							}
-							boolean aggressor = input instanceof MobEntity && members.keySet().contains(((MobEntity)input).getAttackTarget());
+							boolean aggressor = input instanceof Mob && members.keySet().contains(((Mob)input).getTarget());
 							return teammate || pet || aggressor;
 						}
 					}))
@@ -76,19 +76,19 @@ public class EntityGroupGoblin extends EntityGroup
 	 */
 	public void reassignAttackers()
 	{
-		List<MobEntity> setTarget = new ArrayList<>();
+		List<Mob> setTarget = new ArrayList<>();
 		setTarget.addAll(members.keySet());
 		
 		for(LivingEntity target : targets.keySet())
 		{
 			if(isObserved(target))
 			{
-				MobEntity nearest = null;
+				Mob nearest = null;
 				double minDist = Double.MAX_VALUE;
-				for(MobEntity entity : setTarget)
+				for(Mob entity : setTarget)
 				{
-					double dist = target.getDistance(entity);
-					if(dist < minDist && entity.getNavigator().getPathToEntity(target, (int)entity.getAttributeValue(Attributes.FOLLOW_RANGE)) != null)
+					double dist = target.distanceToSqr(entity);
+					if(dist < minDist && entity.getNavigation().createPath(target, (int)entity.getAttributeValue(Attributes.FOLLOW_RANGE)) != null)
 					{
 						nearest = entity;
 						minDist = dist;
@@ -97,7 +97,7 @@ public class EntityGroupGoblin extends EntityGroup
 				
 				if(nearest != null)
 				{
-					nearest.setAttackTarget(target);
+					nearest.setTarget(target);
 					setTarget.remove(nearest);
 				}
 			}
@@ -105,14 +105,14 @@ public class EntityGroupGoblin extends EntityGroup
 		
 		/** Assign any remaining members to the nearest pathable target */
 		if(!setTarget.isEmpty())
-			for(MobEntity member : setTarget)
+			for(Mob member : setTarget)
 			{
 				LivingEntity target = null;
 				double minDist = Double.MAX_VALUE;
 				for(LivingEntity entity : targets.keySet())
 				{
-					double dist = entity.getDistance(member);
-					if(dist < minDist && member.getNavigator().getPathToEntity(entity, (int)member.getAttributeValue(Attributes.FOLLOW_RANGE)) != null)
+					double dist = entity.distanceToSqr(member);
+					if(dist < minDist && member.getNavigation().createPath(entity, (int)member.getAttributeValue(Attributes.FOLLOW_RANGE)) != null)
 					{
 						target = entity;
 						minDist = dist;
@@ -120,7 +120,7 @@ public class EntityGroupGoblin extends EntityGroup
 				}
 				
 				if(target != null)
-					member.setAttackTarget(target);
+					member.setTarget(target);
 			}
 	}
 	
@@ -132,14 +132,14 @@ public class EntityGroupGoblin extends EntityGroup
 		if(members.size() < (targets.size() * 8))
 		{
 			List<EntityGoblin> goblins = new ArrayList<>();
-			for(MobEntity member : members.keySet())
+			for(Mob member : members.keySet())
 				if(member.isAlive())
 				{
-					List<EntityGoblin> nearby = member.getEntityWorld().getEntitiesWithinAABB(EntityGoblin.class, member.getBoundingBox().grow(6, 2, 6), new Predicate<EntityGoblin>()
+					List<EntityGoblin> nearby = member.getLevel().getEntitiesOfClass(EntityGoblin.class, member.getBoundingBox().inflate(6, 2, 6), new Predicate<EntityGoblin>()
 					{
 						public boolean apply(EntityGoblin input)
 						{
-							return input.isAlive() && !input.isChild() && isObserved(input) && GroupHandler.getEntityMemberGroup(input) == null;
+							return input.isAlive() && !input.isBaby() && isObserved(input) && GroupHandler.getEntityMemberGroup(input) == null;
 						}
 					});
 					nearby.removeAll(goblins);
@@ -156,10 +156,10 @@ public class EntityGroupGoblin extends EntityGroup
 		}
 	}
 	
-	public void onMemberHarmed(LivingHurtEvent event, MobEntity victim, LivingEntity attacker)
+	public void onMemberHarmed(LivingHurtEvent event, Mob victim, LivingEntity attacker)
 	{
 		if(isObserved(victim))
-			if(attacker.isPotionActive(Effects.INVISIBILITY))
+			if(attacker.hasEffect(MobEffects.INVISIBILITY))
 				targets.put(attacker, new Sighting(victim));
 			else
 				addTarget(attacker);
@@ -167,7 +167,7 @@ public class EntityGroupGoblin extends EntityGroup
 	
 	public void onEntityKilled(LivingDeathEvent event)
 	{
-		LivingEntity living = event.getEntityLiving();
+		LivingEntity living = event.getEntity();
 		if(isObserved(living))
 			super.onEntityKilled(event);
 	}

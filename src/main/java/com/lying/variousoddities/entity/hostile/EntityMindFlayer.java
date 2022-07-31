@@ -5,32 +5,33 @@ import java.util.Random;
 import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.init.VODamageSource;
 
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.HitResult.Type;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
 
 public class EntityMindFlayer extends EntityOddity
 {
-	public EntityMindFlayer(EntityType<? extends EntityOddity> type, World worldIn)
+	public EntityMindFlayer(EntityType<? extends EntityOddity> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
@@ -40,57 +41,57 @@ public class EntityMindFlayer extends EntityOddity
 		super.registerGoals();
 		this.goalSelector.addGoal(0, new SwimGoal(this));
 		this.goalSelector.addGoal(8, new RandomWalkingGoal(this, 0.6D));
-		this.goalSelector.addGoal(9, new LookAtGoal(this, PlayerEntity.class, 15.0F, 1.0F));
-		this.goalSelector.addGoal(10, new LookAtGoal(this, MobEntity.class, 15.0F));
-		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, PlayerEntity.class, true));
-		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, AbstractVillagerEntity.class, false));
+		this.goalSelector.addGoal(9, new LookAtGoal(this, Player.class, 15.0F, 1.0F));
+		this.goalSelector.addGoal(10, new LookAtGoal(this, Mob.class, 15.0F));
+		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, AbstractVillager.class, false));
 	}
 	
-    public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+	public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason)
     {
-        return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
+        return world.getDifficulty() != Difficulty.PEACEFUL;
     }
-
+	
 	/** Returns true if the given itemstack is a wearable skull or head item */
     public static boolean isHead(ItemStack input)
     {
-		return MobEntity.getSlotForItemStack(input) == EquipmentSlotType.HEAD && Tags.Items.HEADS.contains(input.getItem());
+		return input.getItem().getEquipmentSlot(input) == EquipmentSlot.HEAD && input.is(Tags.Items.HEADS);
     }
     
     public boolean hasHead()
     {
-    	return isHead(getItemStackFromSlot(EquipmentSlotType.HEAD));
+    	return isHead(getItemBySlot(EquipmentSlot.HEAD));
     }
     
-    public boolean attackEntityFrom(DamageSource source, float amount)
+    public boolean hurt(DamageSource source, float amount)
     {
     	if(hasHead() && !(source == DamageSource.OUT_OF_WORLD || source == VODamageSource.BLUDGEON))
-	    	if(source.getImmediateSource() != null && source.getImmediateSource() == source.getTrueSource() && source.getImmediateSource() instanceof LivingEntity)
+	    	if(source.getDirectEntity() != null && source.getDirectEntity() == source.getEntity() && source.getDirectEntity() instanceof LivingEntity)
 	    	{
-	    		LivingEntity ent = (LivingEntity)source.getImmediateSource();
-	    		RayTraceResult ray = ent.pick(ent.getDistance(this) + 10D, 0F, false);	
+	    		LivingEntity ent = (LivingEntity)source.getDirectEntity();
+	    		HitResult ray = ent.pick(ent.distanceToSqr(this) + 10D, 0F, false);	
 	    		if(ray.getType() == Type.ENTITY)
 	    		{
-	    			EntityRayTraceResult entityRay = (EntityRayTraceResult)ray;
+	    			EntityHitResult entityRay = (EntityHitResult)ray;
 	    			if(entityRay.getEntity() == this)
 	    			{
-	    				Vector3d hit = ray.getHitVec().subtract(getPosX(), getPosY(), getPosZ());
+	    				Vec3 hit = ray.getHitVec().subtract(getPosX(), getPosY(), getPosZ());
 	    				double hitY = hit.y;
-	    				if(hitY >= this.getHeight() * 0.888)
+	    				if(hitY >= this.getBbHeight() * 0.888)
 	    				{
 	    					// Head hit!
-	    					ItemStack stack = getItemStackFromSlot(EquipmentSlotType.HEAD);
-	    					if(stack.isDamageable())
-	    						stack.damageItem((int)amount * 3, ent, (player) -> {});
-	    					else if(this.getRNG().nextInt(20) == 0)
+	    					ItemStack stack = getItemBySlot(EquipmentSlot.HEAD);
+	    					if(stack.isDamageableItem())
+	    						stack.hurtAndBreak((int)amount * 3, ent, (player) -> {});
+	    					else if(this.getRandom().nextInt(20) == 0)
 	    					{
 	    						entityDropItem(stack);
-	    						setItemStackToSlot(EquipmentSlotType.HEAD, ItemStack.EMPTY);
+	    						setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
 	    					}
 	    				}
 	    			}
 	    		}
 	    	}
-    	return super.attackEntityFrom(source, amount);
+    	return super.hurt(source, amount);
     }
 }

@@ -7,7 +7,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -25,17 +25,17 @@ public class PacketSyncVisualPotions
 		entityID = entityUUID;
 	}
 	
-	public static PacketSyncVisualPotions decode(PacketBuffer par1Buffer)
+	public static PacketSyncVisualPotions decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketSyncVisualPotions packet = new PacketSyncVisualPotions();
-		packet.entityID = par1Buffer.readUniqueId();
+		packet.entityID = par1Buffer.readUUID();
 		packet.value = par1Buffer.readByte();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncVisualPotions msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncVisualPotions msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.entityID);
+		par1Buffer.writeUUID(msg.entityID);
 		par1Buffer.writeByte(msg.value);
 	}
 	

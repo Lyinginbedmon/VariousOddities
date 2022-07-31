@@ -10,6 +10,7 @@ import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -31,17 +32,17 @@ public class PacketSyncAbilities
 		abilitiesData = abilitiesIn;
 	}
 	
-	public static PacketSyncAbilities decode(PacketBuffer par1Buffer)
+	public static PacketSyncAbilities decode(FriendlyByteBuf par1Buffer)
 	{
-		PacketSyncAbilities packet = new PacketSyncAbilities(par1Buffer.readUniqueId());
-		packet.abilitiesData = par1Buffer.readCompoundTag();
+		PacketSyncAbilities packet = new PacketSyncAbilities(par1Buffer.readUUID());
+		packet.abilitiesData = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncAbilities msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncAbilities msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.uuid);
-		par1Buffer.writeCompoundTag(msg.abilitiesData);
+		par1Buffer.writeUUID(msg.uuid);
+		par1Buffer.writeNbt(msg.abilitiesData);
 	}
 	
 	public static void handle(PacketSyncAbilities msg, Supplier<NetworkEvent.Context> cxt)
@@ -56,7 +57,7 @@ public class PacketSyncAbilities
 				if(world != null)
 				{
 					LivingEntity entity = null;
-					for(LivingEntity living : world.getEntitiesWithinAABB(LivingEntity.class, Minecraft.getInstance().player.getBoundingBox().grow(64D)))
+					for(LivingEntity living : world.getEntitiesOfClass(LivingEntity.class, Minecraft.getInstance().player.getBoundingBox().inflate(64D)))
 						if(living.getUUID().equals(msg.uuid))
 						{
 							entity = living;

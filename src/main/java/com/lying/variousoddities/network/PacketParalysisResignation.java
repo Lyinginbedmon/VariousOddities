@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.init.VOPotions;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -13,12 +13,12 @@ public class PacketParalysisResignation
 {
 	public PacketParalysisResignation(){ }
 	
-	public static PacketParalysisResignation decode(PacketBuffer par1Buffer)
+	public static PacketParalysisResignation decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketParalysisResignation();
 	}
 	
-	public static void encode(PacketParalysisResignation msg, PacketBuffer par1Buffer)
+	public static void encode(PacketParalysisResignation msg, FriendlyByteBuf par1Buffer)
 	{
 		
 	}

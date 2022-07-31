@@ -1,24 +1,18 @@
 package com.lying.variousoddities.entity.wip;
 
-import java.util.Random;
-
 import com.lying.variousoddities.entity.EntityOddityAgeable;
 import com.lying.variousoddities.entity.passive.IChangeling;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 
 public class EntityPatronWitch extends EntityOddityAgeable implements IChangeling
 {
@@ -44,7 +38,7 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
     private float jawOpenness;
     private float prevJawOpenness;
     
-	public EntityPatronWitch(EntityType<? extends EntityOddityAgeable> type, World worldIn)
+	public EntityPatronWitch(EntityType<? extends EntityOddityAgeable> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
@@ -55,12 +49,7 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
 		getDataManager().register(FLAP_TIME, 0);
 	}
 	
-    public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
-    {
-        return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
-    }
-	
-	public AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_)
+	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
 	{
 		return null;
 	}
@@ -86,7 +75,7 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
 		
 		if(!isFlapping())
 		{
-			if(getRNG().nextInt(80) == 0)
+			if(getRandom().nextInt(80) == 0)
 				getDataManager().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);
 		}
 		else
@@ -100,43 +89,43 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
         this.prevChasingPosX = this.chasingPosX;
         this.prevChasingPosY = this.chasingPosY;
         this.prevChasingPosZ = this.chasingPosZ;
-        double d0 = this.getPosX() - this.chasingPosX;
-        double d1 = this.getPosY() - this.chasingPosY;
-        double d2 = this.getPosZ() - this.chasingPosZ;
+        double d0 = this.getX() - this.chasingPosX;
+        double d1 = this.getY() - this.chasingPosY;
+        double d2 = this.getZ() - this.chasingPosZ;
         
         if (d0 > 10.0D)
         {
-            this.chasingPosX = this.getPosX();
+            this.chasingPosX = this.getX();
             this.prevChasingPosX = this.chasingPosX;
         }
         
         if (d2 > 10.0D)
         {
-            this.chasingPosZ = this.getPosZ();
+            this.chasingPosZ = this.getZ();
             this.prevChasingPosZ = this.chasingPosZ;
         }
 
         if (d1 > 10.0D)
         {
-            this.chasingPosY = this.getPosY();
+            this.chasingPosY = this.getY();
             this.prevChasingPosY = this.chasingPosY;
         }
 
         if (d0 < -10.0D)
         {
-            this.chasingPosX = this.getPosX();
+            this.chasingPosX = this.getX();
             this.prevChasingPosX = this.chasingPosX;
         }
 
         if (d2 < -10.0D)
         {
-            this.chasingPosZ = this.getPosZ();
+            this.chasingPosZ = this.getZ();
             this.prevChasingPosZ = this.chasingPosZ;
         }
 
         if (d1 < -10.0D)
         {
-            this.chasingPosY = this.getPosY();
+            this.chasingPosY = this.getY();
             this.prevChasingPosY = this.chasingPosY;
         }
         
@@ -156,11 +145,11 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
     
     public void openJaw()
     {
-        if(!this.world.isRemote)
+        if(!this.level.isClientSide)
         {
             this.openJawCounter = 1;
             setJawOpen(true);
-		    DataHelper.Booleans.setBooleanByte(getDataManager(), getRNG().nextInt(30) == 0, JAW_STYLE);
+		    DataHelper.Booleans.setBooleanByte(getDataManager(), getRandom().nextInt(30) == 0, JAW_STYLE);
         }
     }
     

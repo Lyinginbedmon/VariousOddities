@@ -25,7 +25,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 @Mixin(Mob.class)
-public class MobEntityMixin extends LivingEntityMixin 
+public class MobMixin extends LivingEntityMixin 
 {
 	@Inject(method = "playAmbientSound()V", at = @At("HEAD"), cancellable = true)
 	public void playAmbientSound(final CallbackInfo ci)
@@ -59,7 +59,7 @@ public class MobEntityMixin extends LivingEntityMixin
 		if(attackTarget != null)
 		{
 			AbilityVision.ignoreForTargeted = false;
-			double visibility = attackTarget.getVisibilityMultiplier(mob);
+			double visibility = attackTarget.getVisibilityPercent(mob);
 			if(visibility < 1D && mob.distanceToSqr(attackTarget) > mob.getAttributeValue(Attributes.FOLLOW_RANGE) * visibility)
 			{
 				if(ticksSinceLastSeen++ >= Reference.Values.TICKS_PER_SECOND * 10)

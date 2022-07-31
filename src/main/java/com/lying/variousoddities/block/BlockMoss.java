@@ -45,9 +45,9 @@ public class BlockMoss extends BlockVOEmptyDrops
     /**
      * Called serverside after this block is replaced with another in Chunk, but before the Tile Entity is updated
      */
-    public void onPlayerDestroy(Level worldIn, BlockPos pos, BlockState state)
+    public void destroy(Level worldIn, BlockPos pos, BlockState state)
     {
-        super.onPlayerDestroy(worldIn, pos, state);
+        super.destroy(worldIn, pos, state);
         if(!worldIn.isClientSide)
         {
         	boolean spawnMarimo = false;
@@ -104,12 +104,12 @@ public class BlockMoss extends BlockVOEmptyDrops
     	boolean isWater = isNeighbourWater(worldIn, currentPos, facing);
     	switch(facing)
     	{
-			case DOWN:	return stateIn.with(DOWN, isWater);
-			case UP:	return stateIn.with(UP, isWater);
-			case EAST:	return stateIn.with(EAST, isWater);
-			case NORTH:	return stateIn.with(NORTH, isWater);
-			case SOUTH:	return stateIn.with(SOUTH, isWater);
-			case WEST:	return stateIn.with(WEST, isWater);
+			case DOWN:	return stateIn.setValue(DOWN, isWater);
+			case UP:	return stateIn.setValue(UP, isWater);
+			case EAST:	return stateIn.setValue(EAST, isWater);
+			case NORTH:	return stateIn.setValue(NORTH, isWater);
+			case SOUTH:	return stateIn.setValue(SOUTH, isWater);
+			case WEST:	return stateIn.setValue(WEST, isWater);
 			default:	return stateIn;
     	}
     }

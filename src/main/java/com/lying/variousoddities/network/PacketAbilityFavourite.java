@@ -7,7 +7,7 @@ import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
@@ -28,14 +28,14 @@ public class PacketAbilityFavourite
 		this.favourite = shouldFavourite;
 	}
 	
-	public static PacketAbilityFavourite decode(PacketBuffer par1Buffer)
+	public static PacketAbilityFavourite decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketAbilityFavourite packet = new PacketAbilityFavourite(par1Buffer.readResourceLocation());
 		packet.favourite = par1Buffer.readBoolean();
 		return packet;
 	}
 	
-	public static void encode(PacketAbilityFavourite msg, PacketBuffer par1Buffer)
+	public static void encode(PacketAbilityFavourite msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeResourceLocation(msg.mapName);
 		par1Buffer.writeBoolean(msg.favourite);

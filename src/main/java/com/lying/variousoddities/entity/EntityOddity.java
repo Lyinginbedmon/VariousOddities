@@ -7,6 +7,7 @@ import com.lying.variousoddities.entity.ai.controller.EntityController;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
@@ -27,12 +28,12 @@ public abstract class EntityOddity extends Mob
         this.controllers = new ArrayList<EntityController>();
         addControllers();
 	}
-	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return Mob.func_233666_p_()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)
-        		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.275F);
+        return Mob.createMobAttributes()
+        		.add(Attributes.MAX_HEALTH, 20.0D)
+        		.add(Attributes.MOVEMENT_SPEED, (double)0.275F);
     }
 	
 	/**

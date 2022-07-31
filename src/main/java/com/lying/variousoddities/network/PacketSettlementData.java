@@ -7,6 +7,7 @@ import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 public class PacketSettlementData
@@ -28,16 +29,16 @@ public class PacketSettlementData
 		return index;
 	}
 	
-	public static PacketSettlementData decode(PacketBuffer par1Buffer)
+	public static PacketSettlementData decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketSettlementData packet = new PacketSettlementData();
-		packet.data = par1Buffer.readCompoundTag();
+		packet.data = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketSettlementData msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSettlementData msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeCompoundTag(msg.data);
+		par1Buffer.writeNbt(msg.data);
 	}
 	
 	public static void handle(PacketSettlementData msg, Supplier<NetworkEvent.Context> cxt)

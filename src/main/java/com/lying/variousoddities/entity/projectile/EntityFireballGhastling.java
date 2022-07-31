@@ -1,39 +1,39 @@
 package com.lying.variousoddities.entity.projectile;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.SmallFireballEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.world.Explosion;
-import net.minecraft.world.World;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.SmallFireball;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
-public class EntityFireballGhastling extends SmallFireballEntity 
+public class EntityFireballGhastling extends SmallFireball
 {
-	public EntityFireballGhastling(EntityType<? extends EntityFireballGhastling> typeIn, World worldIn)
+	public EntityFireballGhastling(EntityType<? extends EntityFireballGhastling> typeIn, Level worldIn)
 	{
 		super(typeIn, worldIn);
 	}
 	
-	public EntityFireballGhastling(World worldIn, LivingEntity shooter, double accelX, double accelY, double accelZ)
+	public EntityFireballGhastling(Level worldIn, LivingEntity shooter, double accelX, double accelY, double accelZ)
 	{
 		super(worldIn, shooter, accelX, accelY, accelZ);
 	}
 	
-	protected void onEntityHit(EntityRayTraceResult result)
+	protected void onEntityHit(EntityHitResult result)
 	{
-		if(!getEntityWorld().isRemote)
+		if(!getLevel().isClientSide)
 		{
 			Entity hitEntity = result.getEntity();
 			if(!hitEntity.isImmuneToFire())
 			{
 				Entity shooter = func_234616_v_();
 				int i = hitEntity.getFireTimer();
-				hitEntity.setFire(3);
+				hitEntity.setSecondsOnFire(3);
 				if(!hitEntity.attackEntityFrom(DamageSource.func_233547_a_(this, shooter), 2.0F))
 						hitEntity.forceFireTicks(i);
 				else if(shooter instanceof LivingEntity)
@@ -42,19 +42,19 @@ public class EntityFireballGhastling extends SmallFireballEntity
 		}
 	}
 	
-	protected void onImpact(RayTraceResult result)
+	protected void onImpact(HitResult result)
 	{
 		super.onImpact(result);
-		if(!getEntityWorld().isRemote)
+		if(!getLevel().isClientSide)
 		{
-			getEntityWorld().createExplosion((Entity)null, this.getPosX(), this.getPosY(), this.getPosZ(), 0.5F, false, Explosion.Mode.NONE);
+			getLevel().createExplosion((Entity)null, this.getPosX(), this.getPosY(), this.getPosZ(), 0.5F, false, Explosion.Mode.NONE);
 			remove();
 		}
 	}
 	
-	protected void func_230299_a_(BlockRayTraceResult result)
+	protected void func_230299_a_(BlockHitResult result)
 	{
-		BlockState blockstate = this.world.getBlockState(result.getPos());
-		blockstate.onProjectileCollision(this.world, blockstate, result, this);
+		BlockState blockstate = this.level.getBlockState(result.getPos());
+		blockstate.onProjectileCollision(this.level, blockstate, result, this);
 	}
 }

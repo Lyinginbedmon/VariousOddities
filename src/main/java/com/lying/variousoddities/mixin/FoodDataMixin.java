@@ -11,7 +11,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 
 @Mixin(FoodData.class)
-public class FoodStatsMixin
+public class FoodDataMixin
 {
 	/**
 	 * Passthrough to inform PlayerEntityMixin to modify shouldHeal for non-regenerating players without affecting other calls to shouldHeal.<br>

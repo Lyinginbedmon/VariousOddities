@@ -15,6 +15,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -63,17 +64,17 @@ public class EnumArgumentChecked<T extends Enum<T>> implements ArgumentType<T>
     
     public static class Serializer implements IArgumentSerializer<EnumArgumentChecked<?>>
     {
-        public void write(EnumArgumentChecked<?> argument, PacketBuffer buffer)
+        public void write(EnumArgumentChecked<?> argument, FriendlyByteBuf buffer)
         {
-            buffer.writeString(argument.enumClass.getName());
+            buffer.writeUtf(argument.enumClass.getName());
         }
         
         @SuppressWarnings({"unchecked", "rawtypes"})
-        public EnumArgumentChecked<?> read(PacketBuffer buffer)
+        public EnumArgumentChecked<?> read(FriendlyByteBuf buffer)
         {
             try
             {
-                String name = buffer.readString();
+                String name = buffer.readUtf();
                 return new EnumArgumentChecked(Class.forName(name), name);
             }
             catch (ClassNotFoundException e)

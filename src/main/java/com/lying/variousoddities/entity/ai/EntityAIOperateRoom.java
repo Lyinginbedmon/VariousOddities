@@ -31,7 +31,7 @@ public class EntityAIOperateRoom extends Goal
 		theWorld = creatureIn.getLevel();
 		theMob = creatureIn;
 		theNavigator = creatureIn.getNavigation();
-		this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+		this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 	
 	public boolean canUse()

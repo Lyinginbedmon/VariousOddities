@@ -6,23 +6,24 @@ import java.util.List;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.Goal.Flag;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 
 public class EntityAIWorgFetch extends Goal
 {
 	private final EntityWorg theWorg;
-	private final World theWorld;
-	private final PathNavigator theNavigator;
+	private final Level theWorld;
+	private final PathNavigation theNavigator;
 	
 	private LivingEntity theOwner;
 	private ItemEntity theBone;
@@ -32,89 +33,89 @@ public class EntityAIWorgFetch extends Goal
 				{
 					ItemStack itemstack = input.getItem();
 					Item item = itemstack.getItem();
-					return !input.cannotPickup() && itemstack.getCount() >= 1 && (item == Items.BONE || EntityAIWorgFetch.isItemFeetArmor(itemstack));
+					return input.isPickable() && itemstack.getCount() >= 1 && (item == Items.BONE || EntityAIWorgFetch.isItemFeetArmor(itemstack));
 				}
 			};
-			
+	
 	private final double searchRange;
 	
 	public EntityAIWorgFetch(EntityWorg worgIn, double range)
 	{
 		theWorg = worgIn;
-		theWorld = worgIn.getEntityWorld();
-		theNavigator = worgIn.getNavigator();
+		theWorld = worgIn.getLevel();
+		theNavigator = worgIn.getNavigation();
 		searchRange = range;
-		setMutexFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theWorg.isSitting() || !theWorg.isTamed()|| theWorg.getAttackTarget() != null || !theWorg.getHeldItemMainhand().isEmpty())
+		if(theWorg.isOrderedToSit() || !theWorg.isTame()|| theWorg.getTarget() != null || !theWorg.getMainHandItem().isEmpty())
 			return false;
 		
 		theOwner = theWorg.getOwner();
 		if(theOwner == null)
 			return false;
 		
-		List<ItemEntity> bones = theWorld.getEntitiesWithinAABB(ItemEntity.class, theWorg.getBoundingBox().grow(searchRange, 2D, searchRange), searchPredicate);
+		List<ItemEntity> bones = theWorld.getEntitiesOfClass(ItemEntity.class, theWorg.getBoundingBox().inflate(searchRange, 2D, searchRange), searchPredicate);
 		if(bones.isEmpty())
 			return false;
 		
 		for(ItemEntity bone : bones)
-			if(theNavigator.getPathToEntity(bone, (int)searchRange) != null && theWorg.getDistance(bone) > searchRange)
+			if(theNavigator.createPath(bone, (int)searchRange) != null && theWorg.distanceToSqr(bone) > searchRange)
 				theBone = bone;
 		
-		return theBone != null && theWorg.getRNG().nextInt(30) == 0;
+		return theBone != null && theWorg.getRandom().nextInt(30) == 0;
 	}
 	
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
-		return theBone != null && theBone.isAlive() && theWorg.getAttackTarget() == null && !theWorg.isSitting();
+		return theBone != null && theBone.isAlive() && theWorg.getTarget() == null && !theWorg.isOrderedToSit();
 	}
 	
 	public void startExecuting()
 	{
-		theWorg.getLookController().setLookPositionWithEntity(theBone, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
+		theWorg.getLookControl().setLookPositionWithEntity(theBone, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
 	}
 	
-	public void resetTask()
+	public void stop()
 	{
 		theBone = null;
 	}
 	
 	public void tick()
 	{
-		theWorg.getLookController().setLookPositionWithEntity(theBone, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
-		if(theWorg.getDistance(theBone) >= 1D)
+		theWorg.getLookControl().setLookPositionWithEntity(theBone, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
+		if(theWorg.distanceToSqr(theBone) >= 1D)
 		{
-			if(theNavigator.noPath())
-				theNavigator.tryMoveToEntityLiving(theBone, 1.0D);
+			if(theNavigator.isDone())
+				theNavigator.moveTo(theBone, 1.0D);
 		}
 		else
 		{
-			theNavigator.clearPath();
+			theNavigator.stop();
 			ItemStack heldStack = theBone.getItem();
-			if(heldStack.isDamageable() && (heldStack.getMaxDamage() - heldStack.getDamage()) > 1 && theWorg.getRNG().nextInt(4) == 0)
-				heldStack.damageItem(1, theWorg, (player) -> {});
+			if(heldStack.isDamageableItem() && (heldStack.getMaxDamage() - heldStack.getDamageValue()) > 1 && theWorg.getRandom().nextInt(4) == 0)
+				heldStack.hurtAndBreak(1, theWorg, (player) -> {});
 			
-			theWorg.setHeldItem(Hand.MAIN_HAND, heldStack);
+			theWorg.setItemInHand(InteractionHand.MAIN_HAND, heldStack);
 			theBone.remove();
-			theNavigator.tryMoveToEntityLiving(theOwner, 1.0D);
+			theNavigator.moveTo(theOwner, 1.0D);
 		}
 	}
 	
 	public void dropHeldItem()
 	{
-		if(theWorg.getHeldItemMainhand().isEmpty()) return;
-		theWorg.entityDropItem(theWorg.getHeldItemMainhand().getItem(), 1);
-		theWorg.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
+		if(theWorg.getMainHandItem().isEmpty()) return;
+		theWorg.entityDropItem(theWorg.getMainHandItem().getItem(), 1);
+		theWorg.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 	}
 	
 	public static boolean isItemFeetArmor(ItemStack itemstack)
 	{
 		Item item = itemstack.getItem();
 		return 
-				item.getEquipmentSlot(itemstack) == EquipmentSlotType.FEET ||
-				(item instanceof ArmorItem && ((ArmorItem)item).getEquipmentSlot() == EquipmentSlotType.FEET);
+				item.getEquipmentSlot(itemstack) == EquipmentSlot.FEET ||
+				(item instanceof ArmorItem && ((ArmorItem)item).getEquipmentSlot(itemstack) == EquipmentSlot.FEET);
 	}
 }

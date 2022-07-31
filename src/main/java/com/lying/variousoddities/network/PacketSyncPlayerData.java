@@ -8,7 +8,7 @@ import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
@@ -30,20 +30,20 @@ public class PacketSyncPlayerData
 	
 	public boolean isRequest(){ return dataNBT != null; }
 	
-	public static PacketSyncPlayerData decode(PacketBuffer par1Buffer)
+	public static PacketSyncPlayerData decode(FriendlyByteBuf par1Buffer)
 	{
-		PacketSyncPlayerData packet = new PacketSyncPlayerData(par1Buffer.readUniqueId());
+		PacketSyncPlayerData packet = new PacketSyncPlayerData(par1Buffer.readUUID());
 		if(par1Buffer.readBoolean())
-			packet.dataNBT = par1Buffer.readCompoundTag();
+			packet.dataNBT = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncPlayerData msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncPlayerData msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.playerID);
+		par1Buffer.writeUUID(msg.playerID);
 		par1Buffer.writeBoolean(msg.isRequest());
 		if(msg.isRequest())
-			par1Buffer.writeCompoundTag(msg.dataNBT);
+			par1Buffer.writeNbt(msg.dataNBT);
 	}
 	
 	public static void handle(PacketSyncPlayerData msg, Supplier<NetworkEvent.Context> cxt)

@@ -7,7 +7,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.potion.PotionPetrifying;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -25,14 +25,14 @@ public class PacketPetrifying
 		amplifier = amp;
 	}
 	
-	public static PacketPetrifying decode(PacketBuffer par1Buffer)
+	public static PacketPetrifying decode(FriendlyByteBuf par1Buffer)
 	{
-		return new PacketPetrifying(par1Buffer.readUniqueId(), par1Buffer.readInt());
+		return new PacketPetrifying(par1Buffer.readUUID(), par1Buffer.readInt());
 	}
 	
-	public static void encode(PacketPetrifying msg, PacketBuffer par1Buffer)
+	public static void encode(PacketPetrifying msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeUniqueId(msg.entityID);
+		par1Buffer.writeUUID(msg.entityID);
 		par1Buffer.writeInt(msg.amplifier);
 	}
 	

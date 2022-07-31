@@ -1,7 +1,5 @@
 package com.lying.variousoddities.entity.hostile;
 
-import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.config.ConfigVO;
@@ -12,14 +10,16 @@ import com.lying.variousoddities.entity.ai.group.GroupHandler;
 import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.init.VOEntities;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -27,6 +27,7 @@ import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.animal.Ocelot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 
 public class EntityRatGiant extends AbstractRat
 {
@@ -35,18 +36,18 @@ public class EntityRatGiant extends AbstractRat
 		super(type, worldIn, 1);
 	}
 	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return Mob.func_233666_p_()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)
-        		.createMutableAttribute(Attributes.ARMOR, 0.0D)
-        		.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D)
-        		.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
+        return Mob.createMobAttributes()
+        		.add(Attributes.MAX_HEALTH, 20.0D)
+        		.add(Attributes.ARMOR, 0.0D)
+        		.add(Attributes.MOVEMENT_SPEED, 0.25D)
+        		.add(Attributes.ATTACK_DAMAGE, 4.0D);
     }
 	
-    public static boolean canSpawnAt(EntityType<? extends Mob> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
+    public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason)
     {
-        return world.getDifficulty() != Difficulty.PEACEFUL && world.getLightEmission(pos) < 8 && AbstractRat.canSpawnAt(animal, world, reason, pos, random);
+        return world.getDifficulty() != Difficulty.PEACEFUL && world.getLightEmission(blockPosition()) < 8 && super.checkSpawnRules(world, reason);
     }
     
     public void registerGoals()
@@ -71,14 +72,14 @@ public class EntityRatGiant extends AbstractRat
 		return this.getRandom().nextInt(5) == 0 ? 3 : 2;
 	}
 	
-	protected EntitySize getStandingSize()
+	protected EntityDimensions getStandingSize()
 	{
-		return EntitySize.fixed(0.9F, 1.3F);
+		return EntityDimensions.fixed(0.9F, 1.3F);
 	}
 	
-	protected EntitySize getCrouchingSize()
+	protected EntityDimensions getCrouchingSize()
 	{
-		return EntitySize.fixed(0.9F, 0.5F);
+		return EntityDimensions.fixed(0.9F, 0.5F);
 	}
 	
 	public void setTarget(@Nullable LivingEntity entitylivingbaseIn)
@@ -97,10 +98,10 @@ public class EntityRatGiant extends AbstractRat
 	}
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
-    	if(reason == SpawnReason.SPAWNER)
+    	if(reason == MobSpawnType.SPAWNER)
 	    	for(int i=0; i<getRandom().nextInt(4); i++)
 	    	{
 	    		EntityRat rat = VOEntities.RAT.create(getLevel());

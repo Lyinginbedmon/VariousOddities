@@ -1,6 +1,5 @@
 package com.lying.variousoddities.entity.passive;
 
-import java.util.Random;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -17,13 +16,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.LandOnOwnersShoulderGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -40,6 +42,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -80,25 +83,25 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 			this.targetSelector.addGoal(3, new HurtByTargetGoal(this));
 		}
 	}
-	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return EntityOddity.getAttributes()
-        		.createMutableAttribute(Attributes.MAX_HEALTH, 10D)
-        		.createMutableAttribute(Attributes.MOVEMENT_SPEED, (double)0.05F)
-        		.createMutableAttribute(Attributes.FLYING_SPEED, (double)0.25F);
+        return EntityOddity.createAttributes()
+        		.add(Attributes.MAX_HEALTH, 10D)
+        		.add(Attributes.MOVEMENT_SPEED, (double)0.05F)
+        		.add(Attributes.FLYING_SPEED, (double)0.25F);
     }
 	
-	public static boolean canSpawnAt(EntityType<EntityGhastling> type, Level level, SpawnReason reason, BlockPos pos, Random rand)
+    public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason)
 	{
-		return reason == SpawnReason.SPAWNER || rand.nextInt(20) == 0 && canSpawnOn(type, level, reason, pos, rand);
+		return random.nextInt(20) == 0 && super.checkSpawnRules(world, reason);
 	}
 	
 	public boolean isPersistenceRequired(){ return this.isTame() || super.isPersistenceRequired(); }
 	
-	public SoundCategory getSoundCategory()
+	public SoundSource getSoundCategory()
 	{
-		return SoundCategory.NEUTRAL;
+		return SoundSource.NEUTRAL;
 	}
 	
 	public SoundEvent getAmbientSound(){ return SoundEvents.GHAST_AMBIENT; }

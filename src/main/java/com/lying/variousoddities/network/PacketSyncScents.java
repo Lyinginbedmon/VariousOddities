@@ -7,7 +7,7 @@ import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -21,16 +21,16 @@ public class PacketSyncScents
 		scentData = manager.write(new CompoundTag());
 	}
 	
-	public static PacketSyncScents decode(PacketBuffer par1Buffer)
+	public static PacketSyncScents decode(FriendlyByteBuf par1Buffer)
 	{
 		PacketSyncScents packet = new PacketSyncScents();
-		packet.scentData = par1Buffer.readCompoundTag();
+		packet.scentData = par1Buffer.readNbt();
 		return packet;
 	}
 	
-	public static void encode(PacketSyncScents msg, PacketBuffer par1Buffer)
+	public static void encode(PacketSyncScents msg, FriendlyByteBuf par1Buffer)
 	{
-		par1Buffer.writeCompoundTag(msg.scentData);
+		par1Buffer.writeNbt(msg.scentData);
 	}
 	
 	public static void handle(PacketSyncScents msg, Supplier<NetworkEvent.Context> cxt)

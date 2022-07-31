@@ -9,6 +9,7 @@ import com.lying.variousoddities.utility.DataHelper;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.level.Level;
 
 public abstract class EntityOddityAgeable extends AgeableMob
@@ -41,9 +42,9 @@ public abstract class EntityOddityAgeable extends AgeableMob
 		DataHelper.Booleans.registerBooleanByte(getDataManager(), JAW_OPEN);
 	}
 	
-    public static AttributeModifierMap.MutableAttribute getAttributes()
+    public static AttributeSupplier.Builder createAttributes()
     {
-        return EntityOddity.getAttributes();
+        return EntityOddity.createAttributes();
     }
 	
 	/**
@@ -99,7 +100,7 @@ public abstract class EntityOddityAgeable extends AgeableMob
     {
     	super.tick();
     	if(!getLevel().isClientSide)
-    		getDataManager().set(AGE, getGrowingAge());
+    		getDataManager().set(AGE, getAge());
     }
     
     public void livingTick()
@@ -111,16 +112,16 @@ public abstract class EntityOddityAgeable extends AgeableMob
 		    double d0 = this.random.nextGaussian() * 0.02D;
 		    double d1 = this.random.nextGaussian() * 0.02D;
 		    double d2 = this.random.nextGaussian() * 0.02D;
-		    this.level.addParticle(ParticleTypes.HEART, this.getPosXRandom(1.0D), this.getPosYRandom() + 0.5D, this.getPosZRandom(1.0D), d0, d1, d2);
+		    this.level.addParticle(ParticleTypes.HEART, this.getRandomX(1.0D), this.getRandomY() + 0.5D, this.getRandomZ(1.0D), d0, d1, d2);
 	    }
     }
     
-    public int getGrowingAge()
+    public int getAge()
     {
     	if(getLevel().isClientSide)
     		return getDataManager().get(AGE).intValue();
     	else
-    		return super.getGrowingAge();
+    		return super.getAge();
     }
 
     public boolean isJawOpen(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), JAW_OPEN); }

@@ -36,7 +36,6 @@ public class SettlementRoomBehaviours
 		 * Ensure construction
 		 * Teleport wayward wargs?
 		 */
-		@SuppressWarnings("unused")
 		public void function(BoxRoom room, ServerLevel worldIn, RandomSource rand)
 		{
 			

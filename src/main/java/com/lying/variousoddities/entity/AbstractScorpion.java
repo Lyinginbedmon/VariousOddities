@@ -8,38 +8,37 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.MoveTowardsRestrictionGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -48,7 +47,7 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     private static final DataParameter<Integer> BREED	= EntityDataManager.<Integer>createKey(AbstractScorpion.class, DataSerializers.VARINT);
     private static final DataParameter<Byte>	BABIES	= EntityDataManager.<Byte>createKey(AbstractScorpion.class, DataSerializers.BYTE);
 	
-	protected AbstractScorpion(EntityType<? extends AbstractScorpion> type, World worldIn)
+	protected AbstractScorpion(EntityType<? extends AbstractScorpion> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
@@ -60,27 +59,27 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
 		getDataManager().register(BREED, 0);
 	}
 	
-	public CreatureAttribute getCreatureAttribute(){ return CreatureAttribute.ARTHROPOD; }
+	public MobType getCreatureAttribute(){ return MobType.ARTHROPOD; }
 	
 	protected void registerGoals()
 	{
         this.goalSelector.addGoal(0, new SwimGoal(this));
         this.goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 1.0D));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
 		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
 		
 	    this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
 	}
 	
-	public AgeableEntity func_241840_a(ServerWorld worldIn, AgeableEntity p_241840_2_)
+	public AgeableMob getBreedOffspring(ServerLevel worldIn, AgeableMob p_241840_2_)
 	{
 		return createBaby(worldIn);
 	}
 	
-    public static boolean canSpawnAt(EntityType<?> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
+	public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason)
     {
-    	return world.getLight(pos) < 8 && world.getHeight(Heightmap.Type.WORLD_SURFACE, pos).getY() <= pos.getY();
+    	return world.getLightEmission(blockPosition()) < 8 && world.getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition().getX(), blockPosition().getZ()) <= blockPosition().getY() && super.checkSpawnRules(world, reason);
     }
 	
     public EnumScorpionType getScorpionType(){ return EnumScorpionType.values()[getBreed()]; }
@@ -90,21 +89,21 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     
     public boolean getBabies(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), BABIES); }
     public void setBabies(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, BABIES); }
-    public abstract AbstractScorpion createBaby(World worldIn);
+    public abstract AbstractScorpion createBaby(Level worldIn);
     
-    public void writeAdditional(CompoundNBT compound)
+    public void writeAdditional(CompoundTag compound)
     {
     	super.writeAdditional(compound);
-    	CompoundNBT display = new CompoundNBT();
+    	CompoundTag display = new CompoundTag();
     		display.putBoolean("Babies", getBabies());
     		display.putInt("Breed", getBreed());
     	compound.put("Display", display);
     }
     
-    public void readAdditional(CompoundNBT compound)
+    public void readAdditional(CompoundTag compound)
     {
     	super.readAdditional(compound);
-    	CompoundNBT display = compound.getCompound("Display");
+    	CompoundTag display = compound.getCompound("Display");
     	setBabies(display.getBoolean("Babies"));
     	setBreed(display.getInt("Breed"));
     }
@@ -113,7 +112,7 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
 	{
 		if(super.attackEntityAsMob(entityIn))
 		{
-	    	if(entityIn instanceof LivingEntity && !this.isChild() && this.getRNG().nextInt(3) == 0)
+	    	if(entityIn instanceof LivingEntity && !this.isBaby() && this.getRandom().nextInt(3) == 0)
 	    		this.getScorpionType().apply((LivingEntity)entityIn);
 			
 			return true;
@@ -127,41 +126,41 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     public void onDeath(DamageSource cause)
     {
     	super.onDeath(cause);
-    	if(!this.world.isRemote && this.getBabies() && !this.isChild())
+    	if(!this.level.isClientSide && this.getBabies() && !this.isBaby())
     	{
-    		for(int i=0; i<this.getRNG().nextInt(5); i++)
+    		for(int i=0; i<this.getRandom().nextInt(5); i++)
     		{
-    			AbstractScorpion baby = createBaby(this.world);
-    			baby.setGrowingAge(-2400 + this.getRNG().nextInt(50));
+    			AbstractScorpion baby = createBaby(this.level);
+    			baby.setAge(-2400 + this.getRandom().nextInt(50));
     			
-    			Vector3d position = getPositionVec();
-    			double posX = position.x + (this.getRNG().nextDouble() - 0.5D);
-    			double posZ = position.z + (this.getRNG().nextDouble() - 0.5D);
-    			baby.setPositionAndRotation(posX, position.y + 0.5F, posZ, 360.0F*this.getRNG().nextFloat(), 0F);
-    			this.world.addEntity(baby);
+    			Vec3 position = position();
+    			double posX = position.x + (this.getRandom().nextDouble() - 0.5D);
+    			double posZ = position.z + (this.getRandom().nextDouble() - 0.5D);
+    			baby.setPositionAndRotation(posX, position.y + 0.5F, posZ, 360.0F*this.getRandom().nextFloat(), 0F);
+    			this.level.addFreshEntity(baby);
     		}
     	}
     }
 	
     protected SoundEvent getAmbientSound()
     {
-        return SoundEvents.ENTITY_SILVERFISH_AMBIENT;
+        return SoundEvents.SILVERFISH_AMBIENT;
     }
     
     protected SoundEvent getHurtSound(DamageSource damageSourceIn)
     {
-        return SoundEvents.ENTITY_SILVERFISH_HURT;
+        return SoundEvents.SILVERFISH_HURT;
     }
     
     protected SoundEvent getDeathSound()
     {
-        return SoundEvents.ENTITY_SILVERFISH_DEATH;
+        return SoundEvents.SILVERFISH_DEATH;
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag)
+    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
-		Random rand = new Random(this.getUniqueID().getLeastSignificantBits());
+		Random rand = new Random(this.getUUID().getLeastSignificantBits());
 		DataHelper.Booleans.setBooleanByte(getDataManager(), rand.nextInt(8) == 0, BABIES);
 		getDataManager().set(BREED, rand.nextInt(4) == 0 ? 1 : 0);
 		
@@ -174,16 +173,16 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
 			{
 				public boolean apply(LivingEntity input)
 				{
-					input.addPotionEffect(new EffectInstance(Effects.POISON, 280, 0));
-					return input.getActivePotionEffect(Effects.POISON) != null;
+					input.addEffect(new MobEffectInstance(MobEffects.POISON, 280, 0));
+					return input.getEffect(MobEffects.POISON) != null;
 				}
 			}),
 		BLACK("black", new Predicate<LivingEntity>()
 		{
 			public boolean apply(LivingEntity input)
 			{
-				input.addPotionEffect(new EffectInstance(Effects.WITHER, 280, 0));
-				return input.getActivePotionEffect(Effects.WITHER) != null;
+				input.addEffect(new MobEffectInstance(MobEffects.WITHER, 280, 0));
+				return input.getEffect(MobEffects.WITHER) != null;
 			}
 		}),
 		BASE("base", new Predicate<LivingEntity>()

@@ -1,7 +1,5 @@
 package com.lying.variousoddities.entity;
 
-import java.util.Random;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -30,11 +28,6 @@ public class EntityBodyCorpse extends AbstractBody
 	{
 		super(type, worldIn);
 	}
-    
-    public static boolean canSpawnAt(EntityType<?> animal, Level world, SpawnReason reason, BlockPos pos, Random random)
-    {
-	    return true;
-    }
 	
 	@Nullable
 	public static EntityBodyCorpse createCorpseFrom(@Nonnull LivingEntity living)
@@ -118,9 +111,9 @@ public class EntityBodyCorpse extends AbstractBody
 	
 	public int getTicksRemaining(){ return getDataManager().get(TIMER).intValue(); }
 	
-	public void onKillCommand()
+	public void kill()
 	{
-		super.onKillCommand();
+		super.kill();
 		unloadChunks();
 	}
 	

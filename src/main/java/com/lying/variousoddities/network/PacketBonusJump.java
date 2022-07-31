@@ -7,7 +7,7 @@ import com.lying.variousoddities.capabilities.Abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -21,12 +21,12 @@ public class PacketBonusJump
 		this.isAir = isAirJump;
 	}
 	
-	public static PacketBonusJump decode(PacketBuffer par1Buffer)
+	public static PacketBonusJump decode(FriendlyByteBuf par1Buffer)
 	{
 		return new PacketBonusJump(par1Buffer.readBoolean());
 	}
 	
-	public static void encode(PacketBonusJump msg, PacketBuffer par1Buffer)
+	public static void encode(PacketBonusJump msg, FriendlyByteBuf par1Buffer)
 	{
 		par1Buffer.writeBoolean(msg.isAir);
 	}

@@ -19,31 +19,37 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplier;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @SuppressWarnings("deprecation")
-public class BlockDraftingTable extends VOBlockRotated implements ITileEntityProvider
+public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySupplier<TileEntityDraftingTable>
 {
-	protected static final VoxelShape SHAPE = Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 1.0D, 16.0D);
+	protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 1.0D, 16.0D);
 	
 	public BlockDraftingTable(BlockBehaviour.Properties properties)
 	{
 		super(properties.notSolid().setOpaque(VOBlock::isntSolid));
 	}
-	
-	public VoxelShape getShape(BlockState state, Level worldIn, BlockPos pos, ISelectionContext context)
+
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context)
 	{
 		return SHAPE;
 	}
@@ -63,9 +69,9 @@ public class BlockDraftingTable extends VOBlockRotated implements ITileEntityPro
 		return hasEnoughSolidSide(worldIn, pos.below(), Direction.UP);
 	}
 	
-	public ActionResultType onBlockActivated(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit)
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit)
 	{
-		TileEntity tileentity = worldIn.getTileEntity(pos);
+		BlockEntity tileentity = worldIn.getBlockEntity(pos);
 		if(tileentity.getType() == VOTileEntities.TABLE_DRAFTING)
 		{
 			TileEntityDraftingTable table = (TileEntityDraftingTable)tileentity;
@@ -73,24 +79,24 @@ public class BlockDraftingTable extends VOBlockRotated implements ITileEntityPro
 				GuiDraftingTable.open(table);
 			else
 				table.markDirty();
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
-		return ActionResultType.CONSUME;
+		return InteractionResult.CONSUME;
 	}
 	
-	public BlockRenderType getRenderType(BlockState state)
+	public RenderShape getRenderShape(BlockState state)
 	{
-		return BlockRenderType.MODEL;
+		return RenderShape.MODEL;
 	}
 	
-	public TileEntity createNewTileEntity(Level reader)
+	public TileEntityDraftingTable create(BlockPos pos, BlockState state)
 	{
 		return new TileEntityDraftingTable();
 	}
 	
 	public void dropAsItem(Level worldIn, BlockPos pos)
 	{
-		TileEntity tile = worldIn.getTileEntity(pos);
+		BlockEntity tile = worldIn.getBlockEntity(pos);
 		if(tile instanceof TileEntityDraftingTable && !worldIn.isClientSide)
 		{
 			ItemStack stack = getItem(worldIn, pos, worldIn.getBlockState(pos));
@@ -102,7 +108,7 @@ public class BlockDraftingTable extends VOBlockRotated implements ITileEntityPro
 	
 	public void onBlockHarvested(Level worldIn, BlockPos pos, BlockState state, Player player)
 	{
-		TileEntity tile = worldIn.getTileEntity(pos);
+		BlockEntity tile = worldIn.getBlockEntity(pos);
 		if(tile.getType() == VOTileEntities.TABLE_DRAFTING)
 		{
 			if(player != null && player.isCreative())
@@ -116,20 +122,16 @@ public class BlockDraftingTable extends VOBlockRotated implements ITileEntityPro
 	public ItemStack getItem(Level worldIn, BlockPos pos, BlockState state)
 	{
 		ItemStack stack = VOItems.DRAFTING_TABLE.getDefaultInstance();
-		TileEntityDraftingTable tile = (TileEntityDraftingTable)worldIn.getTileEntity(pos);
+		TileEntityDraftingTable tile = (TileEntityDraftingTable)worldIn.getBlockEntity(pos);
 		if(tile.bitMask() > 0)
-		{
-			CompoundTag data = tile.saveToNbt(new CompoundTag());
-			if(!data.isEmpty())
-				stack.setTagInfo("BlockEntityTag", data);
-		}
+			tile.saveToItem(stack);
 		return stack;
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public void addInformation(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn)
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<Component> tooltip, TooltipFlag flagIn)
 	{
-		super.addInformation(stack, worldIn, tooltip, flagIn);
+		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		if(stack.hasTag() && !stack.getTag().isEmpty())
 		{
 			CompoundTag blockData = stack.getTagElement("BlockEntityTag");

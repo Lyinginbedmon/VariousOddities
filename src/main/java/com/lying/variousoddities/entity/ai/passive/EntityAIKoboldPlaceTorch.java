@@ -3,50 +3,50 @@ package com.lying.variousoddities.entity.ai.passive;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.item.Items;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.common.Tags.Items;
 
 public class EntityAIKoboldPlaceTorch extends Goal
 {
 	private final EntityKobold theKobold;
-	private final World theWorld;
+	private final Level theWorld;
 	
 	public EntityAIKoboldPlaceTorch(EntityKobold koboldIn)
 	{
 		theKobold = koboldIn;
-		theWorld = koboldIn.getEntityWorld();
+		theWorld = koboldIn.getLevel();
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
 		if(theKobold.isHatcheryGuardian())
 		{
-			if(!theWorld.getGameRules().getBoolean(GameRules.MOB_GRIEFING))
+			if(!theWorld.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING))
 				return false;
 			
-			if(!(!theKobold.getHeldItemOffhand().isEmpty() && theKobold.getHeldItemOffhand().getItem() == Items.TORCH))
+			if(!(!theKobold.getMainHandItem().isEmpty() && theKobold.getOffhandItem().getItem() == Items.TORCH))
 				return false;
 			
-			return theKobold.getRNG().nextInt(Reference.Values.TICKS_PER_MINUTE * 5) == 0 && theKobold.getAttackTarget() == null;
+			return theKobold.getRandom().nextInt(Reference.Values.TICKS_PER_MINUTE * 5) == 0 && theKobold.getTarget() == null;
 		}
 		
 		return false;
 	}
 	
-	public boolean shouldContinueExecuting(){ return false; }
+	public boolean canContinueToUse(){ return false; }
 	
-	public void startExecuting()
+	public void start()
 	{
-		BlockPos targetBlock = theKobold.getPosition();
-		if(theWorld.getLight(targetBlock) <= 8)
-			if(theWorld.getBlockState(targetBlock).getMaterial().isReplaceable() && !theWorld.canBlockSeeSky(targetBlock))
-				if(Block.hasEnoughSolidSide(theWorld, targetBlock.down(), Direction.UP))
-					theWorld.setBlockState(targetBlock, Blocks.TORCH.getDefaultState());
+		BlockPos targetBlock = theKobold.blockPosition();
+		if(theWorld.getLightEmission(targetBlock) <= 8)
+			if(theWorld.getBlockState(targetBlock).getMaterial().isReplaceable() && !theWorld.canSeeSky(targetBlock))
+				if(Block.hasEnoughSolidSide(theWorld, targetBlock.below(), Direction.UP))
+					theWorld.setBlockState(targetBlock, Blocks.TORCH.defaultBlockState());
 	}
 }

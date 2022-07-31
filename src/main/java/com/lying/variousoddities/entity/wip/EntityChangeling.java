@@ -1,29 +1,23 @@
 package com.lying.variousoddities.entity.wip;
 
-import java.util.Random;
-
 import com.lying.variousoddities.entity.EntityOddityAgeable;
 import com.lying.variousoddities.entity.passive.IChangeling;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 
 public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 {
     public static final DataParameter<Integer>	FLAP_TIME	= EntityDataManager.<Integer>createKey(EntityChangeling.class, DataSerializers.VARINT);
     
-	public EntityChangeling(EntityType<? extends AgeableEntity> type, World worldIn)
+	public EntityChangeling(EntityType<? extends AgeableMob> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
@@ -34,12 +28,7 @@ public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 		getDataManager().register(FLAP_TIME, 0);
 	}
 	
-    public static boolean canSpawnAt(EntityType<? extends MobEntity> animal, IWorld world, SpawnReason reason, BlockPos pos, Random random)
-    {
-        return CreatureEntity.canSpawnOn(animal, world, reason, pos, random);
-    }
-	
-	public AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_)
+	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
 	{
 		return null;
 	}
@@ -60,7 +49,7 @@ public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 		
 		if(!isFlapping())
 		{
-			if(getRNG().nextInt(80) == 0)
+			if(getRandom().nextInt(80) == 0)
 				getDataManager().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);
 		}
 		else

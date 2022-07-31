@@ -3,8 +3,10 @@ package com.lying.variousoddities.client.renderer.entity;
 import com.lying.variousoddities.client.ClientPlayerDummy;
 import com.lying.variousoddities.entity.EntityDummyBiped;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.math.Vector3d;
 
-import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
+import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
@@ -13,17 +15,15 @@ import net.minecraft.client.renderer.entity.layers.ElytraLayer;
 import net.minecraft.client.renderer.entity.layers.HeadLayer;
 import net.minecraft.client.renderer.entity.layers.HeldItemLayer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.player.PlayerModelPart;
-import net.minecraft.item.CrossbowItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.HandSide;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.PlayerModelPart;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class EntityDummyBipedRenderer extends LivingRenderer<EntityDummyBiped, PlayerModel<EntityDummyBiped>>
 {
@@ -50,7 +50,7 @@ public class EntityDummyBipedRenderer extends LivingRenderer<EntityDummyBiped, P
 		return player.getLocationSkin();
 	}
 	
-	protected void preRenderCallback(AbstractClientPlayerEntity entitylivingbaseIn, MatrixStack matrixStackIn, float partialTickTime)
+	protected void preRenderCallback(LocalPlayer entitylivingbaseIn, MatrixStack matrixStackIn, float partialTickTime)
 	{
 		float scale = 0.9375F;
 		matrixStackIn.scale(scale, scale, scale);
@@ -87,8 +87,8 @@ public class EntityDummyBipedRenderer extends LivingRenderer<EntityDummyBiped, P
 			model.bipedLeftArmwear.showModel = player.isWearing(PlayerModelPart.LEFT_SLEEVE);
 			model.bipedRightArmwear.showModel = player.isWearing(PlayerModelPart.RIGHT_SLEEVE);
 			model.isSneak = clientPlayer.isCrouching();
-			BipedModel.ArmPose armPoseMain = getPoseForHand(clientPlayer, Hand.MAIN_HAND);
-			BipedModel.ArmPose armPoseOff = getPoseForHand(clientPlayer, Hand.OFF_HAND);
+			BipedModel.ArmPose armPoseMain = getPoseForHand(clientPlayer, InteractionHand.MAIN_HAND);
+			BipedModel.ArmPose armPoseOff = getPoseForHand(clientPlayer, InteractionHand.OFF_HAND);
 			if(armPoseMain.func_241657_a_())
 				armPoseOff = clientPlayer.getHeldItemOffhand().isEmpty() ? BipedModel.ArmPose.EMPTY : BipedModel.ArmPose.ITEM;
 		
@@ -105,7 +105,7 @@ public class EntityDummyBipedRenderer extends LivingRenderer<EntityDummyBiped, P
 		}
 	}
 	
-	private static BipedModel.ArmPose getPoseForHand(EntityDummyBiped entityIn, Hand handIn)
+	private static BipedModel.ArmPose getPoseForHand(EntityDummyBiped entityIn, InteractionHand handIn)
 	{
 		ItemStack heldItem = entityIn.getHeldItem(handIn);
 		if(heldItem.isEmpty())
