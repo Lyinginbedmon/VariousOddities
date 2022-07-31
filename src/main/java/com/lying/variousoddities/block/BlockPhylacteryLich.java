@@ -1,6 +1,7 @@
 package com.lying.variousoddities.block;
 
 import com.lying.variousoddities.init.VOBlocks;
+import com.lying.variousoddities.init.VOTileEntities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 
@@ -13,20 +14,27 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType.BlockEntitySupplier;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.world.ForgeChunkManager;
 
-public class BlockPhylacteryLich extends BlockPhylacteryBase implements BlockEntitySupplier<TileEntityPhylactery>
+public class BlockPhylacteryLich extends BlockPhylacteryBase implements EntityBlock
 {
 	public BlockPhylacteryLich(BlockBehaviour.Properties properties)
 	{
 		super(properties);
 	}
 	
-	public TileEntityPhylactery create(BlockPos p_155268_, BlockState p_155269_){ return new TileEntityPhylactery(); }
+	public TileEntityPhylactery newBlockEntity(BlockPos pos, BlockState state){ return new TileEntityPhylactery(pos, state); }
+    
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level worldIn, BlockState state, BlockEntityType<T> typeIn)
+	{
+		return VOBlock.createTickerHelper(typeIn, VOTileEntities.PHYLACTERY, worldIn.isClientSide() ? null : TileEntityPhylactery::serverTick);
+	}
 	
 	public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)
 	{

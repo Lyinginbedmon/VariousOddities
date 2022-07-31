@@ -23,6 +23,9 @@ import com.lying.variousoddities.species.SpeciesRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -35,16 +38,17 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
-    public static final DataParameter<Boolean> 	NOSE = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Boolean> 	EARS = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Boolean>	VIOLENT = EntityDataManager.<Boolean>createKey(EntityGoblin.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Integer> 	COLOR = EntityDataManager.<Integer>createKey(EntityGoblin.class, DataSerializers.VARINT);
-    public static final DataParameter<CompoundTag>	CARRYING = EntityDataManager.<CompoundTag>createKey(EntityGoblin.class, DataSerializers.COMPOUND_NBT);
-    public static final DataParameter<Optional<BlockPos>>	NEST = EntityDataManager.<Optional<BlockPos>>createKey(EntityGoblin.class, DataSerializers.OPTIONAL_BLOCK_POS);
+    public static final EntityDataAccessor<Boolean> 	NOSE = SynchedEntityData.defineId(EntityGoblin.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean> 	EARS = SynchedEntityData.defineId(EntityGoblin.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean>	VIOLENT = SynchedEntityData.defineId(EntityGoblin.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Integer> 	COLOR = SynchedEntityData.defineId(EntityGoblin.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<CompoundTag>	CARRYING = SynchedEntityData.defineId(EntityGoblin.class, EntityDataSerializers.COMPOUND_TAG);
+    public static final EntityDataAccessor<Optional<BlockPos>>	NEST = SynchedEntityData.defineId(EntityGoblin.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
     
     private EntityAIOperateRoom operateRoomTask;
     
@@ -56,16 +60,16 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		this.goblinType = GoblinType.getRandomType(getRandom());
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
+		super.defineSynchedData();
 		Random random = new Random(this.getUUID().getLeastSignificantBits());
-		getDataManager().register(NOSE, random.nextBoolean());
-		getDataManager().register(EARS, random.nextBoolean());
-		getDataManager().register(VIOLENT, random.nextInt(16) > 0);
-		getDataManager().register(COLOR, random.nextInt(3));
-		getDataManager().register(CARRYING, new CompoundTag());
-		getDataManager().register(NEST, Optional.empty());
+		getEntityData().define(NOSE, random.nextBoolean());
+		getEntityData().define(EARS, random.nextBoolean());
+		getEntityData().define(VIOLENT, random.nextInt(16) > 0);
+		getEntityData().define(COLOR, random.nextInt(3));
+		getEntityData().define(CARRYING, new CompoundTag());
+		getEntityData().define(NEST, Optional.empty());
 	}
 	
 	protected void registerGoals()
@@ -73,7 +77,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
         this.goalSelector.addGoal(0, new SwimGoal(this));
         this.goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 1.0D));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
 		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
 	}
 	
@@ -101,46 +105,46 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
 	public String getFactionName(){ return "goblin"; }
     
-    public boolean getNose(){ return getDataManager().get(NOSE).booleanValue(); }
-    public void setNose(boolean par1Boolean){ getDataManager().set(NOSE, par1Boolean); }
+    public boolean getNose(){ return getEntityData().get(NOSE).booleanValue(); }
+    public void setNose(boolean par1Boolean){ getEntityData().set(NOSE, par1Boolean); }
     
-    public boolean getEars(){ return getDataManager().get(EARS).booleanValue(); }
-    public void setEars(boolean par1Boolean){ getDataManager().set(EARS, par1Boolean); }
+    public boolean getEars(){ return getEntityData().get(EARS).booleanValue(); }
+    public void setEars(boolean par1Boolean){ getEntityData().set(EARS, par1Boolean); }
     
-    public boolean isViolent(){ return getDataManager().get(VIOLENT).booleanValue(); }
-    public void setViolent(boolean par1Boolean){ getDataManager().set(VIOLENT, par1Boolean); }
+    public boolean isViolent(){ return getEntityData().get(VIOLENT).booleanValue(); }
+    public void setViolent(boolean par1Boolean){ getEntityData().set(VIOLENT, par1Boolean); }
     
-    public int getColor(){ return ((Integer)getDataManager().get(COLOR)).intValue(); }
-    public void setColor(int par1Int){ getDataManager().set(COLOR, Integer.valueOf(par1Int % 3)); }
+    public int getColor(){ return ((Integer)getEntityData().get(COLOR)).intValue(); }
+    public void setColor(int par1Int){ getEntityData().set(COLOR, Integer.valueOf(par1Int % 3)); }
 	
 	public GoblinType getGoblinType(){ return this.goblinType; }
 	
 	public float getGrowth(){ return 0.2F; }
 	
-	public boolean isInLove(){ return getDataManager().get(IN_LOVE).booleanValue(); }
-	public void setInLove(boolean par1Bool){ getDataManager().set(IN_LOVE, par1Bool); }
+	public boolean isInLove(){ return getEntityData().get(IN_LOVE).booleanValue(); }
+	public void setInLove(boolean par1Bool){ getEntityData().set(IN_LOVE, par1Bool); }
 	
-	public boolean isCarrying(){ return !getDataManager().get(CARRYING).isEmpty(); }
+	public boolean isCarrying(){ return !getEntityData().get(CARRYING).isEmpty(); }
 	public EntityGoblin getOtherParent()
 	{
 		EntityGoblin child = VOEntities.GOBLIN.create(getLevel());
-		child.readAdditional(getDataManager().get(CARRYING));
+		child.readAdditional(getEntityData().get(CARRYING));
 		return child;
 	}
 	public void setCarryingFrom(EntityGoblin parent)
 	{
 		if(parent == null)
-			getDataManager().set(CARRYING, new CompoundTag());
+			getEntityData().set(CARRYING, new CompoundTag());
 		else
 		{
 			CompoundTag parentData = new CompoundTag();
 			parent.writeAdditional(parentData);
-			getDataManager().set(CARRYING, parentData);
+			getEntityData().set(CARRYING, parentData);
 		}
 	}
 	
-	public BlockPos getNestSite(){ return getDataManager().get(NEST).orElse((BlockPos)null); }
-	public void setNestSite(BlockPos pos){ getDataManager().set(NEST, Optional.of(pos)); }
+	public BlockPos getNestSite(){ return getEntityData().get(NEST).orElse((BlockPos)null); }
+	public void setNestSite(BlockPos pos){ getEntityData().set(NEST, Optional.of(pos)); }
 	
     /**
      * Returns the progression of this mob towards adulthood.
@@ -159,7 +163,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		compound.put("Display", displayData);
 		compound.putBoolean("Violent", isViolent());
 		compound.putInt("Type", getGoblinType().ordinal());
-		compound.put("Mate", getDataManager().get(CARRYING));
+		compound.put("Mate", getEntityData().get(CARRYING));
 		if(getNestSite() != null)
 			compound.put("Nest", NbtUtils.writeBlockPos(getNestSite()));
 	}
@@ -170,15 +174,15 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		if(compound.contains("Display", 10))
 		{
 			CompoundTag displayData = compound.getCompound("Display");
-			getDataManager().set(COLOR, displayData.getInt("Color"));
+			getEntityData().set(COLOR, displayData.getInt("Color"));
 			setNose(displayData.getBoolean("Nose"));
 			setEars(displayData.getBoolean("Ears"));
 		}
 		setViolent(compound.getBoolean("Violent"));
 		this.goblinType = GoblinType.get(compound.getInt("Type"));
-		getDataManager().set(CARRYING, compound.getCompound("Mate"));
+		getEntityData().set(CARRYING, compound.getCompound("Mate"));
 		if(compound.contains("Nest", 10))
-			setNestSite(NBTUtil.readBlockPos(compound.getCompound("Nest")));
+			setNestSite(NbtUtils.readBlockPos(compound.getCompound("Nest")));
 	}
 	
     protected SoundEvent getAmbientSound()

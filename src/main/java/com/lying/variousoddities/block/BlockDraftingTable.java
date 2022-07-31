@@ -26,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
@@ -46,27 +47,27 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	
 	public BlockDraftingTable(BlockBehaviour.Properties properties)
 	{
-		super(properties.notSolid().setOpaque(VOBlock::isntSolid));
+		super(properties.noOcclusion().isViewBlocking(VOBlock::isntSolid));
 	}
-
+	
     public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context)
 	{
 		return SHAPE;
 	}
 	
-	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos)
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos)
 	{
-		if(facing == Direction.DOWN && !isValidPosition(stateIn, worldIn, currentPos))
+		if(facing == Direction.DOWN && !canSurvive(stateIn, worldIn, currentPos))
 		{
 			dropAsItem((Level)worldIn, currentPos);
 			return Blocks.AIR.defaultBlockState();
 		}
-		return super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
+		return super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 	}
 	
-	public boolean isValidPosition(BlockState state, Level worldIn, BlockPos pos)
+	public boolean canSurvive(BlockState state, LevelReader worldIn, BlockPos pos)
 	{
-		return hasEnoughSolidSide(worldIn, pos.below(), Direction.UP);
+		return worldIn.getBlockState(pos).isFaceSturdy(worldIn, pos.below(), Direction.UP);
 	}
 	
 	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit)
@@ -91,7 +92,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	
 	public TileEntityDraftingTable create(BlockPos pos, BlockState state)
 	{
-		return new TileEntityDraftingTable();
+		return new TileEntityDraftingTable(pos, state);
 	}
 	
 	public void dropAsItem(Level worldIn, BlockPos pos)
@@ -106,7 +107,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 		}
 	}
 	
-	public void onBlockHarvested(Level worldIn, BlockPos pos, BlockState state, Player player)
+	public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player)
 	{
 		BlockEntity tile = worldIn.getBlockEntity(pos);
 		if(tile.getType() == VOTileEntities.TABLE_DRAFTING)
@@ -116,7 +117,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 			
 			dropAsItem(worldIn, pos);
 		}
-		super.onBlockHarvested(worldIn, pos, state, player);
+		super.playerWillDestroy(worldIn, pos, state, player);
 	}
 	
 	public ItemStack getItem(Level worldIn, BlockPos pos, BlockState state)

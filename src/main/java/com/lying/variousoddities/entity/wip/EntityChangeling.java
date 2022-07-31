@@ -5,9 +5,9 @@ import com.lying.variousoddities.entity.passive.IChangeling;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
@@ -15,17 +15,17 @@ import net.minecraft.world.level.Level;
 
 public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 {
-    public static final DataParameter<Integer>	FLAP_TIME	= EntityDataManager.<Integer>createKey(EntityChangeling.class, DataSerializers.VARINT);
+    public static final EntityDataAccessor<Integer>	FLAP_TIME	= SynchedEntityData.defineId(EntityChangeling.class, EntityDataSerializers.INT);
     
 	public EntityChangeling(EntityType<? extends AgeableMob> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(FLAP_TIME, 0);
+		super.defineSynchedData();
+		getEntityData().define(FLAP_TIME, 0);
 	}
 	
 	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
@@ -50,11 +50,11 @@ public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 		if(!isFlapping())
 		{
 			if(getRandom().nextInt(80) == 0)
-				getDataManager().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);
+				getEntityData().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);
 		}
 		else
-			getDataManager().set(FLAP_TIME, getFlappingTime() - 1);
+			getEntityData().set(FLAP_TIME, getFlappingTime() - 1);
 	}
     
-    public int getFlappingTime(){ return getDataManager().get(FLAP_TIME).intValue(); }
+    public int getFlappingTime(){ return getEntityData().get(FLAP_TIME).intValue(); }
 }

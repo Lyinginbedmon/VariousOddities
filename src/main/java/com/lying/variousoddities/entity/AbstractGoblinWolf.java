@@ -2,7 +2,6 @@ package com.lying.variousoddities.entity;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nullable;
 
@@ -17,12 +16,15 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
 import com.mojang.math.Vector3d;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.Difficulty;
@@ -39,7 +41,6 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -53,11 +54,11 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  */
 public abstract class AbstractGoblinWolf extends TamableAnimal
 {
-	protected static final DataParameter<Integer> GENETICS	= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
+	protected static final EntityDataAccessor<Integer> GENETICS	= SynchedEntityData.defineId(AbstractGoblinWolf.class, EntityDataSerializers.INT);
 	
-	public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(AbstractGoblinWolf.class, DataSerializers.VARINT);
-	public static final DataParameter<Boolean>	BEGGING		= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
-	public static final DataParameter<Boolean>	JAW_OPEN	= EntityDataManager.<Boolean>createKey(AbstractGoblinWolf.class, DataSerializers.BOOLEAN);
+	public static final EntityDataAccessor<Integer>	COLOR		= SynchedEntityData.defineId(AbstractGoblinWolf.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Boolean>	BEGGING		= SynchedEntityData.defineId(AbstractGoblinWolf.class, EntityDataSerializers.BOOLEAN);
+	public static final EntityDataAccessor<Boolean>	JAW_OPEN	= SynchedEntityData.defineId(AbstractGoblinWolf.class, EntityDataSerializers.BOOLEAN);
 	
     private List<Tuple<Goal, Integer>> aggressiveBehaviours;
     
@@ -81,13 +82,13 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
 		super(type, worldIn);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(GENETICS, Genetics.DEFAULT.toVal());
-		getDataManager().register(COLOR, 0);
-		getDataManager().register(BEGGING, false);
-		getDataManager().register(JAW_OPEN, false);
+		super.defineSynchedData();
+		getEntityData().define(GENETICS, Genetics.DEFAULT.toVal());
+		getEntityData().define(COLOR, 0);
+		getEntityData().define(BEGGING, false);
+		getEntityData().define(JAW_OPEN, false);
 	}
 	
 	public void registerGoals()
@@ -122,7 +123,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     public void writeAdditional(CompoundTag compound)
     {
     	super.writeAdditional(compound);
-    	compound.putInt("Genes", getDataManager().get(GENETICS).intValue());
+    	compound.putInt("Genes", getEntityData().get(GENETICS).intValue());
     	CompoundTag display = new CompoundTag();
     		display.putInt("Color", getColor());
     	compound.put("Display", display);
@@ -138,14 +139,14 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     
     public boolean isFoodItem(ItemStack stack)
     {
-    	return VOItemTags.WORG_FOOD.contains(stack.getItem());
+    	return stack.is(VOItemTags.WORG_FOOD);
     }
     
-    public int getColor(){ return getDataManager().get(COLOR).intValue(); }
-    public void setColor(int par1Int){ getDataManager().set(COLOR, MathHelper.clamp(par1Int, 0, 2)); }
+    public int getColor(){ return getEntityData().get(COLOR).intValue(); }
+    public void setColor(int par1Int){ getEntityData().set(COLOR, Mth.clamp(par1Int, 0, 2)); }
     
-    public boolean isJawOpen(){ return getDataManager().get(JAW_OPEN).booleanValue(); }
-    public void setJawOpen(boolean par1Bool){ getDataManager().set(JAW_OPEN, par1Bool); }
+    public boolean isJawOpen(){ return getEntityData().get(JAW_OPEN).booleanValue(); }
+    public void setJawOpen(boolean par1Bool){ getEntityData().set(JAW_OPEN, par1Bool); }
 	public float getJawState(float partialTicks)
 	{
         return this.prevJawOpenness + (this.jawOpenness - this.prevJawOpenness) * partialTicks;
@@ -186,7 +187,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     @OnlyIn(Dist.CLIENT)
     public float getShadingWhileWet(float partialTicks)
     {
-    	return Math.min(0.5F + MathHelper.lerp(partialTicks, this.prevTimeShaking, this.timeShaking) / 2.0F * 0.5F, 1.0F);
+    	return Math.min(0.5F + Mth.lerp(partialTicks, this.prevTimeShaking, this.timeShaking) / 2.0F * 0.5F, 1.0F);
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -194,7 +195,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     {
         float f = (this.prevTimeShaking + (this.timeShaking - this.prevTimeShaking) * partialTicks + offset) / 1.8F;
         f = Math.max(0F, Math.min(1F, f));
-        return MathHelper.sin(f * (float)Math.PI) * MathHelper.sin(f * (float)Math.PI * 11.0F) * 0.15F * (float)Math.PI;
+        return Mth.sin(f * (float)Math.PI) * Mth.sin(f * (float)Math.PI * 11.0F) * 0.15F * (float)Math.PI;
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -222,8 +223,8 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         return 0.4F;
     }
     
-    public boolean isBegging(){ return getDataManager().get(BEGGING).booleanValue(); }
-    public void setBegging(boolean par1Bool){ getDataManager().set(BEGGING, par1Bool); }
+    public boolean isBegging(){ return getEntityData().get(BEGGING).booleanValue(); }
+    public void setBegging(boolean par1Bool){ getEntityData().set(BEGGING, par1Bool); }
     
     public void tick()
     {
@@ -253,7 +254,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         	
         	if(this.timeShaking > 0.4F)
         	{
-        		int i = (int)(MathHelper.sin((this.timeShaking - 0.4F) * (float)Math.PI) * 7F);
+        		int i = (int)(Mth.sin((this.timeShaking - 0.4F) * (float)Math.PI) * 7F);
         		Vector3d motion = this.getMotion();
         		do
         		{
@@ -298,7 +299,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         else{ this.jawOpenness += (-this.jawOpenness) * 0.1F - 0.05F; }
         this.jawOpenness = Math.max(0F, Math.min(1F, this.jawOpenness));
         
-        if(!this.getLevel().isClientSide && this.isWet && !this.isShaking && !this.hasPath() && this.onGround)
+        if(!this.getLevel().isClientSide && this.isWet && !this.isShaking && !getNavigation().isInProgress() && this.onGround)
         {
         	resetShaking();
         	this.isShaking = true;
@@ -311,7 +312,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         		setGoblinSight(Reference.Values.TICKS_PER_DAY);
         
         // Eating held food
-        if(!this.getLevel().isClientSide && this.isAlive() && this.getHealth() < this.getMaxHealth() && this.isServerLevel())
+        if(!this.getLevel().isClientSide && this.isAlive() && this.getHealth() < this.getMaxHealth())
         {
         	++this.eatTicks;
         	ItemStack heldItem = this.getItemBySlot(EquipmentSlot.MAINHAND);
@@ -355,7 +356,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
 	    			for(int i = 0; i < 8; ++i)
 	    			{
 	    				Vector3d pos = (new Vector3d(((double)this.random.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D)).rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F)).rotateYaw(-this.rotationYaw * ((float)Math.PI / 180F));
-	    				this.level.addParticle(new ItemParticleData(ParticleTypes.ITEM, heldItem), this.getX() + this.getLookVec().x / 2.0D, this.getPosY(), this.getZ() + this.getLookVec().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
+	    				this.level.addParticle(new ItemParticleData(ParticleTypes.ITEM, heldItem), this.getX() + this.getLookAngle().x / 2.0D, this.getY(), this.getZ() + this.getLookAngle().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
 	    			}
 	    		break;
 	    	case 56:
@@ -369,8 +370,8 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     
     public boolean isNoDespawnRequired(){ return true; }
     
-    public Genetics getGenetics(){ return new Genetics(getDataManager().get(GENETICS).intValue()); }
-    public void setGenetics(int genesIn){ getDataManager().set(GENETICS, genesIn); applyGeneticAI(); }
+    public Genetics getGenetics(){ return new Genetics(getEntityData().get(GENETICS).intValue()); }
+    public void setGenetics(int genesIn){ getEntityData().set(GENETICS, genesIn); applyGeneticAI(); }
     public void setGenetics(Genetics genesIn){ setGenetics(genesIn.toVal()); }
     
     public abstract void getAggressiveBehaviours();
@@ -396,7 +397,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     			this.targetSelector.addGoal(behaviour.getB(), behaviour.getA());
     }
     
-    public void setAttackTarget(@Nullable LivingEntity target)
+    public void setTarget(@Nullable LivingEntity target)
     {
     	if(!isTame() && target != null)
     	{
@@ -404,10 +405,10 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         		return;
         	
         	if(target.isAlive() && isOrderedToSit())
-        		func_233687_w_(false);
+        		setOrderedToSit(false);
     	}
     	
-    	super.setAttackTarget(target);
+    	super.setTarget(target);
     }
     
     protected void spawnDrops(DamageSource source)

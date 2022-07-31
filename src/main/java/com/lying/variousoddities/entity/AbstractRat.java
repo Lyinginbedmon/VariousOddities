@@ -11,6 +11,9 @@ import com.lying.variousoddities.utility.DataHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -32,9 +35,9 @@ import net.minecraft.world.level.Level;
 
 public abstract class AbstractRat extends PathfinderMob
 {
-	public static final DataParameter<Byte>		EYES		= EntityDataManager.<Byte>createKey(AbstractRat.class, DataSerializers.BYTE);
-	public static final DataParameter<Integer>	STAND_TIME	= EntityDataManager.<Integer>createKey(AbstractRat.class, DataSerializers.VARINT);
-	public static final DataParameter<Integer>	BREED		= EntityDataManager.<Integer>createKey(AbstractRat.class, DataSerializers.VARINT);
+	public static final EntityDataAccessor<Byte>		EYES		= SynchedEntityData.defineId(AbstractRat.class, EntityDataSerializers.BYTE);
+	public static final EntityDataAccessor<Integer>	STAND_TIME	= SynchedEntityData.defineId(AbstractRat.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<Integer>	BREED		= SynchedEntityData.defineId(AbstractRat.class, EntityDataSerializers.INT);
 	
 	private static final int STAND_CAP = 10;
 	public int standTimer = 0;
@@ -48,12 +51,12 @@ public abstract class AbstractRat extends PathfinderMob
 		size = sizeIn;
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), EYES, false);
-		getDataManager().register(STAND_TIME, Integer.valueOf(0));
-		getDataManager().register(BREED, 0);
+		super.defineSynchedData();
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), EYES, false);
+		getEntityData().define(STAND_TIME, Integer.valueOf(0));
+		getEntityData().define(BREED, 0);
 	}
 	
 	protected void registerGoals()
@@ -116,8 +119,8 @@ public abstract class AbstractRat extends PathfinderMob
 	public float getStandingHeight(){ return getStandingSize().height; }
 	
 	public float getStand(){ return getStandTime() < 0 ? 1F : (float)getStandTime() / (float)STAND_CAP; }
-	public int getStandTime(){ return getDataManager().get(STAND_TIME).intValue(); }
-	public void setStandTime(int par1Int){ getDataManager().set(STAND_TIME, Math.min(STAND_CAP, par1Int)); }
+	public int getStandTime(){ return getEntityData().get(STAND_TIME).intValue(); }
+	public void setStandTime(int par1Int){ getEntityData().set(STAND_TIME, Math.min(STAND_CAP, par1Int)); }
 	
 	public void startStanding(int par1Int)
 	{
@@ -126,11 +129,11 @@ public abstract class AbstractRat extends PathfinderMob
 	}
 	
 	public EnumRatBreed getRatBreed(){ return EnumRatBreed.getByID(getBreed()); }
-	public int getBreed(){ return getDataManager().get(BREED).intValue(); }
-	public void setBreed(int par1Int){ getDataManager().set(BREED, par1Int); }
+	public int getBreed(){ return getEntityData().get(BREED).intValue(); }
+	public void setBreed(int par1Int){ getEntityData().set(BREED, par1Int); }
 	
-	public boolean getEyesGlow(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), EYES); }
-	public void setEyesGlow(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, EYES); }
+	public boolean getEyesGlow(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), EYES); }
+	public void setEyesGlow(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, EYES); }
 	
 	public abstract int getRandomBreed();
     

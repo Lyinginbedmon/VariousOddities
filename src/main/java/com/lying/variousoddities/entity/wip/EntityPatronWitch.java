@@ -6,9 +6,9 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
@@ -16,8 +16,8 @@ import net.minecraft.world.level.Level;
 
 public class EntityPatronWitch extends EntityOddityAgeable implements IChangeling
 {
-    public static final DataParameter<Byte>		JAW_STYLE	= EntityDataManager.<Byte>createKey(EntityPatronWitch.class, DataSerializers.BYTE);
-    public static final DataParameter<Integer>	FLAP_TIME	= EntityDataManager.<Integer>createKey(EntityPatronWitch.class, DataSerializers.VARINT);
+    public static final EntityDataAccessor<Byte>		JAW_STYLE	= SynchedEntityData.defineId(EntityPatronWitch.class, EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Integer>	FLAP_TIME	= SynchedEntityData.defineId(EntityPatronWitch.class, EntityDataSerializers.INT);
     
     public float prevCameraYaw;
     public float cameraYaw;
@@ -43,10 +43,10 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
 		super(type, worldIn);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(FLAP_TIME, 0);
+		super.defineSynchedData();
+		getEntityData().define(FLAP_TIME, 0);
 	}
 	
 	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
@@ -76,13 +76,13 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
 		if(!isFlapping())
 		{
 			if(getRandom().nextInt(80) == 0)
-				getDataManager().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);
+				getEntityData().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);
 		}
 		else
-			getDataManager().set(FLAP_TIME, getFlappingTime() - 1);
+			getEntityData().set(FLAP_TIME, getFlappingTime() - 1);
     }
     
-    public int getFlappingTime(){ return getDataManager().get(FLAP_TIME).intValue(); }
+    public int getFlappingTime(){ return getEntityData().get(FLAP_TIME).intValue(); }
     
     private void updatePonytail()
     {
@@ -149,7 +149,7 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
         {
             this.openJawCounter = 1;
             setJawOpen(true);
-		    DataHelper.Booleans.setBooleanByte(getDataManager(), getRandom().nextInt(30) == 0, JAW_STYLE);
+		    DataHelper.Booleans.setBooleanByte(getEntityData(), getRandom().nextInt(30) == 0, JAW_STYLE);
         }
     }
     
@@ -157,11 +157,11 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
     {
     	super.setJawOpen(par1Bool);
     	if(!par1Bool)
-		    DataHelper.Booleans.setBooleanByte(getDataManager(), false, JAW_STYLE);
+		    DataHelper.Booleans.setBooleanByte(getEntityData(), false, JAW_STYLE);
     }
     
     public boolean isJawSplit()
     {
-    	return DataHelper.Booleans.getBooleanByte(getDataManager(), JAW_STYLE);
+    	return DataHelper.Booleans.getBooleanByte(getEntityData(), JAW_STYLE);
     }
 }

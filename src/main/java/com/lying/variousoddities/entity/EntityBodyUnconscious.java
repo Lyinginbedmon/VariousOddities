@@ -13,6 +13,9 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
@@ -26,7 +29,7 @@ import net.minecraft.world.level.Level;
 
 public class EntityBodyUnconscious extends AbstractBody
 {
-    protected static final DataParameter<CompoundTag> LAST_KNOWN_EQUIPMENT	= EntityDataManager.<CompoundTag>createKey(EntityBodyUnconscious.class, DataSerializers.COMPOUND_NBT);
+    protected static final EntityDataAccessor<CompoundTag> LAST_KNOWN_EQUIPMENT	= SynchedEntityData.defineId(EntityBodyUnconscious.class, EntityDataSerializers.COMPOUND_TAG);
 	private final NonNullList<ItemStack> lastKnownArmour = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
 	private final NonNullList<ItemStack> lastKnownEquip = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
 	
@@ -35,10 +38,10 @@ public class EntityBodyUnconscious extends AbstractBody
 		super(type, worldIn);
 	}
 	
-	public void registerData()
+	public void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(LAST_KNOWN_EQUIPMENT, new CompoundTag());
+		super.defineSynchedData();
+		getEntityData().define(LAST_KNOWN_EQUIPMENT, new CompoundTag());
 	}
 	
 	@Nullable
@@ -84,7 +87,7 @@ public class EntityBodyUnconscious extends AbstractBody
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
-				getDataManager().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
+				getEntityData().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
 				data.putString("id", living.getEntityString());
@@ -98,7 +101,7 @@ public class EntityBodyUnconscious extends AbstractBody
 			setSoulUUID(null);
 		}
 		
-		getDataManager().set(ENTITY, data);
+		getEntityData().set(ENTITY, data);
 		updateSize();
 		onInventoryChanged(null);
 	}
@@ -149,7 +152,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					}
 					
 					if(needsUpdate)
-						getDataManager().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundTag(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
+						getEntityData().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundTag(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
 					
 					// If the player is online and not unconscious, remove body
 					PlayerData data = PlayerData.forPlayer(soul);
@@ -188,7 +191,7 @@ public class EntityBodyUnconscious extends AbstractBody
 	
 	private ItemStack getSlotFromLastKnown(EquipmentSlot.Type group, int index)
 	{
-		readLastKnownFromNBT(getDataManager().get(LAST_KNOWN_EQUIPMENT));
+		readLastKnownFromNBT(getEntityData().get(LAST_KNOWN_EQUIPMENT));
 		switch(group)
 		{
 			case ARMOR:	return this.lastKnownArmour.get(index);

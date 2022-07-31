@@ -4,7 +4,6 @@ import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -31,34 +30,28 @@ public class CommandKnockout extends CommandBase
 	
 	private static int knockOutSelf(CommandSourceStack source)
 	{
-		try
-		{
-			return knockOutTarget(source, source.getPlayer());
-		}
-		catch (CommandSyntaxException e)
-		{
-			source.sendErrorMessage(Component.translatable(translationSlug+"failed", source.getDisplayName()));
-			return 0;
-		}
+		return knockOutTarget(source, source.getPlayer());
+//		source.sendFailure(Component.translatable(translationSlug+"failed", source.getDisplayName()));
+//		return 0;
 	}
 	
 	private static int knockOutTarget(CommandSourceStack source, Entity entity)
 	{
 		if(entity == null)
 		{
-			source.sendErrorMessage(Component.translatable(translationSlug+"invalid"));
+			source.sendFailure(Component.translatable(translationSlug+"invalid"));
 			return 0;
 		}
 		else if(entity instanceof LivingEntity)
 		{
 			if(entity.hurt(VODamageSource.BLUDGEON, Float.MAX_VALUE))
 			{
-				source.sendFeedback(Component.translatable(translationSlug+"success", entity.getDisplayName()), true);
+				source.sendSuccess(Component.translatable(translationSlug+"success", entity.getDisplayName()), true);
 				return 15;
 			}
 		}
 		
-		source.sendErrorMessage(Component.translatable(translationSlug+"failed", source.getDisplayName()));
+		source.sendFailure(Component.translatable(translationSlug+"failed", source.getDisplayName()));
 		return 0;
 	}
 }

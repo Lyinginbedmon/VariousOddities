@@ -11,8 +11,8 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 
-import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands.EnvironmentType;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.util.Tuple;
 
 public abstract class CommandBase
@@ -22,17 +22,17 @@ public abstract class CommandBase
         return EnvironmentType.ALL;
     }
     
-    protected static LiteralArgumentBuilder<CommandSource> build()
+    protected static LiteralArgumentBuilder<CommandSourceStack> build()
     {
         throw new RuntimeException("Missing command builder!");
     }
     
-    protected static LiteralArgumentBuilder<CommandSource> newLiteral(final String name)
+    protected static LiteralArgumentBuilder<CommandSourceStack> newLiteral(final String name)
     {
         return LiteralArgumentBuilder.literal(name);
     }
     
-    protected static <T> RequiredArgumentBuilder<CommandSource, T> newArgument(final String name, final ArgumentType<T> type)
+    protected static <T> RequiredArgumentBuilder<CommandSourceStack, T> newArgument(final String name, final ArgumentType<T> type)
     {
         return RequiredArgumentBuilder.argument(name, type);
     }
@@ -65,7 +65,7 @@ public abstract class CommandBase
          * List of child trees, commands are directly baked into rootNode
          */
         private final List<CommandTree> childTrees;
-        private final List<Tuple<Supplier<EnvironmentType>, Supplier<LiteralArgumentBuilder<CommandSource>>>> childNodes;
+        private final List<Tuple<Supplier<EnvironmentType>, Supplier<LiteralArgumentBuilder<CommandSourceStack>>>> childNodes;
         /**
          * Target environment type.
          */
@@ -112,7 +112,7 @@ public abstract class CommandBase
          * @param commandEnviroment command's enviroment getter
          * @return this
          */
-        protected CommandTree addNode(final Supplier<LiteralArgumentBuilder<CommandSource>> commandBuilder, final Supplier<EnvironmentType> commandEnviroment)
+        protected CommandTree addNode(final Supplier<LiteralArgumentBuilder<CommandSourceStack>> commandBuilder, final Supplier<EnvironmentType> commandEnviroment)
         {
             childNodes.add(new Tuple<>(commandEnviroment, commandBuilder));
             return this;
@@ -123,16 +123,16 @@ public abstract class CommandBase
          *
          * @return tree as command node
          */
-        protected Optional<LiteralArgumentBuilder<CommandSource>> build(final EnvironmentType environment)
+        protected Optional<LiteralArgumentBuilder<CommandSourceStack>> build(final EnvironmentType environment)
         {
             if (!checkEnvironment(environment, buildWhenOn))
             {
                 return Optional.empty();
             }
 
-            final LiteralArgumentBuilder<CommandSource> rootNode = newLiteral(commandName);
+            final LiteralArgumentBuilder<CommandSourceStack> rootNode = newLiteral(commandName);
 
-            for (final Tuple<Supplier<EnvironmentType>, Supplier<LiteralArgumentBuilder<CommandSource>>> node : childNodes)
+            for (final Tuple<Supplier<EnvironmentType>, Supplier<LiteralArgumentBuilder<CommandSourceStack>>> node : childNodes)
             {
                 if (checkEnvironment(environment, node.getA().get()))
                 {
@@ -141,7 +141,7 @@ public abstract class CommandBase
             }
             for (final CommandTree tree : childTrees)
             {
-                final Optional<LiteralArgumentBuilder<CommandSource>> builtTree = tree.build(environment);
+                final Optional<LiteralArgumentBuilder<CommandSourceStack>> builtTree = tree.build(environment);
                 if (builtTree.isPresent())
                 {
                     rootNode.then(builtTree.get().build());
@@ -151,9 +151,9 @@ public abstract class CommandBase
             return childNodes.isEmpty() && childTrees.isEmpty() ? Optional.empty() : Optional.of(rootNode);
         }
 
-        protected void register(final CommandDispatcher<CommandSource> commandDispatcher, final EnvironmentType serverEnvironmentType)
+        protected void register(final CommandDispatcher<CommandSourceStack> commandDispatcher, final EnvironmentType serverEnvironmentType)
         {
-            final Optional<LiteralArgumentBuilder<CommandSource>> builtTree = build(serverEnvironmentType);
+            final Optional<LiteralArgumentBuilder<CommandSourceStack>> builtTree = build(serverEnvironmentType);
 
             if (builtTree.isPresent())
             {

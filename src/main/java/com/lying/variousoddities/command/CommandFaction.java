@@ -22,6 +22,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.CompoundTagArgument;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
@@ -38,7 +39,7 @@ public class CommandFaction extends CommandBase
 {
 	public static final SimpleCommandExceptionType FACTION_NOT_FOUND = new SimpleCommandExceptionType(Component.translatable("argument.faction.notfound"));
  	public static final SuggestionProvider<CommandSourceStack> FACTION_SUGGEST = SuggestionProviders.register(new ResourceLocation("default_factions"), (context, builder) -> {
- 		return ISuggestionProvider.suggest(FactionManager.defaultFactions(), builder);
+ 		return SharedSuggestionProvider.suggest(FactionManager.defaultFactions(), builder);
  		});
  	
 	private static final String translationSlug = "command."+Reference.ModInfo.MOD_ID+".faction.";

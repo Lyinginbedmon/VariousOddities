@@ -1,21 +1,19 @@
 package com.lying.variousoddities.species.abilities;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -23,7 +21,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 {
 	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "burrow");
-	private static final List<Material> DIRT_BLOCKS = Arrays.asList(Material.DIRT, Material.PLANT, Material.SNOW, Material.ICE, Material.SAND);
 	
 	private boolean canBurrowStone = false;
 	private boolean leavesTunnel = false;
@@ -121,10 +118,27 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 	public boolean isPhaseable(BlockGetter worldIn, BlockPos pos, LivingEntity entity)
 	{
 		BlockState state = worldIn.getBlockState(pos);
-		Material material = state.getMaterial();
-		if(((canBurrowStone && material == Material.STONE) || DIRT_BLOCKS.contains(material)) && state.getHarvestLevel() <= 1)
+		if(state.is(VOBlocks.UNPHASEABLE))
+			return false;
+		
+		if(((canBurrowStone && isStoneOrEquivalent(state)) || isDirtOrEquivalent(state)) && isSoftMaterial(state))
 			return entity.blockPosition().getY() <= pos.getY() || entity.isCrouching();
 		return false;
+	}
+	
+	private boolean isDirtOrEquivalent(BlockState state)
+	{
+		return state.is(BlockTags.SAND) || state.is(BlockTags.DIRT) || state.is(BlockTags.SNOW) || state.is(BlockTags.ICE);
+	}
+	
+	private boolean isStoneOrEquivalent(BlockState state)
+	{
+		return state.is(BlockTags.MINEABLE_WITH_PICKAXE) && !state.is(BlockTags.NEEDS_DIAMOND_TOOL);
+	}
+	
+	private boolean isSoftMaterial(BlockState state)
+	{
+		return state.is(BlockTags.NEEDS_STONE_TOOL) || !(state.is(BlockTags.NEEDS_IRON_TOOL) || state.is(BlockTags.NEEDS_DIAMOND_TOOL));
 	}
 	
 	public static class Builder extends ToggledAbility.Builder

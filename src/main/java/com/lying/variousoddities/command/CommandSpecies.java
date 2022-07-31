@@ -27,6 +27,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
@@ -43,7 +44,7 @@ import net.minecraft.world.entity.player.Player;
 public class CommandSpecies extends CommandBase
 {
  	public static final SuggestionProvider<CommandSourceStack> SPECIES_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("species_names"), (context, builder) -> {
- 		return ISuggestionProvider.suggestIterable(VORegistries.SPECIES.keySet(), builder);
+ 		return SharedSuggestionProvider.suggestResource(VORegistries.SPECIES.keySet(), builder);
  		});
  	
  	
@@ -180,7 +181,7 @@ public class CommandSpecies extends CommandBase
 	private static class Templates
 	{
 	 	public static final SuggestionProvider<CommandSourceStack> TEMPLATE_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("template_names"), (context, builder) -> {
-	 		return ISuggestionProvider.suggestIterable(VORegistries.TEMPLATES.keySet(), builder);
+	 		return SharedSuggestionProvider.suggestResource(VORegistries.TEMPLATES.keySet(), builder);
 	 		});
 	 	
 		private static final DynamicCommandExceptionType TEMPLATE_MISSING_EXCEPTION = new DynamicCommandExceptionType((p_208922_0_) -> {

@@ -18,14 +18,12 @@ import com.lying.variousoddities.init.VOSoundEvents;
 import com.lying.variousoddities.species.SpeciesRegistry;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -35,7 +33,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
@@ -43,16 +40,15 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 
 public class EntityKobold extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
-    public static final DataParameter<Byte>		HORNS		= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
-    public static final DataParameter<Byte>		SNOUT		= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
-    public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(EntityKobold.class, DataSerializers.VARINT);
-    public static final DataParameter<Byte>		JAW_OPEN	= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
-    public static final DataParameter<Byte>		HAS_EGG		= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
-    public static final DataParameter<Byte>		GUARD		= EntityDataManager.<Byte>createKey(EntityKobold.class, DataSerializers.BYTE);
+    public static final EntityDataAccessor<Byte>	HORNS		= SynchedEntityData.defineId(EntityKobold.class, EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Byte>	SNOUT		= SynchedEntityData.defineId(EntityKobold.class, EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Integer>	COLOR		= SynchedEntityData.defineId(EntityKobold.class, EntityDataSerializers.VARINT);
+    public static final EntityDataAccessor<Byte>	JAW_OPEN	= SynchedEntityData.defineId(EntityKobold.class, EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Byte>	HAS_EGG		= SynchedEntityData.defineId(EntityKobold.class, EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Byte>	GUARD		= SynchedEntityData.defineId(EntityKobold.class, EntityDataSerializers.BYTE);
     
     private int openJawCounter;
     private float jawOpenness;
@@ -65,16 +61,16 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		super(type, worldIn);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
+		super.defineSynchedData();
 		Random rand = new Random(this.getUUID().getLeastSignificantBits());
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), HORNS, rand.nextBoolean());
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), SNOUT, rand.nextBoolean());
-		getDataManager().register(COLOR, rand.nextInt(3));
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), JAW_OPEN, false);
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), HAS_EGG, false);
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), GUARD, false);
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), HORNS, rand.nextBoolean());
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), SNOUT, rand.nextBoolean());
+		getEntityData().define(COLOR, rand.nextInt(3));
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), JAW_OPEN, false);
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), HAS_EGG, false);
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), GUARD, false);
 	}
 	
 	protected void registerGoals()
@@ -124,8 +120,8 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		if(isInLove() && getLevel().getDayTime() < 15000){ setInLove(false); return; }
 	}
 	
-	public boolean isInLove(){ return getDataManager().get(IN_LOVE).booleanValue(); }
-	public void setInLove(boolean par1Bool){ getDataManager().set(IN_LOVE, par1Bool); }
+	public boolean isInLove(){ return getEntityData().get(IN_LOVE).booleanValue(); }
+	public void setInLove(boolean par1Bool){ getEntityData().set(IN_LOVE, par1Bool); }
 	
 	public void onMatingFinish()
 	{
@@ -157,15 +153,15 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		return null;
 	}
 	
-	public boolean isCarryingEgg(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), HAS_EGG); }
+	public boolean isCarryingEgg(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), HAS_EGG); }
 	
-	public void setCarryingEgg(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, HAS_EGG); }
+	public void setCarryingEgg(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, HAS_EGG); }
 	
-	public boolean isHatcheryGuardian(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), GUARD); }
+	public boolean isHatcheryGuardian(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), GUARD); }
 	
 	public void setHatcheryGuardian(boolean par1Bool)
 	{
-		DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, GUARD);
+		DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, GUARD);
 		if(par1Bool)
 		{
 			if(getOffhandItem().isEmpty())
@@ -173,7 +169,7 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		}
 	}
 	
-	public int getColor(){ return getDataManager().get(COLOR).intValue(); }
+	public int getColor(){ return getEntityData().get(COLOR).intValue(); }
 	
 	public float getGrowth(){ return 0.45F; }
 	
@@ -189,12 +185,12 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
         return this.prevJawOpenness + (this.jawOpenness - this.prevJawOpenness) * partialTicks;
 	}
 	
-    public boolean isJawOpen(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), JAW_OPEN); }
-    public void setJawOpen(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, JAW_OPEN); }
+    public boolean isJawOpen(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), JAW_OPEN); }
+    public void setJawOpen(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, JAW_OPEN); }
     
     private void openJaw()
     {
-        if (!this.world.isRemote)
+        if (!this.level.isClientSide)
         {
             this.openJawCounter = 1;
             setJawOpen(true);
@@ -219,9 +215,9 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
         return VOSoundEvents.ENTITY_KOBOLD_DEATH;
     }
 	
-	public boolean getShortSnout(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), SNOUT); }
+	public boolean getShortSnout(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), SNOUT); }
 	
-	public boolean getHorns(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), HORNS); }
+	public boolean getHorns(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), HORNS); }
 	
 	public void writeAdditional(CompoundTag compound)
 	{
@@ -242,18 +238,18 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
 		if(compound.contains("Display", 10))
 		{
 			CompoundTag displayData = compound.getCompound("Display");
-			getDataManager().set(COLOR, displayData.getInt("Color"));
-			DataHelper.Booleans.setBooleanByte(getDataManager(), displayData.getBoolean("Horns"), HORNS);
-			DataHelper.Booleans.setBooleanByte(getDataManager(), displayData.getBoolean("Snout"), SNOUT);
+			getEntityData().set(COLOR, displayData.getInt("Color"));
+			DataHelper.Booleans.setBooleanByte(getEntityData(), displayData.getBoolean("Horns"), HORNS);
+			DataHelper.Booleans.setBooleanByte(getEntityData(), displayData.getBoolean("Snout"), SNOUT);
 		}
 		setInLove(compound.getBoolean("InLove"));
 		setCarryingEgg(compound.getBoolean("HasEgg"));
-		DataHelper.Booleans.setBooleanByte(getDataManager(), compound.getBoolean("IsGuard"), GUARD);
+		DataHelper.Booleans.setBooleanByte(getEntityData(), compound.getBoolean("IsGuard"), GUARD);
 	}
 	
-	public void setAttackTarget(@Nullable LivingEntity entitylivingbaseIn)
+	public void setTarget(@Nullable LivingEntity entitylivingbaseIn)
 	{
-		super.setAttackTarget(entitylivingbaseIn);
+		super.setTarget(entitylivingbaseIn);
 		if(entitylivingbaseIn != null)
 		{
 			EntityGroup group = GroupHandler.getEntityMemberGroup(this);

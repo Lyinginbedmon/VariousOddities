@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -157,20 +158,20 @@ public class AbilitySize extends AbilityModifier
 				return;
 			
 			float scale = size.getScale();
-			EntitySize baseSize = event.getNewSize();
-			event.setNewSize(EntitySize.fixed(baseSize.width * scale, baseSize.height * scale));
+			EntityDimensions baseSize = event.getNewSize();
+			event.setNewSize(EntityDimensions.fixed(baseSize.width * scale, baseSize.height * scale));
 			event.setNewEyeHeight(event.getNewEyeHeight() * scale);
 		}
 	}
 	
 	public void onAbilityAdded(LivingEntity entity)
 	{
-		entity.recalculateSize();
+		entity.refreshDimensions();
 	}
 	
 	public void onAbilityRemoved(LivingEntity entity)
 	{
-		entity.recalculateSize();
+		entity.refreshDimensions();
 	}
 	
 	public static enum Size implements StringRepresentable

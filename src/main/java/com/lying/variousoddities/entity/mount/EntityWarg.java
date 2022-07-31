@@ -8,6 +8,9 @@ import com.lying.variousoddities.inventory.ContainerWarg;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
@@ -38,11 +41,11 @@ import net.minecraft.world.level.block.CarpetBlock;
 
 public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount, IMountInventory, IInventoryChangedListener
 {
-	private static final DataParameter<Boolean> REARING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
-	private static final DataParameter<Boolean> SITTING	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
-	private static final DataParameter<Boolean> CHEST	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
-	private static final DataParameter<Boolean> SADDLE	= EntityDataManager.<Boolean>createKey(EntityWarg.class, DataSerializers.BOOLEAN);
-	private static final DataParameter<Integer> CARPET	= EntityDataManager.<Integer>createKey(EntityWarg.class, DataSerializers.VARINT);
+	private static final EntityDataAccessor<Boolean> REARING	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Boolean> SITTING	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Boolean> CHEST	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Boolean> SADDLE	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Integer> CARPET	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.INT);
 	
 	private float jumpPower = 0F;
 	private boolean allowStandSliding;
@@ -62,14 +65,14 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	    this.initWargChest();
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(REARING, false);
-		getDataManager().register(SITTING, false);
-		getDataManager().register(CHEST, false);
-		getDataManager().register(SADDLE, false);
-		getDataManager().register(CARPET, -1);
+		super.defineSynchedData();
+		getEntityData().define(REARING, false);
+		getEntityData().define(SITTING, false);
+		getEntityData().define(CHEST, false);
+		getEntityData().define(SADDLE, false);
+		getEntityData().define(CARPET, -1);
 	}
 	
     public static AttributeSupplier.Builder createAttributes()
@@ -156,9 +159,9 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
     
     public boolean isTamed(){ return true; }
 	
-	public boolean hasChest(){ return getDataManager().get(CHEST).booleanValue(); }
+	public boolean hasChest(){ return getEntityData().get(CHEST).booleanValue(); }
 	
-	public void setChested(boolean bool){ getDataManager().set(CHEST, bool); }
+	public void setChested(boolean bool){ getEntityData().set(CHEST, bool); }
 	
 	public int getSizeInventory(){ return 3 + inventoryColumns() * 3; }
 	
@@ -188,12 +191,12 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public boolean isRearing()
 	{
-		return getDataManager().get(REARING).booleanValue();
+		return getEntityData().get(REARING).booleanValue();
 	}
 	
 	public void setRearing(boolean rearing)
 	{
-		getDataManager().set(REARING, rearing);
+		getEntityData().set(REARING, rearing);
 	}
 	
 	private void makeWargRear()
@@ -217,17 +220,17 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public DyeColor getCarpetColor()
 	{
-		int id = getDataManager().get(CARPET).intValue();
+		int id = getEntityData().get(CARPET).intValue();
 		return id < 0 ? null : DyeColor.byId(id);
 	}
 	
-	public void setCarpetColor(DyeColor colorIn){ getDataManager().set(CARPET, colorIn == null ? -1 : colorIn.getId()); }
+	public void setCarpetColor(DyeColor colorIn){ getEntityData().set(CARPET, colorIn == null ? -1 : colorIn.getId()); }
 	
 	@Override
-	public boolean isOrderedToSit(){ return getDataManager().get(SITTING).booleanValue(); }
+	public boolean isOrderedToSit(){ return getEntityData().get(SITTING).booleanValue(); }
 	
 	@Override
-	public void setOrderedToSit(boolean sitting){ getDataManager().set(SITTING, sitting); }
+	public void setOrderedToSit(boolean sitting){ getEntityData().set(SITTING, sitting); }
 	
 	@Override
 	public boolean isSleeping() { return isOrderedToSit(); }
@@ -373,7 +376,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		playSound(SoundEvents.ENTITY_DONKEY_CHEST, 1F, (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1F);
 	}
 	
-	public boolean isSaddled(){ return getDataManager().get(SADDLE).booleanValue(); }
+	public boolean isSaddled(){ return getEntityData().get(SADDLE).booleanValue(); }
 	
 	@Nullable
 	public Entity getControllingPassenger()
@@ -480,7 +483,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	private void updateSaddle()
 	{
 		if(!this.level.isClientSide)
-			getDataManager().set(SADDLE, !this.wargChest.getStackInSlot(0).isEmpty());
+			getEntityData().set(SADDLE, !this.wargChest.getStackInSlot(0).isEmpty());
 	}
 	
 	private void updateCarpet()
@@ -489,7 +492,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		{
 			ItemStack carpet = this.wargChest.getStackInSlot(1);
 			int color = carpet.isEmpty() ? -1 : ((CarpetBlock)Block.getBlockFromItem(carpet.getItem())).getColor().getId(); 
-			getDataManager().set(CARPET, color);
+			getEntityData().set(CARPET, color);
 		}
 	}
 }

@@ -2,6 +2,7 @@ package com.lying.variousoddities.tileentity;
 
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.init.VOTileEntities;
@@ -10,20 +11,20 @@ import com.lying.variousoddities.reference.Reference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.BlockVoxelShape;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class TileEntityPhylactery extends BlockEntity implements ITickableTileEntity
+public class TileEntityPhylactery extends BlockEntity
 {
 	private static int HEAL_RATE = Reference.Values.TICKS_PER_SECOND * 15;
 	
@@ -40,14 +41,14 @@ public class TileEntityPhylactery extends BlockEntity implements ITickableTileEn
 	private int timeSincePlaced = 0;
 	private int unoccupiedTicks = 0;
 	
-	public TileEntityPhylactery()
+	public TileEntityPhylactery(BlockPos pos, BlockState state)
 	{
-		super(VOTileEntities.PHYLACTERY);
+		super(VOTileEntities.PHYLACTERY, pos, state);
 	}
 	
-	public CompoundTag write(CompoundTag compound)
+	public void saveAdditional(CompoundTag compound)
 	{
-		super.write(compound);
+		super.saveAdditional(compound);
 		
 		if(this.ownerName != null)
 			compound.putString("OwnerName", Component.Serializer.toJson(this.ownerName));
@@ -60,15 +61,13 @@ public class TileEntityPhylactery extends BlockEntity implements ITickableTileEn
 		compound.putDouble("MaxSize", this.maxSize);
 		if(this.unoccupiedTicks > 0)
 			compound.putInt("Unoccupied", this.unoccupiedTicks);
-		
-		return compound;
 	}
 	
-	public void read(BlockState state, CompoundTag nbt)
+	public void load(CompoundTag nbt)
 	{
-		super.read(state, nbt);
+		super.load(nbt);
 		if(nbt.contains("OwnerName", 8))
-			this.ownerName = Component.Serializer.getComponentFromJson(nbt.getString("OwnerName"));
+			this.ownerName = Component.Serializer.fromJson(nbt.getString("OwnerName"));
 		
 		if(nbt.contains("OwnerUUID", 11))
 			this.ownerUUID = nbt.getUUID("OwnerUUID");
@@ -81,23 +80,22 @@ public class TileEntityPhylactery extends BlockEntity implements ITickableTileEn
 		markDirty();
 	}
 	
-	public void tick()
+	public static void serverTick(Level world, BlockPos pos, BlockState state, TileEntityPhylactery phylactery)
 	{
-		Level world = this.getLevel();
-		double mistRadius = getMistRadius();
-		++this.timeSincePlaced;
-		if(getMistRadius() != mistRadius)
-			markDirty();
+		double mistRadius = phylactery.getMistRadius();
+		++phylactery.timeSincePlaced;
+		if(phylactery.getMistRadius() != mistRadius)
+			phylactery.markDirty();
 		
 		// Identify the owner entity if possible
-		if(owner == null)
+		if(phylactery.owner == null)
 		{
-			if(isPlayer)
-				this.owner = world.getPlayerByUUID(ownerUUID);
+			if(phylactery.isPlayer)
+				phylactery.owner = world.getPlayerByUUID(phylactery.ownerUUID);
 			else
 			{
 				// Mob phylactery handling currently not implemented
-				if(this.unoccupiedTicks++ > (Reference.Values.TICKS_PER_MINUTE * 20 * 7))
+				if(phylactery.unoccupiedTicks++ > (Reference.Values.TICKS_PER_MINUTE * 20 * 7))
 					 // Respawn mob 7 days after loss
 					 ;
 			}
@@ -105,37 +103,37 @@ public class TileEntityPhylactery extends BlockEntity implements ITickableTileEn
 			return;
 		}
 		else
-			this.unoccupiedTicks = 0;
+			phylactery.unoccupiedTicks = 0;
 		
 		// Update owner name if it has (somehow) changed
-		if(this.ownerName == null || !this.ownerName.equals(this.owner.getDisplayName()))
-			this.ownerName = this.owner.getDisplayName();
+		if(phylactery.ownerName == null || !phylactery.ownerName.equals(phylactery.owner.getDisplayName()))
+			phylactery.ownerName = phylactery.owner.getDisplayName();
 		
 		// Players respawn near their phylactery
-		if(isPlayer)
+		if(phylactery.isPlayer)
 			if(!world.isClientSide)
 			{
-				ServerPlayer player = (ServerPlayer)this.owner;
-				if(player.getRespawnPosition().distSqr(getBlockPos()) > 0)
-					player.setRespawnPosition(world.dimension(), getBlockPos(), 0F, true, false);
+				ServerPlayer player = (ServerPlayer)phylactery.owner;
+				if(player.getRespawnPosition().distSqr(pos) > 0)
+					player.setRespawnPosition(world.dimension(), pos, 0F, true, false);
 			}
 		
 		// Lich is healed whilst in dungeon mist
 		if(!world.isClientSide)
 		{
-			boolean ownerInMist = isInsideMist(this.owner);
-			if(this.owner.getHealth() < this.lastKnownHealth)
-				this.healTicks = HEAL_RATE;
-			else if(--this.healTicks < 0)
+			boolean ownerInMist = phylactery.isInsideMist(phylactery.owner);
+			if(phylactery.owner.getHealth() < phylactery.lastKnownHealth)
+				phylactery.healTicks = HEAL_RATE;
+			else if(--phylactery.healTicks < 0)
 			{
 				if(ownerInMist)
-					this.owner.heal(2F);
-				this.healTicks = HEAL_RATE;
+					phylactery.owner.heal(2F);
+				phylactery.healTicks = HEAL_RATE;
 			}
-			this.lastKnownHealth = this.owner.getHealth();
+			phylactery.lastKnownHealth = phylactery.owner.getHealth();
 			
-			if(ownerInMist && this.timeSincePlaced % 80 == 0)
-				this.owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_SECOND * 12, 0, true, true));
+			if(ownerInMist && phylactery.timeSincePlaced % 80 == 0)
+				phylactery.owner.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_SECOND * 12, 0, true, true));
 		}
 	}
 	
@@ -172,13 +170,22 @@ public class TileEntityPhylactery extends BlockEntity implements ITickableTileEn
 			return false;
 		
 		BlockState down = world.getBlockState(pos.below());
-		return !down.getFluidState().isEmpty() || down.func_242698_a(world, pos, Direction.UP, BlockVoxelShape.CENTER);
+		return !down.getFluidState().isEmpty() || down.isFaceSturdy(world, pos, Direction.UP, SupportType.CENTER);
+	}
+
+	@Nonnull
+	public final CompoundTag getUpdateTag()
+	{
+		CompoundTag compound = new CompoundTag();
+		saveAdditional(compound);
+		return compound;
 	}
 	
-	public CompoundTag getUpdateTag() { return this.write(new CompoundTag()); }
-	
 	@Nullable
-	public SUpdateTileEntityPacket getUpdatePacket() { return new SUpdateTileEntityPacket(this.getBlockPos(), -1, this.getUpdateTag()); }
+	public final ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
 	
-	public void onDataPacket(net.minecraft.network.NetworkManager net, net.minecraft.network.play.server.SUpdateTileEntityPacket pkt) { this.read(this.getBlockState(), pkt.getNbtCompound()); }
+	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt)
+	{
+		this.load(pkt.getTag());
+	}
 }

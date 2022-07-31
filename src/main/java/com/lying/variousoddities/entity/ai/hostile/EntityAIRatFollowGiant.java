@@ -6,7 +6,7 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityRatGiant;
 import com.lying.variousoddities.entity.passive.EntityRat;
 
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class EntityAIRatFollowGiant extends Goal
 {
@@ -23,16 +23,16 @@ public class EntityAIRatFollowGiant extends Goal
 	{
 		theRat = ratIn;
 		moveSpeed = par2Speed;
-		setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+		setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theRat.getAttackTarget() != null)
+		if(theRat.getTarget() != null)
 			return false;
 		
 	    double distanceMin = DISTANCE_MAX;
-	    for (EntityRatGiant giantRat : this.theRat.world.<EntityRatGiant>getEntitiesWithinAABB(EntityRatGiant.class, theRat.getBoundingBox().grow(8.0D, 4.0D, 8.0D), new Predicate<EntityRatGiant>()
+	    for (EntityRatGiant giantRat : this.theRat.level.<EntityRatGiant>getEntitiesOfClass(EntityRatGiant.class, theRat.getBoundingBox().inflate(8.0D, 4.0D, 8.0D), new Predicate<EntityRatGiant>()
 	    {
 	    	public boolean apply(EntityRatGiant input)
 	    	{
@@ -40,7 +40,7 @@ public class EntityAIRatFollowGiant extends Goal
 	    	}
 	    }))
 	    {
-            double distance = this.theRat.getDistanceSq(giantRat);
+            double distance = this.theRat.distanceTo(giantRat);
             if(distance <= distanceMin)
             {
                 distanceMin = distance;
@@ -51,18 +51,18 @@ public class EntityAIRatFollowGiant extends Goal
 	    return !(this.theGiantRat == null || distanceMin < 9.0D);
 	}
 	
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
-        double distance = this.theRat.getDistanceSq(this.theGiantRat);
+        double distance = this.theRat.distanceTo(this.theGiantRat);
         return this.theGiantRat.isAlive() && distance >= DISTANCE_MIN && distance <= DISTANCE_MAX;
 	}
 	
-	public void resetTask()
+	public void stop()
 	{
 		this.theGiantRat = null;
 	}
 	
-	public void startExecuting()
+	public void start()
 	{
 		this.delayTimer = 0;
 	}
@@ -72,7 +72,7 @@ public class EntityAIRatFollowGiant extends Goal
         if(--this.delayTimer <= 0)
         {
             this.delayTimer = 10;
-            this.theRat.getNavigator().tryMoveToEntityLiving(this.theGiantRat, this.moveSpeed);
+            this.theRat.getNavigation().moveTo(this.theGiantRat, this.moveSpeed);
         }
     }
 }

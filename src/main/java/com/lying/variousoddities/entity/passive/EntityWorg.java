@@ -6,7 +6,11 @@ import com.lying.variousoddities.entity.ai.passive.EntityAIWorgSpook;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.init.VOEntities;
 
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -23,17 +27,17 @@ import net.minecraft.world.level.Level;
 
 public class EntityWorg extends AbstractGoblinWolf
 {
-	private static final DataParameter<Boolean> SPOOKED = EntityDataManager.<Boolean>createKey(EntityWorg.class, DataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Boolean> SPOOKED = SynchedEntityData.defineId(EntityWorg.class, EntityDataSerializers.BOOLEAN);
 	
 	public EntityWorg(EntityType<? extends EntityWorg> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(SPOOKED, false);
+		super.defineSynchedData();
+		getEntityData().define(SPOOKED, false);
 	}
 
     public static AttributeSupplier.Builder createAttributes()
@@ -69,15 +73,15 @@ public class EntityWorg extends AbstractGoblinWolf
         return 0.4F;
     }
 	
-    public void spook(){ getDataManager().set(SPOOKED, true); }
+    public void spook(){ getEntityData().set(SPOOKED, true); }
     
-    public boolean isSpooked(){ return getDataManager().get(SPOOKED).booleanValue(); }
+    public boolean isSpooked(){ return getEntityData().get(SPOOKED).booleanValue(); }
     
-    public void unSpook(){ getDataManager().set(SPOOKED, false); }
+    public void unSpook(){ getEntityData().set(SPOOKED, false); }
     
-    public ActionResultType func_230254_b_(Player player, Hand hand)
+    public ActionResultType func_230254_b_(Player player, InteractionHand hand)
     {
-    	ItemStack heldItem = player.getHeldItem(hand);
+    	ItemStack heldItem = player.getItemInHand(hand);
     	if(getLevel().isClientSide)
     	{
     		boolean flag = this.isOwnedBy(player) || this.isTame() || heldItem.getItem() == Items.BONE && !this.isTame() && getTarget() == null;
@@ -96,7 +100,7 @@ public class EntityWorg extends AbstractGoblinWolf
 		    		return ActionResultType.func_233537_a_(this.level.isClientSide);
 		    	}
 				
-				if(heldItem.getItem() == Items.BONE && getGrowingAge() == 0)
+				if(heldItem.getItem() == Items.BONE && getAge() == 0)
 				{
 	    			setInLove(player);
 	    			
@@ -115,8 +119,8 @@ public class EntityWorg extends AbstractGoblinWolf
 					}
 					else
 					{
-						player.setHeldItem(hand, getMainHandItem());
-						setHeldItem(Hand.MAIN_HAND, heldItem);
+						player.setItemInHand(hand, getMainHandItem());
+						setItemInHand(InteractionHand.MAIN_HAND, heldItem);
 					}
 	    		}
 			}
@@ -130,7 +134,7 @@ public class EntityWorg extends AbstractGoblinWolf
 	    		{
 	    			this.tame(player);
 	    			this.navigation.stop();
-	    			this.setAttackTarget(null);
+	    			this.setTarget(null);
 	    			this.setOrderedToSit(true);
 	    			this.getLevel().setEntityState(this, (byte)7);
 	    		}

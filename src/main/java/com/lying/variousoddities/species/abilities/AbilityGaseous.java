@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -37,7 +38,7 @@ public class AbilityGaseous extends AbilityPhasing implements ICompoundAbility
 	
 	public boolean ignoresNonMagicDamage(){ return false; }
 	
-	public boolean isPhaseable(Level worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(BlockGetter worldIn, BlockPos pos, LivingEntity entity)
 	{
 		return false;
 	}

@@ -5,19 +5,19 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.ItemTagsProvider;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.Tags.IOptionalNamedTag;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class VOItemTags extends ItemTagsProvider
 {
-    public static final IOptionalNamedTag<Item> WORG_FOOD = ItemTags.createOptional(new ResourceLocation(Reference.ModInfo.MOD_ID, "worg_food"));
+    public static final TagKey<Item> WORG_FOOD = ItemTags.createOptional(new ResourceLocation(Reference.ModInfo.MOD_ID, "worg_food"));
     
 	public VOItemTags(DataGenerator dataGenerator, @Nullable ExistingFileHelper existingFileHelper)
 	{

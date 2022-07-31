@@ -9,6 +9,9 @@ import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -24,9 +27,9 @@ import net.minecraft.world.level.Level;
  */
 public class EntitySpell extends Entity
 {
-    private static final DataParameter<ItemStack> ITEM				= EntityDataManager.<ItemStack>createKey(EntitySpell.class, DataSerializers.ITEMSTACK);
-    private static final DataParameter<Integer> SPELL_ID			= EntityDataManager.<Integer>createKey(EntitySpell.class, DataSerializers.VARINT);
-    private static final DataParameter<CompoundTag> SPELLDATA	= EntityDataManager.<CompoundTag>createKey(EntitySpell.class, DataSerializers.COMPOUND_NBT);
+    private static final EntityDataAccessor<ItemStack> ITEM				= SynchedEntityData.defineId(EntitySpell.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<Integer> SPELL_ID			= SynchedEntityData.defineId(EntitySpell.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<CompoundTag> SPELLDATA	= SynchedEntityData.defineId(EntitySpell.class, EntityDataSerializers.COMPOUND_TAG);
     
     public EntitySpell(EntityType<? extends EntitySpell> typeIn, Level worldIn)
     {
@@ -52,11 +55,11 @@ public class EntitySpell extends Entity
 		return new SSpawnObjectPacket(this);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		getDataManager().register(ITEM, ItemStack.EMPTY);
-		getDataManager().register(SPELL_ID, -1);
-		getDataManager().register(SPELLDATA, new CompoundTag());
+		getEntityData().define(ITEM, ItemStack.EMPTY);
+		getEntityData().define(SPELL_ID, -1);
+		getEntityData().define(SPELLDATA, new CompoundTag());
 	}
 	
 	protected void readAdditional(CompoundTag compound)
@@ -109,12 +112,12 @@ public class EntitySpell extends Entity
 	
 	public void setSpellID(int par1Int)
 	{
-		getDataManager().set(SPELL_ID, par1Int);
+		getEntityData().set(SPELL_ID, par1Int);
 	}
 	
 	public int getSpellID()
 	{
-		return getDataManager().get(SPELL_ID).intValue();
+		return getEntityData().get(SPELL_ID).intValue();
 	}
 	
 	public SpellData getSpell()
@@ -124,11 +127,11 @@ public class EntitySpell extends Entity
 	
     public boolean isNoDespawnRequired(){ return true; }
     
-    public ItemStack getItem(){ return (ItemStack)getDataManager().get(ITEM); }
+    public ItemStack getItem(){ return (ItemStack)getEntityData().get(ITEM); }
     public void setItem(ItemStack stack)
     {
-    	getDataManager().set(ITEM, stack);
-//    	getDataManager().setDirty(ITEM);
+    	getEntityData().set(ITEM, stack);
+//    	getEntityData().setDirty(ITEM);
     }
 	
     public ActionResultType processInitialInteract(Player player, InteractionHand hand)

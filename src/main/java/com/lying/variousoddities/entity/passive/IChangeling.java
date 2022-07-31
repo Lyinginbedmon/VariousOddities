@@ -14,6 +14,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.EntityTeleportEvent;
 
 public interface IChangeling extends IFactionMob
@@ -99,7 +100,7 @@ public interface IChangeling extends IFactionMob
         if (stack1.getCount() > stack1.getMaxStackSize())
             return false;
         
-        return ItemStack.areItemStackTagsEqual(stack1, stack2);
+        return ItemStack.tagMatches(stack1, stack2);
     }
 	
 	public static EnumAttitude getChangelingAttitude(Player par1Player, LivingEntity par2Entity)
@@ -145,12 +146,13 @@ public interface IChangeling extends IFactionMob
 	
 	public static boolean teleportTo(Mob theMob, double x, double y, double z)
 	{
+		Vec3 oldPos = theMob.position();
 		EntityTeleportEvent.EnderEntity event = new EntityTeleportEvent.EnderEntity(theMob, x, y, z);
         if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event)) return false;
         boolean success = false;//theMob.attemptTeleport(event.getTargetX(), event.getTargetY(), event.getTargetZ());
         if(success)
         {
-            theMob.getLevel().playSound((Player)null, theMob.prevPosX, theMob.prevPosY, theMob.prevPosZ, SoundEvents.ENDERMAN_TELEPORT, theMob.getSoundSource(), 1.0F, 1.0F);
+            theMob.getLevel().playSound((Player)null, oldPos.x, oldPos.y, oldPos.z, SoundEvents.ENDERMAN_TELEPORT, theMob.getSoundSource(), 1.0F, 1.0F);
             theMob.playSound(SoundEvents.ENDERMAN_TELEPORT, 1.0F, 1.0F);
         }
         return success;

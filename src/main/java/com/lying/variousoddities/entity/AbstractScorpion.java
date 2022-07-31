@@ -14,9 +14,9 @@ import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -44,19 +44,19 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public abstract class AbstractScorpion extends EntityOddityAgeable
 {
-    private static final DataParameter<Integer> BREED	= EntityDataManager.<Integer>createKey(AbstractScorpion.class, DataSerializers.VARINT);
-    private static final DataParameter<Byte>	BABIES	= EntityDataManager.<Byte>createKey(AbstractScorpion.class, DataSerializers.BYTE);
+    private static final EntityDataAccessor<Integer> BREED	= SynchedEntityData.defineId(AbstractScorpion.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Byte>	BABIES	= SynchedEntityData.defineId(AbstractScorpion.class, EntityDataSerializers.BYTE);
 	
 	protected AbstractScorpion(EntityType<? extends AbstractScorpion> type, Level worldIn)
 	{
 		super(type, worldIn);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), BABIES, false);
-		getDataManager().register(BREED, 0);
+		super.defineSynchedData();
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), BABIES, false);
+		getEntityData().define(BREED, 0);
 	}
 	
 	public MobType getCreatureAttribute(){ return MobType.ARTHROPOD; }
@@ -83,12 +83,12 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     }
 	
     public EnumScorpionType getScorpionType(){ return EnumScorpionType.values()[getBreed()]; }
-    public int getBreed(){ return ((Integer)getDataManager().get(BREED)).intValue(); }
+    public int getBreed(){ return ((Integer)getEntityData().get(BREED)).intValue(); }
     public void setBreed(EnumScorpionType type){ setBreed(type.ordinal()); }
-    public void setBreed(int par1Int){ getDataManager().set(BREED, Integer.valueOf(par1Int % 4)); }
+    public void setBreed(int par1Int){ getEntityData().set(BREED, Integer.valueOf(par1Int % 4)); }
     
-    public boolean getBabies(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), BABIES); }
-    public void setBabies(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, BABIES); }
+    public boolean getBabies(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), BABIES); }
+    public void setBabies(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, BABIES); }
     public abstract AbstractScorpion createBaby(Level worldIn);
     
     public void writeAdditional(CompoundTag compound)
@@ -108,9 +108,9 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     	setBreed(display.getInt("Breed"));
     }
     
-	public boolean attackEntityAsMob(Entity entityIn)
+	public boolean doHurtTarget(Entity entityIn)
 	{
-		if(super.attackEntityAsMob(entityIn))
+		if(super.doHurtTarget(entityIn))
 		{
 	    	if(entityIn instanceof LivingEntity && !this.isBaby() && this.getRandom().nextInt(3) == 0)
 	    		this.getScorpionType().apply((LivingEntity)entityIn);
@@ -123,9 +123,9 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     /**
      * Called when the mob's health reaches 0.
      */
-    public void onDeath(DamageSource cause)
+    public void die(DamageSource cause)
     {
-    	super.onDeath(cause);
+    	super.die(cause);
     	if(!this.level.isClientSide && this.getBabies() && !this.isBaby())
     	{
     		for(int i=0; i<this.getRandom().nextInt(5); i++)
@@ -161,8 +161,8 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
     {
 		Random rand = new Random(this.getUUID().getLeastSignificantBits());
-		DataHelper.Booleans.setBooleanByte(getDataManager(), rand.nextInt(8) == 0, BABIES);
-		getDataManager().set(BREED, rand.nextInt(4) == 0 ? 1 : 0);
+		DataHelper.Booleans.setBooleanByte(getEntityData(), rand.nextInt(8) == 0, BABIES);
+		getEntityData().set(BREED, rand.nextInt(4) == 0 ? 1 : 0);
 		
 		return spawnDataIn;
     }

@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 
 public class AbilityEtherealness extends AbilityPhasing
 {
@@ -21,7 +21,7 @@ public class AbilityEtherealness extends AbilityPhasing
 	
 	public boolean ignoresNonMagicDamage(){ return true; }
 	
-	public boolean isPhaseable(Level worldIn, BlockPos pos, LivingEntity entity)
+	public boolean isPhaseable(BlockGetter worldIn, BlockPos pos, LivingEntity entity)
 	{
 		return entity.blockPosition().getY() <= pos.getY() || entity.isCrouching();
 	}

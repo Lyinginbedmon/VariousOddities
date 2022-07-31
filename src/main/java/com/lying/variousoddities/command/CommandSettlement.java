@@ -22,6 +22,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.CompoundTagArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
@@ -29,6 +30,7 @@ import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
@@ -189,7 +191,7 @@ public class CommandSettlement extends CommandBase
     private static class VariantAdd
     {
 	 	public static final SuggestionProvider<CommandSourceStack> TYPE_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("settlement_types"), (context, builder) -> {
-	 		return ISuggestionProvider.suggestIterable(SettlementManager.getSettlementTypes(), builder);
+	 		return SharedSuggestionProvider.suggestResource(SettlementManager.getSettlementTypes(), builder);
 	 		});
     	
 	 	private static final String TYPE = "type";
@@ -369,11 +371,11 @@ public class CommandSettlement extends CommandBase
 				CompoundTag originalNBT = settlementNBT.copy();
 				settlementNBT.merge(newNBT);
 				if(settlementNBT.equals(originalNBT))
-					source.sendFailure(makeErrorMessage(translationSlug+"edit.failed", settlementNBT.toFormattedComponent()), true);
+					source.sendFailure(makeErrorMessage(translationSlug+"edit.failed", NbtUtils.toPrettyComponent(settlementNBT)));
 				else
 				{
 					manager.add(index, SettlementManager.NBTToSettlement(settlementNBT));
-					source.sendSuccess(Component.translatable(translationSlug+"edit.success", settlementNBT.toFormattedComponent()), true);
+					source.sendSuccess(Component.translatable(translationSlug+"edit.success", NbtUtils.toPrettyComponent(settlementNBT)), true);
 				}
     		}
     		else
@@ -425,12 +427,7 @@ public class CommandSettlement extends CommandBase
     	
     	public static int listHerePos(CommandContext<CommandSourceStack> source) throws CommandSyntaxException
     	{
-    		Vec3 position = null;
-			try
-			{
-				position = Vec3Argument.getVec3(source, "position");
-			} catch (CommandSyntaxException e){ }
-			
+    		Vec3 position = Vec3Argument.getVec3(source, "position");
 			if(position == null)
 			{
 				source.getSource().sendFailure(makeErrorMessage(translationSlug+".here.failed.coords"));
@@ -710,7 +707,7 @@ public class CommandSettlement extends CommandBase
                 roomNBT.merge(newNBT);
                 if(roomNBT.equals(originalNBT))
                 {
-                	source.sendFailure(makeErrorMessage(translationSlug+"room.edit.failed", roomNBT.toFormattedComponent()), true);
+                	source.sendFailure(makeErrorMessage(translationSlug+"room.edit.failed", NbtUtils.toPrettyComponent(roomNBT)));
                 	return 0;
                 }
                 else
@@ -720,7 +717,7 @@ public class CommandSettlement extends CommandBase
                 	SettlementManager manager = SettlementManager.get(source.getLevel());
                 	manager.add(manager.getIndexBySettlement(settlement), settlement);
                 	
-                	source.sendSuccess(Component.translatable(translationSlug+"room.edit.success", roomNBT.toFormattedComponent()), true);
+                	source.sendSuccess(Component.translatable(translationSlug+"room.edit.success", NbtUtils.toPrettyComponent(roomNBT)), true);
                 	return 15;
                 }
     		}

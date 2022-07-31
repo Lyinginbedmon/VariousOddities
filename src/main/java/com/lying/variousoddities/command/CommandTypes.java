@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.lying.variousoddities.api.EnumArgumentChecked;
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.command.CommandTypes.VariantSet;
-import com.lying.variousoddities.command.CommandTypes.VariantTest;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
@@ -22,6 +20,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.EntitySummonArgument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
@@ -36,13 +35,13 @@ import net.minecraft.world.entity.LivingEntity;
 public class CommandTypes extends CommandBase
 {
  	public static final SuggestionProvider<CommandSourceStack> SUPERTYPE_SUGGEST = SuggestionProviders.register(new ResourceLocation("creature_supertypes"), (context, builder) -> {
- 		return ISuggestionProvider.suggest(EnumCreatureType.getSupertypeNames(), builder);
+ 		return SharedSuggestionProvider.suggest(EnumCreatureType.getSupertypeNames(), builder);
  		});
  	public static final SuggestionProvider<CommandSourceStack> SUBTYPE_SUGGEST = SuggestionProviders.register(new ResourceLocation("creature_subtypes"), (context, builder) -> {
- 		return ISuggestionProvider.suggest(EnumCreatureType.getSubtypeNames(), builder);
+ 		return SharedSuggestionProvider.suggest(EnumCreatureType.getSubtypeNames(), builder);
  		});
  	public static final SuggestionProvider<CommandSourceStack> TYPE_SUGGEST = SuggestionProviders.register(new ResourceLocation("creature_types"), (context, builder) -> {
-	 	return ISuggestionProvider.suggest(EnumCreatureType.getTypeNames(), builder);
+	 	return SharedSuggestionProvider.suggest(EnumCreatureType.getTypeNames(), builder);
 	 	});
  	
 	private static final String TYPE = "type";

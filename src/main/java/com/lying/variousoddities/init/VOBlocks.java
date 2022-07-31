@@ -20,10 +20,10 @@ public class VOBlocks
 	
     public static final TagKey<Block> UNPHASEABLE = createTag("unphaseable");
 	
-	public static final Block TABLE_DRAFTING	= register("drafting_table", new BlockDraftingTable(BlockBehaviour.Properties.of(Material.WOOD, MaterialColor.TERRACOTTA_BLUE).zeroHardnessAndResistance()));
-	public static final Block MOSS_BLOCK		= register("moss_block", new BlockMoss(BlockBehaviour.Properties.of(Material.PLANT, MaterialColor.COLOR_GREEN).notSolid().setOpaque(VOBlock::isntSolid)));
-	public static final Block EGG_KOBOLD		= register("kobold_egg", new BlockEggKobold(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.TERRACOTTA_YELLOW).strength(0.8F).setRequiresTool().harvestTool(ToolType.PICKAXE).harvestLevel(2)));
-	public static final Block EGG_KOBOLD_INERT	= register("inert_kobold_egg", new BlockEggBase(BlockEggBase.SHAPE_SMALL, BlockBehaviour.Properties.of(Material.STONE, MaterialColor.TERRACOTTA_YELLOW).strength(0.8F).setRequiresTool().harvestTool(ToolType.PICKAXE).harvestLevel(2)));
+	public static final Block TABLE_DRAFTING	= register("drafting_table", new BlockDraftingTable(BlockBehaviour.Properties.of(Material.WOOD, MaterialColor.TERRACOTTA_BLUE).instabreak()));
+	public static final Block MOSS_BLOCK		= register("moss_block", new BlockMoss(BlockBehaviour.Properties.of(Material.PLANT, MaterialColor.COLOR_GREEN).noCollission().isViewBlocking(VOBlock::isntSolid)));
+	public static final Block EGG_KOBOLD		= register("kobold_egg", new BlockEggKobold(BlockBehaviour.Properties.of(Material.STONE, MaterialColor.TERRACOTTA_YELLOW).strength(0.8F).requiresCorrectToolForDrops()));//harvestTool(ToolType.PICKAXE).harvestLevel(2)));
+	public static final Block EGG_KOBOLD_INERT	= register("inert_kobold_egg", new BlockEggBase(BlockEggBase.SHAPE_SMALL, BlockBehaviour.Properties.of(Material.STONE, MaterialColor.TERRACOTTA_YELLOW).strength(0.8F).requiresCorrectToolForDrops()));//harvestTool(ToolType.PICKAXE).harvestLevel(2)));
 	public static final Block LAYER_SCALE		= register("scale_layer", new BlockLayerScale(BlockBehaviour.Properties.of(Material.GRASS, MaterialColor.TERRACOTTA_YELLOW).strength(0.3F)));
 	public static final Block PHYLACTERY		= register("phylactery", new BlockPhylacteryLich(BlockBehaviour.Properties.of(Material.STONE)));
 	public static final Block PHYLACTERY_EMPTY	= register("empty_phylactery", new BlockPhylacteryBase(BlockBehaviour.Properties.of(Material.STONE)));

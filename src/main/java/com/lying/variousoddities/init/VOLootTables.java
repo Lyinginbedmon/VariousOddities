@@ -6,10 +6,11 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.loot.LootEntry;
-import net.minecraft.loot.TableLootEntry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
+import net.minecraft.world.level.storage.loot.entries.LootTableReference;
+import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraftforge.event.LootTableLoadEvent;
 
 public class VOLootTables
@@ -46,18 +47,17 @@ public class VOLootTables
 	
 	private static LootPool getInjectPool(String entryName)
 	{
-		return LootPool.builder()
-				.addEntry(getInjectEntry(entryName, 100))
-				.bonusRolls(0, 1)
+		return LootPool.lootPool()
+				.add(getInjectEntry(entryName, 100))
+				.setBonusRolls(UniformGenerator.between(0, 1))
 				.name(Reference.ModInfo.MOD_ID + "_inject")
 				.build();
 	}
 	
-	private static LootEntry.Builder<?> getInjectEntry(String name, int weight)
+	private static LootPoolEntryContainer.Builder<?> getInjectEntry(String name, int weight)
 	{
 		ResourceLocation table = new ResourceLocation(Reference.ModInfo.MOD_ID, "inject/" + name);
-		return TableLootEntry.builder(table)
-				.weight(weight);
+		return LootTableReference.lootTableReference(table).setWeight(weight);
 	}
 	
 	static

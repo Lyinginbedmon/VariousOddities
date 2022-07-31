@@ -12,11 +12,15 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
@@ -50,7 +54,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnimal
 {
-	private static final DataParameter<Integer> EMOTION = EntityDataManager.<Integer>createKey(EntityGhastling.class, DataSerializers.VARINT);
+	private static final EntityDataAccessor<Integer> EMOTION = SynchedEntityData.defineId(EntityGhastling.class, EntityDataSerializers.INT);
 	private static final Set<Item> TAME_ITEMS = Sets.newHashSet(Items.SUGAR, Items.COOKIE, Items.HONEYCOMB, Items.HONEY_BOTTLE, Items.SWEET_BERRIES);
 	
 	public EntityGhastling(EntityType<? extends EntityGhastling> type, Level worldIn)
@@ -61,10 +65,10 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 	    this.setPathPriority(PathNodeType.DAMAGE_FIRE, 0.0F);
 	}
 	
-	public void registerData()
+	public void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(EMOTION, 0);
+		super.defineSynchedData();
+		getEntityData().define(EMOTION, 0);
 	}
 	
 	public void registerGoals()
@@ -117,16 +121,16 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 	
 	public boolean isImmuneToFire(){ return true; }
 	
-	public boolean attackEntityFrom(DamageSource source, float amount)
+	public boolean hurt(DamageSource source, float amount)
 	{
 		if(source.isFire() || source.isExplosion())
 			return false;
-		return super.attackEntityFrom(source, amount);
+		return super.hurt(source, amount);
 	}
 	
-	public ActionResultType func_230254_b_(Player player, Hand hand)
+	public ActionResultType func_230254_b_(Player player, InteractionHand hand)
 	{
-		ItemStack heldStack = player.getHeldItem(hand);
+		ItemStack heldStack = player.getItemInHand(hand);
 		if(!this.isTame())
 		{
 			if(TAME_ITEMS.contains(heldStack.getItem()))
@@ -269,10 +273,10 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 		this.func_233629_a_(this, false);
 	}
 	
-	public Emotion getEmotion(){ return Emotion.fromInt(getDataManager().get(EMOTION).intValue()); }
+	public Emotion getEmotion(){ return Emotion.fromInt(getEntityData().get(EMOTION).intValue()); }
 	public void setEmotion(Emotion emote)
 	{
-		getDataManager().set(EMOTION, emote.ordinal());
+		getEntityData().set(EMOTION, emote.ordinal());
 		setPose(emote.pose());
 	}
 	

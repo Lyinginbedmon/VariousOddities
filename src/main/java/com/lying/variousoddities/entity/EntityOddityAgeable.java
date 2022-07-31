@@ -7,6 +7,9 @@ import com.lying.variousoddities.entity.ai.controller.EntityController;
 import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -14,9 +17,9 @@ import net.minecraft.world.level.Level;
 
 public abstract class EntityOddityAgeable extends AgeableMob
 {
-    protected static final DataParameter<Integer> AGE		= EntityDataManager.<Integer>createKey(EntityOddityAgeable.class, DataSerializers.VARINT);
-    protected static final DataParameter<Boolean> IN_LOVE	= EntityDataManager.<Boolean>createKey(EntityOddityAgeable.class, DataSerializers.BOOLEAN);
-    protected static final DataParameter<Byte> JAW_OPEN		= EntityDataManager.<Byte>createKey(EntityOddityAgeable.class, DataSerializers.BYTE);
+    protected static final EntityDataAccessor<Integer> AGE		= SynchedEntityData.defineId(EntityOddityAgeable.class, EntityDataSerializers.INT);
+    protected static final EntityDataAccessor<Boolean> IN_LOVE	= SynchedEntityData.defineId(EntityOddityAgeable.class, EntityDataSerializers.BOOLEAN);
+    protected static final EntityDataAccessor<Byte> JAW_OPEN		= SynchedEntityData.defineId(EntityOddityAgeable.class, EntityDataSerializers.BYTE);
     
     /** A list of EntityControllers able to influence this entity */
 	@SuppressWarnings("rawtypes")
@@ -34,12 +37,12 @@ public abstract class EntityOddityAgeable extends AgeableMob
         addControllers();
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(AGE, 0);
-		getDataManager().register(IN_LOVE, false);
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), JAW_OPEN);
+		super.defineSynchedData();
+		getEntityData().define(AGE, 0);
+		getEntityData().define(IN_LOVE, false);
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), JAW_OPEN);
 	}
 	
     public static AttributeSupplier.Builder createAttributes()
@@ -100,7 +103,7 @@ public abstract class EntityOddityAgeable extends AgeableMob
     {
     	super.tick();
     	if(!getLevel().isClientSide)
-    		getDataManager().set(AGE, getAge());
+    		getEntityData().set(AGE, getAge());
     }
     
     public void livingTick()
@@ -119,11 +122,11 @@ public abstract class EntityOddityAgeable extends AgeableMob
     public int getAge()
     {
     	if(getLevel().isClientSide)
-    		return getDataManager().get(AGE).intValue();
+    		return getEntityData().get(AGE).intValue();
     	else
     		return super.getAge();
     }
 
-    public boolean isJawOpen(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), JAW_OPEN); }
-    public void setJawOpen(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, JAW_OPEN); }
+    public boolean isJawOpen(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), JAW_OPEN); }
+    public void setJawOpen(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, JAW_OPEN); }
 }

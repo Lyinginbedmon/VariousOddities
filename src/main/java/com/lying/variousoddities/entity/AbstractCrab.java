@@ -10,9 +10,9 @@ import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
 import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -32,14 +32,14 @@ import net.minecraft.world.phys.Vec3;
 
 public class AbstractCrab extends EntityOddity
 {
-    public static final DataParameter<Boolean>	BARNACLES	= EntityDataManager.<Boolean>createKey(AbstractCrab.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Boolean>	BIG_L		= EntityDataManager.<Boolean>createKey(AbstractCrab.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Boolean>	BIG_R		= EntityDataManager.<Boolean>createKey(AbstractCrab.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Integer>	COLOR		= EntityDataManager.<Integer>createKey(AbstractCrab.class, DataSerializers.VARINT);
-    public static final DataParameter<Boolean>	SCUTTLE		= EntityDataManager.<Boolean>createKey(AbstractCrab.class, DataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean>	BARNACLES	= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean>	BIG_L		= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean>	BIG_R		= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Integer>	COLOR		= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Boolean>	SCUTTLE		= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.BOOLEAN);
     
-    public static final DataParameter<Boolean>	PARTYING	= EntityDataManager.<Boolean>createKey(AbstractCrab.class, DataSerializers.BOOLEAN);
-    public static final DataParameter<Integer>	BUBBLES		= EntityDataManager.<Integer>createKey(AbstractCrab.class, DataSerializers.VARINT);
+    public static final EntityDataAccessor<Boolean>	PARTYING	= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Integer>	BUBBLES		= SynchedEntityData.defineId(AbstractCrab.class, EntityDataSerializers.INT);
     
     private BlockPos jukeboxPos = null;
     
@@ -49,17 +49,17 @@ public class AbstractCrab extends EntityOddity
 	    setPathPriority(PathNodeType.WATER, 0.0F);
 	}
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(BARNACLES, false);
-		getDataManager().register(BIG_L, false);
-		getDataManager().register(BIG_R, false);
-		getDataManager().register(COLOR, 0);
-		getDataManager().register(SCUTTLE, false);
+		super.defineSynchedData();
+		getEntityData().define(BARNACLES, false);
+		getEntityData().define(BIG_L, false);
+		getEntityData().define(BIG_R, false);
+		getEntityData().define(COLOR, 0);
+		getEntityData().define(SCUTTLE, false);
 		
-		getDataManager().register(PARTYING, false);
-		getDataManager().register(BUBBLES, 0);
+		getEntityData().define(PARTYING, false);
+		getEntityData().define(BUBBLES, 0);
 	}
     
     public void registerGoals()
@@ -81,25 +81,25 @@ public class AbstractCrab extends EntityOddity
     	return true;
     }
     
-    public boolean hasBarnacles(){ return getDataManager().get(BARNACLES).booleanValue(); }
-    public void setBarnacles(boolean par1Bool){ getDataManager().set(BARNACLES, par1Bool); }
+    public boolean hasBarnacles(){ return getEntityData().get(BARNACLES).booleanValue(); }
+    public void setBarnacles(boolean par1Bool){ getEntityData().set(BARNACLES, par1Bool); }
     
-    public boolean hasBigLeftClaw(){ return getDataManager().get(BIG_L).booleanValue(); }
-    public void setBigLeftClaw(boolean par1Bool){ getDataManager().set(BIG_L, par1Bool); }
+    public boolean hasBigLeftClaw(){ return getEntityData().get(BIG_L).booleanValue(); }
+    public void setBigLeftClaw(boolean par1Bool){ getEntityData().set(BIG_L, par1Bool); }
     
-    public boolean hasBigRightClaw(){ return getDataManager().get(BIG_R).booleanValue(); }
-    public void setBigRightClaw(boolean par1Bool){ getDataManager().set(BIG_R, par1Bool); }
+    public boolean hasBigRightClaw(){ return getEntityData().get(BIG_R).booleanValue(); }
+    public void setBigRightClaw(boolean par1Bool){ getEntityData().set(BIG_R, par1Bool); }
     
-    public int getColor(){ return getDataManager().get(COLOR).intValue(); }
-    public void setColor(int par1Int){ getDataManager().set(COLOR, Mth.clamp(par1Int, 0, 2)); }
+    public int getColor(){ return getEntityData().get(COLOR).intValue(); }
+    public void setColor(int par1Int){ getEntityData().set(COLOR, Mth.clamp(par1Int, 0, 2)); }
     
     public boolean shouldScuttle()
     {
     	Vec3 motion = getMotion();
     	double motionLength = Math.sqrt((motion.x * motion.x) + (motion.z * motion.z));
-    	return getDataManager().get(SCUTTLE) && motionLength > 0.01D;
+    	return getEntityData().get(SCUTTLE) && motionLength > 0.01D;
     }
-    public void setScuttle(boolean par1Bool){ getDataManager().set(SCUTTLE, par1Bool); }
+    public void setScuttle(boolean par1Bool){ getEntityData().set(SCUTTLE, par1Bool); }
 	
 	public void writeAdditional(CompoundTag compound)
 	{
@@ -119,7 +119,7 @@ public class AbstractCrab extends EntityOddity
 		if(compound.contains("Display", 10))
 		{
 			CompoundTag displayData = compound.getCompound("Display");
-			getDataManager().set(COLOR, displayData.getInt("Color"));
+			getEntityData().set(COLOR, displayData.getInt("Color"));
 			setBarnacles(displayData.getBoolean("Barnacles"));
 			setBigLeftClaw(displayData.getBoolean("BigLeft"));
 			setBigRightClaw(displayData.getBoolean("BigRight"));
@@ -129,16 +129,16 @@ public class AbstractCrab extends EntityOddity
 	
 	public static void startParty(Level world, BlockPos pos, boolean party)
 	{
-		for(AbstractCrab crab : world.getEntitiesWithinAABB(AbstractCrab.class, new AABB(pos).inflate(6D)))
+		for(AbstractCrab crab : world.getEntitiesOfClass(AbstractCrab.class, new AABB(pos).inflate(6D)))
 			if(crab.getTarget() == null)
 				crab.setPartying(pos);
 	}
 	
-	public boolean isPartying(){ return getDataManager().get(PARTYING).booleanValue(); }
+	public boolean isPartying(){ return getEntityData().get(PARTYING).booleanValue(); }
 	public void setPartying(BlockPos jukeboxPos)
 	{
 		this.jukeboxPos = jukeboxPos;
-		getDataManager().set(PARTYING, jukeboxPos != null);
+		getEntityData().set(PARTYING, jukeboxPos != null);
 	}
 	
 	public void updateAITasks()
@@ -148,9 +148,9 @@ public class AbstractCrab extends EntityOddity
 			if(
 				getTarget() != null || 
 				this.jukeboxPos == null || 
-				this.jukeboxPos.distanceSq(getPosition()) >= 16D ||
-				getEntityWorld().getBlockState(this.jukeboxPos).getBlock() != Blocks.JUKEBOX || 
-				getEntityWorld().getBlockState(this.jukeboxPos).get(JukeboxBlock.HAS_RECORD) == false)
+				this.jukeboxPos.distSqr(blockPosition()) >= 16D ||
+				getLevel().getBlockState(this.jukeboxPos).getBlock() != Blocks.JUKEBOX || 
+				getLevel().getBlockState(this.jukeboxPos).getValue(JukeboxBlock.HAS_RECORD) == false)
 					setPartying(null);
 	}
 	
@@ -160,8 +160,8 @@ public class AbstractCrab extends EntityOddity
     		setBubbles(40 + this.random.nextInt(20));
     }
     
-    public int getBubbles(){ return getDataManager().get(BUBBLES).intValue(); }
-    public void setBubbles(int par1Int){ getDataManager().set(BUBBLES, par1Int); }
+    public int getBubbles(){ return getEntityData().get(BUBBLES).intValue(); }
+    public void setBubbles(int par1Int){ getEntityData().set(BUBBLES, par1Int); }
     
     public void tick()
     {
@@ -177,15 +177,15 @@ public class AbstractCrab extends EntityOddity
     	float yaw = this.renderYawOffset + (shouldScuttle() ? 90F : 0F);
     	Vec3 forward = Vec3.fromPitchYaw(0, yaw);
     	Vec3 left = Vec3.fromPitchYaw(0, yaw - 90F);
-    	double widthBase = getWidth() * 0.3D;
-    	Vec3 pos = getPositionVec();
+    	double widthBase = getBbWidth() * 0.3D;
+    	Vec3 pos = position();
         for(int i=0; i<10; ++i)
         {
         	double xPos = pos.x + (forward.x * 0.8D) + (left.x * widthBase * (this.random.nextDouble() - 0.5D));
-        	double yPos = pos.y + (this.random.nextDouble()) * (double)getHeight() + getHeight()*0.2D;
+        	double yPos = pos.y + (this.random.nextDouble()) * (double)getBbHeight() + getBbHeight()*0.2D;
         	double zPos = pos.z + (forward.z * 0.8D) + (left.z * widthBase * (this.random.nextDouble() - 0.5D));
         	
-            getEntityWorld().addParticle(ParticleTypes.BUBBLE, xPos, yPos, zPos, 0D, 0D, 0D);
+            getLevel().addParticle(ParticleTypes.BUBBLE, xPos, yPos, zPos, 0D, 0D, 0D);
         }
     }
     
@@ -195,9 +195,9 @@ public class AbstractCrab extends EntityOddity
         return super.getAmbientSound();
     }
     
-    protected float getSoundPitch()
+    public float getVoicePitch()
     {
-    	return (super.getSoundPitch() - 1.0F) * 0.1F;
+    	return (super.getVoicePitch() - 1.0F) * 0.1F;
     }
     
     public int getTalkInterval()

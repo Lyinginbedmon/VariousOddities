@@ -28,7 +28,7 @@ public class BlockPhylacteryBase extends VOBlock
 	
 	public BlockPhylacteryBase(BlockBehaviour.Properties properties)
 	{
-		super(properties.notSolid().setOpaque(VOBlock::isntSolid).hardnessAndResistance(25.0F, 1200.0F));
+		super(properties.noOcclusion().isViewBlocking(VOBlock::isntSolid).strength(25.0F, 1200.0F));
 		this.registerDefaultState(defaultBlockState().setValue(POWER, 0));
 	}
 	
@@ -91,14 +91,14 @@ public class BlockPhylacteryBase extends VOBlock
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void onReplaced(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving)
+	public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving)
 	{
 		if(!isMoving && !state.is(newState.getBlock()))
 		{
 			if(state.getValue(POWER) > 0)
 				worldIn.updateNeighborsAt(pos, this);
 			
-			super.onReplaced(state, worldIn, pos, newState, isMoving);
+			super.onRemove(state, worldIn, pos, newState, isMoving);
 		}
 	}
 	

@@ -178,7 +178,7 @@ public class VOBusServer
 			livingData.setSelectedSpecies(false);
 		
 		if(AbilityRegistry.hasAbility(event.getEntity(), AbilitySize.REGISTRY_NAME))
-			event.getEntity().recalculateSize();
+			event.getEntity().refreshDimensions();
 		
 		if(PlayerData.isPlayerBodyDead(event.getEntity()))
 		{

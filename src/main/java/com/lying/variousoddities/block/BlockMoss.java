@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Material;
 
@@ -31,8 +32,8 @@ public class BlockMoss extends BlockVOEmptyDrops
     
 	public BlockMoss(BlockBehaviour.Properties properties)
 	{
-		super("moss_block", properties.sound(SoundType.SLIME_BLOCK).strength(0.5F, 3.0F).harvestLevel(1).harvestTool(ToolType.SHOVEL));
-        this.setDefaultState(this.stateContainer.getBaseState().with(NORTH, Boolean.valueOf(false)).with(EAST, Boolean.valueOf(false)).with(SOUTH, Boolean.valueOf(false)).with(WEST, Boolean.valueOf(false)).with(UP, Boolean.valueOf(false)).with(DOWN, Boolean.valueOf(false)));
+		super("moss_block", properties.sound(SoundType.SLIME_BLOCK).strength(0.5F, 3.0F).requiresCorrectToolForDrops());//.harvestLevel(1).harvestTool(ToolType.SHOVEL));
+        this.registerDefaultState(this.defaultBlockState().setValue(NORTH, Boolean.valueOf(false)).setValue(EAST, Boolean.valueOf(false)).setValue(SOUTH, Boolean.valueOf(false)).setValue(WEST, Boolean.valueOf(false)).setValue(UP, Boolean.valueOf(false)).setValue(DOWN, Boolean.valueOf(false)));
 	}
     
     public boolean isTransparent(BlockState stateIn){ return true; }
@@ -84,7 +85,7 @@ public class BlockMoss extends BlockVOEmptyDrops
         }
     }
     
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder)
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
     {
     	builder.add(NORTH, EAST, WEST, SOUTH, UP, DOWN);
     }

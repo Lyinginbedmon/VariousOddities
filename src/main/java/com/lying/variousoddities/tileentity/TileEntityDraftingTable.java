@@ -36,21 +36,21 @@ public class TileEntityDraftingTable extends VOTileEntity
 	 */
 	private int lockMask = 0;
 	
-	public TileEntityDraftingTable()
+	public TileEntityDraftingTable(BlockPos pos, BlockState state)
 	{
-		super(VOTileEntities.TABLE_DRAFTING);
+		super(VOTileEntities.TABLE_DRAFTING, pos, state);
 	}
 	
-	public void read(BlockState state, CompoundTag nbt)
+	public void load(CompoundTag nbt)
 	{
-		super.read(state, nbt);
+		super.load( nbt);
 		this.loadFromNbt(nbt);
 	}
 	
-	public CompoundTag write(CompoundTag compound)
+	public void saveAdditional(CompoundTag compound)
 	{
-		super.write(compound);
-		return this.saveToNbt(compound);
+		super.saveAdditional(compound);
+		this.saveToNbt(compound);
 	}
 	
 	public void loadFromNbt(CompoundTag compound)
@@ -79,7 +79,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 		
 		this.showBounds = compound.getBoolean("ShowBounds");
 		
-		super.markDirty();
+		super.setChanged();
 	}
 	
 	public CompoundTag saveToNbt(CompoundTag compound)
@@ -113,13 +113,13 @@ public class TileEntityDraftingTable extends VOTileEntity
 	}
 	
 	public boolean showBoundaries(){ return this.showBounds; }
-	public void toggleBoundaries(){ this.showBounds = !this.showBounds; markDirty(); }
+	public void toggleBoundaries(){ this.showBounds = !this.showBounds; setChanged(); }
 	
 	public int bitMask(){ return this.lockMask; }
 	public void setMask(int bitIn)
 	{
 		this.lockMask = Math.max(0, Math.min(15, bitIn));
-		markDirty();
+		setChanged();
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 			else
 				min = getBlockPos().offset(-1, -1, -1);
 			
-			markDirty();
+			setChanged();
 		}
 		return min;
 	}
@@ -175,7 +175,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 			else
 				max = getBlockPos().offset(1, 1, 1);
 			
-			markDirty();
+			setChanged();
 		}
 		return max;
 	}
@@ -277,7 +277,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 		int posZ = Math.min(maxZ, this.min().getZ() + z);
 		
 		this.min = new BlockPos(posX, posY, posZ);
-		markDirty();
+		setChanged();
 	}
 	
 	public void moveMax(int x, int y, int z)
@@ -297,7 +297,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 		int posZ = Math.max(minZ, this.max().getZ() + z);
 		
 		this.max = new BlockPos(posX, posY, posZ);
-		markDirty();
+		setChanged();
 	}
 	
 	public EnumRoomFunction getFunction(){ return this.function; }
@@ -309,7 +309,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 		
 		this.function = function;
 		
-		markDirty();
+		setChanged();
 	}
 	
 	public boolean hasTitle(){ return this.title != null && this.title.length() > 0; }
@@ -319,7 +319,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 	public void setTitle(String nameIn)
 	{
 		this.title = nameIn;
-		markDirty();
+		setChanged();
 	}
 	
 	public static BoxRoom getRoomFromNBT(CompoundTag tableData)
@@ -341,15 +341,15 @@ public class TileEntityDraftingTable extends VOTileEntity
 		return room;
 	}
 	
-	public void markDirty()
+	public void setChanged()
 	{
-		super.markDirty();
+		super.setChanged();
 		if(getLevel() != null && !getLevel().isClientSide)
 		{
 			BlockPos pos = getBlockPos();
 			for(Player player : getLevel().players())
 				if(player.distanceToSqr(new Vec3(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D)) < (64 * 64))
-					((ServerPlayer)player).connection.sendPacket(getUpdatePacket());
+					((ServerPlayer)player).connection.send(getUpdatePacket());
 		}
 	}
 	

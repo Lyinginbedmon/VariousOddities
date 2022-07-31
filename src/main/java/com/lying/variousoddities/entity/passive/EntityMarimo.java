@@ -12,6 +12,9 @@ import com.mojang.math.Vector3d;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -33,9 +36,9 @@ import net.minecraft.world.level.material.Fluids;
 
 public class EntityMarimo extends EntityOddity implements IMysticSource
 {
-    private static final DataParameter<Integer> DYE_COLOR	= EntityDataManager.<Integer>createKey(EntityMarimo.class, DataSerializers.VARINT);
-    public static final DataParameter<Byte>		MYSTIC		= EntityDataManager.<Byte>createKey(EntityMarimo.class, DataSerializers.BYTE);
-    public static final DataParameter<Integer>	RECHARGE	= EntityDataManager.<Integer>createKey(EntityMarimo.class, DataSerializers.VARINT);
+    private static final EntityDataAccessor<Integer>	 DYE_COLOR	= SynchedEntityData.defineId(EntityMarimo.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Byte>		MYSTIC		= SynchedEntityData.defineId(EntityMarimo.class, EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Integer>		RECHARGE	= SynchedEntityData.defineId(EntityMarimo.class, EntityDataSerializers.INT);
 	private float targetYaw;
 	private float targetPitch;
     
@@ -52,14 +55,14 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
 	public void setItemStackToSlot(EquipmentSlot slotIn, ItemStack stack){ }
 	public HandSide getPrimaryHand() { return HandSide.RIGHT; }
 	
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
+		super.defineSynchedData();
 		random = new Random(this.getUUID().getLeastSignificantBits());
 		
-		getDataManager().register(DYE_COLOR, DyeColor.GREEN.getId());
-		DataHelper.Booleans.registerBooleanByte(getDataManager(), MYSTIC, random.nextInt(50) == 0);
-		getDataManager().register(RECHARGE, 0);
+		getEntityData().define(DYE_COLOR, DyeColor.GREEN.getId());
+		DataHelper.Booleans.registerBooleanByte(getEntityData(), MYSTIC, random.nextInt(50) == 0);
+		getEntityData().define(RECHARGE, 0);
 	}
 	
     public static AttributeSupplier.Builder createAttributes()
@@ -93,7 +96,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
 	
     public ActionResultType applyPlayerInteraction(Player player, InteractionHand hand)
     {
-        ItemStack itemstack = player.getHeldItem(hand);
+        ItemStack itemstack = player.getItemInHand(hand);
         if(itemstack.getItem() == Items.POTION && PotionUtils.getPotion(itemstack) == Potions.WATER)
         {
         	itemstack.shrink(1);
@@ -108,7 +111,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     public ItemStack getItemStack()
     {
     	ItemStack bottle = VOItems.MOSS_BOTTLE.getDefaultInstance();
-    	if(this.hasCustomName()) bottle.setDisplayName(getCustomName());
+    	if(this.hasCustomName()) bottle.setHoverName(getCustomName());
     	CompoundTag stackData = bottle.hasTag() ? bottle.getTag() : new CompoundTag();
     	stackData.putInt("Color", getColor().getId());
     	stackData.putBoolean("Mystic", isMagical());
@@ -153,25 +156,25 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
         {
         	if(canProvidePower())
         	{
-		    	if(getLevel().isClientSide && getRNG().nextInt(50) == 0)
+		    	if(getLevel().isClientSide && getRandom().nextInt(50) == 0)
 		            for (int i = 0; i < 2; ++i)
-		            	getLevel().addParticle(ParticleTypes.PORTAL, getPosX() + (this.random.nextDouble() - 0.5D) * (double)getWidth(), getPosY() + this.random.nextDouble() * (double)getHeight() - 0.25D, getPosZ() + (this.random.nextDouble() - 0.5D) * (double)getWidth(), (this.random.nextDouble() - 0.5D) * 2.0D, -this.random.nextDouble(), (this.random.nextDouble() - 0.5D) * 2.0D);
+		            	getLevel().addParticle(ParticleTypes.PORTAL, getX() + (this.random.nextDouble() - 0.5D) * (double)getBbWidth(), getY() + this.random.nextDouble() * (double)getBbHeight() - 0.25D, getZ() + (this.random.nextDouble() - 0.5D) * (double)getBbWidth(), (this.random.nextDouble() - 0.5D) * 2.0D, -this.random.nextDouble(), (this.random.nextDouble() - 0.5D) * 2.0D);
         	}
         	else
         	{
-		    	int charge = getDataManager().get(RECHARGE).intValue();
+		    	int charge = getEntityData().get(RECHARGE).intValue();
 		    	if(!getLevel().isClientSide && charge != 0)
 		    	{
 		    		charge -= Math.signum(charge);
-		    		getDataManager().set(RECHARGE, charge);
+		    		getEntityData().set(RECHARGE, charge);
 		    	}
         	}
         }
     }
     
-    public void setColor(int par1Int){ getDataManager().set(DYE_COLOR, par1Int); }
+    public void setColor(int par1Int){ getEntityData().set(DYE_COLOR, par1Int); }
     public void setColor(DyeColor colorIn){ setColor(colorIn.getId()); }
-    public DyeColor getColor(){ return DyeColor.byId(getDataManager().get(DYE_COLOR).intValue()); }
+    public DyeColor getColor(){ return DyeColor.byId(getEntityData().get(DYE_COLOR).intValue()); }
     
     protected float limitAngle(float sourceAngle, float targetAngle, float maximumChange)
     {
@@ -190,13 +193,13 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
         return false;
     }
     
-	public boolean canProvidePower(){ return isMagical() && getDataManager().get(RECHARGE).intValue() == 0; }
+	public boolean canProvidePower(){ return isMagical() && getEntityData().get(RECHARGE).intValue() == 0; }
 	
 	public int getTotalPower(){ return 1; }
 	
-	public void setRecharge(){ getDataManager().set(RECHARGE, Reference.Values.TICKS_PER_DAY * 2); }
+	public void setRecharge(){ getEntityData().set(RECHARGE, Reference.Values.TICKS_PER_DAY * 2); }
 	
-	public boolean isMagical(){ return DataHelper.Booleans.getBooleanByte(getDataManager(), MYSTIC); }
-	public void setMagical(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getDataManager(), par1Bool, MYSTIC); }
+	public boolean isMagical(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), MYSTIC); }
+	public void setMagical(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, MYSTIC); }
 
 }

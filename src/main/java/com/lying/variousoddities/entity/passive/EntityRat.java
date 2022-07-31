@@ -8,6 +8,10 @@ import com.lying.variousoddities.entity.ai.hostile.EntityAIRatFollowGiant;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -19,7 +23,7 @@ import net.minecraft.world.level.Level;
 
 public class EntityRat extends AbstractRat
 {
-	public static final DataParameter<Boolean> MINION = EntityDataManager.<Boolean>createKey(EntityRat.class, DataSerializers.BOOLEAN);
+	public static final EntityDataAccessor<Boolean> MINION = SynchedEntityData.defineId(EntityRat.class, EntityDataSerializers.BOOLEAN);
 	
 	public EntityRat(EntityType<? extends EntityRat> type, Level worldIn)
 	{
@@ -35,10 +39,10 @@ public class EntityRat extends AbstractRat
         		.add(Attributes.ATTACK_DAMAGE, 3.5D);
     }
     
-	protected void registerData()
+	protected void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(MINION, false);
+		super.defineSynchedData();
+		getEntityData().define(MINION, false);
 	}
     
     public void registerGoals()
@@ -64,14 +68,14 @@ public class EntityRat extends AbstractRat
 		return getRandom().nextInt(20) == 0 ? EnumRatBreed.getID(EnumRatBreed.PLAGUE) : getRandom().nextInt(3);
 	}
 	
-	protected EntitySize getStandingSize()
+	protected EntityDimensions getStandingSize()
 	{
-		return EntitySize.fixed(0.3F, 0.5F);
+		return EntityDimensions.fixed(0.3F, 0.5F);
 	}
 	
-	protected EntitySize getCrouchingSize()
+	protected EntityDimensions getCrouchingSize()
 	{
-		return EntitySize.fixed(0.3F, 0.2F);
+		return EntityDimensions.fixed(0.3F, 0.2F);
 	}
 	
     protected float getSoundPitch()
@@ -79,8 +83,8 @@ public class EntityRat extends AbstractRat
     	return super.getVoicePitch() * 1.25F;
     }
     
-    public void setMinion(boolean par1Bool){ getDataManager().set(MINION, par1Bool); }
-    public boolean isMinion(){ return getDataManager().get(MINION).booleanValue(); }
+    public void setMinion(boolean par1Bool){ getEntityData().set(MINION, par1Bool); }
+    public boolean isMinion(){ return getEntityData().get(MINION).booleanValue(); }
     
     public void writeAdditional(CompoundTag compound)
     {

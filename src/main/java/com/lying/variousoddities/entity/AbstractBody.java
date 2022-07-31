@@ -20,9 +20,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -40,11 +44,11 @@ import net.minecraft.world.level.Level;
 
 public abstract class AbstractBody extends LivingEntity implements IInventoryChangedListener
 {
-    protected static final DataParameter<CompoundTag> ENTITY	= EntityDataManager.<CompoundTag>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
-    protected static final DataParameter<CompoundTag> PROFILE	= EntityDataManager.<CompoundTag>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
-    protected static final DataParameter<CompoundTag> EQUIPMENT	= EntityDataManager.<CompoundTag>createKey(AbstractBody.class, DataSerializers.COMPOUND_NBT);
-    protected static final DataParameter<Optional<UUID>> SOUL_ID	= EntityDataManager.<Optional<UUID>>createKey(AbstractBody.class, DataSerializers.OPTIONAL_UNIQUE_ID);
-    protected static final EntitySize BODY_SIZE = EntitySize.fixed(0.75F, 0.5F);
+    protected static final EntityDataAccessor<CompoundTag> ENTITY	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.COMPOUND_TAG);
+    protected static final EntityDataAccessor<CompoundTag> PROFILE	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.COMPOUND_TAG);
+    protected static final EntityDataAccessor<CompoundTag> EQUIPMENT	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.COMPOUND_TAG);
+    protected static final EntityDataAccessor<Optional<UUID>> SOUL_ID	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.OPTIONAL_UUID);
+    protected static final EntityDimensions BODY_SIZE = EntityDimensions.fixed(0.75F, 0.5F);
     
     protected final Inventory bodyInventory;
 	
@@ -65,13 +69,13 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		setMotion(living.getMotion());
 	}
 	
-	public void registerData()
+	public void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(ENTITY, new CompoundTag());
-		getDataManager().register(PROFILE, new CompoundTag());
-		getDataManager().register(EQUIPMENT, new CompoundTag());
-		getDataManager().register(SOUL_ID, Optional.<UUID>empty());
+		super.defineSynchedData();
+		getEntityData().define(ENTITY, new CompoundTag());
+		getEntityData().define(PROFILE, new CompoundTag());
+		getEntityData().define(EQUIPMENT, new CompoundTag());
+		getEntityData().define(SOUL_ID, Optional.<UUID>empty());
 	}
 	
     public static AttributeSupplier.Builder createAttributes()
@@ -83,8 +87,8 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public void readAdditional(CompoundTag compound)
 	{
 		super.readAdditionalSaveData(compound);
-		getDataManager().set(ENTITY, compound.getCompound("Entity"));
-		getDataManager().set(PROFILE, compound.getCompound("Player"));
+		getEntityData().set(ENTITY, compound.getCompound("Entity"));
+		getEntityData().set(PROFILE, compound.getCompound("Player"));
 		updateSize();
 		this.persistent = compound.getBoolean("PersistenceRequired");
 		readInventoryFromNBT(compound);
@@ -95,8 +99,8 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public void writeAdditional(CompoundTag compound)
 	{
 		super.writeAdditional(compound);
-		compound.put("Entity", getDataManager().get(ENTITY));
-		compound.put("Player", getDataManager().get(PROFILE));
+		compound.put("Entity", getEntityData().get(ENTITY));
+		compound.put("Player", getEntityData().get(PROFILE));
 		compound.putBoolean("PersistenceRequired", this.persistent);
 		writeInventoryToNBT(compound);
 		if(hasSoul())
@@ -177,7 +181,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public void onInventoryChanged(Inventory invBasic)
 	{
 		if(!getLevel().isClientSide)
-			getDataManager().set(EQUIPMENT, writeInventoryToNBT(new CompoundTag()));
+			getEntityData().set(EQUIPMENT, writeInventoryToNBT(new CompoundTag()));
 	}
 	
 	public static void clearNearbyAttackTargetsOf(@Nonnull LivingEntity victim)
@@ -193,9 +197,9 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public Component getDisplayName(){ return this.hasBody() ? getBody().getDisplayName() : super.getDisplayName(); }
 	
-	public boolean hasBody(){ return getDataManager().get(ENTITY).contains("id", 8); }
+	public boolean hasBody(){ return getEntityData().get(ENTITY).contains("id", 8); }
 	
-	public boolean isPlayer(){ return hasBody() && getDataManager().get(ENTITY).getString("id").equalsIgnoreCase("player"); }
+	public boolean isPlayer(){ return hasBody() && getEntityData().get(ENTITY).getString("id").equalsIgnoreCase("player"); }
 	
 	public void setBody(@Nullable LivingEntity living, boolean withDropChance)
 	{
@@ -267,7 +271,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
-				getDataManager().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
+				getEntityData().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
 				data.putString("id", living.getEntityString());
@@ -281,7 +285,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 			setSoulUUID(null);
 		}
 		
-		getDataManager().set(ENTITY, data);
+		getEntityData().set(ENTITY, data);
 		updateSize();
 		onInventoryChanged(null);
 	}
@@ -291,14 +295,14 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	public GameProfile getGameProfile()
 	{
-		return NbtUtils.readGameProfile(getDataManager().get(PROFILE));
+		return NbtUtils.readGameProfile(getEntityData().get(PROFILE));
 	}
 	
-	public void setSoulUUID(UUID idIn){ getDataManager().set(SOUL_ID, Optional.<UUID>of(idIn)); }
+	public void setSoulUUID(UUID idIn){ getEntityData().set(SOUL_ID, Optional.<UUID>of(idIn)); }
 	
 	public UUID getSoulUUID()
 	{
-		Optional<UUID> id = getDataManager().get(SOUL_ID);
+		Optional<UUID> id = getEntityData().get(SOUL_ID);
 		return id.isPresent() ? id.get() : null;
 	}
 	
@@ -324,7 +328,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	@Nullable
 	public LivingEntity getBody()
 	{
-		CompoundTag data = getDataManager().get(ENTITY);
+		CompoundTag data = getEntityData().get(ENTITY);
 		if(data.isEmpty()) return null;
 		
 		String id = data.getString("id");
@@ -403,8 +407,8 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	
 	protected final void updateSize()
 	{
-		recalculateSize();
-		recenterBoundingBox();
+		refreshDimensions();
+		reapplyPosition();
 	}
 	
 	public Iterable<ItemStack> getArmorInventoryList()
@@ -441,7 +445,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public Inventory getInventory()
 	{
 		if(getLevel().isClientSide)
-			readInventoryFromNBT(getDataManager().get(EQUIPMENT));
+			readInventoryFromNBT(getEntityData().get(EQUIPMENT));
 		return this.bodyInventory;
 	}
 	
@@ -454,7 +458,7 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 	public ItemStack getItemStackFromSlot(EquipmentSlot slotIn)
 	{
 		if(getLevel().isClientSide)
-			readInventoryFromNBT(getDataManager().get(EQUIPMENT));
+			readInventoryFromNBT(getEntityData().get(EQUIPMENT));
 		
 		switch(slotIn)
 		{
@@ -508,20 +512,20 @@ public abstract class AbstractBody extends LivingEntity implements IInventoryCha
 		
 		if(getBody() != null)
 		{
-			EntitySize bodySize = getSize(Pose.STANDING);
-			if(getHeight() != bodySize.height || getWidth() != bodySize.width)
+			EntityDimensions bodySize = getSize(Pose.STANDING);
+			if(getBbHeight() != bodySize.height || getBbWidth() != bodySize.width)
 				updateSize();
 		}
 	}
 	
-	public EntitySize getSize(Pose poseIn)
+	public EntityDimensions getSize(Pose poseIn)
 	{
-		return hasBody() ? BODY_SIZE : super.getSize(poseIn);
+		return hasBody() ? BODY_SIZE : super.getDimensions(poseIn);
 	}
 	
 	public final ActionResultType processInitialInteract(Player player, InteractionHand hand)
 	{
-		ItemStack heldStack = player.getHeldItem(hand);
+		ItemStack heldStack = player.getItemInHand(hand);
 		if(!heldStack.isEmpty() && heldStack.getItem() instanceof SpawnEggItem)
 		{
 			SpawnEggItem egg = (SpawnEggItem)heldStack.getItem();

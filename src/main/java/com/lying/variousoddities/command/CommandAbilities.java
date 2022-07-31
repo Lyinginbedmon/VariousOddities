@@ -19,11 +19,13 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.CompoundTagArgument;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -36,7 +38,7 @@ import net.minecraft.world.entity.LivingEntity;
 public class CommandAbilities extends CommandBase
 {
  	public static final SuggestionProvider<CommandSourceStack> ABILITY_SUGGESTIONS = SuggestionProviders.register(new ResourceLocation("ability_names"), (context, builder) -> {
- 		return ISuggestionProvider.suggestIterable(AbilityRegistry.getAbilityNames(), builder);
+ 		return SharedSuggestionProvider.suggestResource(AbilityRegistry.getAbilityNames(), builder);
  		});
  	
     private static final SimpleCommandExceptionType INVALID_ENTITY_EXCEPTION = new SimpleCommandExceptionType(Component.translatable("argument.entity.invalid"));
@@ -128,7 +130,7 @@ public class CommandAbilities extends CommandBase
 				if(ability != null)
 				{
 					CompoundTag nbt = ability.writeAtomically(new CompoundTag());
-					source.sendSuccess(Component.translatable(translationSlug+"get", mapName.toString(), nbt.toFormattedComponent()), true);
+					source.sendSuccess(Component.translatable(translationSlug+"get", mapName.toString(), NbtUtils.toPrettyComponent(nbt)), true);
 				}
 				else
 					throw GET_INVALID_EXCEPTION.create(mapName);

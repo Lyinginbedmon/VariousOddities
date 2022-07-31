@@ -68,7 +68,7 @@ public class PacketHandler
 		if(world instanceof ServerLevel)
 		{
 			ServerLevel ws = (ServerLevel) world;
-			ws.getChunkProvider().chunkManager.getTrackingPlayers(new ChunkPos(pos), false).filter(p -> p.getDistanceSq(pos.getX(), pos.getY(), pos.getZ()) < 64 * 64).forEach(p -> HANDLER.send(PacketDistributor.PLAYER.with(() -> p), toSend));
+			ws.getChunkSource().chunkMap.getPlayers(new ChunkPos(pos), false).stream().filter(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < 64 * 64).forEach(p -> HANDLER.send(PacketDistributor.PLAYER.with(() -> p), toSend));
 		}
 	}
 	
@@ -80,12 +80,12 @@ public class PacketHandler
 	public static void sendToAll(ServerLevel world, Object toSend)
 	{
 		for(ServerPlayer player : world.players())
-			HANDLER.sendTo(toSend, player.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
+			HANDLER.sendTo(toSend, player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 	}
 	
 	public static void sendTo(ServerPlayer playerMP, Object toSend)
 	{
-		HANDLER.sendTo(toSend, playerMP.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
+		HANDLER.sendTo(toSend, playerMP.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 	}
 	
 	public static void sendNonLocal(ServerPlayer playerMP, Object toSend)

@@ -1,12 +1,8 @@
 package com.lying.variousoddities.entity.hostile;
 
-import java.util.Random;
-
 import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.init.VODamageSource;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
@@ -75,7 +71,7 @@ public class EntityMindFlayer extends EntityOddity
 	    			EntityHitResult entityRay = (EntityHitResult)ray;
 	    			if(entityRay.getEntity() == this)
 	    			{
-	    				Vec3 hit = ray.getHitVec().subtract(getPosX(), getPosY(), getPosZ());
+	    				Vec3 hit = ray.getLocation().subtract(getX(), getY(), getZ());
 	    				double hitY = hit.y;
 	    				if(hitY >= this.getBbHeight() * 0.888)
 	    				{

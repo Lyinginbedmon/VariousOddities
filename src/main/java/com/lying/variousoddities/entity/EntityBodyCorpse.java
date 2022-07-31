@@ -10,6 +10,9 @@ import com.lying.variousoddities.reference.Reference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,9 +23,9 @@ import net.minecraftforge.common.world.ForgeChunkManager;
 
 public class EntityBodyCorpse extends AbstractBody
 {
-	private static final DataParameter<Integer> TIMER = EntityDataManager.<Integer>createKey(EntityBodyCorpse.class, DataSerializers.VARINT);
-	private static final DataParameter<Boolean> LOADED = EntityDataManager.<Boolean>createKey(EntityBodyCorpse.class, DataSerializers.BOOLEAN);
-	private static final DataParameter<BlockPos> LOAD_POS = EntityDataManager.<BlockPos>createKey(EntityBodyCorpse.class, DataSerializers.BLOCK_POS);
+	private static final EntityDataAccessor<Integer> TIMER = SynchedEntityData.defineId(EntityBodyCorpse.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Boolean> LOADED = SynchedEntityData.defineId(EntityBodyCorpse.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<BlockPos> LOAD_POS = SynchedEntityData.defineId(EntityBodyCorpse.class, EntityDataSerializers.BLOCK_POS);
 	
 	public EntityBodyCorpse(EntityType<? extends EntityBodyCorpse> type, Level worldIn)
 	{
@@ -38,28 +41,28 @@ public class EntityBodyCorpse extends AbstractBody
 		return corpse;
 	}
 	
-	public void registerData()
+	public void defineSynchedData()
 	{
-		super.registerData();
-		getDataManager().register(TIMER, Reference.Values.TICKS_PER_MINUTE * 15);
-		getDataManager().register(LOADED, false);
-		getDataManager().register(LOAD_POS, BlockPos.ZERO);
+		super.defineSynchedData();
+		getEntityData().define(TIMER, Reference.Values.TICKS_PER_MINUTE * 15);
+		getEntityData().define(LOADED, false);
+		getEntityData().define(LOAD_POS, BlockPos.ZERO);
 	}
 	
 	public void readAdditional(CompoundTag compound)
 	{
 		super.readAdditional(compound);
-		getDataManager().set(TIMER, compound.getInt("TicksRemaining"));
-		getDataManager().set(LOADED, compound.getBoolean("ChunkLoading"));
-		getDataManager().set(LOAD_POS, NbtUtils.readBlockPos(compound.getCompound("ChunkLoadPos")));
+		getEntityData().set(TIMER, compound.getInt("TicksRemaining"));
+		getEntityData().set(LOADED, compound.getBoolean("ChunkLoading"));
+		getEntityData().set(LOAD_POS, NbtUtils.readBlockPos(compound.getCompound("ChunkLoadPos")));
 	}
 	
 	public void writeAdditional(CompoundTag compound)
 	{
 		super.writeAdditional(compound);
 		compound.putInt("TicksRemaining", getTicksRemaining());
-		compound.putBoolean("ChunkLoading", getDataManager().get(LOADED).booleanValue());
-		compound.put("ChunkLoadPos", NbtUtils.writeBlockPos(getDataManager().get(LOAD_POS)));
+		compound.putBoolean("ChunkLoading", getEntityData().get(LOADED).booleanValue());
+		compound.put("ChunkLoadPos", NbtUtils.writeBlockPos(getEntityData().get(LOAD_POS)));
 	}
 	
 	public boolean shouldBindIfPersistent(){ return false; }
@@ -80,14 +83,14 @@ public class EntityBodyCorpse extends AbstractBody
 					moveWithinRangeOf(this, soul, PlayerData.forPlayer((Player)soul).getSoulCondition().getWanderRange());
 				
 				if(!PlayerData.isPlayerBodyDead((Player)soul) && !getLevel().isClientSide)
-					this.onKillCommand();
+					this.kill();
 			}
 			
 			if(getInventory().isEmpty() && !getLevel().isClientSide)
 			{
-				getDataManager().set(TIMER, Math.max(0, getTicksRemaining() - 1));
+				getEntityData().set(TIMER, Math.max(0, getTicksRemaining() - 1));
 				if(getTicksRemaining() == 0)
-					this.onKillCommand();
+					this.kill();
 			}
 		}
 		
@@ -96,20 +99,20 @@ public class EntityBodyCorpse extends AbstractBody
 				loadChunks();
 			else
 			{
-				ChunkPos current = new ChunkPos(getPosition());
-				ChunkPos previous = new ChunkPos(getDataManager().get(LOAD_POS));
+				ChunkPos current = new ChunkPos(blockPosition());
+				ChunkPos previous = new ChunkPos(getEntityData().get(LOAD_POS));
 				
 				if(current != previous)
 				{
 					unloadChunks(previous.x, previous.z);
 					loadChunks();
 					
-					getDataManager().set(LOAD_POS, getPosition());
+					getEntityData().set(LOAD_POS, blockPosition());
 				}
 			}
 	}
 	
-	public int getTicksRemaining(){ return getDataManager().get(TIMER).intValue(); }
+	public int getTicksRemaining(){ return getEntityData().get(TIMER).intValue(); }
 	
 	public void kill()
 	{
@@ -117,7 +120,7 @@ public class EntityBodyCorpse extends AbstractBody
 		unloadChunks();
 	}
 	
-	public boolean isLoaded(){ return getDataManager().get(LOADED).booleanValue(); }
+	public boolean isLoaded(){ return getEntityData().get(LOADED).booleanValue(); }
 	
 	public void loadChunks()
 	{
@@ -128,7 +131,7 @@ public class EntityBodyCorpse extends AbstractBody
 			for(int z=-1; z<2; z++)
 				ForgeChunkManager.forceChunk(world, Reference.ModInfo.MOD_ID, this, this.chunkCoordX + x, this.chunkCoordZ + z, true, true);
 		
-		getDataManager().set(LOADED, true);
+		getEntityData().set(LOADED, true);
 	}
 	
 	public void unloadChunks()
@@ -145,6 +148,6 @@ public class EntityBodyCorpse extends AbstractBody
 			for(int z=-1; z<2; z++)
 				ForgeChunkManager.forceChunk(world, Reference.ModInfo.MOD_ID, this, chunkX + x, chunkZ + z, false, true);
 		
-		getDataManager().set(LOADED, false);
+		getEntityData().set(LOADED, false);
 	}
 }

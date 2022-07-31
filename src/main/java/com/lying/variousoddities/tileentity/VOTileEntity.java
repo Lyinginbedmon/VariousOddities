@@ -2,35 +2,39 @@ package com.lying.variousoddities.tileentity;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class VOTileEntity extends BlockEntity
 {
-	public VOTileEntity(BlockEntityType<?> type)
+	public VOTileEntity(BlockEntityType<?> type, BlockPos pos, BlockState state)
 	{
-		super(type);
+		super(type, pos, state);
 	}
 	
 	@Nonnull
-	public CompoundTag write(CompoundTag tag)
+	public void saveAdditional(CompoundTag tag)
 	{
-		CompoundTag compound = super.write(tag);
-		writePacketNBT(compound);
-		return compound;
+		super.saveAdditional(tag);
+		writePacketNBT(tag);
 	}
 	
 	@Nonnull
 	public final CompoundTag getUpdateTag()
 	{
-		return write(new CompoundTag());
+		CompoundTag compound = new CompoundTag();
+		saveAdditional(compound);
+		return compound;
 	}
 	
-	public void read(BlockState state, CompoundTag compound)
+	public void load(CompoundTag compound)
 	{
-		super.read(state, compound);
+		super.load(compound);
 		readPacketNBT(compound);
 	}
 	
@@ -38,16 +42,11 @@ public abstract class VOTileEntity extends BlockEntity
 	
 	public void readPacketNBT(CompoundTag compound){ }
 	
-	public final SUpdateTileEntityPacket getUpdatePacket()
-	{
-		CompoundTag tag = new CompoundTag();
-		writePacketNBT(tag);
-		return new SUpdateTileEntityPacket(pos, -999, tag);
-	}
+	public final ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
 	
-	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet)
+	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt)
 	{
-		super.onDataPacket(net, packet);
-		readPacketNBT(packet.getNbtCompound());
+		super.onDataPacket(net, pkt);
+		readPacketNBT(pkt.getTag());
 	}
 }

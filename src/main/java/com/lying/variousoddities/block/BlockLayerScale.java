@@ -24,7 +24,7 @@ public class BlockLayerScale extends VOBlock
 	
 	public BlockLayerScale(BlockBehaviour.Properties properties)
 	{
-		super(properties.strength(0.5F).sound(SoundType.GRASS).noCollission().noOcclusion());
+		super(properties.strength(0.5F).sound(SoundType.GRASS).noCollission().noOcclusion().isViewBlocking(VOBlock::isntSolid));
 	}
 	
     public Item getItemDropped(BlockState state, Random rand, int fortune)
