@@ -54,7 +54,7 @@ public class SettlementManagerServer extends SettlementManager
 							settlement.invalidate();
 							ruins.add(index);
 						}
-					manager.markDirty();
+					manager.setDirty();
 				}
 				manager.notifyObservers(index, valid ? settlement : null);
 			}

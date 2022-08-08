@@ -37,7 +37,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 		theGoblin = creatureIn;
 		theWorld = creatureIn.getLevel();
 		theNavigator = creatureIn.getNavigation();
-        setMutexFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
+        setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
 	}
 	
 	public boolean canUse()
@@ -49,8 +49,8 @@ public class EntityAIGoblinWorgBreed extends Goal
 		double minDist = Double.MAX_VALUE;
 		for(EntityWorg worg : eligibleWorgs)
 		{
-			double distance = theGoblin.getDistanceSq(worg);
-			Path path = theNavigator.getPathToEntity(worg, 10);
+			double distance = theGoblin.distanceToSqr(worg);
+			Path path = theNavigator.createPath(worg, 10);
 			if(distance < minDist && path != null)
 			{
 				worgA = worg;
@@ -65,8 +65,8 @@ public class EntityAIGoblinWorgBreed extends Goal
 			minDist = Double.MAX_VALUE;
 			for(EntityWorg worg : eligibleWorgs)
 			{
-				double distance = worgA.getDistanceSq(worg);
-				Path path = worgA.getNavigation().getPathToEntity(worg, 10);
+				double distance = worgA.distanceToSqr(worg);
+				Path path = worgA.getNavigation().createPath(worg, 10);
 				if(distance < minDist && path != null)
 				{
 					worgB = worg;
@@ -85,8 +85,8 @@ public class EntityAIGoblinWorgBreed extends Goal
 	
 	public void resetTask()
 	{
-		if(worgA != null) worgA.func_233687_w_(false);
-		if(worgB != null) worgB.func_233687_w_(false);
+		if(worgA != null) worgA.setOrderedToSit(false);
+		if(worgB != null) worgB.setOrderedToSit(false);
 		currentState = null;
 		worgA = worgB = null;
 	}
@@ -109,32 +109,32 @@ public class EntityAIGoblinWorgBreed extends Goal
 		{
 			case MOVING_TO_A:
 				theGoblin.getLookController().setLookPositionWithEntity(worgA, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
-				if(theGoblin.getDistance(worgA) > 1.5D)
+				if(theGoblin.distanceTo(worgA) > 1.5D)
 				{
-					if(theNavigator.noPath())
+					if(theNavigator.isDone())
 					{
-						theNavigator.tryMoveToEntityLiving(worgA, 1.0D);
-						if(theNavigator.noPath())
+						theNavigator.moveTo(worgA, 1.0D);
+						if(theNavigator.isDone())
 							currentState = null;
 					}
 				}
 				else
 				{
-					worgA.func_233687_w_(true);
-					theNavigator.clearPath();
+					worgA.setOrderedToSit(true);
+					theNavigator.stop();
 					breedingTimer = Reference.Values.TICKS_PER_SECOND * 2;
 					currentState = State.BREEDING_A;
 				}
 				break;
 			case BREEDING_A:
-				if(theGoblin.getDistance(worgA) < 1.5D)
+				if(theGoblin.distanceTo(worgA) < 1.5D)
 				{
 					if(--breedingTimer <= 0)
 					{
 						theGoblin.swingArm(InteractionHand.MAIN_HAND);
 						worgA.setInLove(null);
-						worgA.func_233687_w_(false);
-						worgA.getNavigation().tryMoveToEntityLiving(worgB, 1D);
+						worgA.setOrderedToSit(false);
+						worgA.getNavigation().moveTo(worgB, 1D);
 						currentState = State.MOVING_TO_B;
 					}
 				}
@@ -142,32 +142,32 @@ public class EntityAIGoblinWorgBreed extends Goal
 				break;
 			case MOVING_TO_B:
 				theGoblin.getLookController().setLookPositionWithEntity(worgB, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
-				if(theGoblin.getDistance(worgB) > 1.5D)
+				if(theGoblin.distanceTo(worgB) > 1.5D)
 				{
-					if(theNavigator.noPath())
+					if(theNavigator.isDone())
 					{
-						theNavigator.tryMoveToEntityLiving(worgB, 1.0D);
-						if(theNavigator.noPath())
+						theNavigator.moveTo(worgB, 1.0D);
+						if(theNavigator.isDone())
 							currentState = null;
 					}
 				}
 				else
 				{
-					worgB.func_233687_w_(true);
-					theNavigator.clearPath();
+					worgB.setOrderedToSit(true);
+					theNavigator.stop();
 					breedingTimer = Reference.Values.TICKS_PER_SECOND * 2;
 					currentState = State.BREEDING_B;
 				}
 				break;
 			case BREEDING_B:
-				if(theGoblin.getDistance(worgB) < 1.5D)
+				if(theGoblin.distanceTo(worgB) < 1.5D)
 				{
 					if(--breedingTimer <= 0)
 					{
 						theGoblin.swingArm(InteractionHand.MAIN_HAND);
 						worgB.setInLove(null);
-						worgB.func_233687_w_(false);
-						worgB.getNavigation().tryMoveToEntityLiving(worgA, 1D);
+						worgB.setOrderedToSit(false);
+						worgB.getNavigation().moveTo(worgA, 1D);
 						currentState = null;
 					}
 				}

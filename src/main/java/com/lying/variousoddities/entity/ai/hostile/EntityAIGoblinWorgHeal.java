@@ -37,7 +37,7 @@ public class EntityAIGoblinWorgHeal extends Goal
 		theGoblin = goblinIn;
 		theWorld = goblinIn.getLevel();
 		theNavigator = goblinIn.getNavigation();
-		setMutexFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 	
 	public boolean canUse()
@@ -45,10 +45,10 @@ public class EntityAIGoblinWorgHeal extends Goal
 		if(theGoblin.getTarget() != null) return false;
 		
 		double minDist = Double.MAX_VALUE;
-		for(EntityWorg worg : theWorld.getEntitiesWithinAABB(EntityWorg.class, theGoblin.getBoundingBox().grow(8), searchPredicate))
+		for(EntityWorg worg : theWorld.getEntitiesOfClass(EntityWorg.class, theGoblin.getBoundingBox().inflate(8), searchPredicate))
 		{
-			double distance = worg.getDistanceSq(theGoblin);
-			if(distance < minDist && theNavigator.getPathToEntity(worg, 10) != null)
+			double distance = worg.distanceToSqr(theGoblin);
+			if(distance < minDist && theNavigator.createPath(worg, 10) != null)
 			{
 				minDist = distance;
 				theWorg = worg;
@@ -71,7 +71,7 @@ public class EntityAIGoblinWorgHeal extends Goal
 	
 	public void startExecuting()
 	{
-		if(theWorg.getDistance(theGoblin) > 1.5D) currentState = State.MOVING;
+		if(theWorg.distanceTo(theGoblin) > 1.5D) currentState = State.MOVING;
 		else currentState = State.HEALING;
 	}
 	
@@ -87,24 +87,24 @@ public class EntityAIGoblinWorgHeal extends Goal
 		switch(currentState)
 		{
 			case MOVING:
-				if(theGoblin.getDistance(theWorg) > 1.5D)
+				if(theGoblin.distanceTo(theWorg) > 1.5D)
 				{
-					if(theNavigator.noPath())
+					if(theNavigator.isDone())
 					{
-						theNavigator.tryMoveToEntityLiving(theWorg, 1.0D);
-						if(theNavigator.noPath())
+						theNavigator.moveTo(theWorg, 1.0D);
+						if(theNavigator.isDone())
 							currentState = null;
 					}
 				}
 				else
 				{
-					theNavigator.clearPath();
+					theNavigator.stop();
 					healTimer = Reference.Values.TICKS_PER_SECOND * 2;
 					currentState = State.HEALING;
 				}
 				break;
 			case HEALING:
-				if(theGoblin.getDistance(theWorg) <= 1.5D)
+				if(theGoblin.distanceTo(theWorg) <= 1.5D)
 				{
 					if(--healTimer <= 0)
 					{

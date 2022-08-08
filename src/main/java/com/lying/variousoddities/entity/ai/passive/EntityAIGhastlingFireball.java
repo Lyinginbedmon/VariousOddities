@@ -6,11 +6,11 @@ import com.lying.variousoddities.entity.passive.EntityGhastling;
 import com.lying.variousoddities.entity.passive.EntityGhastling.Emotion;
 import com.lying.variousoddities.entity.projectile.EntityFireballGhastling;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIGhastlingFireball extends Goal
 {
@@ -20,50 +20,50 @@ public class EntityAIGhastlingFireball extends Goal
 	public EntityAIGhastlingFireball(EntityGhastling entity)
 	{
 		this.theGhastling = entity;
-		this.setMutexFlags(EnumSet.of(Flag.LOOK));
+		this.setFlags(EnumSet.of(Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		return this.theGhastling.getAttackTarget() != null && this.theGhastling.getAttackTarget().isAlive();
+		return this.theGhastling.getTarget() != null && this.theGhastling.getTarget().isAlive();
 	}
 	
-	public void startExecuting()
+	public void startg()
 	{
 		this.attackTimer = 0;
 		this.theGhastling.setEmotion(Emotion.ANGRY);
 	}
 	
-	public void resetTask()
+	public void stop()
 	{
 		this.theGhastling.setEmotion(Emotion.NEUTRAL);
 	}
 	
 	public void tick()
 	{
-		LivingEntity target = this.theGhastling.getAttackTarget();
+		LivingEntity target = this.theGhastling.getTarget();
 		this.theGhastling.getLookController().setLookPositionWithEntity(target, 30F, 30F);
-		if(target.getDistanceSq(theGhastling) < 4096D && this.theGhastling.canEntityBeSeen(target))
+		if(target.distanceToSqr(theGhastling) < 4096D && this.theGhastling.canEntityBeSeen(target))
 		{
-			World world = this.theGhastling.getEntityWorld();
+			Level world = this.theGhastling.getLevel();
 			++this.attackTimer;
 			if(this.attackTimer == 10 && !this.theGhastling.isSilent())
-				world.playEvent((PlayerEntity)null, 1015, this.theGhastling.getPosition(), 0);
+				world.playEvent((Player)null, 1015, this.theGhastling.getPosition(), 0);
 			
 			if(this.attackTimer == 20)
 			{
-				Vector3d dirToTarget = new Vector3d(target.getPosX() - this.theGhastling.getPosX(), target.getPosYHeight(0.5D) - this.theGhastling.getPosYHeight(0.5D), target.getPosZ() - this.theGhastling.getPosZ()).normalize();
+				Vec3 dirToTarget = new Vec3(target.getX() - this.theGhastling.getX(), target.getY(0.5D) - this.theGhastling.getY(0.5D), target.getZ() - this.theGhastling.getZ()).normalize();
 				double moveX = dirToTarget.x * 4D;
 				double moveY = dirToTarget.y * 4D;
 				double moveZ = dirToTarget.z * 4D; 
 				if(!this.theGhastling.isSilent())
-					world.playEvent((PlayerEntity)null, 1016, this.theGhastling.getPosition(), 0);
+					world.playEvent((Player)null, 1016, this.theGhastling.getPosition(), 0);
 				
-				Vector3d direction = this.theGhastling.getLook(1F);
+				Vec3 direction = this.theGhastling.getLook(1F);
 				EntityFireballGhastling fireball = new EntityFireballGhastling(world, this.theGhastling, moveX, moveY, moveZ);
-				fireball.setPosition(this.theGhastling.getPosX() + direction.x * this.theGhastling.getWidth(), this.theGhastling.getPosYHeight(0.5D), this.theGhastling.getPosZ() + direction.z * this.theGhastling.getWidth());
+				fireball.setPosition(this.theGhastling.getX() + direction.x * this.theGhastling.getBbWidth(), this.theGhastling.getY(0.5D), this.theGhastling.getZ() + direction.z * this.theGhastling.getBbWidth());
 				fireball.setShooter(theGhastling);
-				world.addEntity(fireball);
+				world.addFreshEntity(fireball);
 				this.attackTimer -= 40;
 				this.theGhastling.setEmotion(Emotion.ANGRY);
 			}

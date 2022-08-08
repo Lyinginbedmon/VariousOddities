@@ -1,6 +1,6 @@
 package com.lying.variousoddities.client.model;
 
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.phys.Vec3;
 
 public enum EnumLimbPosition
 {
@@ -18,7 +18,7 @@ public enum EnumLimbPosition
 	REAR_RIGHT(RIGHT.getX(), 0, REAR.getZ());
 	
 	private final float xDirection, yDirection, zDirection;
-	private final Vector3d vector;
+	private final Vec3 vector;
 	
 	private EnumLimbPosition(float x, float y, float z)
 	{
@@ -26,14 +26,14 @@ public enum EnumLimbPosition
 		yDirection = y;
 		zDirection = z;
 		
-		vector = new Vector3d(x, y, z);
+		vector = new Vec3(x, y, z);
 	}
 	
 	public float getX(){ return xDirection; }
 	public float getY(){ return yDirection; }
 	public float getZ(){ return zDirection; }
 	
-	public Vector3d asVector()
+	public Vec3 asVector()
 	{
 		return vector;
 	}

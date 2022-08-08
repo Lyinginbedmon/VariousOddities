@@ -31,7 +31,7 @@ public class EntityAIGoblinWorgHurt extends Goal
 		theGoblin = goblinIn;
 		theWorld = goblinIn.getLevel();
 		
-		setMutexFlags(EnumSet.of(Flag.LOOK));
+		setFlags(EnumSet.of(Flag.LOOK));
 	}
 	
 	public boolean canUse()
@@ -52,9 +52,9 @@ public class EntityAIGoblinWorgHurt extends Goal
 	{
 		theGoblin.getLookController().setLookPositionWithEntity(targetWorg, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
 		theGoblin.swingArm(InteractionHand.OFF_HAND);
-		targetWorg.attackEntityFrom(DamageSource.causeMobDamage(theGoblin), 0F);
+		targetWorg.attackEntityFrom(DamageSource.mobAttack(theGoblin), 0F);
 		
-		for(EntityGoblin child : theWorld.getEntitiesWithinAABB(EntityGoblin.class, targetWorg.getBoundingBox().inflate(12, 2, 12), new Predicate<EntityGoblin>()
+		for(EntityGoblin child : theWorld.getEntitiesOfClass(EntityGoblin.class, targetWorg.getBoundingBox().inflate(12, 2, 12), new Predicate<EntityGoblin>()
 			{
 				public boolean apply(EntityGoblin input){ return input.isBaby() && input.canEntityBeSeen(targetWorg) && input.canEntityBeSeen(theGoblin); }
 			}))

@@ -21,23 +21,16 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
 
-public class FactionManager extends WorldSavedData
+public class FactionManager extends SavedData
 {
 	protected static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_factions";
 	
 	private static final Map<String, Faction> DEFAULT_FACTIONS = new HashMap<>();
 	public final Map<String, Faction> factions = new HashMap<>();
 	
-	public FactionManager()
-	{
-		this(DATA_NAME);
-	}
-	
-	public FactionManager(String name)
-	{
-		super(name);
-	}
+	public FactionManager(){ }
 	
 	public static FactionManager get(Level worldIn)
 	{
@@ -48,12 +41,13 @@ public class FactionManager extends WorldSavedData
 			ServerLevel world = (ServerLevel)worldIn;
 			MinecraftServer server = world.getServer();
 			ServerLevel overWorld = server.getLevel(Level.OVERWORLD);
-			FactionManager manager = (FactionManager)overWorld.getSavedData().get(FactionManager::new, DATA_NAME);
+			FactionManager manager = (FactionManager)overWorld.getDataStorage().get(FactionManager::fromNBT, DATA_NAME);
 			if(manager == null)
 			{
-				manager = (FactionManager)world.getSavedData().getOrCreate(FactionManager::new, DATA_NAME);
+				manager = new FactionManager();
 				if(ConfigVO.MOBS.factionSettings.factionsInConfig())
 					manager.stringToFactions(ConfigVO.MOBS.factionSettings.factionString());
+				overWorld.getDataStorage().set(DATA_NAME, manager);
 			}
 			return manager;
 		}
@@ -62,19 +56,19 @@ public class FactionManager extends WorldSavedData
 	public void add(Faction faction)
 	{
 		factions.put(faction.name, faction);
-		markDirty();
+		setDirty();
 	}
 	
 	public void remove(String name)
 	{
 		factions.remove(name);
-		markDirty();
+		setDirty();
 	}
 	
 	public void clear()
 	{
 		factions.clear();
-		markDirty();
+		setDirty();
 	}
 	
 	public boolean isEmpty()
@@ -104,7 +98,7 @@ public class FactionManager extends WorldSavedData
 		return null;
 	}
 	
-	public CompoundTag write(CompoundTag compound)
+	public CompoundTag save(CompoundTag compound)
 	{
 		ListTag list = new ListTag();
 		for(Faction faction : factions.values())
@@ -122,6 +116,13 @@ public class FactionManager extends WorldSavedData
 			if(faction != null)
 				factions.put(faction.name, faction);
 		}
+	}
+	
+	public static FactionManager fromNBT(CompoundTag compound)
+	{
+		FactionManager manager = new FactionManager();
+		manager.read(compound);
+		return manager;
 	}
 	
 	public Faction getFaction(LivingEntity entity)

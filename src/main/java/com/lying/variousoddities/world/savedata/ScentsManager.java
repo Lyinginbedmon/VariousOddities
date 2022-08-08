@@ -25,6 +25,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -33,7 +34,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 
-public class ScentsManager extends WorldSavedData
+public class ScentsManager extends SavedData
 {
 	public static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_scents";
 	
@@ -71,10 +72,7 @@ public class ScentsManager extends WorldSavedData
 	private Level world;
 	private int scentTimer = 0;
 	
-	public ScentsManager()
-	{
-		super(DATA_NAME);
-	}
+	public ScentsManager(){ }
 	
 	public ScentsManager(@Nonnull Level worldIn)
 	{
@@ -90,7 +88,13 @@ public class ScentsManager extends WorldSavedData
 			return VariousOddities.proxy.getScentsManager(worldIn);
 		else
 		{
-			ScentsManager instance = ((ServerLevel)worldIn).getSavedData().getOrCreate(ScentsManager::new, ScentsManager.DATA_NAME);
+			ScentsManager instance = ((ServerLevel)worldIn).getDataStorage().get(ScentsManager::fromNBT, ScentsManager.DATA_NAME);
+			if(instance == null)
+			{
+				instance = new ScentsManager();
+				((ServerLevel)worldIn).getDataStorage().set(DATA_NAME, instance);
+			}
+			
 			instance.setWorld(worldIn);
 			return instance;
 		}
@@ -175,7 +179,7 @@ public class ScentsManager extends WorldSavedData
 		return tally;
 	}
 	
-	public CompoundTag write(CompoundTag compound)
+	public CompoundTag save(CompoundTag compound)
 	{
 		compound.putInt("Timer", scentTimer);
 		ListTag scentList = new ListTag();
@@ -208,6 +212,13 @@ public class ScentsManager extends WorldSavedData
 				markers.add(new ScentMarker(this.world, typeMarkers.getCompound(j)));
 			scentMap.put(type, markers);
 		}
+	}
+	
+	public static ScentsManager fromNBT(CompoundTag compound)
+	{
+		ScentsManager manager = new ScentsManager();
+		manager.read(compound);
+		return manager;
 	}
 	
 	public void cleanScents()

@@ -71,8 +71,8 @@ public class GroupHandler
 			Mob victim = (Mob)event.getEntity();
 			DamageSource source = event.getSource();
 			LivingEntity attacker = null;
-			if(source.getTrueSource() != null && source.getTrueSource() instanceof LivingEntity)
-				attacker = (LivingEntity)source.getTrueSource();
+			if(source.getEntity() != null && source.getEntity() instanceof LivingEntity)
+				attacker = (LivingEntity)source.getEntity();
 			
 			EntityGroup group = getEntityMemberGroup((Mob)event.getEntity());
 			if(group != null && attacker != null)

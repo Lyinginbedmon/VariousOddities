@@ -29,7 +29,7 @@ public class EntityAIGoblinWorgFight extends Goal
 	{
 		theGoblin = goblinIn;
 		theWorld = goblinIn.getLevel();
-		setMutexFlags(EnumSet.of(Flag.LOOK));
+		setFlags(EnumSet.of(Flag.LOOK));
 	}
 	
 	public boolean canUse()
@@ -43,23 +43,23 @@ public class EntityAIGoblinWorgFight extends Goal
 		for(EntityWorg worg : worgs)
 		{
 			if(worgA == null) worgA = worg;
-			else if(worgB == null && worg.getNavigation().getPathToEntity(worgA, 10) != null)
+			else if(worgB == null && worg.getNavigation().createPath(worgA, 10) != null)
 			{
 				worgB = worg;
 				break;
 			}
 		}
 		
-		return worgA != null && worgB != null && theGoblin.getRNG().nextInt(1000) == 0;
+		return worgA != null && worgB != null && theGoblin.getRandom().nextInt(1000) == 0;
 	}
 	
 	public void startExecuting()
 	{
-		theGoblin.getLookController().setLookPositionWithEntity(theGoblin.getRNG().nextBoolean() ? worgA : worgB, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
+		theGoblin.getLookController().setLookPositionWithEntity(theGoblin.getRandom().nextBoolean() ? worgA : worgB, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
 		theGoblin.swingArm(InteractionHand.MAIN_HAND);
-		worgA.setAttackTarget(worgB);
+		worgA.setTarget(worgB);
 		theWorld.setEntityState(worgA, (byte)6);
-		worgB.setAttackTarget(worgA);
+		worgB.setTarget(worgA);
 		theWorld.setEntityState(worgB, (byte)6);
 	}
 }

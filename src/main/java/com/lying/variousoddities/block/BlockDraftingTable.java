@@ -79,7 +79,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 			if(worldIn.isClientSide)
 				GuiDraftingTable.open(table);
 			else
-				table.markDirty();
+				table.setChanged();
 			return InteractionResult.SUCCESS;
 		}
 		return InteractionResult.CONSUME;

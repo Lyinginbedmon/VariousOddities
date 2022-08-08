@@ -30,8 +30,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.SavedData;
 
-public class TypesManager extends WorldSavedData
+public class TypesManager extends SavedData
 {
 	protected static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_types";
 	
@@ -40,15 +41,7 @@ public class TypesManager extends WorldSavedData
 	
 	private ServerLevel world = null;
 	
-	public TypesManager()
-	{
-		this(DATA_NAME);
-	}
-	
-	public TypesManager(String nameIn)
-	{
-		super(nameIn);
-	}
+	public TypesManager() { }
 	
 	public void read(CompoundTag compound)
 	{
@@ -68,7 +61,7 @@ public class TypesManager extends WorldSavedData
 		}
 	}
 	
-	public CompoundTag write(CompoundTag compound)
+	public CompoundTag save(CompoundTag compound)
 	{
 		ListTag mobs = new ListTag();
 		for(EnumCreatureType type : typeToMob.keySet())
@@ -86,6 +79,13 @@ public class TypesManager extends WorldSavedData
 		return compound;
 	}
 	
+	public static TypesManager fromNBT(CompoundTag compound)
+	{
+		TypesManager manager = new TypesManager();
+		manager.read(compound);
+		return manager;
+	}
+	
 	@Nullable
 	public static TypesManager get(@Nonnull Level worldIn)
 	{
@@ -98,10 +98,10 @@ public class TypesManager extends WorldSavedData
 			ServerLevel world = (ServerLevel)worldIn;
 			MinecraftServer server = world.getServer();
 			ServerLevel overWorld = server.getLevel(Level.OVERWORLD);
-			TypesManager manager = (TypesManager)overWorld.getSavedData().get(TypesManager::new, DATA_NAME);
+			TypesManager manager = (TypesManager)overWorld.getDataStorage().get(TypesManager::fromNBT, DATA_NAME);
 			if(manager == null)
 			{
-				manager = (TypesManager)overWorld.getSavedData().getOrCreate(TypesManager::new, DATA_NAME);
+				manager = (TypesManager)overWorld.getDataStorage().computeIfAbsent(TypesManager::fromNBT, TypesManager::new, DATA_NAME);
 				manager.resetMobs();
 			}
 			manager.world = world;
@@ -111,12 +111,12 @@ public class TypesManager extends WorldSavedData
 	
 	public void notifyPlayer(Player player)
 	{
-		PacketHandler.sendTo((ServerPlayer)player, new PacketTypesData(write(new CompoundTag())));
+		PacketHandler.sendTo((ServerPlayer)player, new PacketTypesData(save(new CompoundTag())));
 	}
 	
 	public void notifyPlayers(ServerLevel world)
 	{
-		PacketHandler.sendToAll(world, new PacketTypesData(write(new CompoundTag())));
+		PacketHandler.sendToAll(world, new PacketTypesData(save(new CompoundTag())));
 	}
 	
 	public void clearCaches()
@@ -136,7 +136,7 @@ public class TypesManager extends WorldSavedData
 					if(entry != null && entry.length() > 0 && entry.contains(":"))
 						addToEntity(new ResourceLocation(entry), type, false);
 		
-		markDirty();
+		setDirty();
 	}
 	
 	public List<ResourceLocation> mobsOfType(EnumCreatureType type)
@@ -209,7 +209,7 @@ public class TypesManager extends WorldSavedData
 		mobTypeCache.remove(entity.toString());
 		
 		if(notify)
-			markDirty();
+			setDirty();
 	}
 	
 	public void removeFromEntity(ResourceLocation entity, EnumCreatureType type, boolean notify)
@@ -223,12 +223,12 @@ public class TypesManager extends WorldSavedData
 		mobTypeCache.remove(entity.toString());
 		
 		if(notify)
-			markDirty();
+			setDirty();
 	}
 	
-	public void markDirty()
+	public void setDirty()
 	{
-		super.markDirty();
+		super.setDirty();
 		if(this.world != null)
 			notifyPlayers(this.world);
 	}

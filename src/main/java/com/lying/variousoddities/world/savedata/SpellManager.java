@@ -35,30 +35,23 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 
-public class SpellManager extends WorldSavedData
+public class SpellManager extends SavedData
 {
 	protected static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_spells";
 	
 	protected final Map<ResourceLocation, List<SpellData>> DIM_TO_SPELLS = new HashMap<>();
 	protected int nextID = 0;
 	
-	public SpellManager()
-	{
-		this(DATA_NAME);
-	}
+	public SpellManager() { }
 	
-	public SpellManager(String name)
-	{
-		super(name);
-	}
-	
-	public CompoundTag write(CompoundTag compound)
+	public CompoundTag save(CompoundTag compound)
 	{
 		compound.putInt("NextID", nextID);
 		
@@ -110,12 +103,19 @@ public class SpellManager extends WorldSavedData
 		return spellList;
 	}
 	
+	public static SpellManager fromNBT(CompoundTag compound)
+	{
+		SpellManager manager = new SpellManager();
+		manager.read(compound);
+		return manager;
+	}
+	
 	public static SpellManager get(Level worldIn)
 	{
 		if(worldIn.isClientSide)
 			return VariousOddities.proxy.getSpells();
 		else
-			return (SpellManager)((ServerLevel)worldIn).getSavedData().getOrCreate(SpellManager::new, DATA_NAME);
+			return (SpellManager)((ServerLevel)worldIn).getDataStorage().computeIfAbsent(SpellManager::fromNBT, SpellManager::new, DATA_NAME);
 	}
 	
 	/**
@@ -129,13 +129,13 @@ public class SpellManager extends WorldSavedData
 		for(SpellData spell : getSpellsInDimension(dim))
 		{
 			if(spell.onUpdate(world, side))
-				markDirty();
+				setDirty();
 			
 			if(spell.isDead() && side == Side.SERVER)
 			{
 				deadSpells.add(spell.getID());
 				world.addParticle(ParticleTypes.EXPLOSION, spell.posX, spell.posY, spell.posZ, 0D, 0D, 0D);
-				markDirty();
+				setDirty();
 			}
 		}
 		
@@ -160,7 +160,7 @@ public class SpellManager extends WorldSavedData
 			{
 				spells.remove(foundSpell);
 				DIM_TO_SPELLS.put(dim, spells);
-				markDirty();
+				setDirty();
 				return true;
 			}
 		}
@@ -182,7 +182,7 @@ public class SpellManager extends WorldSavedData
 		spells.add(spell);
 		DIM_TO_SPELLS.put(dim, spells);
 		
-		markDirty();
+		setDirty();
 //		BusSpells.notifyClients(world);
 		return nextID++;
 	}

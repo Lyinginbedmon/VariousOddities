@@ -5,21 +5,21 @@ import com.lying.variousoddities.entity.AbstractGoblinWolf;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
 
 public class EntityAIWorgFollowGoblin extends Goal
 {
 	private final AbstractGoblinWolf theWorg;
-	private final World theWorld;
-	private final PathNavigator theNavigator;
+	private final Level theWorld;
+	private final PathNavigation theNavigator;
 	
 	private Predicate<EntityGoblin> searchPredicate = new Predicate<EntityGoblin>()
 			{
 				public boolean apply(EntityGoblin input)
 				{
-					return input.isAlive() && !input.isChild();
+					return input.isAlive() && !input.isBaby();
 				}
 			};
 	private EntityGoblin nearestGoblin = null;
@@ -27,20 +27,20 @@ public class EntityAIWorgFollowGoblin extends Goal
 	public EntityAIWorgFollowGoblin(AbstractGoblinWolf worgIn)
 	{
 		theWorg = worgIn;
-		theWorld = worgIn.getEntityWorld();
-		theNavigator = worgIn.getNavigator();
+		theWorld = worgIn.getLevel();
+		theNavigator = worgIn.getNavigation();
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theWorg.isTamed() || theWorg.getAttackTarget() != null && theWorg.getAttackTarget().isAlive() || theWorg.isSitting() || theWorg.getControllingPassenger() != null)
+		if(theWorg.isTame() || theWorg.getTarget() != null && theWorg.getTarget().isAlive() || theWorg.isOrderedToSit() || theWorg.getControllingPassenger() != null)
 			return false;
 		
 		double minDist = Double.MAX_VALUE;
-		for(EntityGoblin goblin : theWorld.getEntitiesWithinAABB(EntityGoblin.class, theWorg.getBoundingBox().grow(16D), searchPredicate))
+		for(EntityGoblin goblin : theWorld.getEntitiesOfClass(EntityGoblin.class, theWorg.getBoundingBox().inflate(16D), searchPredicate))
 		{
-			double dist = goblin.getDistanceSq(theWorg) / goblin.getGoblinType().authority;
-			if(dist < minDist && theWorg.getNavigator().getPathToEntity(goblin, (int)dist + 1) != null)
+			double dist = goblin.distanceToSqr(theWorg) / goblin.getGoblinType().authority;
+			if(dist < minDist && theNavigator.createPath(goblin, (int)dist + 1) != null)
 			{
 				nearestGoblin = goblin;
 				minDist = dist;
@@ -48,7 +48,7 @@ public class EntityAIWorgFollowGoblin extends Goal
 		}
 		if(nearestGoblin == null || !nearestGoblin.isAlive()) return false;
 		
-		return nearestGoblin.getDistance(theWorg) > (theWorg.isChild() ? 3D : 6D);
+		return nearestGoblin.distanceTo(theWorg) > (theWorg.isBaby() ? 3D : 6D);
 	}
 	
 	public void resetTask()
@@ -60,6 +60,6 @@ public class EntityAIWorgFollowGoblin extends Goal
 	{
 		theWorg.getLookController().setLookPositionWithEntity(nearestGoblin, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
 		theWorg.setGoblinSight(Reference.Values.TICKS_PER_DAY);
-		theNavigator.tryMoveToEntityLiving(nearestGoblin, 1.0D);
+		theNavigator.moveTo(nearestGoblin, 1.0D);
 	}
 }

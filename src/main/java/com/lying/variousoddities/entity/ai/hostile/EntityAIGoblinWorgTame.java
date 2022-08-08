@@ -9,8 +9,8 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.client.renderer.MobEffectInstance;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.Wolf;
@@ -39,7 +39,7 @@ public class EntityAIGoblinWorgTame extends Goal
 		this.theGoblin = goblinIn;
 		theWorld = goblinIn.getLevel();
 		theNavigator = goblinIn.getNavigation();
-		setMutexFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
+		setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
 	}
 	
 	public boolean canUse()
@@ -47,7 +47,7 @@ public class EntityAIGoblinWorgTame extends Goal
 		double minDist = Double.MAX_VALUE;
 		for(Wolf wolf : theWorld.<Wolf>getEntitiesOfClass(Wolf.class, theGoblin.getBoundingBox().inflate(8D), searchPredicate))
 		{
-			double dist = wolf.getDistanceSq(theGoblin);
+			double dist = wolf.distanceToSqr(theGoblin);
 			if(dist < minDist)
 			{
 				targetWolf = wolf;
@@ -72,7 +72,7 @@ public class EntityAIGoblinWorgTame extends Goal
 	
 	public void startExecuting()
 	{
-		if(targetWolf.getDistance(theGoblin) < 1D) currentState = State.TAMING;
+		if(targetWolf.distanceTo(theGoblin) < 1D) currentState = State.TAMING;
 		else currentState = State.MOVING;
 	}
 	
@@ -88,12 +88,12 @@ public class EntityAIGoblinWorgTame extends Goal
 		switch(currentState)
 		{
 			case MOVING:
-				if(targetWolf.getDistance(theGoblin) >= 1D)
+				if(targetWolf.distanceTo(theGoblin) >= 1D)
 				{
-					if(theNavigator.noPath())
+					if(theNavigator.isDone())
 					{
-						theNavigator.tryMoveToEntityLiving(targetWolf, 1.0D);
-						if(theNavigator.noPath())
+						theNavigator.moveTo(targetWolf, 1.0D);
+						if(theNavigator.isDone())
 							currentState = null;
 					}
 				}
@@ -112,7 +112,7 @@ public class EntityAIGoblinWorgTame extends Goal
 					if(targetWolf.hasCustomName())
 						theWorg.setCustomName(targetWolf.getCustomName());
 					
-					theWorg.setPositionAndRotation(targetWolf.getPosX(), targetWolf.getPosY(), targetWolf.getPosZ(), targetWolf.rotationYaw, targetWolf.rotationPitch);
+					theWorg.setPositionAndRotation(targetWolf.getX(), targetWolf.getY(), targetWolf.getZ(), targetWolf.getYRot(), targetWolf.getXRot());
 					
 					targetWolf.remove();
 					theWorld.addFreshEntity(theWorg);

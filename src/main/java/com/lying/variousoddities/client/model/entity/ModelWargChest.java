@@ -14,19 +14,19 @@ public class ModelWargChest extends ModelMountChest<EntityWarg>
 	public void setLivingAnimations(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)
 	{
 		super.setLivingAnimations(entityIn, limbSwing, limbSwingAmount, partialTickTime);
-		if(entityIn.isEntitySleeping())
+		if(entityIn.isOrderedToSit())
 		{
-			body.setRotationPoint(0.0F, 33.0F, -1.0F);
-			body.rotateAngleX = -((float)Math.PI / 4F);
-			this.chestL.rotationPointY = this.chestR.rotationPointY = -7F;
+			body.setPos(0.0F, 33.0F, -1.0F);
+			body.xRot = -((float)Math.PI / 4F);
+			this.chestL.y = this.chestR.y = -7F;
 		}
         else
         {
-            body.setRotationPoint(0.0F, 26.0F, 2.0F);
-            body.rotateAngleX = 0F;
-    		this.chestL.rotationPointY = this.chestR.rotationPointY = -7F;
+            body.setPos(0.0F, 26.0F, 2.0F);
+            body.xRot = 0F;
+    		this.chestL.y = this.chestR.y = -7F;
         }
 		
-        body.rotateAngleZ = entityIn.getShakeAngle(partialTickTime, -0.16F);
+        body.zRot = entityIn.getShakeAngle(partialTickTime, -0.16F);
 	}
 }

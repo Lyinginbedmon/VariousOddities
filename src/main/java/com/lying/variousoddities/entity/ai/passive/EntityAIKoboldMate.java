@@ -2,7 +2,6 @@ package com.lying.variousoddities.entity.ai.passive;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
@@ -17,20 +16,21 @@ import com.lying.variousoddities.world.settlement.SettlementKobold;
 import com.lying.variousoddities.world.settlement.SettlementRoomBehaviours;
 import com.lying.variousoddities.world.settlement.SettlementRoomBehaviours.KoboldRoomBehaviourNest;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 
 public class EntityAIKoboldMate extends Goal
 {
 	private final EntityKobold theKobold;
-	private final World theWorld;
-	private final PathNavigator theNavigator;
+	private final Level theWorld;
+	private final PathNavigation theNavigator;
 	
 	private EntityKobold targetMate = null;
 	private BlockPos targetEgg = null;
@@ -49,19 +49,19 @@ public class EntityAIKoboldMate extends Goal
 	public EntityAIKoboldMate(EntityKobold koboldIn)
 	{
 		theKobold = koboldIn;
-		theWorld = koboldIn.getEntityWorld();
-		theNavigator = koboldIn.getNavigator();
-        setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+		theWorld = koboldIn.getLevel();
+		theNavigator = koboldIn.getNavigation();
+        setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
 	}
 	
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		if(theKobold.getAttackTarget() == null && theKobold.getRNG().nextInt(20) == 0)
+		if(theKobold.getTarget() == null && theKobold.getRandom().nextInt(20) == 0)
 		{
-			if(theKobold.isCarryingEgg() && theWorld.getGameRules().getBoolean(GameRules.MOB_GRIEFING))
+			if(theKobold.isCarryingEgg() && theWorld.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING))
 				return true;
 			
-			if(theKobold.getGrowingAge() != 0)
+			if(theKobold.getAge() != 0)
 				return false;
 			
 			// 1F == full moon
@@ -73,7 +73,7 @@ public class EntityAIKoboldMate extends Goal
 			if(dayTime < 15000 || dayTime > 21000)
 				return false;
 			
-			if(!theWorld.canBlockSeeSky(theKobold.getPosition()))
+			if(!theWorld.canSeeSky(theKobold.blockPosition()))
 				return false;
 			
 			return true;
@@ -84,7 +84,7 @@ public class EntityAIKoboldMate extends Goal
 	
 	public boolean shouldContinueExecuting()
 	{
-		return theKobold.getAttackTarget() == null && currentState != null;
+		return theKobold.getTarget() == null && currentState != null;
 	}
 	
 	public void resetTask()
@@ -118,12 +118,12 @@ public class EntityAIKoboldMate extends Goal
 				if(isMateInvalid())
 				{
 					this.targetMate = null;
-					for(EntityKobold kobold : theWorld.getEntitiesWithinAABB(EntityKobold.class, theKobold.getBoundingBox().grow(16), IN_LOVE_FILTER))
+					for(EntityKobold kobold : theWorld.getEntitiesOfClass(EntityKobold.class, theKobold.getBoundingBox().inflate(16), IN_LOVE_FILTER))
 					{
 						if(kobold == theKobold)
 							continue;
 						
-						if(theNavigator.getPathToEntity(kobold, 32) != null)
+						if(theNavigator.createPath(kobold, 32) != null)
 						{
 							targetMate = kobold;
 							break;
@@ -135,11 +135,11 @@ public class EntityAIKoboldMate extends Goal
 						theKobold.setInLove(false);
 					}
 				}
-				else if(targetMate.getDistance(theKobold) > 1F)
+				else if(targetMate.distanceTo(theKobold) > 1F)
 				{
 					theKobold.getLookController().setLookPositionWithEntity(targetMate, 30F, 30F);
-					theNavigator.tryMoveToEntityLiving(targetMate, 1D);
-					if(theNavigator.noPath())
+					theNavigator.moveTo(targetMate, 1D);
+					if(theNavigator.isDone())
 						this.targetMate = null;
 				}
 				else
@@ -155,8 +155,8 @@ public class EntityAIKoboldMate extends Goal
 				else
 				{
 					theKobold.getLookController().setLookPositionWithEntity(targetMate, 30F, 30F);
-					if(targetMate.getDistance(theKobold) > 1F)
-						theKobold.getNavigator().tryMoveToEntityLiving(targetMate, 1D);
+					if(targetMate.distanceTo(theKobold) > 1F)
+						theKobold.getNavigation().moveTo(targetMate, 1D);
 					else if(matingTime < (Reference.Values.TICKS_PER_SECOND * 15))
 						matingTime++;
 					else
@@ -183,10 +183,10 @@ public class EntityAIKoboldMate extends Goal
 					for(BoxRoom room : nest.getRoomsOfType(EnumRoomFunction.NEST))
 					{
 						BlockPos core = room.getCore();
-						if(theNavigator.getPathToPos(core, 64) == null)
+						if(theNavigator.createPath(core, 64) == null)
 							continue;
 						
-						double dist = theKobold.getPosition().distanceSq(core);
+						double dist = theKobold.blockPosition().distSqr(core);
 						if(dist < closestDist && dist < (32D * 32D))
 						{
 							closestNest = room;
@@ -197,16 +197,16 @@ public class EntityAIKoboldMate extends Goal
 				if(closestNest == null)
 				{
 					// Establish new nest
-					BlockPos pos = theKobold.getPosition();
+					BlockPos pos = theKobold.blockPosition();
 					BlockPos testPos;
-					Random rand = theKobold.getRNG();
+					RandomSource rand = theKobold.getRandom();
 					int attempts = 100;
 					do
 					{
 						int xOff = rand.nextInt(16) - 8;
 						int yOff = rand.nextInt(8) - 4;
 						int zOff = rand.nextInt(16) - 8;
-						testPos = pos.add(xOff, yOff, zOff);
+						testPos = pos.offset(xOff, yOff, zOff);
 					}
 					while(--attempts > 0 && !KoboldRoomBehaviourNest.isPositionValidForEgg(testPos, theWorld));
 					
@@ -228,7 +228,7 @@ public class EntityAIKoboldMate extends Goal
 				{
 					EntityAIOperateRoom roomTask = EntityAIOperateRoom.getOperateTask(theKobold);
 					if(closestNest != null && roomTask != null)
-						roomTask.requestVisitTo(closestNest, SettlementRoomBehaviours.KOBOLD_NEST, theKobold.getRNG());
+						roomTask.requestVisitTo(closestNest, SettlementRoomBehaviours.KOBOLD_NEST, theKobold.getRandom());
 				}
 				setState(null);
 		}
@@ -255,15 +255,15 @@ public class EntityAIKoboldMate extends Goal
 	public boolean isPositionValidForEgg(BlockPos pos)
 	{
 		if(pos != null)
-			if(theWorld.isAirBlock(pos) && Block.hasSolidSideOnTop(theWorld, pos.down()))
-				return theWorld.isAreaLoaded(pos, 1) && !theWorld.canBlockSeeSky(pos);
+			if(theWorld.isEmptyBlock(pos) && Block.hasSolidSideOnTop(theWorld, pos.below()))
+				return theWorld.isAreaLoaded(pos, 1) && !theWorld.canSeeSky(pos);
 		return false;
 	}
 	
 	public boolean hasSolidNeighbour(BlockPos pos)
 	{
 		for(Direction face : Direction.Plane.HORIZONTAL)
-			if(theWorld.getBlockState(pos.offset(face)).isOpaqueCube(theWorld, pos.offset(face)))
+			if(theWorld.getBlockState(pos.relative(face)).isOpaqueCube(theWorld, pos.relative(face)))
 				return true;
 		return false;
 	}
@@ -274,12 +274,12 @@ public class EntityAIKoboldMate extends Goal
 		int attempts = 100;
 		while(!(isPositionValidForEgg(eggSite) && hasSolidNeighbour(eggSite)) && --attempts > 0)
 		{
-			double moveX = theKobold.getRNG().nextInt(32)	- 16;
-			double moveY = theKobold.getRNG().nextInt(6)	- 3;
-			double moveZ = theKobold.getRNG().nextInt(32)	- 16;
-			eggSite = theKobold.getPosition().add(moveX, moveY, moveZ);
+			double moveX = theKobold.getRandom().nextInt(32)	- 16;
+			double moveY = theKobold.getRandom().nextInt(6)	- 3;
+			double moveZ = theKobold.getRandom().nextInt(32)	- 16;
+			eggSite = theKobold.blockPosition().offset(moveX, moveY, moveZ);
 		}
-		if(attempts >= 0 && theKobold.getNavigator().getPathToPos(eggSite, 16) != null) return eggSite;
+		if(attempts >= 0 && theKobold.getNavigation().createPath(eggSite, 16) != null) return eggSite;
 		return null;
 	}
 	

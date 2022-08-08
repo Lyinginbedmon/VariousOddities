@@ -107,7 +107,7 @@ public class EntityAIWorgFetch extends Goal
 	public void dropHeldItem()
 	{
 		if(theWorg.getMainHandItem().isEmpty()) return;
-		theWorg.entityDropItem(theWorg.getMainHandItem().getItem(), 1);
+		theWorg.spawnAtLocation(theWorg.getMainHandItem().getItem(), 1);
 		theWorg.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 	}
 	

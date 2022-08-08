@@ -27,10 +27,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 
-public abstract class SettlementManager extends WorldSavedData
+public abstract class SettlementManager extends SavedData
 {
 	public static final String DATA_NAME = Reference.ModInfo.MOD_ID+"_settlements";
 	
@@ -40,14 +41,7 @@ public abstract class SettlementManager extends WorldSavedData
 	public Map<Integer, Settlement> settlements = new HashMap<>();
 	protected Level world;
 	
-	public SettlementManager()
-	{
-		this(DATA_NAME);
-	}
-	public SettlementManager(String nameIn)
-	{
-		super(nameIn);
-	}
+	public SettlementManager(){ }
 	
 	public void setWorld(Level worldIn)
 	{
@@ -144,7 +138,7 @@ public abstract class SettlementManager extends WorldSavedData
 		return null;
 	}
 	
-	public CompoundTag write(CompoundTag compound)
+	public CompoundTag save(CompoundTag compound)
 	{
 		ListTag settlementList = new ListTag();
 		for(int index : settlements.keySet())
@@ -167,13 +161,15 @@ public abstract class SettlementManager extends WorldSavedData
 		}
 	}
 	
+	public abstract SettlementManager fromNBT(CompoundTag compound);
+	
 	public static SettlementManager get(Level worldIn)
 	{
 		if(worldIn.isClientSide)
 			return VariousOddities.proxy.getSettlementManager(worldIn);
 		else
 		{
-			SettlementManagerServer instance = ((ServerLevel)worldIn).getSavedData().getOrCreate(SettlementManagerServer::new, SettlementManager.DATA_NAME);
+			SettlementManagerServer instance = ((ServerLevel)worldIn).getDataStorage().get(SettlementManager::fromNBT, SettlementManager.DATA_NAME);
 			instance.setWorld(worldIn);
 			return instance;
 		}

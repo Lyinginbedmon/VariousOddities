@@ -1,7 +1,7 @@
 package com.lying.variousoddities.client.model.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
 public interface IPonytailModel
 {
@@ -9,5 +9,5 @@ public interface IPonytailModel
 	
 	public void setPonytailRotation(float par1Float, float par2Float, boolean par3Bool);
 	
-	public void renderPonytail(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn);
+	public void renderPonytail(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn);
 }

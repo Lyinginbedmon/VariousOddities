@@ -9,6 +9,7 @@ import com.lying.variousoddities.world.settlement.BoxRoom;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
@@ -104,7 +105,7 @@ public class EntityAIOperateRoom extends Goal
 		targetRand = randIn;
 	}
 	
-	public static EntityAIOperateRoom getOperateTask(Monster creature)
+	public static EntityAIOperateRoom getOperateTask(Mob creature)
 	{
 		return creature instanceof ISettlementEntity ? ((ISettlementEntity)creature).getOperateRoomTask() : null;
 	}

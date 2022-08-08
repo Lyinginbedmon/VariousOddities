@@ -3,11 +3,11 @@ package com.lying.variousoddities.entity.ai.hostile;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 
-import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
@@ -32,12 +32,12 @@ public class EntityAIGoblinFlee extends Goal
 	public boolean canUse()
 	{
 		toAvoid = getNearestAvoid();
-		return theGoblin.isBaby() && toAvoid != null && toAvoid.getDistance(theGoblin) < 5D;
+		return theGoblin.isBaby() && toAvoid != null && toAvoid.distanceTo(theGoblin) < 5D;
 	}
 	
 	public boolean shouldContinueExecuting()
 	{
-		return !theNavigator.noPath();
+		return !theNavigator.isDone();
 	}
 	
 	public void resetTask()
@@ -50,8 +50,8 @@ public class EntityAIGoblinFlee extends Goal
 		Path thePath = getPathAwayFrom(toAvoid);
 		if(thePath != null)
 		{
-			theNavigator.clearPath();
-			theNavigator.setPath(thePath, fleeSpeed);
+			theNavigator.stop();
+			theNavigator.moveTo(thePath, fleeSpeed);
 		}
 	}
 	
@@ -67,7 +67,7 @@ public class EntityAIGoblinFlee extends Goal
 				}
 			}))
 		{
-			double distance = living.getDistanceSq(theGoblin);
+			double distance = living.distanceTo(theGoblin);
 			if(getPathAwayFrom(living) != null && distance < minDist)
 			{
 				minDist = distance;
@@ -80,11 +80,11 @@ public class EntityAIGoblinFlee extends Goal
 	/** Returns a path to a random position that isn't closer to the flee target */
 	private Path getPathAwayFrom(Mob fleeTarget)
 	{
-        Vec3 vec = RandomPositionGenerator.findRandomTargetBlockAwayFrom(theGoblin, 16, 7, new Vec3(fleeTarget.getPosX(), fleeTarget.getPosY(), fleeTarget.getPosZ()));
+        Vec3 vec = DefaultRandomPos.getPosAway(theGoblin, 16, 7, new Vec3(fleeTarget.getX(), fleeTarget.getY(), fleeTarget.getZ()));
         if(vec == null) return null;
-        else if(fleeTarget.getDistanceSq(vec.x, vec.y, vec.z) < fleeTarget.getDistanceSq(theGoblin))
+        else if(fleeTarget.distanceToSqr(vec.x, vec.y, vec.z) < fleeTarget.distanceToSqr(theGoblin))
         	return null;
         else
-        	return theNavigator.getPathToPos(vec.x, vec.y, vec.z, (int)theGoblin.getAttributeValue(Attributes.FOLLOW_RANGE));
+        	return theNavigator.createPath(vec.x, vec.y, vec.z, (int)theGoblin.getAttributeValue(Attributes.FOLLOW_RANGE));
 	}
 }

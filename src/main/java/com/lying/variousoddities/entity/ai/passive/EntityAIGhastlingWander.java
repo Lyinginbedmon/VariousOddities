@@ -66,7 +66,7 @@ public class EntityAIGhastlingWander extends Goal
 	public void start()
 	{
 		LivingEntity owner = this.creature.isTame() ? this.creature.getOwner() : null;
-		double ownerDist =  owner != null ? owner.getDistanceSq(this.creature) : Double.MAX_VALUE;
+		double ownerDist =  owner != null ? owner.distanceToSqr(this.creature) : Double.MAX_VALUE;
 		
 		if(owner != null && ownerDist > (16D * 16D))
 			tryTeleportToOwner();
@@ -81,7 +81,7 @@ public class EntityAIGhastlingWander extends Goal
 				AABB bounds = this.creature.getBoundingBox().move(dest);
 				if(!this.world.hasNoCollisions(this.creature, bounds))
 					dest = null;
-				else if(owner != null && owner.getDistanceSq(dest) > RANGE_MAX && owner.getDistanceSq(dest) > (ownerDist * 0.75D))
+				else if(owner != null && owner.distanceToSqr(dest) > RANGE_MAX && owner.distanceToSqr(dest) > (ownerDist * 0.75D))
 					dest = null;
 			}
 			while(dest == null && attempts-- > 0);
@@ -123,7 +123,7 @@ public class EntityAIGhastlingWander extends Goal
 	
 	private boolean tryTeleportToPos(int x, int y, int z)
 	{
-		if(this.creature.getOwner().getDistanceSq(x, y, z) < (2D * 2D))
+		if(this.creature.getOwner().distanceToSqr(x, y, z) < (2D * 2D))
 			return false;
 		if(!canTeleportTo(new BlockPos(x, y, z)))
 			return false;

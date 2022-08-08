@@ -8,13 +8,14 @@ import com.lying.variousoddities.reference.Reference;
 import com.mojang.math.Vector3d;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityAIGoblinMate extends Goal
 {
@@ -40,7 +41,7 @@ public class EntityAIGoblinMate extends Goal
 		theGoblin = goblinIn;
 		theNavigator = goblinIn.getNavigation();
 		theWorld = goblinIn.getLevel();
-        this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
 	}
 	
 	public boolean canUse()
@@ -57,11 +58,11 @@ public class EntityAIGoblinMate extends Goal
 		if(theWorld.getEntitiesOfClass(EntityGoblin.class, theGoblin.getBoundingBox().inflate(16), searchPredicate).size() < 2)
 		{
 			theGoblin.setInLove(false);
-			theGoblin.setGrowingAge(1200);
+			theGoblin.setAge(1200);
 			return false;
 		}
 		
-		return (theGoblin.getGrowingAge() == 0 && !theGoblin.isBaby()) && theGoblin.getRandom().nextInt(100) == 0;
+		return (theGoblin.getAge() == 0 && !theGoblin.isBaby()) && theGoblin.getRandom().nextInt(100) == 0;
 	}
 	
 	public boolean shouldContinueExecuting()
@@ -78,7 +79,7 @@ public class EntityAIGoblinMate extends Goal
 	
 	public void startExecuting()
 	{
-		theGoblin.getNavigation().clearPath();
+		theGoblin.getNavigation().stop();
 		if(theGoblin.isCarrying())
 			currentState = State.SEARCHING_NEST;
 		else
@@ -96,11 +97,11 @@ public class EntityAIGoblinMate extends Goal
 			case SEARCHING_MATE:
 				if(targetMate == null || !targetMate.isAlive() || !targetMate.isInLove())
 				{
-					for(EntityGoblin goblin : theWorld.getEntitiesWithinAABB(EntityGoblin.class, theGoblin.getBoundingBox().grow(16), searchPredicate))
+					for(EntityGoblin goblin : theWorld.getEntitiesOfClass(EntityGoblin.class, theGoblin.getBoundingBox().inflate(16), searchPredicate))
 					{
 						if(goblin != theGoblin)
 						{
-							if(theNavigator.getPathToEntity(goblin, (int)theGoblin.getAttributeValue(Attributes.FOLLOW_RANGE)) != null)
+							if(theNavigator.createPath(goblin, (int)theGoblin.getAttributeValue(Attributes.FOLLOW_RANGE)) != null)
 							{
 								targetMate = goblin;
 								break;
@@ -116,41 +117,41 @@ public class EntityAIGoblinMate extends Goal
 				break;
 			case MATING:
 				if(!targetMate.isInLove()) currentState = State.SEARCHING_MATE;
-				else if(theGoblin.getDistance(targetMate) < 1D)
+				else if(theGoblin.distanceTo(targetMate) < 1D)
 				{
-					theNavigator.clearPath();
+					theNavigator.stop();
 					if(--matingTimer <= 0)
 					{
 						matingTimer = Reference.Values.TICKS_PER_SECOND * 5;
 						theGoblin.setInLove(false);
 						targetMate.setInLove(false);
-						theGoblin.setGrowingAge(72000);
-						targetMate.setGrowingAge(72000);
+						theGoblin.setAge(72000);
+						targetMate.setAge(72000);
 						
 						theGoblin.setCarryingFrom(targetMate);
 						currentState = State.SEARCHING_NEST;
 					}
 				}
-				else theNavigator.tryMoveToEntityLiving(targetMate, 1.0D);
+				else theNavigator.moveTo(targetMate, 1.0D);
 				break;
 			case SEARCHING_NEST:
 				if(nestSite == null || !isValidForNest(nestSite) || distanceToPos(nestSite) > 32D)
 					theGoblin.setNestSite(getRandomNestSite());
 				else
 				{
-					if(distanceToPos(nestSite) > 1.5D) theNavigator.tryMoveToXYZ(nestSite.getX(), nestSite.getY(), nestSite.getZ(), 1.2D);
+					if(distanceToPos(nestSite) > 1.5D) theNavigator.moveTo(nestSite.getX(), nestSite.getY(), nestSite.getZ(), 1.2D);
 					else
 					{
-						theNavigator.clearPath();
+						theNavigator.stop();
 						
 						if(--matingTimer <= 0)
 						{
 							EntityGoblin parent = theGoblin.getOtherParent();
 							for(int i=0; i < (1 + theGoblin.getRandom().nextInt(2)); i++)
 							{
-								EntityGoblin child = (EntityGoblin)theGoblin.func_241840_a((ServerLevel)theWorld, parent);
+								EntityGoblin child = (EntityGoblin)theGoblin.getBreedOffspring((ServerLevel)theWorld, parent);
 								child.copyLocationAndAnglesFrom(theGoblin);
-								child.setGrowingAge(-4000);
+								child.setAge(-4000);
 								theWorld.addFreshEntity(child);
 							}
 							
@@ -164,11 +165,11 @@ public class EntityAIGoblinMate extends Goal
 			case LEAVING_NEST:
 				if(distanceToPos(nestSite) < 8D && matingTimer-- > 0)
 				{
-					if(theNavigator.noPath())
+					if(theNavigator.isDone())
 					{
 						// Find random position away from nest site and move towards it
-			            Vector3d targetFlee = RandomPositionGenerator.findRandomTargetBlockAwayFrom(theGoblin, 16, 7, new Vector3d(nestSite.getX(), nestSite.getY(), nestSite.getZ()));
-			            if(targetFlee != null) theNavigator.tryMoveToXYZ(targetFlee.x, targetFlee.y, targetFlee.z, 1.2D);
+			            Vec3 targetFlee = DefaultRandomPos.getPosAway(theGoblin, 16, 7, new Vec3(nestSite.getX(), nestSite.getY(), nestSite.getZ()));
+			            if(targetFlee != null) theNavigator.moveTo(targetFlee.x, targetFlee.y, targetFlee.z, 1.2D);
 					}
 				}
 				else currentState = null;
@@ -178,7 +179,7 @@ public class EntityAIGoblinMate extends Goal
 	
 	public double distanceToPos(BlockPos pos)
 	{
-		return Math.sqrt(theGoblin.getDistanceSq(pos.getX(), pos.getY(), pos.getZ()));
+		return Math.sqrt(theGoblin.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()));
 	}
 	
 	public BlockPos getRandomNestSite()
@@ -199,7 +200,7 @@ public class EntityAIGoblinMate extends Goal
 	
 	private boolean isValidSite(BlockPos pos)
 	{
-		return pos != null && isValidForNest(pos) && theNavigator.getPathToPos(pos, (int)theGoblin.getAttributeValue(Attributes.FOLLOW_RANGE)) != null;
+		return pos != null && isValidForNest(pos) && theNavigator.createPath(pos, (int)theGoblin.getAttributeValue(Attributes.FOLLOW_RANGE)) != null;
 	}
 	
 	public boolean isValidForNest(BlockPos pos)
