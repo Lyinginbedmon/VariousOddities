@@ -1,108 +1,85 @@
 package com.lying.variousoddities.client.model.entity;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.compress.utils.Lists;
 
 import com.lying.variousoddities.client.model.EnumLimbPosition;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.AbstractRat;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.Model;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public class ModelRat extends EntityModel<AbstractRat>
 {
-	ModelRenderer head;
-	ModelRenderer body;
+	ModelPart head;
+	ModelPart body;
 	
 	ModelLeg legLeftRear;
 	ModelLeg legRightRear;
 	ModelLeg legLeftFront;
 	ModelLeg legRightFront;
 	
-	List<ModelRenderer> tail = new ArrayList<ModelRenderer>();
+	List<ModelPart> tail = Lists.newArrayList();
 	
-	public ModelRat()
+	public ModelRat(ModelPart partsIn)
 	{
-		this.textureHeight = 64;
-		this.textureWidth = 32;
+		head = partsIn.getChild("head");
+		body = partsIn.getChild("body");
 		
-		head = ModelUtils.freshRenderer(this);
-		head.rotationPointY = 18.5F * EnumLimbPosition.DOWN.getY();
-		head.rotationPointZ = 4.5F * EnumLimbPosition.FRONT.getZ();
-			ModelRenderer headMain = ModelUtils.freshRenderer(this);
-			headMain.setTextureOffset(0, 0).addBox(-2F, -6F, -2F, 4, 6, 4);
-			headMain.rotateAngleX = ModelUtils.degree90;
-		head.addChild(headMain);
+		ModelPart root = body.getChild("tail");
+		while(root.hasChild("child"))
+			tail.add(root = root.getChild("child"));
 		
-		ModelRenderer earLeft = ModelUtils.freshRenderer(this);
-		earLeft.setRotationPoint(2.5F * EnumLimbPosition.LEFT.getX(), 1.5F * EnumLimbPosition.UP.getY(), 1F * EnumLimbPosition.FRONT.getZ());
-		earLeft.mirror = true;
-		earLeft.rotateAngleX = -ModelUtils.toRadians(15D);
-		earLeft.rotateAngleY = -ModelUtils.toRadians(30D);
-		earLeft.setTextureOffset(16, 0).addBox(-1.5F, -1.5F, -0.5F, 3, 3, 1, 0.2F);
-		head.addChild(earLeft);
+		legLeftRear = new ModelLeg(EnumLimbPosition.LEFT, EnumLimbPosition.REAR, partsIn.getChild("rear_left_leg"));
+		legRightRear = new ModelLeg(EnumLimbPosition.RIGHT, EnumLimbPosition.REAR, partsIn.getChild("rear_right_leg"));
+		legLeftFront = new ModelLeg(EnumLimbPosition.LEFT, EnumLimbPosition.FRONT, partsIn.getChild("front_left_leg"));
+		legRightFront = new ModelLeg(EnumLimbPosition.RIGHT, EnumLimbPosition.FRONT, partsIn.getChild("front_right_leg"));
+	}
+	
+	public static LayerDefinition createBodyLayer(CubeDeformation deformation)
+	{
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition part = mesh.getRoot();
 		
-		ModelRenderer earRight = ModelUtils.freshRenderer(this);
-		earRight.setRotationPoint(2.5F * EnumLimbPosition.RIGHT.getX(), 1.5F * EnumLimbPosition.UP.getY(), 1F * EnumLimbPosition.FRONT.getZ());
-		earRight.rotateAngleX = -ModelUtils.toRadians(15D);
-		earRight.rotateAngleY = ModelUtils.toRadians(30D);
-		earRight.setTextureOffset(24, 0).addBox(-1.5F, -1.5F, -0.5F, 3, 3, 1, 0.2F);
-		head.addChild(earRight);
+		PartDefinition head = part.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.offset(0F, 18.5F, -4.5F));
+			head.addOrReplaceChild("main", CubeListBuilder.create().texOffs(0, 0).addBox(-2F, -6F, -2F, 4F, 6F, 4F), PartPose.rotation(ModelUtils.degree90, 0F, 0F));
+			head.addOrReplaceChild("ear_left", CubeListBuilder.create().mirror().texOffs(16, 0).addBox(-1.5F, -1.5F, -0.5F, 3F, 3F, 1F, deformation.extend(0.2F)), PartPose.offsetAndRotation(2.5F * EnumLimbPosition.LEFT.getX(), 1.5F * EnumLimbPosition.UP.getY(), 1F * EnumLimbPosition.FRONT.getZ(), -ModelUtils.toRadians(15D), -ModelUtils.toRadians(30D), 0F));
+			head.addOrReplaceChild("ear_right", CubeListBuilder.create().texOffs(24, 0).addBox(-1.5F, -1.5F, -0.5F, 3F, 3F, 1F, deformation.extend(0.2F)), PartPose.offsetAndRotation(2.5F * EnumLimbPosition.RIGHT.getX(), 1.5F * EnumLimbPosition.UP.getY(), 1F * EnumLimbPosition.FRONT.getZ(), -ModelUtils.toRadians(15D), ModelUtils.toRadians(30D), 0F));
+			head.addOrReplaceChild("whisker_left", CubeListBuilder.create().texOffs(16, 4).addBox(0F, 1.5F, 0F, 5F, 3F, 0F), PartPose.offsetAndRotation(2F * EnumLimbPosition.LEFT.getX(), 3F * EnumLimbPosition.UP.getY(), 5F * EnumLimbPosition.FRONT.getZ(), 0F, -ModelUtils.toRadians(40D), 0F));
+			head.addOrReplaceChild("whisker_right", CubeListBuilder.create().mirror().texOffs(16, 7).addBox(-5F, 1.5F, 0F, 5F, 3F, 0F), PartPose.offsetAndRotation(2F * EnumLimbPosition.RIGHT.getX(), 3F * EnumLimbPosition.UP.getY(), 5F * EnumLimbPosition.FRONT.getZ(), 0F, ModelUtils.toRadians(40D), 0F));
 		
-		ModelRenderer whiskersLeft = ModelUtils.freshRenderer(this);
-		whiskersLeft.setRotationPoint(2F * EnumLimbPosition.LEFT.getX(), 3F * EnumLimbPosition.UP.getY(), 5F * EnumLimbPosition.FRONT.getZ());
-		whiskersLeft.rotateAngleY = -ModelUtils.toRadians(40D);
-		whiskersLeft.setTextureOffset(16, 4).addBox(0F, 1.5F, 0F, 5, 3, 0);
-		head.addChild(whiskersLeft);
-
-		ModelRenderer whiskersRight = ModelUtils.freshRenderer(this);
-		whiskersRight.setRotationPoint(2F * EnumLimbPosition.RIGHT.getX(), 3F * EnumLimbPosition.UP.getY(), 5F * EnumLimbPosition.FRONT.getZ());
-		whiskersRight.mirror = true;
-		whiskersRight.rotateAngleY = ModelUtils.toRadians(40D);
-		whiskersRight.setTextureOffset(16, 7).addBox(-5F, 1.5F, 0F, 5, 3, 0);
-		head.addChild(whiskersRight);
+		PartDefinition body = part.addOrReplaceChild("body", CubeListBuilder.create(), PartPose.offset(0F, 21F, 0F));
+			body.addOrReplaceChild("main", CubeListBuilder.create().texOffs(0, 10).addBox(-3F, -4F, -2.5F, 6F, 10F, 5F), PartPose.rotation(0F, ModelUtils.degree90, 0F));
+			PartDefinition prev = body.addOrReplaceChild("tail", CubeListBuilder.create(), PartPose.offsetAndRotation(0F, 0F, 1.85F, ModelUtils.degree90, 0F, 0F));
+			for(int i=0; i<3; i++)
+				prev = prev.addOrReplaceChild("child", CubeListBuilder.create().texOffs(22, 10 + (4 * i)).addBox(-0.5F, 0F, -0.5F, 1, 3, 1, deformation.extend(0.2F-(0.01F * i))), PartPose.offset(0F, 3.3F, 0F));
 		
-		body = ModelUtils.freshRenderer(this);
-		body.rotationPointY = 21F * EnumLimbPosition.DOWN.getY();
-			ModelRenderer bodyMain = ModelUtils.freshRenderer(this);
-			bodyMain.setTextureOffset(0, 10).addBox(-3F, -4F, -2.5F, 6, 10, 5);
-			bodyMain.rotateAngleX = ModelUtils.degree90;
-		body.addChild(bodyMain);
-		
-		for(int i=0; i<3; i++)
-		{
-			ModelRenderer segment = createTailSegment(i, this); 
-			tail.add(segment);
-			if(i > 0)
-			{
-				tail.get(i - 1).addChild(segment);
-			}
-		}
-		ModelRenderer root = ModelUtils.freshRenderer(this);
-		root.rotationPointY = 0F;
-		root.rotationPointZ = 1.85F * EnumLimbPosition.REAR.getZ();
-		root.rotateAngleX = ModelUtils.degree90;
-		root.addChild(tail.get(0));
-		body.addChild(root);
-		
-		legLeftRear = new ModelLeg(EnumLimbPosition.LEFT, EnumLimbPosition.REAR, this);
-		legRightRear = new ModelLeg(EnumLimbPosition.RIGHT, EnumLimbPosition.REAR, this);
-		legLeftFront = new ModelLeg(EnumLimbPosition.LEFT, EnumLimbPosition.FRONT, this);
-		legRightFront = new ModelLeg(EnumLimbPosition.RIGHT, EnumLimbPosition.FRONT, this);
+		ModelLeg.addLeg(EnumLimbPosition.LEFT, EnumLimbPosition.REAR, part);
+		ModelLeg.addLeg(EnumLimbPosition.RIGHT, EnumLimbPosition.REAR, part);
+		ModelLeg.addLeg(EnumLimbPosition.LEFT, EnumLimbPosition.FRONT, part);
+		ModelLeg.addLeg(EnumLimbPosition.RIGHT, EnumLimbPosition.FRONT, part);
+			
+		return LayerDefinition.create(mesh, 64, 32);
 	}
 	
     /**
      * Sets the models various rotation angles then renders the model.
      */
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+    public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
     {
-//    	this.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+//    	this.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     	
     	head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     	body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
@@ -117,27 +94,27 @@ public class ModelRat extends EntityModel<AbstractRat>
      * and legs, where par1 represents the time(so that arms and legs swing back and forth) and par2 represents how
      * "far" arms and legs can swing at most.
      */
-    public void setRotationAngles(AbstractRat entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+    public void setupAnim(AbstractRat entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
     {
-        this.head.rotateAngleX = headPitch * 0.017453292F;
-        this.head.rotateAngleY = netHeadYaw * 0.017453292F;
+        this.head.xRot = headPitch * 0.017453292F;
+        this.head.yRot = netHeadYaw * 0.017453292F;
         
-        Vector3d motion = entityIn.getMotion();
+        Vec3 motion = entityIn.getDeltaMovement();
         boolean isMoving = Math.sqrt((motion.x * motion.x) + (motion.z * motion.z)) > 0.01D;
-        float tailRot = isMoving ? 0F : (float)Math.cos(entityIn.ticksExisted / 20F) * ModelUtils.toRadians(25D);
-        for(ModelRenderer segment : tail)
+        float tailRot = isMoving ? 0F : (float)Math.cos(entityIn.tickCount / 20F) * ModelUtils.toRadians(25D);
+        for(ModelPart segment : tail)
         {
-        	segment.rotateAngleX = isMoving ? ModelUtils.toRadians(10D) : 0F;
-        	segment.rotateAngleZ = tailRot;
+        	segment.xRot = isMoving ? ModelUtils.toRadians(10D) : 0F;
+        	segment.zRot = tailRot;
         }
         
     	float standTime = entityIn.getStand();
-    	this.head.rotationPointY = 18.5F - (6.5F * standTime);
-    	this.head.rotationPointZ = -4.5F + (4.5F * standTime);
-    	this.body.rotateAngleX = -(ModelUtils.toRadians(60D) * standTime);
-		this.body.rotationPointY = 20F - (3F * standTime);
-		this.body.rotationPointZ = -0.5F + (1.5F * standTime);
-    	this.tail.get(0).rotateAngleX += ModelUtils.degree90 * standTime;
+    	this.head.y = 18.5F - (6.5F * standTime);
+    	this.head.z = -4.5F + (4.5F * standTime);
+    	this.body.xRot = -(ModelUtils.toRadians(60D) * standTime);
+		this.body.y = 20F - (3F * standTime);
+		this.body.z = -0.5F + (1.5F * standTime);
+    	this.tail.get(0).xRot += ModelUtils.degree90 * standTime;
         
 		legLeftRear.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 		legRightRear.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
@@ -145,43 +122,39 @@ public class ModelRat extends EntityModel<AbstractRat>
 		legRightFront.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     }
     
-    private ModelRenderer createTailSegment(int i, Model model)
+    public class ModelLeg
     {
-    	ModelRenderer segment = ModelUtils.freshRenderer(model);
-    	segment.rotationPointY = 3.3F * EnumLimbPosition.DOWN.getY();
-    	segment.setTextureOffset(22, 10 + (4 * i)).addBox(-0.5F, 0F, -0.5F, 1, 3, 1, 0.2F-(0.01F * i));
-    	return segment;
-    }
-    
-    public class ModelLeg extends ModelRenderer
-    {
-    	ModelRenderer theLeg;
+    	ModelPart theLeg;
     	
     	private final EnumLimbPosition posX;
     	private final EnumLimbPosition posZ;
     	
-    	public ModelLeg(EnumLimbPosition leftRight, EnumLimbPosition frontRear, Model theModel)
+    	public ModelLeg(EnumLimbPosition leftRight, EnumLimbPosition frontRear, ModelPart theModel)
     	{
-    		super(theModel);
-    		this.posX = leftRight;
-    		this.posZ = frontRear;
+    		posX = leftRight;
+    		posZ = frontRear;
+    		theLeg = theModel;
+    	}
+    	
+    	public static PartDefinition addLeg(EnumLimbPosition leftRight, EnumLimbPosition frontRear, PartDefinition theModel)
+    	{
+    		float xPoint = (frontRear == EnumLimbPosition.FRONT ? 2.75F : 3.5F) * leftRight.getX();
+    		float zPoint = (frontRear == EnumLimbPosition.FRONT ? -3.5F : 4.8F);
     		
-    		float xPoint = (posZ == EnumLimbPosition.FRONT ? 2.75F : 3.5F) * posX.getX();
-    		float zPoint = (posZ == EnumLimbPosition.FRONT ? -3.5F : 4.8F);
+    		CubeListBuilder legBase = CubeListBuilder.create();
+    		if(leftRight == EnumLimbPosition.LEFT)
+    			legBase.mirror();
     		
-    		theLeg = ModelUtils.freshRenderer(theModel);
-    		theLeg.setRotationPoint(xPoint, 23F * EnumLimbPosition.DOWN.getY(), zPoint);
-    		theLeg.mirror = posX == EnumLimbPosition.LEFT;
-    			ModelRenderer legBase = ModelUtils.freshRenderer(theModel);
-    			legBase.setTextureOffset(posX==EnumLimbPosition.LEFT ? 0 : 12, posZ==EnumLimbPosition.FRONT ? 25 : 31).addBox(-1.5F, -4F, -0.5F, 3, 4, 2);
-    			legBase.rotateAngleX = ModelUtils.degree90;
-    		theLeg.addChild(legBase);
+    		PartDefinition theLeg = theModel.addOrReplaceChild(frontRear.name().toLowerCase()+"_"+leftRight.name().toLowerCase()+"_leg", legBase, PartPose.offset(xPoint, 23F * EnumLimbPosition.DOWN.getY(), zPoint));
+    			theLeg.addOrReplaceChild("foot", CubeListBuilder.create().texOffs(leftRight == EnumLimbPosition.LEFT ? 0 : 12, frontRear == EnumLimbPosition.FRONT ? 25 : 31).addBox(-1.5F, -4F, -0.5F, 3, 4, 2), PartPose.rotation(ModelUtils.degree90, 0F, 0F));
+    		
+    		return theLeg;
     	}
     	
         /**
          * Sets the models various rotation angles then renders the model.
          */
-        public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+        public void render(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
         {
         	theLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         }
@@ -196,17 +169,17 @@ public class ModelRat extends EntityModel<AbstractRat>
         	float swingRate = 2F;
         	float swingRange = ModelUtils.toRadians(30D);
         	
-            theLeg.rotateAngleX = MathHelper.cos(limbSwing * swingRate) * swingRange * limbSwingAmount;
-            theLeg.rotateAngleX *= posX.getX() * posZ.getZ();
+            theLeg.xRot = Mth.cos(limbSwing * swingRate) * swingRange * limbSwingAmount;
+            theLeg.xRot *= posX.getX() * posZ.getZ();
             
             if(posZ == EnumLimbPosition.FRONT)
             {
             	float standTime = entityIn.getStand();
             	
-            	this.theLeg.rotationPointY = 23F - (6.5F * standTime);
-            	this.theLeg.rotationPointZ = -3.5F + (1.5F * standTime);
+            	this.theLeg.y = 23F - (6.5F * standTime);
+            	this.theLeg.z = -3.5F + (1.5F * standTime);
             	
-            	this.theLeg.rotateAngleX += (ModelUtils.toRadians(60D) * standTime);
+            	this.theLeg.xRot += (ModelUtils.toRadians(60D) * standTime);
             }
         }
     }

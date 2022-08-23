@@ -14,7 +14,7 @@ import com.lying.variousoddities.species.TemplateRegistry;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DirectoryCache;
 import net.minecraft.data.IDataProvider;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class VOTemplatesProvider implements IDataProvider
 {

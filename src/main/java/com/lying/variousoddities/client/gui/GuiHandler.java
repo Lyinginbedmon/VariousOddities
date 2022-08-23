@@ -24,10 +24,15 @@ import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -56,7 +61,7 @@ public class GuiHandler
 		
 		if(event.getType() == ElementType.CROSSHAIRS)
 		{
-			MatrixStack matrix = event.getMatrixStack();
+			PoseStack matrix = event.getMatrixStack();
 			float partialTicks = event.getPartialTicks();
 			
 			if(trackingEyeTicks > 0 && --trackingEyeTicks > 0)
@@ -78,10 +83,10 @@ public class GuiHandler
 				int startY = top - (size / 2);
 				int endY = startY + size;
 				
-				matrix.push();
+				matrix.pushPose();
 					mc.getTextureManager().bindTexture(TRACKING_EYE);
 					blit(matrix.getLast().getMatrix(), (int)startX, (int)endX, (int)startY, (int)endY, 0, texXMin / 16F, texXMax / 16F, texYMin / 64F, texYMax / 64F, 1F, 1F, 1F, 1F);
-				matrix.pop();
+				matrix.popPose();
 				profiler.endSection();
 			}
 			
@@ -146,7 +151,7 @@ public class GuiHandler
 					mc.getTextureManager().bindTexture(HUD_ICONS);
 					
 					float bludgeoning = data.getBludgeoning();
-					float val = MathHelper.clamp(bludgeoning / player.getHealth(), 0F, 1F);
+					float val = Mth.clamp(bludgeoning / player.getHealth(), 0F, 1F);
 					
 					int width = (int)(val * 81);
 					int height = 9;
@@ -161,13 +166,13 @@ public class GuiHandler
 					RenderSystem.disableBlend();
 					RenderSystem.color4f(1F, 1F, 1F, 1F);
 					
-					mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+					mc.getTextureManager().bindTexture(Screen.GUI_ICONS_LOCATION);
 				}
 			}
 		profiler.endSection();
 	}
 	
-	private static void drawFavouritedAbilities(MatrixStack matrix, MainWindow window, float partialTicks, EnumCorner corner)
+	private static void drawFavouritedAbilities(PoseStack matrix, MainWindow window, float partialTicks, EnumCorner corner)
 	{
 		profiler.startSection("abilities");
 		
@@ -198,7 +203,7 @@ public class GuiHandler
 				break;
 		}
 		
-		matrix.push();
+		matrix.pushPose();
 			float posX = posXStart;
 			float posY = posYStart;
 			int maxFav = 0;
@@ -235,7 +240,7 @@ public class GuiHandler
 					posY += posYInc;
 				}
 			}
-		matrix.pop();
+		matrix.popPose();
 		
 		profiler.endSection();
 	}
@@ -250,12 +255,12 @@ public class GuiHandler
 		}
 	}
 	
-	public static void drawIconAt(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY)
+	public static void drawIconAt(PoseStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY)
 	{
 		drawIconAt(matrix, posX, posY, indexX, indexY, sizeX, sizeY, 1F, 1F, 1F, 1F);
 	}
 	
-	public static void drawIconAt(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float red, float green, float blue, float alpha)
+	public static void drawIconAt(PoseStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float red, float green, float blue, float alpha)
 	{
 		// Texture co-ordinates
 		float texXMin = ICON_TEX * (float)indexX;
@@ -268,16 +273,16 @@ public class GuiHandler
 		double endX = posX + sizeX;
 		double endY = posY + sizeY;
 		
-		matrix.push();
+		matrix.pushPose();
 			mc.getTextureManager().bindTexture(ABILITY_ICONS);
 			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
-		matrix.pop();
+		matrix.popPose();
 	}
 	
-	public static void drawPartialIcon(MatrixStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float startP, float endP, float red, float green, float blue, float alpha)
+	public static void drawPartialIcon(PoseStack matrix, double posX, double posY, int indexX, int indexY, double sizeX, double sizeY, float startP, float endP, float red, float green, float blue, float alpha)
 	{
-		double yMin = MathHelper.clamp(Math.min(startP, endP), 0F, 1F);
-		double yMax = MathHelper.clamp(Math.max(startP, endP), 0F, 1F);
+		double yMin = Mth.clamp(Math.min(startP, endP), 0F, 1F);
+		double yMax = Mth.clamp(Math.max(startP, endP), 0F, 1F);
 		
 		// Texture co-ordinates
 		float texXMin = ICON_TEX * (float)indexX;
@@ -291,18 +296,18 @@ public class GuiHandler
 		double endY = posY + (sizeY * yMax);
 		posY += sizeY * yMin;
 		
-		matrix.push();
+		matrix.pushPose();
 			mc.getTextureManager().bindTexture(ABILITY_ICONS);
 			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
-		matrix.pop();
+		matrix.popPose();
 	}
 	
-	public static void drawAbilitySlot(MatrixStack matrix, float posX, float posY)
+	public static void drawAbilitySlot(PoseStack matrix, float posX, float posY)
 	{
 		drawIconAt(matrix, posX - 1, posY - 1, 1, 1, ICON_SIZE + 2, ICON_SIZE + 2);
 	}
 	
-	private static void drawAbility(ActivatedAbility ability, int cooldown, double posX, double posY, MatrixStack matrix, SideX side)
+	private static void drawAbility(ActivatedAbility ability, int cooldown, double posX, double posY, PoseStack matrix, SideX side)
 	{
 		EnumNameDisplay displayStyle = ConfigVO.CLIENT.nameDisplay.get();
 		if(displayStyle == null)
@@ -313,7 +318,7 @@ public class GuiHandler
 		double startY = posY;
 		double endX = startX + ICON_SIZE;
 		
-		matrix.push();
+		matrix.pushPose();
 			boolean canTrigger = ability.canTrigger(player);
 			
 			if(cooldown <= 0)
@@ -331,7 +336,7 @@ public class GuiHandler
 				drawPartialIcon(matrix, posX, posY, texIndex, 0, ICON_SIZE, ICON_SIZE, coolRemaining, 1F, 1F, 1F, 1F, 1F);
 			}
 			
-			if(displayStyle != EnumNameDisplay.SNEAKING || player.isSneaking())
+			if(displayStyle != EnumNameDisplay.SNEAKING || player.isCrouching())
 			{
 				int textColor = ability.isActive() ? TextFormatting.GOLD.getColor() : canTrigger ? -1 : 10526880;
 				String name = ability.getDisplayName().getString();
@@ -346,7 +351,7 @@ public class GuiHandler
 					
 					int startInd = (int)(sin * name.length());
 					int endInd = Math.min(startInd + 14, name.length());
-					startInd = MathHelper.clamp(startInd, 0, endInd - 14);
+					startInd = Mth.clamp(startInd, 0, endInd - 14);
 					displayName = name.substring(startInd, endInd);
 					while(displayName.lastIndexOf(" ") == displayName.length() - 1 && displayName.length() > 0)
 						displayName = displayName.substring(0, displayName.length() - 1);
@@ -357,10 +362,10 @@ public class GuiHandler
 						displayName += "...";
 				}
 				
-				int textPos = side == SideX.RIGHT ? (int)(endX + 5D) : (int)(startX - 5D - mc.fontRenderer.getStringWidth(displayName));
-				mc.fontRenderer.drawString(matrix, displayName, textPos, (int)startY + 1, textColor);
+				int textPos = side == SideX.RIGHT ? (int)(endX + 5D) : (int)(startX - 5D - mc.font.width(displayName));
+				mc.font.drawString(matrix, displayName, textPos, (int)startY + 1, textColor);
 			}
-		matrix.pop();
+		matrix.popPose();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -368,8 +373,8 @@ public class GuiHandler
 	{
 		GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR.param, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR.param, GlStateManager.SourceFactor.ONE.param, GlStateManager.DestFactor.ZERO.param);
 		GlStateManager.color4f(1F, 1F, 1F, 1F);
-		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuffer();
+		bufferbuilder.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
 			bufferbuilder.pos(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMax).endVertex();
 			bufferbuilder.pos(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMax).endVertex();
 			bufferbuilder.pos(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMin).endVertex();

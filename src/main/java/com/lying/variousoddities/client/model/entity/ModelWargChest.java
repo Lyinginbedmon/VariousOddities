@@ -8,7 +8,7 @@ public class ModelWargChest extends ModelMountChest<EntityWarg>
 	{
 		super(scaleIn);
 		
-		this.chestL.rotationPointZ = this.chestR.rotationPointZ = 9F;
+		this.chestL.z = this.chestR.z = 9F;
 	}
 	
 	public void setLivingAnimations(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)

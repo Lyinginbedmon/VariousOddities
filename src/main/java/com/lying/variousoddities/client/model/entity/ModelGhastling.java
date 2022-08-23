@@ -1,63 +1,64 @@
 package com.lying.variousoddities.client.model.entity;
 
-import java.util.Arrays;
 import java.util.Random;
 
-import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.passive.EntityGhastling;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.entity.model.SegmentedModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
 
-public class ModelGhastling extends SegmentedModel<EntityGhastling>
+public class ModelGhastling extends HierarchicalModel<EntityGhastling>
 {
-	private final ModelRenderer body;
-	private final ModelRenderer[] tentacles = new ModelRenderer[6];
+	private final ModelPart body;
+	private final ModelPart[] tentacles = new ModelPart[6];
 	
-	private final float TENT_SPREAD = 2F;
+	private static final float TENT_SPREAD = 2F;
 	
-	public ModelGhastling()
+	public ModelGhastling(ModelPart partsIn)
 	{
-		this.textureHeight = 32;
-		this.textureWidth = 32;
+		body = partsIn.getChild("body");
+		for(int i=0; i<6; ++i)
+			tentacles[i] = body.getChild("tentacle_"+i);
+	}
+	
+	public static LayerDefinition createBodyLayer(CubeDeformation deformation)
+	{
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition part = mesh.getRoot();
 		
-		body = ModelUtils.freshRenderer(this);
-		body.addBox(-4F, -4F, -4F, 8, 8, 8);
-		body.rotationPointY = 21F;
-		
+		PartDefinition body = part.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-4F, -4F, -4F, 8, 8, 8, deformation), PartPose.offset(0F, 21F, 0F));
 		Random rand = new Random(1660L);
-		for(int i=0; i< this.tentacles.length; ++i)
-		{
-			this.tentacles[i] = ModelUtils.freshRenderer(this);
-			this.tentacles[i].addBox(-0.5F, 0F, -0.5F, 1, rand.nextInt(3) + 4, 1, 0.7F);
-			this.tentacles[i].rotationPointX = (((float)(i % 3) - (float)(i / 3 % 2) * 0.5F + 0.25F) / 2.0F * 2.0F - 1.0F) * TENT_SPREAD;
-			this.tentacles[i].rotationPointZ = ((float)(i / 3) / 2.0F * 2.0F - 1.0F) * TENT_SPREAD;
-			this.tentacles[i].rotationPointY = 2F;
-			body.addChild(this.tentacles[i]);
-		}
+			for(int i=0; i<6; ++i)
+				body.addOrReplaceChild("tentacle_"+i, CubeListBuilder.create().texOffs(0, 0).addBox(-0.5F, 0F, -0.5F, 1, rand.nextInt(3) + 4, 1, deformation.extend(0.7F)), PartPose.offset((((float)(i % 3) - (float)(i / 3 % 2) * 0.5F + 0.25F) / 2.0F * 2.0F - 1.0F) * TENT_SPREAD, ((float)(i / 3) / 2.0F * 2.0F - 1.0F) * TENT_SPREAD, 2F));
+		
+		return LayerDefinition.create(mesh, 32, 32);
 	}
 	
-	public Iterable<ModelRenderer> getParts()
+	public ModelPart root()
 	{
-		return Arrays.asList(body);
+		return body;
 	}
 	
-	public void setRotationAngles(EntityGhastling entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public void setupAnim(EntityGhastling entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		this.body.rotateAngleX = headPitch * ((float)Math.PI / 180F);
-		this.body.rotateAngleY = netHeadYaw * ((float)Math.PI / 180F);
+		this.body.xRot = headPitch * ((float)Math.PI / 180F);
+		this.body.yRot = netHeadYaw * ((float)Math.PI / 180F);
 		for(int i = 0; i < this.tentacles.length; ++i)
-			this.tentacles[i].rotateAngleX = 0.2F * MathHelper.sin(ageInTicks * 0.3F + (float)i) + 0.4F;
+			this.tentacles[i].xRot = 0.2F * Mth.sin(ageInTicks * 0.3F + (float)i) + 0.4F;
 	}
 	
-	public void renderOnShoulder(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, int ageInTicks)
+	public void renderOnShoulder(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, int ageInTicks)
 	{
-		this.setRotationAngles(null, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-		this.getParts().forEach((p_228285_4_) -> {
-			p_228285_4_.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-			});
+		this.setupAnim(null, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+		this.root().render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
 	}
 }

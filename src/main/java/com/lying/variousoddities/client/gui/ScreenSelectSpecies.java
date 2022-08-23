@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nullable;
 
@@ -22,25 +21,25 @@ import com.lying.variousoddities.species.abilities.AbilityModifier;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
 import com.lying.variousoddities.species.types.EnumCreatureType;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.Player;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.entity.player.Player;
 
 public class ScreenSelectSpecies extends Screen
@@ -79,7 +78,7 @@ public class ScreenSelectSpecies extends Screen
 	
 	public ScreenSelectSpecies(Player playerIn, int power, boolean random)
 	{
-		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select"));
+		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
 		this.targetPower = power;
 		this.randomise = random;
@@ -152,7 +151,7 @@ public class ScreenSelectSpecies extends Screen
 		if(this.randomise && !this.selectableSpecies.isEmpty())
 		{
 			Species selected = Species.HUMAN;
-			Random rand = player.getRNG();
+			RandomSource rand = player.getRandom();
 			if(!this.selectableSpecies.isEmpty())
 				do
 				{
@@ -164,7 +163,7 @@ public class ScreenSelectSpecies extends Screen
 		}
 	}
 	
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		renderDirtBackground(0);
 		if(!this.randomise)
@@ -187,11 +186,11 @@ public class ScreenSelectSpecies extends Screen
 		Species currentSpecies = getCurrentSpecies();
 		
 		this.selectButton.setMessage(currentSpecies.getDisplayName());
-		yPos += this.font.FONT_HEIGHT + 12;
+		yPos += this.font.lineHeight + 12;
 		
 		// Render stars of appropriate colour for power
 		drawStars(matrixStack, yPos, currentSpecies.getPower());
-		yPos += this.font.FONT_HEIGHT + 3;
+		yPos += this.font.lineHeight + 3;
 		
 		// Display types
 		int health = 20;
@@ -203,7 +202,7 @@ public class ScreenSelectSpecies extends Screen
 		}
 		
 		// Health and armour
-		yPos += this.font.FONT_HEIGHT + 3;
+		yPos += this.font.lineHeight + 3;
 		
 		double armour = 0;
 		List<Ability> abilities = currentSpecies.getFullAbilities();
@@ -220,14 +219,14 @@ public class ScreenSelectSpecies extends Screen
 		drawHealthAndArmour(matrixStack, this.font, this.width / 2, yPos, health, (int)armour);
 		
 		// Display abilities
-		yPos += this.font.FONT_HEIGHT + 3;
+		yPos += this.font.lineHeight + 3;
 		this.abilityList.setTop(yPos);
 		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
     
 	@SuppressWarnings("deprecation")
-	public static void drawListBorder(MatrixStack matrixStack, ExtendedList<?> listIn, int heightIn, int texX, int texY, int growth, ResourceLocation texture)
+	public static void drawListBorder(PoseStack matrixStack, ExtendedList<?> listIn, int heightIn, int texX, int texY, int growth, ResourceLocation texture)
 	{
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		Minecraft.getInstance().getTextureManager().bindTexture(texture);
@@ -239,45 +238,45 @@ public class ScreenSelectSpecies extends Screen
 		int sideHeight = listBottom - (listTop + 6);
 		int sideWidth = listRight - (listLeft + 6);
 		// Top Left
-		AbstractGui.blit(matrixStack, listLeft, listTop, 6, 6, texX, texY, 6, 6, 256, 256);
+		Screen.blit(matrixStack, listLeft, listTop, 6, 6, texX, texY, 6, 6, 256, 256);
 		// Top Right
-		AbstractGui.blit(matrixStack, listRight, listTop, 6, 6, texX + 26, texY, 6, 6, 256, 256);
+		Screen.blit(matrixStack, listRight, listTop, 6, 6, texX + 26, texY, 6, 6, 256, 256);
 		// Bot Left
-		AbstractGui.blit(matrixStack, listLeft, listBottom, 6, 6, texX, texY + 26, 6, 6, 256, 256);
+		Screen.blit(matrixStack, listLeft, listBottom, 6, 6, texX, texY + 26, 6, 6, 256, 256);
 		// Bot Right
-		AbstractGui.blit(matrixStack, listRight, listBottom, 6, 6, texX + 26, texY + 26, 6, 6, 256, 256);
+		Screen.blit(matrixStack, listRight, listBottom, 6, 6, texX + 26, texY + 26, 6, 6, 256, 256);
 		// Left
-		AbstractGui.blit(matrixStack, listLeft, listTop + 6, 6, sideHeight, texX, texY + 6, 6, 20, 256, 256);
+		Screen.blit(matrixStack, listLeft, listTop + 6, 6, sideHeight, texX, texY + 6, 6, 20, 256, 256);
 		// Right
-		AbstractGui.blit(matrixStack, listRight, listTop + 6, 6, sideHeight, texX + 26, texY + 6, 6, 20, 256, 256);
+		Screen.blit(matrixStack, listRight, listTop + 6, 6, sideHeight, texX + 26, texY + 6, 6, 20, 256, 256);
 		// Top
-		AbstractGui.blit(matrixStack, listLeft + 6, listTop, sideWidth, 6, texX + 6, texY, 20, 6, 256, 256);
+		Screen.blit(matrixStack, listLeft + 6, listTop, sideWidth, 6, texX + 6, texY, 20, 6, 256, 256);
 		// Bottom
-		AbstractGui.blit(matrixStack, listLeft + 6, listBottom, sideWidth, 6, texX + 6, texY + 26, 20, 6, 256, 256);
+		Screen.blit(matrixStack, listLeft + 6, listBottom, sideWidth, 6, texX + 6, texY + 26, 20, 6, 256, 256);
 	}
 	
     @SuppressWarnings("deprecation")
 	private void hideListEdge()
     {
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuffer();
-		this.minecraft.getTextureManager().bindTexture(AbstractGui.BACKGROUND_LOCATION);
+		Tesselator tessellator = Tesselator.getInstance();
+		BufferBuilder bufferbuilder = tessellator.getBuilder();
+		this.minecraft.getTextureManager().bindTexture(Screen.BACKGROUND_LOCATION);
 		int listRight = this.speciesList.getLeft() + this.speciesList.getWidth() + 5;
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		int listStart = 32;
-        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-	        bufferbuilder.pos(0.0D, (double)listStart, 0.0D).tex(0.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
-	        bufferbuilder.pos((double)listRight, (double)listStart, 0.0D).tex((float)listRight / 32.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
-	        bufferbuilder.pos((double)listRight, (double)0, 0.0D).tex((float)listRight / 32.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
-	        bufferbuilder.pos(0.0D, (double)0, 0.0D).tex(0.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
+        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+	        bufferbuilder.vertex(0.0D, (double)listStart, 0.0D).uv(0.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.vertex((double)listRight, (double)listStart, 0.0D).uv((float)listRight / 32.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.vertex((double)listRight, (double)0, 0.0D).uv((float)listRight / 32.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.vertex(0.0D, (double)0, 0.0D).uv(0.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
 	    tessellator.draw();
 		
 		int listEnd = this.height - 51;
-        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-	        bufferbuilder.pos(0.0D, (double)this.height, 0.0D).tex(0.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
-	        bufferbuilder.pos((double)listRight, (double)this.height, 0.0D).tex((float)listRight / 32.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
-	        bufferbuilder.pos((double)listRight, (double)listEnd, 0.0D).tex((float)listRight / 32.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
-	        bufferbuilder.pos(0.0D, (double)listEnd, 0.0D).tex(0.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
+        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+	        bufferbuilder.vertex(0.0D, (double)this.height, 0.0D).uv(0.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.vertex((double)listRight, (double)this.height, 0.0D).uv((float)listRight / 32.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.vertex((double)listRight, (double)listEnd, 0.0D).uv((float)listRight / 32.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
+	        bufferbuilder.vertex(0.0D, (double)listEnd, 0.0D).uv(0.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
         tessellator.draw();
 		RenderSystem.enableTexture();
 		RenderSystem.shadeModel(7424);
@@ -286,7 +285,7 @@ public class ScreenSelectSpecies extends Screen
     }
 	
 	@SuppressWarnings("deprecation")
-	public void renderBackgroundLayer(MatrixStack matrixStack, float partialTicks)
+	public void renderBackgroundLayer(PoseStack matrixStack, float partialTicks)
 	{
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURE);
@@ -295,12 +294,12 @@ public class ScreenSelectSpecies extends Screen
 		// Top
 		this.blit(matrixStack, x, 45, 0, 0, 175, 46);
 		// Middle
-		AbstractGui.blit(matrixStack, x, 45 + 46, 175, this.height - 20 - 45 - 46, 0, 47, 175, 125, 256, 256);
+		Screen.blit(matrixStack, x, 45 + 46, 175, this.height - 20 - 45 - 46, 0, 47, 175, 125, 256, 256);
 		// Bottom
 		this.blit(matrixStack, x, this.height - 20, 0, 172, 175, 8);
 	}
 	
-	public void drawStars(MatrixStack matrixStack, int yPos, int power)
+	public void drawStars(PoseStack matrixStack, int yPos, int power)
 	{
 		int stars = Math.max(Math.abs(power), 1);
 		
@@ -310,7 +309,7 @@ public class ScreenSelectSpecies extends Screen
 		drawStars(matrixStack, power, startX, yPos);
 	}
 	
-	public static void drawStars(MatrixStack matrixStack, int power, int xPos, int yPos)
+	public static void drawStars(PoseStack matrixStack, int power, int xPos, int yPos)
 	{
 		float red = power > 0 ? 0F : power < 0 ? 1F : 0.5F;
 		float green = power > 0 ? 1F : power < 0 ? 0F : 0.5F;
@@ -318,7 +317,7 @@ public class ScreenSelectSpecies extends Screen
 		drawStars(matrixStack, power, xPos, yPos, red, green, blue);
 	}
 	
-	public static void drawStars(MatrixStack matrixStack, int power, int xPos, int yPos, float red, float green, float blue)
+	public static void drawStars(PoseStack matrixStack, int power, int xPos, int yPos, float red, float green, float blue)
 	{
 		int stars = Math.max(Math.abs(power), 1);
 		int startX = xPos;
@@ -329,14 +328,14 @@ public class ScreenSelectSpecies extends Screen
 		}
 	}
 	
-	public static void drawStar(MatrixStack matrixStack, int xPos, int yPos, float red, float green, float blue)
+	public static void drawStar(PoseStack matrixStack, int xPos, int yPos, float red, float green, float blue)
 	{
 		int startX = xPos;
 		int endX = startX + 9;
-		matrixStack.push();
+		matrixStack.pushPose();
 			Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
 			blit(matrixStack.getLast().getMatrix(), startX, (int)endX, yPos, yPos + 9, 0, 0, ICON_TEX, ICON_TEX, ICON_TEX * 2, red, green, blue, 1F);
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 	
     public void init(Minecraft minecraft, int width, int height)
@@ -357,28 +356,28 @@ public class ScreenSelectSpecies extends Screen
 		this.abilityList = new AbilityList(minecraft, (this.width - listWidth) / 2, listWidth, this.height, 20);
 		this.children.add(this.abilityList);
     	
-    	this.addButton(selectButton = new Button(midX - 50, 35, 100, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
+    	this.addWidget(selectButton = new Button(midX - 50, 35, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
     		{
     			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
     		},
-				(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
+				(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
     	
-    	this.addButton(typesButton = new Button(midX - 60, height - 25, 120, 20, new TranslationTextComponent("gui.varodd.species_select.lose_types"), (button) ->
+    	this.addWidget(typesButton = new Button(midX - 60, height - 25, 120, 20, Component.translatable("gui.varodd.species_select.lose_types"), (button) ->
     		{
     			keepTypes = !keepTypes;
-    			typesButton.setMessage(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select."+(keepTypes ? "keep_types" : "lose_types")));
-    		}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".species_select.keep_types.info"), x, y); }));
+    			typesButton.setMessage(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select."+(keepTypes ? "keep_types" : "lose_types")));
+    		}, (button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.keep_types.info"), x, y); }));
     	
-    	this.addButton(new Button(midX + 100, 35, 20, 20, new StringTextComponent("X"), (button) -> 
+    	this.addWidget(new Button(midX + 100, 35, 20, 20, Component.literal("X"), (button) -> 
     	{
 			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUniqueID()));
 			Minecraft.getInstance().displayGuiScreen(null);
-    	}, (button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui.varodd.species_select.exit"), x, y); }));
-    	this.addButton(new Button(this.width - 23, 3, 20, 20, new StringTextComponent(">"), (button) -> 
+    	}, (button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui.varodd.species_select.exit"), x, y); }));
+    	this.addWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
     		{
     			Minecraft.getInstance().displayGuiScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
     		},
-    			(button,matrix,x,y) -> { renderTooltip(matrix, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
+    			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
     }
     
     private void populateAbilityList(List<Ability> abilitiesIn)
@@ -400,7 +399,7 @@ public class ScreenSelectSpecies extends Screen
 		return selectableSpecies.get(index);
     }
     
-    public static void drawHealthAndArmour(MatrixStack matrix, FontRenderer font, int xPos, int yPos, int health, int armour)
+    public static void drawHealthAndArmour(PoseStack matrix, Font font, int xPos, int yPos, int health, int armour)
     {
 		yPos -= 2;
     	int healthX = xPos;
@@ -417,7 +416,7 @@ public class ScreenSelectSpecies extends Screen
 	    	String healthStr = String.valueOf(health);
 			drawCenteredString(matrix, font, healthStr, healthX, yPos, -1);
 			
-			int heartX = healthX - (font.getStringWidth(healthStr) / 2) - 2 - font.FONT_HEIGHT;
+			int heartX = healthX - (font.width(healthStr) / 2) - 2 - font.lineHeight;
 			drawHUDIcon(matrix, heartX, yPos, 16, 0);
 			drawHUDIcon(matrix, heartX, yPos, 52, 0);
 		}
@@ -427,15 +426,15 @@ public class ScreenSelectSpecies extends Screen
 	    	String armourStr = String.valueOf(armour);
 			drawCenteredString(matrix, font, armourStr, armourX, yPos, -1);
 			
-			int chestX = armourX + (font.getStringWidth(armourStr) / 2) + 2;
+			int chestX = armourX + (font.width(armourStr) / 2) + 2;
 			drawHUDIcon(matrix, chestX, yPos, 34, 9);
 		}
     }
     
-    public static void drawHUDIcon(MatrixStack matrix, int xPos, int yPos, int texX, int texY)
+    public static void drawHUDIcon(PoseStack matrix, int xPos, int yPos, int texX, int texY)
     {
     	yPos -= 1;
-		matrix.push();
+		matrix.pushPose();
 			Minecraft.getInstance().getTextureManager().bindTexture(GUI_ICONS_LOCATION);
 			
 			float scale = 1F / 256F;
@@ -443,8 +442,8 @@ public class ScreenSelectSpecies extends Screen
 			float xMax = (texX + 9) * scale;
 			float yMin = texY * scale;
 			float yMax = (texY + 9) * scale;
-			blit(matrix.getLast().getMatrix(), xPos, xPos + Minecraft.getInstance().fontRenderer.FONT_HEIGHT, yPos, yPos + Minecraft.getInstance().fontRenderer.FONT_HEIGHT, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
-		matrix.pop();
+			blit(matrix.getLast().getMatrix(), xPos, xPos + Minecraft.getInstance().font.lineHeight, yPos, yPos + Minecraft.getInstance().font.lineHeight, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
+		matrix.popPose();
     }
 	
 	@SuppressWarnings("deprecation")
@@ -452,12 +451,12 @@ public class ScreenSelectSpecies extends Screen
 	{
 		GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR.param, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR.param, GlStateManager.SourceFactor.ONE.param, GlStateManager.DestFactor.ZERO.param);
 		GlStateManager.color4f(1F, 1F, 1F, 1F);
-		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-			bufferbuilder.pos(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMax).endVertex();
-			bufferbuilder.pos(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMax).endVertex();
-			bufferbuilder.pos(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMin).endVertex();
-			bufferbuilder.pos(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMin).endVertex();
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+			bufferbuilder.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMax).endVertex();
+			bufferbuilder.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMax).endVertex();
+			bufferbuilder.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMin).endVertex();
+			bufferbuilder.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMin).endVertex();
 		bufferbuilder.finishDrawing();
 		RenderSystem.enableAlphaTest();
 		WorldVertexBufferUploader.draw(bufferbuilder);

@@ -5,9 +5,9 @@ import javax.annotation.Nonnull;
 import com.lying.variousoddities.init.VOBlocks;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.data.tags.BlockTagsProvider;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class VOBlockTags extends BlockTagsProvider

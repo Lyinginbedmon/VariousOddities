@@ -6,14 +6,13 @@ import com.lying.variousoddities.client.renderer.RenderUtils;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 import com.lying.variousoddities.world.settlement.BoxRoom;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.play.server.STitlePacket;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -24,12 +23,12 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class SettlementRender
 {
 	private static final Minecraft mc = Minecraft.getInstance();
-	private static PlayerEntity clientPlayer = mc.player;
+	private static Player clientPlayer = mc.player;
 	
 	private static int latestSettlement = -1;
 	private static BoxRoom latestRoom = null;
 	
-	public static PlayerEntity getPlayer()
+	public static Player getPlayer()
 	{
 		if(clientPlayer == null)
 			clientPlayer = mc.player;
@@ -39,7 +38,7 @@ public class SettlementRender
 	
 	public static boolean canRender()
 	{
-		return mc.world != null && getPlayer() != null;
+		return mc.level != null && getPlayer() != null;
 	}
 	
 	@SubscribeEvent
@@ -54,7 +53,7 @@ public class SettlementRender
 		getPlayer();
 		if(!canRender()) return;
 		
-		SettlementManager localManager = VariousOddities.proxy.getSettlementManager(mc.world);
+		SettlementManager localManager = VariousOddities.proxy.getSettlementManager(mc.level);
 		if(!localManager.isEmpty())
 		{
 			Settlement currentSettlement = localManager.getTitleSettlementAt(getPlayer().getPosition());
@@ -78,18 +77,18 @@ public class SettlementRender
 			// If we've entered a different room in a settlement, announce accordingly
 			if(currentSettlement != null)
 			{
-				BoxRoom roomHere = currentSettlement.getRoomAt(getPlayer().getPosition());
+				BoxRoom roomHere = currentSettlement.getRoomAt(getPlayer().blockPosition());
 				if(roomHere == null)
 					latestRoom = null;
 				else if(!roomHere.equals(latestRoom))
 				{
 					if(roomHere != null)
 					{
-						ITextComponent subtitle = null;
+						Component subtitle = null;
 						if(roomHere.hasTitle())
 							subtitle = roomHere.getTitle();
 						else if(getPlayer().isCreative())
-							subtitle = new TranslationTextComponent(roomHere.getFunction().name());
+							subtitle = Component.translatable(roomHere.getFunction().name());
 						
 						if(subtitle != null)
 							mc.getConnection().handleTitle(new STitlePacket(STitlePacket.Type.ACTIONBAR, subtitle));
@@ -108,7 +107,7 @@ public class SettlementRender
 	
 	public static int latestSettlement(){ return latestSettlement; }
 	
-	private static void renderSettlementRooms(Settlement settlement, Vector3d eyePos, MatrixStack matrixIn)
+	private static void renderSettlementRooms(Settlement settlement, Vec3 eyePos, PoseStack matrixIn)
 	{
         float alpha = 255F / 255F;
         float red = 223F / 255F;
@@ -116,9 +115,9 @@ public class SettlementRender
         float green = 255F / 255F;
 		for(BoxRoom room : settlement.getRooms())
 		{
-	        Vector3d boxMin = new Vector3d(room.min().getX(), room.min().getY(), room.min().getZ());
-	        Vector3d boxMax = boxMin.add(room.sizeX(), room.sizeY(), room.sizeZ());
-	        RenderUtils.drawBoundingBox(matrixIn, boxMin, boxMax, getPlayer().getLookVec(), eyePos, red, green, blue, alpha, 0.025F, true);
+	        Vec3 boxMin = new Vec3(room.min().getX(), room.min().getY(), room.min().getZ());
+	        Vec3 boxMax = boxMin.add(room.sizeX(), room.sizeY(), room.sizeZ());
+	        RenderUtils.drawBoundingBox(matrixIn, boxMin, boxMax, getPlayer().getLookAngle(), eyePos, red, green, blue, alpha, 0.025F, true);
 		}
 	}
 }

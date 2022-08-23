@@ -2,28 +2,26 @@ package com.lying.variousoddities.client.gui;
 
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.StringUtils;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Player;
 
 public class ScreenParalysed extends AbstractParalysisScreen
 {
-	public ScreenParalysed(PlayerEntity playerIn)
+	public ScreenParalysed(Player playerIn)
 	{
-		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".paralysed"), playerIn);
+		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed"), playerIn);
 	}
 	
 	public int ticksToDisplay()
 	{
-		EffectInstance paralysis = thePlayer.getActivePotionEffect(VOPotions.PARALYSIS);
+		MobEffectInstance paralysis = thePlayer.getEffect(VOPotions.PARALYSIS);
 		if(paralysis == null)
 			return 0;
-		else if(paralysis.getIsPotionDurationMax())
+		else if(paralysis.isNoCounter())
 			return -1;
 		
 		return paralysis.getDuration();
@@ -31,18 +29,18 @@ public class ScreenParalysed extends AbstractParalysisScreen
 	
 	public boolean shouldClose()
 	{
-		return thePlayer.getActivePotionEffect(VOPotions.PARALYSIS) == null || thePlayer.getActivePotionEffect(VOPotions.PARALYSIS).getDuration() == 0;
+		return thePlayer.getEffect(VOPotions.PARALYSIS) == null || thePlayer.getEffect(VOPotions.PARALYSIS).getDuration() == 0;
 	}
 	
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		this.renderBackground(matrixStack);
 		
-		ITextComponent duration;
+		Component duration;
 		if(ticksToDisplay() >= 0)
-			duration = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".paralysed.temporary", StringUtils.ticksToElapsedTime(MathHelper.floor((float)ticksToDisplay())));
+			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.temporary", StringUtils.ticksToElapsedTime(Mth.floor((float)ticksToDisplay())));
 		else
-			duration = new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".paralysed.permanent");
+			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.permanent");
 		
 		drawCenteredString(matrixStack, this.font, duration, this.width / 2, 55, 16777215);
 		

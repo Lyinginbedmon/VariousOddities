@@ -5,19 +5,19 @@ import java.util.ArrayList;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
 
-public class ModelKobold extends BipedModel<EntityKobold>
+public class ModelKobold extends HumanoidModel<EntityKobold>
 {
-	ModelRenderer snout;
-	ModelRenderer horns;
+	ModelPart snout;
+	ModelPart horns;
 	private final float JAW_RANGE = ModelUtils.toRadians(6D);
-	ModelRenderer jaw;
-	ModelRenderer belly;
-	ModelRenderer tail;
-	ArrayList<ModelRenderer> tailSegments = new ArrayList<ModelRenderer>();
+	ModelPart jaw;
+	ModelPart belly;
+	ModelPart tail;
+	ArrayList<ModelPart> tailSegments = new ArrayList<ModelPart>();
 	
 	public ModelKobold()
 	{
@@ -46,12 +46,12 @@ public class ModelKobold extends BipedModel<EntityKobold>
 		// Horns
 			int hornX = 45, hornY = 13;
 		horns = ModelUtils.freshRenderer(this);
-		ModelRenderer hornRight = ModelUtils.freshRenderer(this).setTextureOffset(hornX, hornY).addBox(-4.2F, -6.5F, -2F, 2, 2, 8);
+		ModelPart hornRight = ModelUtils.freshRenderer(this).setTextureOffset(hornX, hornY).addBox(-4.2F, -6.5F, -2F, 2, 2, 8);
 		hornRight.rotateAngleX = ModelUtils.degree10;
 		hornRight.rotateAngleY = -ModelUtils.degree5;
 			horns.addChild(hornRight);
 		
-		ModelRenderer hornLeft = ModelUtils.freshRenderer(this);
+		ModelPart hornLeft = ModelUtils.freshRenderer(this);
 		hornLeft.mirror = true;
 		hornLeft.setTextureOffset(hornX, hornY).addBox(2.2F, -6.5F, -2F, 2, 2, 8);
 		hornLeft.rotateAngleX = ModelUtils.degree10;
@@ -75,7 +75,7 @@ public class ModelKobold extends BipedModel<EntityKobold>
 		
 		for(int i=0; i<2; i++)
 		{
-			ModelRenderer segment = makeTailSegment(i);
+			ModelPart segment = makeTailSegment(i);
 			tailSegments.get(i).addChild(segment);
 			tailSegments.add(segment);
 		}
@@ -83,11 +83,11 @@ public class ModelKobold extends BipedModel<EntityKobold>
 		this.bipedBody.addChild(tail);
 		
 		/** Arms */
-        ModelRenderer upper = ModelUtils.freshRenderer(this);
+        ModelPart upper = ModelUtils.freshRenderer(this);
         upper.setTextureOffset(0, 43).addBox(-2.0F, -2.0F, -1.5F, 3, 6, 3, 0.01F);
         upper.rotateAngleX = ModelUtils.degree10;
 
-        ModelRenderer lower = ModelUtils.freshRenderer(this).setTextureOffset(12, 43);
+        ModelPart lower = ModelUtils.freshRenderer(this).setTextureOffset(12, 43);
         lower.addBox(-2.0F, 2.5F, 1.0F, 3, 6, 3, 0.2F);
         lower.rotateAngleX = (float)(Math.toRadians(-30));
 
@@ -113,19 +113,19 @@ public class ModelKobold extends BipedModel<EntityKobold>
 		
 		/** Legs */
 	        // Thigh
-	        ModelRenderer thigh = ModelUtils.freshRenderer(this).setTextureOffset(0, 52);
+	        ModelPart thigh = ModelUtils.freshRenderer(this).setTextureOffset(0, 52);
 	        thigh.addBox(-2F, -2F, -6.5F, 4, 3, 9);
 	        thigh.rotateAngleX = (float)(Math.toRadians(35D));
 			
 	        // Ankle
-	        ModelRenderer ankle = ModelUtils.freshRenderer(this).setTextureOffset(26, 52);
+	        ModelPart ankle = ModelUtils.freshRenderer(this).setTextureOffset(26, 52);
 	        ankle.addBox(-1.5F, 3.5F, -2F, 3, 2, 7);
 	        ankle.rotateAngleX = (float)(Math.toRadians(-30D));
 	        
 	        // Foot
-	        ModelRenderer foot = ModelUtils.freshRenderer(this).setTextureOffset(46, 52);
+	        ModelPart foot = ModelUtils.freshRenderer(this).setTextureOffset(46, 52);
 	        foot.addBox(-1.5F, 10F, -3F, 3, 2, 5);
-	        ModelRenderer bridge = ModelUtils.freshRenderer(this).setTextureOffset(46, 59);
+	        ModelPart bridge = ModelUtils.freshRenderer(this).setTextureOffset(46, 59);
 	        bridge.addBox(-1F, 3.5F, -9.75F, 2, 2, 6);
 	        bridge.rotateAngleX = (float)(Math.toRadians(70D));
 	        foot.addChild(bridge);
@@ -163,9 +163,9 @@ public class ModelKobold extends BipedModel<EntityKobold>
 		this.bipedLeftLeg.setRotationPoint(2.4F, 12F, 0F);
 	}
     
-    private ModelRenderer makeTailSegment(int tailPosition)
+    private ModelPart makeTailSegment(int tailPosition)
     {
-    	ModelRenderer segment = ModelUtils.freshRenderer(this).setTextureOffset(20+(20*tailPosition), 33).addBox(-1F, -1F, 0F, 2, 2, 8 - (2*tailPosition));
+    	ModelPart segment = ModelUtils.freshRenderer(this).setTextureOffset(20+(20*tailPosition), 33).addBox(-1F, -1F, 0F, 2, 2, 8 - (2*tailPosition));
     	segment.rotationPointZ = 9.5F - (2*tailPosition);
     	
     	return segment;
@@ -182,7 +182,7 @@ public class ModelKobold extends BipedModel<EntityKobold>
 		horns.showModel = entityIn.getHorns();
 		
 		float time = ((float)Math.sin(ageInTicks / 20)) * 0.5F;
-		for(ModelRenderer segment : tailSegments)
+		for(ModelPart segment : tailSegments)
 		{
 			segment.rotateAngleY = time / 3;
 			segment.rotateAngleX = (time * Math.signum(time)) / 8;

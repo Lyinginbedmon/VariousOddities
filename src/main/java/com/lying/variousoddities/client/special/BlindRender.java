@@ -9,10 +9,10 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.AbilityBlind;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3d;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -23,15 +23,15 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.settings.PointOfView;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -45,7 +45,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class BlindRender
 {
 	private static final Minecraft mc = Minecraft.getInstance();
-	private static PlayerEntity player = mc.player;
+	private static Player player = mc.player;
 	
 	private static boolean blindnessActive = false;
 	
@@ -71,14 +71,14 @@ public class BlindRender
 		float partialTicks = event.getPartialTicks();
 		if(player == null)
 			player = mc.player;
-		if(player == null || player.getEntityWorld() == null)
+		if(player == null || player.getLevel() == null)
 			return;
-		World world = player.getEntityWorld();
+		Level world = player.getLevel();
 		
 		List<BlockPos> clear = Lists.newArrayList();
 		BLIND_RENDERS.forEach((blockPos, ticks) -> 
 			{
-				if(player.getPosition().distanceSq(blockPos) < MEMORY_RANGE)
+				if(player.blockPosition().distanceSq(blockPos) < MEMORY_RANGE)
 					BLIND_RENDERS.put(blockPos, Math.min(++ticks, BLOCK_MEMORY));
 				else
 				{
@@ -92,12 +92,12 @@ public class BlindRender
 		clear.forEach((blockPos) -> { BLIND_RENDERS.remove(blockPos); });
 		
 		// Block the player is standing on
-		BlockPos floor = player.getPosition();
-		for(int i=0; i<player.getHeight(); i++)
+		BlockPos floor = player.blockPosition();
+		for(int i=0; i<player.getBbHeight(); i++)
 		{
-			registerBlock(floor.up(i), world);
+			registerBlock(floor.above(i), world);
 			for(Direction facing : Direction.values())
-				registerBlock(floor.up(i).offset(facing), world);
+				registerBlock(floor.above(i).relative(facing), world);
 		}
 		
 		// Block the player is looking at
@@ -132,22 +132,22 @@ public class BlindRender
 		}
 	}
 	
-	private static void registerBlock(BlockPos pos, World world)
+	private static void registerBlock(BlockPos pos, Level world)
 	{
-		if(!world.isAirBlock(pos))
+		if(!world.isEmptyBlock(pos))
 			BLIND_RENDERS.put(pos, BLOCK_MEMORY);
 	}
 	
-	private static void renderBlock(BlockState state, BlockPos pos, World world, MatrixStack stack, float alpha, float partialTicks)
+	private static void renderBlock(BlockState state, BlockPos pos, Level world, PoseStack stack, float alpha, float partialTicks)
 	{
 		BlockRendererDispatcher renderer = Minecraft.getInstance().getBlockRendererDispatcher();
 		IBakedModel model = renderer.getModelForState(state);
 		RenderType renderType = getStateRenderType(state);
-		stack.push();
+		stack.pusePose();
 			Vector3d playerPos = mc.getRenderManager().info.getProjectedView();
 			double alphaOffset = (1F - alpha) * 0.5D;
 			stack.translate(pos.getX() - playerPos.x + alphaOffset, pos.getY() - playerPos.y + alphaOffset, pos.getZ() - playerPos.z + alphaOffset);
-			stack.push();
+			stack.pusePose();
 				stack.scale(alpha, alpha, alpha);
 				ForgeHooksClient.setRenderLayer(renderType);
 					IVertexBuilder vertex = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().getBuffer(getStateRenderType(state));
@@ -160,11 +160,11 @@ public class BlindRender
 					TileEntity tile = world.getTileEntity(pos);
 					renderTile(tile, stack, partialTicks);
 				}
-			stack.pop();
-		stack.pop();
+			stack.popPose();
+		stack.popPose();
 	}
 	
-	private static <E extends TileEntity> void renderTile(E tile, MatrixStack stack, float partialTicks)
+	private static <E extends TileEntity> void renderTile(E tile, PoseStack stack, float partialTicks)
 	{
 		TileEntityRenderer<E> tileRenderer = TileEntityRendererDispatcher.instance.getRenderer(tile);
 		if(tileRenderer != null)

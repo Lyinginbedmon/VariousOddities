@@ -20,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -51,14 +52,14 @@ public class IngameGuiMixin
 		if(data == null || PlayerData.isPlayerNormalFunction(player))
 			return;
 		ci.cancel();
-		AbstractGui gui = (AbstractGui)(Object)this;
+		Screen gui = (Screen)(Object)this;
 		Component displayText = null;
 		switch(data.getBodyCondition())
 		{
 			case DEAD:
 				float progress = 1F - data.timeToRespawnable();
 				mc.getProfiler().startSection("expBar");
-					mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+					mc.getTextureManager().bindTexture(Screen.GUI_ICONS_LOCATION);
 					int k = (int)(progress * 183.0F);
 					int l = this.scaledHeight - 32 + 3;
 					gui.blit(matrixStack, xPos, l, 0, 64, 182, 5);
@@ -103,7 +104,7 @@ public class IngameGuiMixin
 									this.blitIcon(matrixStack, heartX, heartY, texX, texY);
 									heartX += ICON_SIZE + 1;
 								}
-							Minecraft.getInstance().getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+							Minecraft.getInstance().getTextureManager().bindTexture(Screen.GUI_ICONS_LOCATION);
 						}
 					}
 				break;
@@ -127,6 +128,6 @@ public class IngameGuiMixin
 	
 	private void blitIcon(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset)
 	{
-		AbstractGui.blit(matrixStack, x, y, 0, (float)uOffset, (float)vOffset, ICON_SIZE, ICON_SIZE, 256, 256);
+		Screen.blit(matrixStack, x, y, 0, (float)uOffset, (float)vOffset, ICON_SIZE, ICON_SIZE, 256, 256);
 	}
 }

@@ -3,18 +3,18 @@ package com.lying.variousoddities.client.gui;
 import java.util.List;
 
 import com.lying.variousoddities.species.Species;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.list.ExtendedList;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
 
-public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
+public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntry>
 {
 	private final ScreenSelectSpecies parentScreen;
 	
@@ -30,7 +30,7 @@ public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
 	
 	protected int getScrollbarPosition(){ return this.x1 - 6; }
 	
-	public class SpeciesListEntry extends ExtendedList.AbstractListEntry<SpeciesList.SpeciesListEntry>
+	public class SpeciesListEntry extends ObjectSelectionList.Entry<SpeciesList.SpeciesListEntry>
 	{
 		private final Minecraft mc;
 		private final IReorderingProcessor field_243407_e;
@@ -45,12 +45,12 @@ public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
 			this.field_243407_e = func_244424_a(mcIn, speciesIn.getDisplayName());
 		}
 		
-		private IReorderingProcessor func_244424_a(Minecraft p_244424_0_, ITextComponent p_244424_1_)
+		private IReorderingProcessor func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
 		{
-			int i = p_244424_0_.fontRenderer.getStringPropertyWidth(p_244424_1_);
+			int i = p_244424_0_.font.getStringPropertyWidth(p_244424_1_);
 			if (i > 157)
 			{
-				ITextProperties itextproperties = ITextProperties.func_240655_a_(p_244424_0_.fontRenderer.func_238417_a_(p_244424_1_, 157 - p_244424_0_.fontRenderer.getStringWidth("...")), ITextProperties.func_240652_a_("..."));
+				ITextProperties itextproperties = ITextProperties.func_240655_a_(p_244424_0_.font.func_238417_a_(p_244424_1_, 157 - p_244424_0_.font.getStringWidth("...")), ITextProperties.func_240652_a_("..."));
 				return LanguageMap.getInstance().func_241870_a(itextproperties);
 			}
 			else
@@ -58,7 +58,7 @@ public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
 		}
 		
 		@SuppressWarnings("deprecation")
-		public void render(MatrixStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
+		public void render(PoseStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
 		{
 			this.mc.getTextureManager().bindTexture(Widget.WIDGETS_LOCATION);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -81,7 +81,7 @@ public class SpeciesList extends ExtendedList<SpeciesList.SpeciesListEntry>
 			blit(matrixStack, rowLeft - 2 + texWidth, rowTop + texHeight, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
 			
 			IReorderingProcessor processor = this.field_243407_e;
-			this.mc.fontRenderer.func_238407_a_(matrixStack, processor, (float)(rowLeft + 2), (float)(rowTop + (rowHeight + 3 - mc.fontRenderer.FONT_HEIGHT) / 2), 16777215);
+			this.mc.font.func_238407_a_(matrixStack, processor, (float)(rowLeft + 2), (float)(rowTop + (rowHeight + 3 - mc.font.lineHeight) / 2), 16777215);
 		}
 		
 	 	public boolean mouseClicked(double mouseX, double mouseY, int button)

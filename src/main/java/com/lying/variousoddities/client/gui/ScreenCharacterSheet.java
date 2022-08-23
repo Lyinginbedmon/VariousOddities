@@ -15,6 +15,7 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.Types;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -135,7 +136,7 @@ public class ScreenCharacterSheet extends Screen
 		}
     }
 	
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		Style tooltipToRender = null;
 		
@@ -169,7 +170,7 @@ public class ScreenCharacterSheet extends Screen
 		if(mouseY >= yPos && mouseY <= (yPos + 9))
 			if(mouseX <= (this.width + typesWidth) / 2 && mouseX >= (this.width - typesWidth) / 2)
 			{
-				Style style = this.minecraft.fontRenderer.getCharacterManager().func_238357_a_(this.typesHeader, mouseX - ((this.width - typesWidth) / 2));
+				Style style = this.minecraft.font.getSplitter().componentStyleAtWidth(this.typesHeader, mouseX - ((this.width - typesWidth) / 2));
 				if(style != null)
 					tooltipToRender = style;
 			}
@@ -194,7 +195,7 @@ public class ScreenCharacterSheet extends Screen
 			renderComponentHoverEffect(matrixStack, tooltipToRender, mouseX, mouseY);
 	}
 	
-	private void renderBackgroundTexture(MatrixStack matrixStack, boolean isDouble)
+	private void renderBackgroundTexture(PoseStack matrixStack, boolean isDouble)
 	{
 		// Fill
 		TextureArea area = getTextureArea();
@@ -202,7 +203,7 @@ public class ScreenCharacterSheet extends Screen
 	}
 	
 	@SuppressWarnings("deprecation")
-	private void renderOuterEdges(MatrixStack matrixStack, boolean isDouble)
+	private void renderOuterEdges(PoseStack matrixStack, boolean isDouble)
 	{
 		RenderSystem.color4f(1F, 1F, 1F, 1F);
 		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
@@ -218,19 +219,19 @@ public class ScreenCharacterSheet extends Screen
 		// Edges
 		int width = area.width() - 12;
 		int height = area.height() - 12;
-		AbstractGui.blit(matrixStack, area.xMin, area.yMin + 6, 6, height, 0, 6, 6, 200, 512, 512);
-		AbstractGui.blit(matrixStack, area.xMax - 6, area.yMin + 6, 6, height, 206, 6, 6, 200, 512, 512);
-		AbstractGui.blit(matrixStack, area.xMin + 6, area.yMin, width, 6, 6, 0, 200, 6, 512, 512);
-		AbstractGui.blit(matrixStack, area.xMin + 6, area.yMax - 6, width, 6, 6, 206, 200, 6, 512, 512);
+		Screen.blit(matrixStack, area.xMin, area.yMin + 6, 6, height, 0, 6, 6, 200, 512, 512);
+		Screen.blit(matrixStack, area.xMax - 6, area.yMin + 6, 6, height, 206, 6, 6, 200, 512, 512);
+		Screen.blit(matrixStack, area.xMin + 6, area.yMin, width, 6, 6, 0, 200, 6, 512, 512);
+		Screen.blit(matrixStack, area.xMin + 6, area.yMax - 6, width, 6, 6, 206, 200, 6, 512, 512);
 	}
 	
-	private void renderFill(MatrixStack matrixStack, int startX, int startY, int width, int height)
+	private void renderFill(PoseStack matrixStack, int startX, int startY, int width, int height)
 	{
 		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
-		AbstractGui.blit(matrixStack, startX, startY, width, height, 6, 6, Math.min(200, width), Math.min(200, height), 512, 512);
+		Screen.blit(matrixStack, startX, startY, width, height, 6, 6, Math.min(200, width), Math.min(200, height), 512, 512);
 	}
 	
-	private void renderForegroundTexture(MatrixStack matrixStack, boolean isDouble)
+	private void renderForegroundTexture(PoseStack matrixStack, boolean isDouble)
 	{
 		renderOuterEdges(matrixStack, isDouble);
 		
@@ -239,7 +240,7 @@ public class ScreenCharacterSheet extends Screen
 			hideList(matrixStack, this.listActives);
 	}
 	
-	private void hideList(MatrixStack matrixStack, AbilityList list)
+	private void hideList(PoseStack matrixStack, AbilityList list)
 	{
 		this.minecraft.getTextureManager().bindTexture(SHEET_GUI_TEXTURES);
 		
@@ -264,18 +265,18 @@ public class ScreenCharacterSheet extends Screen
 		this.blit(matrixStack, xMax, yMax, 26, 278, 6, 6);
 		
 		// Edges
-		AbstractGui.blit(matrixStack, xMin, yMin + 6, 6, height, 0, 258, 6, 20, 512, 512);
-		AbstractGui.blit(matrixStack, xMax, yMin + 6, 6, height, 26, 258, 6, 20, 512, 512);
-		AbstractGui.blit(matrixStack, xMin + 6, yMin, width, 6, 6, 252, 20, 6, 512, 512);
-		AbstractGui.blit(matrixStack, xMin + 6, yMax, width, 6, 6, 278, 20, 6, 512, 512);
+		Screen.blit(matrixStack, xMin, yMin + 6, 6, height, 0, 258, 6, 20, 512, 512);
+		Screen.blit(matrixStack, xMax, yMin + 6, 6, height, 26, 258, 6, 20, 512, 512);
+		Screen.blit(matrixStack, xMin + 6, yMin, width, 6, 6, 252, 20, 6, 512, 512);
+		Screen.blit(matrixStack, xMin + 6, yMax, width, 6, 6, 278, 20, 6, 512, 512);
 	}
 	
-	public void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight)
+	public void blit(PoseStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight)
 	{
 		blit(matrixStack, x, y, getBlitOffset(), (float)uOffset, (float)vOffset, uWidth, vHeight, 512, 512);
 	}
 	
-	private void renderActionSet(MatrixStack matrixStack, int mouseX, int mouseY)
+	private void renderActionSet(PoseStack matrixStack, int mouseX, int mouseY)
 	{
 		EnumCreatureType.Action hovered = null;
 		int count = EnumCreatureType.Action.values().length;
@@ -323,7 +324,7 @@ public class ScreenCharacterSheet extends Screen
 	}
 	
 	/** Renders the given action on the screen, returning true if the mouse is hovered over it */
-	private boolean renderAction(MatrixStack matrixStack, int x, int y, int mouseX, int mouseY, EnumCreatureType.Action action, boolean present)
+	private boolean renderAction(PoseStack matrixStack, int x, int y, int mouseX, int mouseY, EnumCreatureType.Action action, boolean present)
 	{
 		float colR = present ? 0F : 1F;
 		float colG = present ? 1F : 0F;

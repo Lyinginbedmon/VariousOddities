@@ -12,6 +12,7 @@ import com.mojang.brigadier.CommandDispatcher;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.synchronization.ArgumentUtils;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class VOCommands
@@ -39,6 +40,6 @@ public class VOCommands
     /** Registers custom command arguments */
     public static void registerArguments()
     {
-    	ArgumentTypes.register(Reference.ModInfo.MOD_PREFIX+"enum_checked", EnumArgumentChecked.class, (IArgumentSerializer)new EnumArgumentChecked.Serializer());
+    	ArgumentUtils.register(Reference.ModInfo.MOD_PREFIX+"enum_checked", EnumArgumentChecked.class, (IArgumentSerializer)new EnumArgumentChecked.Serializer());
     }
 }

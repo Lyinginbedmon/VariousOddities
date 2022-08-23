@@ -6,11 +6,11 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.EntityTypeTagsProvider;
-import net.minecraft.entity.EntityType;
+import net.minecraft.data.tags.EntityTypeTagsProvider;
 import net.minecraft.tags.EntityTypeTags;
-import net.minecraft.tags.ITag;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.registries.tags.ITag;
 
 public class VOEntityTags extends EntityTypeTagsProvider
 {

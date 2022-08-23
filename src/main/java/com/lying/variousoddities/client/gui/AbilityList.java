@@ -8,25 +8,25 @@ import com.lying.variousoddities.client.gui.AbilityList.AbilityListEntry;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.utility.VOHelper;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.widget.list.AbstractList;
-import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.LanguageMap;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 
-public class AbilityList extends AbstractList<AbilityListEntry>
+public class AbilityList extends ObjectSelectionList<AbilityListEntry>
 {
 	private final Minecraft mc;
 	private boolean empty = true;
@@ -65,13 +65,13 @@ public class AbilityList extends AbstractList<AbilityListEntry>
 		abilitiesIn.forEach((ability) -> { addAbility(ability); });
 	}
 	
-	public class AbilityListEntry extends ExtendedList.AbstractListEntry<AbilityListEntry>
+	public class AbilityListEntry extends ObjectSelectionList.Entry<AbilityListEntry>
 	{
 		public final ResourceLocation WIDGET_TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/species_select.png");
 		public final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
 		
 		private final Minecraft mc;
-		private final IReorderingProcessor field_243407_e;
+		private final FormattedCharSequence field_243407_e;
 		private final Ability ability;
 		
 		public AbilityListEntry(Minecraft mcIn, Ability abilityIn)
@@ -81,19 +81,19 @@ public class AbilityList extends AbstractList<AbilityListEntry>
 			this.field_243407_e = func_244424_a(mcIn, abilityIn.getDisplayName());
 		}
 		
-		private IReorderingProcessor func_244424_a(Minecraft p_244424_0_, ITextComponent p_244424_1_)
+		private FormattedCharSequence func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
 		{
-			int i = p_244424_0_.fontRenderer.getStringPropertyWidth(p_244424_1_);
+			int i = p_244424_0_.font.width(p_244424_1_);
 			if (i > 157)
 			{
-				ITextProperties itextproperties = ITextProperties.func_240655_a_(p_244424_0_.fontRenderer.func_238417_a_(p_244424_1_, 157 - p_244424_0_.fontRenderer.getStringWidth("...")), ITextProperties.func_240652_a_("..."));
-				return LanguageMap.getInstance().func_241870_a(itextproperties);
+				FormattedText itextproperties = FormattedText.composite(p_244424_0_.font.substrByWidth(p_244424_1_, 157 - p_244424_0_.font.width("...")), FormattedText.of("..."));
+				return Language.getInstance().getVisualOrder(itextproperties);
 			}
 			else
-				return p_244424_1_.func_241878_f();
+				return p_244424_1_.getVisualOrderText();
 		}
 		
-		public void render(MatrixStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
+		public void render(PoseStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
 		{
 			rowTop -= 1;
 			rowTop -= slotIndex * 3;
@@ -105,14 +105,14 @@ public class AbilityList extends AbstractList<AbilityListEntry>
 			drawLine(matrixStack, drawXMin, drawXMax, rowTop + 11, 97);
 			drawLine(matrixStack, drawXMin, drawXMax, rowTop + rowHeight, 97);
 			
-			this.mc.fontRenderer.func_238407_a_(matrixStack, this.field_243407_e, (float)(rowLeft + 10), (float)(rowTop + 2), 16777215);
+			this.mc.font.func_238407_a_(matrixStack, this.field_243407_e, (float)(rowLeft + 10), (float)(rowTop + 2), 16777215);
 			
 			float yPos = (float)(rowTop + 14);
 			int lineCount = 0;
-			for(ITextProperties line : VOHelper.getWrappedText(this.ability.getDescription(), this.mc.fontRenderer, rowWidth - 10))
+			for(FormattedText line : VOHelper.getWrappedText(this.ability.getDescription(), this.mc.font, rowWidth - 10))
 			{
-				this.mc.fontRenderer.func_238418_a_(line, rowLeft, (int)yPos, rowWidth, 13487565);
-				yPos += this.mc.fontRenderer.FONT_HEIGHT;
+				this.mc.font.func_238418_a_(line, rowLeft, (int)yPos, rowWidth, 13487565);
+				yPos += this.mc.font.lineHeight;
 				if(lineCount++ > 4)
 					break;
 			}
@@ -122,34 +122,33 @@ public class AbilityList extends AbstractList<AbilityListEntry>
 				GuiHandler.drawAbilitySlot(matrixStack, rowLeft, rowTop + 1);
 		}
 		
-		private void drawLine(MatrixStack matrixStack, int minX, int maxX, int yPos, int col)
+		private void drawLine(PoseStack matrixStack, int minX, int maxX, int yPos, int col)
 		{
 			drawSquare(matrixStack, minX, maxX, yPos, yPos + 1, col);
 		}
 		
 		@SuppressWarnings("deprecation")
-		private void drawSquare(MatrixStack matrixStack, int minX, int maxX, int minY, int maxY, int col)
+		private void drawSquare(PoseStack matrixStack, int minX, int maxX, int minY, int maxY, int col)
 		{
 			RenderSystem.disableCull();
 			RenderSystem.disableTexture();
 			RenderSystem.shadeModel(GL11.GL_FLAT);
-			matrixStack.push();
+			matrixStack.pushPose();
 				Matrix4f matrix4f = matrixStack.getLast().getMatrix();
-				BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-				buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
-					buffer.pos(matrix4f, minX, minY, 0F).color(col, col, col, 255).endVertex();
-					buffer.pos(matrix4f, maxX, minY, 0F).color(col, col, col, 255).endVertex();
-					buffer.pos(matrix4f, maxX, maxY, 0F).color(col, col, col, 255).endVertex();
-					buffer.pos(matrix4f, minX, maxY, 0F).color(col, col, col, 255).endVertex();
-				buffer.finishDrawing();
-				WorldVertexBufferUploader.draw(buffer);
-			matrixStack.pop();
+				BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+				buffer.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+					buffer.vertex(matrix4f, minX, minY, 0F).color(col, col, col, 255).endVertex();
+					buffer.vertex(matrix4f, maxX, minY, 0F).color(col, col, col, 255).endVertex();
+					buffer.vertex(matrix4f, maxX, maxY, 0F).color(col, col, col, 255).endVertex();
+					buffer.vertex(matrix4f, minX, maxY, 0F).color(col, col, col, 255).endVertex();
+				BufferUploader.drawWithShader(buffer.end());
+			matrixStack.popPose();
 		}
 		
 		private static final float TEX_SIZE = 128F;
 		private static final float ICON_TEX = 16F / TEX_SIZE;
 	    
-	    public void drawAbilityIcon(MatrixStack matrix, int xPos, int yPos, Ability.Type nature)
+	    public void drawAbilityIcon(PoseStack matrix, int xPos, int yPos, Ability.Type nature)
 	    {
 	    	yPos -= 1;
 	    	
@@ -163,11 +162,11 @@ public class AbilityList extends AbstractList<AbilityListEntry>
 			double endX = xPos + 9;
 			double endY = yPos + 9;
 			
-			matrix.push();
+			matrix.pushPose();
 				Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
 				iconBlit(matrix.getLast().getMatrix(), xPos, (int)endX, yPos, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, 1F, 1F, 1F, 1F);
 				iconBlit(matrix.getLast().getMatrix(), xPos, (int)endX, yPos, (int)endY, 0, ICON_TEX * 2, ICON_TEX * 3, ICON_TEX * 1, ICON_TEX * 2, 1F, 1F, 1F, 1F);
-			matrix.pop();
+			matrix.popPose();
 	    }
 		
 		@SuppressWarnings("deprecation")
@@ -175,15 +174,20 @@ public class AbilityList extends AbstractList<AbilityListEntry>
 		{
 			GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR.param, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR.param, GlStateManager.SourceFactor.ONE.param, GlStateManager.DestFactor.ZERO.param);
 			GlStateManager.color4f(1F, 1F, 1F, 1F);
-			BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
-			bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-				bufferbuilder.pos(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMax).endVertex();
-				bufferbuilder.pos(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMax).endVertex();
-				bufferbuilder.pos(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMin).endVertex();
-				bufferbuilder.pos(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMin).endVertex();
-			bufferbuilder.finishDrawing();
+			BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+			bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+				bufferbuilder.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMax).endVertex();
+				bufferbuilder.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMax).endVertex();
+				bufferbuilder.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMin).endVertex();
+				bufferbuilder.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMin).endVertex();
 			RenderSystem.enableAlphaTest();
-			WorldVertexBufferUploader.draw(bufferbuilder);
+			BufferUploader.drawWithShader(bufferbuilder.end());
+		}
+		
+		@Override
+		public Component getNarration() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	}
 }

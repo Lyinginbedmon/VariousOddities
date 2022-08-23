@@ -21,29 +21,30 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 import com.lying.variousoddities.utility.VOHelper;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector2f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -54,7 +55,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	
 	public static final Minecraft mc = Minecraft.getInstance();
 	
-	private final PlayerEntity thePlayer;
+	private final Player thePlayer;
 	private final LivingData theData;
 	private final List<ActivatedAbility> abilities = Lists.newArrayList();
 	private final List<Ability> passives = Lists.newArrayList();
@@ -68,11 +69,11 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	
 	public ScreenAbilityMenu()
 	{
-		super(new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".ability_menu"));
+		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".ability_menu"));
 		thePlayer = Minecraft.getInstance().player;
 		theData = LivingData.forEntity(thePlayer);
 		
-		PacketHandler.sendToServer(new PacketSyncAbilities(thePlayer.getUniqueID()));
+		PacketHandler.sendToServer(new PacketSyncAbilities(thePlayer.getUUID()));
 		
 		for(Ability ability : AbilityRegistry.getCreatureAbilities(thePlayer).values())
 			if(!ability.passive())
@@ -101,22 +102,22 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		abilitySet.clear();
 		if(!abilities.isEmpty())
 		{
-			index = MathHelper.clamp(index, 0, Math.max(abilities.size() - 7, 0));
+			index = Mth.clamp(index, 0, Math.max(abilities.size() - 7, 0));
 			indexEnd = Math.min(index + 7, abilities.size());
 			abilitySet.addAll(this.abilities.subList(index, indexEnd));
 		}
 		
-    	this.addButton(new Button(this.width - 23, 3, 20, 20, new StringTextComponent(">"), (button) -> 
+    	this.addWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
     		{
     			Minecraft.getInstance().displayGuiScreen(new ScreenCharacterSheet());
     		})
     			{
     				@SuppressWarnings("deprecation")
-					public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+					public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
     				{
     					Minecraft.getInstance().getTextureManager().bindTexture(ScreenCharacterSheet.SHEET_GUI_TEXTURES);
     					RenderSystem.color4f(1F, 1F, 1F, 1F);
-    					AbstractGui.blit(matrixStack, this.x, this.y, 160, 212 + (this.isHovered() ? 20 : 0), this.width, this.height, 512, 512);
+    					Screen.blit(matrixStack, this.x, this.y, 160, 212 + (this.isHovered() ? 20 : 0), this.width, this.height, 512, 512);
     				}
     			});
 	}
@@ -173,7 +174,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		double dirX = mouseX - midX;
 		double dirY = mouseY - midY;
 		
-		Vector3d direction = (new Vector3d(dirX, dirY, 0D)).normalize();
+		Vec3 direction = (new Vec3(dirX, dirY, 0D)).normalize();
 		double angle = (Math.atan2(direction.x, direction.y) / Math.PI) * 180D;
 		while(angle < 0)
 			angle += 360;
@@ -201,25 +202,25 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	
 	public boolean isLoaded(){ return this.openTicks > startup; }
 	
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		int maxRadius = (int)(this.height * 0.375D);
 		int currentRadius = isLoaded() ? maxRadius : (maxRadius / 2) + (int)((maxRadius / 2) * ((double)openTicks + partialTicks) / (double)startup);
 		
 		double angleInc = Math.toRadians(360F / (abilitySet.size() + 1));
-		Vector2f vec = rotateVector(new Vector2f(0F, currentRadius), angleInc);
-		Vector2f vec2 = rotateVector(new Vector2f(0F, this.height * 0.375F), angleInc);
+		Vec2 vec = rotateVector(new Vec2(0F, currentRadius), angleInc);
+		Vec2 vec2 = rotateVector(new Vec2(0F, this.height * 0.375F), angleInc);
 		float angle = (float)-angleInc * 0.5F;
 		
 		float midX = this.width * 0.5F;
 		float midY = this.height * 0.5F;
 		if(abilities.size() > 7)
 		{
-			drawCenteredString(matrixStack, font, new StringTextComponent("..."), (int)midX, (int)(midY + 50), -1);
+			drawCenteredString(matrixStack, font, Component.literal("..."), (int)midX, (int)(midY + 50), -1);
 			if(index > 0)
-				drawCenteredString(matrixStack, font, new StringTextComponent("<"), (int)midX - 6, (int)(midY + 50 + font.FONT_HEIGHT * 0.25D), -1);
+				drawCenteredString(matrixStack, font, Component.literal("<"), (int)midX - 6, (int)(midY + 50 + font.lineHeight * 0.25D), -1);
 			if(indexEnd < abilities.size())
-				drawCenteredString(matrixStack, font, new StringTextComponent(">"), (int)midX + 5, (int)(midY + 50 + font.FONT_HEIGHT * 0.25D), -1);
+				drawCenteredString(matrixStack, font, Component.literal(">"), (int)midX + 5, (int)(midY + 50 + font.lineHeight * 0.25D), -1);
 		}
 		
 		if(!abilitySet.isEmpty())
@@ -271,45 +272,45 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		{
 			// Draw full circle
 			drawRadialSlice(matrixStack, midX, midY, angle, (float)angleInc, currentRadius, 200, 230, 255, 90, partialTicks);
-			drawCenteredString(matrixStack, font, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".abilities_menu.empty"), (int)midX, (int)(midY + 50), -1);
+			drawCenteredString(matrixStack, font, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".abilities_menu.empty"), (int)midX, (int)(midY + 50), -1);
 		}
 		
 		if(!passives.isEmpty())
 		{
-			matrixStack.push();
+			matrixStack.pushPose();
 				matrixStack.translate(midX + maxRadius * 1.25D, midY, 0D);
-				matrixStack.push();
+				matrixStack.pushPose();
 					float scale = 0.75F;
 					matrixStack.scale(scale, scale, scale);
-					int textY = (int)(-(passives.size() * (font.FONT_HEIGHT + 2) * 0.5F));
-					int textInc = font.FONT_HEIGHT + 2;
+					int textY = (int)(-(passives.size() * (font.lineHeight + 2) * 0.5F));
+					int textInc = font.lineHeight + 2;
 					for(int i=0; i<Math.min(passives.size(), 1 + openTicks); i++)
 					{
 						Ability passive = passives.get(i);
 						drawString(matrixStack, font, passive.getDisplayName(), 0, textY, -1);
 						textY += textInc;
 					}
-				matrixStack.pop();
-			matrixStack.pop();
+				matrixStack.popPose();
+			matrixStack.popPose();
 		}
 		
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
 	
-	public void drawAbilityNames(MatrixStack matrixStack)
+	public void drawAbilityNames(PoseStack matrixStack)
 	{
-		matrixStack.push();
+		matrixStack.pushPose();
 			matrixStack.translate(this.width * 0.5D, this.height * 0.5D, 0);
-			matrixStack.push();
+			matrixStack.pushPose();
 				float angleInc = 360F / (abilitySet.size() + 1);
 				for(int index=0; index<abilitySet.size(); index++)
 				{
 					ActivatedAbility ability = abilitySet.get(index);
-					matrixStack.push();
+					matrixStack.pushPose();
 						float angle = angleInc * (index + 1);
 						matrixStack.rotate(Vector3f.ZP.rotationDegrees(angleInc * (index + 1)));
 						matrixStack.translate(0, 60, 0);
-						matrixStack.push();
+						matrixStack.pushPose();
 							if(angle%90 == 0)
 								matrixStack.rotate(Vector3f.ZP.rotationDegrees(-angle));
 							else
@@ -319,31 +320,31 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 									matrixStack.rotate(Vector3f.ZP.rotationDegrees(-180F));
 							}
 							
-							List<ITextProperties> messageLines = VOHelper.getWrappedText(ability.getDisplayName(), font, 90);
+							List<FormattedText> messageLines = VOHelper.getWrappedText(ability.getDisplayName(), font, 90);
 							int textX = 0;
-							for(ITextProperties line : messageLines)
+							for(FormattedText line : messageLines)
 							{
 								int length = font.getStringWidth(line.getSerializedName());
 								if(length > 80)
 									textX = Math.min(textX, length - 80);
 							}
 							
-							int textCol = ability.isActive() ? TextFormatting.GOLD.getColor() : -1;
-							int textY = (int)(messageLines.size() * font.FONT_HEIGHT * -0.5D);
-							for(ITextProperties line : messageLines)
+							int textCol = ability.isActive() ? ChatFormatting.GOLD.getColor() : -1;
+							int textY = (int)(messageLines.size() * font.lineHeight * -0.5D);
+							for(FormattedText line : messageLines)
 							{
 								drawCenteredString(matrixStack, font, line.getSerializedName(), textX, textY, textCol);
-								textY += font.FONT_HEIGHT;
+								textY += font.lineHeight;
 							}
-						matrixStack.pop();
-					matrixStack.pop();
+						matrixStack.popPose();
+					matrixStack.popPose();
 				}
-			matrixStack.pop();
-		matrixStack.pop();
+			matrixStack.popPose();
+		matrixStack.popPose();
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void drawFavouriteButtonAt(MatrixStack matrix, double posX, double posY, boolean bright)
+	public void drawFavouriteButtonAt(PoseStack matrix, double posX, double posY, boolean bright)
 	{
 		posX -= 8;
 		posY -= 8;
@@ -361,42 +362,42 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		
 		RenderSystem.enableTexture();
 		RenderSystem.shadeModel(GL11.GL_FLAT);
-		matrix.push();
+		matrix.pushPose();
 			Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
 			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, bright);
-		matrix.pop();
+		matrix.popPose();
 	}
 	
 	@SuppressWarnings("deprecation")
-	private void drawArc(MatrixStack stackIn, float originX, float originY, float initialAngle, float angleInc, float radius, int red, int green, int blue, int alpha, float partialTicks)
+	private void drawArc(PoseStack stackIn, float originX, float originY, float initialAngle, float angleInc, float radius, int red, int green, int blue, int alpha, float partialTicks)
 	{
 		RenderSystem.disableCull();
 		RenderSystem.disableTexture();
 		RenderSystem.enableBlend();
 		RenderSystem.shadeModel(GL11.GL_FLAT);
 		
-		stackIn.push();
+		stackIn.pushPose();
 			Matrix4f matrix4f = stackIn.getLast().getMatrix();
 			BufferBuilder buffer = Tessellator.getInstance().getBuffer();
 			buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
 				// Centre vertex
-				buffer.pos(matrix4f, originX, originY, 0F).color(255, 255, 255, 255).endVertex();
+				buffer.vertex(matrix4f, originX, originY, 0F).color(255, 255, 255, 255).endVertex();
 				
-				Vector2f vec = rotateVector(new Vector2f(0F, radius), -initialAngle);
+				Vec2 vec = rotateVector(new Vec2(0F, radius), -initialAngle);
 				int rotationsPerArc = 16;
 				// Perimeter vertices in pairs
 				for(int i=0; i<=rotationsPerArc; i++)
 				{
-					buffer.pos(matrix4f, originX + vec.x, originY + vec.y, 0F).color(red, green, blue, alpha).endVertex();
+					buffer.vertex(matrix4f, originX + vec.x, originY + vec.y, 0F).color(red, green, blue, alpha).endVertex();
 					vec = rotateVector(vec, angleInc / rotationsPerArc);
 				}
 			buffer.finishDrawing();
 			WorldVertexBufferUploader.draw(buffer);
-		stackIn.pop();
+		stackIn.popPose();
 		RenderSystem.disableBlend();
 	}
 	
-	public void drawRadialSlice(MatrixStack stackIn, float originX, float originY, float angle, float angleInc, float radius, int red, int green, int blue, int alpha, float partialTicks)
+	public void drawRadialSlice(PoseStack stackIn, float originX, float originY, float angle, float angleInc, float radius, int red, int green, int blue, int alpha, float partialTicks)
 	{
 		drawArc(stackIn, originX, originY, angle, angleInc, radius * 1.15F, red, green, blue, alpha - 50, partialTicks);
 		drawArc(stackIn, originX, originY, angle, angleInc, radius * 0.85F, red, green, blue, alpha, partialTicks);
@@ -444,11 +445,11 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		return super.keyReleased(key, scanCode, modifiers);
 	}
 	
-	private Vector2f rotateVector(Vector2f vec, double angle)
+	private Vec2 rotateVector(Vec2 vec, double angle)
 	{
 		double x = vec.x * Math.cos(angle) - vec.y * Math.sin(angle);
 		double y = vec.x * Math.sin(angle) + vec.y * Math.cos(angle);
-		return new Vector2f((float)x, (float)y);
+		return new Vec2((float)x, (float)y);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -458,12 +459,12 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		int green = bright ? 170 : 100;
 		int blue = bright ? 0 : 100;
 		GlStateManager.color4f(1F, 1F, 1F, 1F);
-		BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-		buffer.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-			buffer.pos(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, 255).tex(texXMin, texYMax).endVertex();
-			buffer.pos(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, 255).tex(texXMax, texYMax).endVertex();
-			buffer.pos(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, 255).tex(texXMax, texYMin).endVertex();
-			buffer.pos(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, 255).tex(texXMin, texYMin).endVertex();
+		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+			buffer.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, 255).uv(texXMin, texYMax).endVertex();
+			buffer.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, 255).uv(texXMax, texYMax).endVertex();
+			buffer.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, 255).uv(texXMax, texYMin).endVertex();
+			buffer.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, 255).uv(texXMin, texYMin).endVertex();
 		buffer.finishDrawing();
 		RenderSystem.enableAlphaTest();
 		WorldVertexBufferUploader.draw(buffer);

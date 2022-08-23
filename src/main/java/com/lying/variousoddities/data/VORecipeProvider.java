@@ -5,14 +5,14 @@ import java.util.function.Consumer;
 import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemHeldFlag.EnumPrideType;
 
-import net.minecraft.advancements.criterion.InventoryChangeTrigger;
-import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.ItemPredicate;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.data.RecipeProvider;
-import net.minecraft.data.ShapelessRecipeBuilder;
-import net.minecraft.item.Item;
+import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.util.IItemProvider;
+import net.minecraft.world.item.Item;
 
 public class VORecipeProvider extends RecipeProvider
 {

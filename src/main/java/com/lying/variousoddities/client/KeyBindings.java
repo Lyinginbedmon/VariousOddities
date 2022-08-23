@@ -2,6 +2,8 @@ package com.lying.variousoddities.client;
 
 import java.util.List;
 
+import javax.swing.text.JTextComponent.KeyBinding;
+
 import org.lwjgl.glfw.GLFW;
 
 import com.google.common.collect.Lists;
@@ -14,10 +16,9 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.util.InputMappings;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
@@ -63,7 +64,7 @@ public class KeyBindings
 	public void handleInputEvent(InputEvent event)
 	{
 		KeyBinding pressedKey = getPressedKey();
-		ClientPlayerEntity player = Minecraft.getInstance().player;
+		LocalPlayer player = Minecraft.getInstance().player;
 		if(pressedKey == null || player == null || !player.isAlive() || (player.isSleeping() || player.isPlayerFullyAsleep()) || Minecraft.getInstance().currentScreen != null)
 			return;
 		

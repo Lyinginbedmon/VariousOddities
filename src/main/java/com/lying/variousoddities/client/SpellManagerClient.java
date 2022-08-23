@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lying.variousoddities.world.savedata.SpellManager;
-import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;

@@ -5,17 +5,16 @@ import com.lying.variousoddities.inventory.ContainerWarg;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSit;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.gui.screen.inventory.InventoryScreen;
-import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public class GuiWarg extends ContainerScreen<ContainerWarg>
 {
@@ -25,7 +24,7 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
 	
 	private Button sitButton;
 	
-	public GuiWarg(ContainerWarg wargContainer, PlayerInventory playerContainer, ITextComponent nameIn)
+	public GuiWarg(ContainerWarg wargContainer, PlayerInventory playerContainer, Component nameIn)
 	{
 		super(wargContainer, playerContainer, nameIn);
 		this.wargEntity = wargContainer.theWarg;
@@ -42,7 +41,7 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
     	
 		int i = (this.width - this.xSize) / 2;
 		int j = (this.height - this.ySize) / 2;
-    	addButton(sitButton = new Button(i - 32, j, 30, 20, new TranslationTextComponent("gui."+Reference.ModInfo.MOD_ID+".warg.sit"), (button) -> 
+    	addButton(sitButton = new Button(i - 32, j, 30, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".warg.sit"), (button) -> 
     	{
     		boolean sit = !wargEntity.isSitting();
     		PacketHandler.sendToServer(new PacketSit(this.minecraft.player.getUniqueID(), sit));
@@ -56,7 +55,7 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
     }
     
 	@SuppressWarnings("deprecation")
-	protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y)
+	protected void drawGuiContainerBackgroundLayer(PoseStack matrixStack, float partialTicks, int x, int y)
 	{
 		RenderSystem.color4f(1F, 1F, 1F, 1F);
 		this.minecraft.getTextureManager().bindTexture(HORSE_GUI_TEXTURES);
@@ -74,7 +73,7 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
 		InventoryScreen.drawEntityOnScreen(i + 51, j + 60, 17, (float)(i + 51) - this.mousePosX, (float)(j + 75 - 50) - this.mousePosY, this.wargEntity);
 	}
 	
-	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks)
+	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		this.renderBackground(matrixStack);
 		this.mousePosX = (float)mouseX;
