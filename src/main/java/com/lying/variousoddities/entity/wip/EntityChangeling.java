@@ -37,9 +37,9 @@ public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 	
 	public void setParentHive(BlockPos hivePos) { }
 	
-	public void livingTick()
+	public void aiStep()
 	{
-		super.livingTick();
+		super.aiStep();
 		
 //        if(this.openJawCounter > 0 && ++this.openJawCounter > Reference.Values.TICKS_PER_SECOND)
 //        {
@@ -47,7 +47,7 @@ public class EntityChangeling extends EntityOddityAgeable implements IChangeling
 //            setJawOpen(false);
 //        }
 		
-		if(!isFlapping())
+		if(!areWingsFlapping())
 		{
 			if(getRandom().nextInt(80) == 0)
 				getEntityData().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);

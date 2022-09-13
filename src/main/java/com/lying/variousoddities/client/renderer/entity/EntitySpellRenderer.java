@@ -4,8 +4,8 @@ import com.lying.variousoddities.entity.EntitySpell;
 
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -14,15 +14,15 @@ import net.minecraftforge.fml.client.registry.IRenderFactory;
 public class EntitySpellRenderer extends EntityRenderer<EntitySpell>
 {
 	@SuppressWarnings("unused")
-	private final EntityRendererManager manager;
+	private final EntityRendererProvider.Context manager;
 	
-	public EntitySpellRenderer(EntityRendererManager renderManager)
+	public EntitySpellRenderer(EntityRendererProvider.Context renderManager)
 	{
 		super(renderManager);
 		manager = renderManager;
 	}
 	
-	public ResourceLocation getEntityTexture(EntitySpell entity)
+	public ResourceLocation getTextureLocation(EntitySpell entity)
 	{
 		return null;
 	}
@@ -90,7 +90,7 @@ public class EntitySpellRenderer extends EntityRenderer<EntitySpell>
 	
 	public static class RenderFactory implements IRenderFactory<EntitySpell>
 	{
-		public EntityRenderer<? super EntitySpell> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntitySpell> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntitySpellRenderer(manager);
 		}

@@ -11,12 +11,13 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.TemplateRegistry;
 
+import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.DirectoryCache;
+import net.minecraft.data.DataProvider;
 import net.minecraft.data.IDataProvider;
 import net.minecraft.resources.ResourceLocation;
 
-public class VOTemplatesProvider implements IDataProvider
+public class VOTemplatesProvider implements DataProvider
 {
 	private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
 	private final DataGenerator dataGenerator;
@@ -28,7 +29,7 @@ public class VOTemplatesProvider implements IDataProvider
 	
 	public String getName(){ return "Various Oddities templates"; }
 	
-	public void act(DirectoryCache cache) throws IOException
+	public void run(CachedOutput cache) throws IOException
 	{
 		Path path = this.dataGenerator.getOutputFolder();
 		Map<ResourceLocation, Template> map = Maps.newHashMap();

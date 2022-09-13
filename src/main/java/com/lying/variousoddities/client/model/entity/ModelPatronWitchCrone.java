@@ -3,89 +3,80 @@ package com.lying.variousoddities.client.model.entity;
 import com.google.common.collect.ImmutableList;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.wip.EntityPatronWitch;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.HandSide;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.HumanoidArm;
 
-public class ModelPatronWitchCrone extends BipedModel<EntityPatronWitch> implements IPonytailModel
+public class ModelPatronWitchCrone extends HumanoidModel<EntityPatronWitch> implements IPonytailModel
 {
-	ModelRenderer skirting;
+	private ModelPart skirting;
 	
-	public ModelRenderer ponytail;
-	public ModelRenderer ponytailAnchor;
-	public ModelRenderer ponytailAnchor2;
+	public ModelPart ponytail;
+	public ModelPart ponytailAnchor;
+	public ModelPart ponytailAnchor2;
 	
-	public ModelPatronWitchCrone()
+	public ModelPatronWitchCrone(ModelPart partsIn)
 	{
-		super(0, 0, 64, 64);
-		this.textureHeight = 64;
-		this.textureWidth = 64;
+		super(partsIn);
 		
-		this.bipedHead = ModelUtils.freshRenderer(this);
-		this.bipedHead.setRotationPoint(0F, 0F, -3F);
-		this.bipedHead.setTextureOffset(0, 0).addBox(-4F, -8F, -4F, 8, 8, 8);
-		this.bipedHead.setTextureOffset(32, 0).addBox(-4F, -8F, -4F, 8, 8, 8, 0.5F);
+		this.ponytailAnchor = partsIn.getChild("ponytail_anchor_A");
+		this.ponytailAnchor2 = this.ponytailAnchor.getChild("ponytail_anchor_B");
+        this.ponytail = this.ponytailAnchor2.getChild("ponytail");
 		
-		this.ponytailAnchor = ModelUtils.freshRenderer(this).addBox(0F, 0F, 0F, 1, 1, 1);
-			this.ponytailAnchor2 = ModelUtils.freshRenderer(this).addBox(0F, 0F, 0F, 1, 1, 1);
-			this.ponytailAnchor2.setRotationPoint(0, -5, 4);
+		this.skirting = this.body.getChild("skirting");
+	}
+	
+	public static LayerDefinition createBodyLayer(CubeDeformation deformation)
+	{
+		MeshDefinition mesh = HumanoidModel.createMesh(deformation, 0F);
+		PartDefinition part = mesh.getRoot();
 		
-        this.ponytail = ModelUtils.freshRenderer(this).setTextureSize(64, 32);
-        this.ponytail.addBox(-5F, 0F, 0F, 10, 16, 1);
-        	this.ponytailAnchor2.addChild(ponytail);
-				this.ponytailAnchor.addChild(ponytailAnchor2);
+		PartDefinition ponytailAnchor = part.addOrReplaceChild("ponytail_anchor_A", CubeListBuilder.create().texOffs(0, 0).addBox(0F, 0F, 0F, 1, 1, 1), PartPose.ZERO);
+		PartDefinition ponytailAnchor2 = ponytailAnchor.addOrReplaceChild("ponytail_anchor_B", CubeListBuilder.create().texOffs(0, 0).addBox(0F, 0F, 0F, 1, 1, 1), PartPose.offset(0, -5, 4));
+			ponytailAnchor2.addOrReplaceChild("ponytail", CubeListBuilder.create().texOffs(64, 32).addBox(-5F, 0F, 0F, 10, 16, 1), PartPose.ZERO);
 		
-		this.bipedBody = ModelUtils.freshRenderer(this);
-			// Tunic
-		this.bipedBody.setTextureOffset(16, 37).addBox(-4, 0, -4, 8, 9, 4, 0.5F);
-			ModelRenderer body1 = ModelUtils.freshRenderer(this);
-			body1.setRotationPoint(0, 9, 0);
-			body1.setTextureOffset(16, 16).addBox(-4F, -9, -2, 8, 9, 4);
-			body1.rotateAngleX = ModelUtils.toRadians(16D);
-				this.bipedBody.addChild(body1);
-			ModelRenderer body2 = ModelUtils.freshRenderer(this);
-			body2.setRotationPoint(0, 8, 0);
-			body2.setTextureOffset(16, 29).addBox(-4, 0, -2, 8, 4, 4);
-				this.bipedBody.addChild(body2);
-			this.skirting = ModelUtils.freshRenderer(this);
-			this.skirting.setRotationPoint(0, 9, 0);
-			this.skirting.setTextureOffset(16, 50).addBox(-4, 0, -2, 8, 9, 4, 0.5F);
-				this.bipedBody.addChild(this.skirting);
+		part.addOrReplaceChild("head", CubeListBuilder.create()
+			.texOffs(0, 0).addBox(-4F, -8F, -4F, 8, 8, 8)
+			.texOffs(32, 0).addBox(-4F, -8F, -4F, 8, 8, 8, deformation.extend(0.5F)), PartPose.offset(0F, 0F, -3F));
 		
-		this.bipedRightArm = ModelUtils.freshRenderer(this);
-		this.bipedRightArm.setRotationPoint(-5, 2, -2);
-		this.bipedRightArm.setTextureOffset(40, 16).addBox(-2, -2, -2, 3, 12, 4);
-		this.bipedRightArm.setTextureOffset(40, 32).addBox(-2, -2, -2, 3, 12, 4, 0.5F);
+		PartDefinition body = part.addOrReplaceChild("body", CubeListBuilder.create().texOffs(16, 37).addBox(-4, 0, -4, 8, 9, 4, deformation.extend(0.5F)), PartPose.ZERO);
+			body.addOrReplaceChild("child", CubeListBuilder.create().texOffs(16, 16).addBox(-4F, -9F, -2F, 8, 9, 4), PartPose.offsetAndRotation(0, 9, 0, ModelUtils.toRadians(16D), 0F, 0F));
+			body.addOrReplaceChild("child_2", CubeListBuilder.create().texOffs(16, 29).addBox(-4, 0, -2, 8, 4, 4), PartPose.offset(0, 8, 0));
+			body.addOrReplaceChild("skirting", CubeListBuilder.create().texOffs(16, 50).addBox(-4, 0, -2, 8, 9, 4, deformation.extend(0.5F)), PartPose.offset(0, 9, 0));
 		
-		this.bipedLeftArm = ModelUtils.freshRenderer(this);
-		this.bipedLeftArm.setRotationPoint(5, 2, -2);
-		this.bipedLeftArm.mirror = true;
-		this.bipedLeftArm.setTextureOffset(40, 16).addBox(-1, -2, -2, 3, 12, 4);
-		this.bipedLeftArm.setTextureOffset(40, 32).addBox(-1, -2, -2, 3, 12, 4, 0.5F);
+		part.addOrReplaceChild("right_arm", CubeListBuilder.create()
+			.texOffs(40, 16).addBox(-2, -2, -2, 3, 12, 4)
+			.texOffs(40, 32).addBox(-2, -2, -2, 3, 12, 4, deformation.extend(0.5F)), PartPose.offset(-5F, 2F, -2F));
 		
-        this.bipedRightLeg = ModelUtils.freshRenderer(this);
-        this.bipedRightLeg.setTextureOffset(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4, 12, 4);
-        this.bipedRightLeg.setRotationPoint(-1.9F, 12.0F, 0.0F);
+		part.addOrReplaceChild("left_arm", CubeListBuilder.create().mirror()
+			.texOffs(40, 16).addBox(-1, -2, -2, 3, 12, 4)
+			.texOffs(40, 32).addBox(-1, -2, -2, 3, 12, 4, deformation.extend(0.5F)), PartPose.offset(5F, 2F, -2F));
+		
+		part.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4, 12, 4), PartPose.offset(-1.9F, 12F, 0F));
         
-        this.bipedLeftLeg = ModelUtils.freshRenderer(this);
-        this.bipedLeftLeg.mirror = true;
-        this.bipedLeftLeg.setTextureOffset(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4, 12, 4);
-        this.bipedLeftLeg.setRotationPoint(1.9F, 12.0F, 0.0F);
+		part.addOrReplaceChild("left_leg", CubeListBuilder.create().mirror().texOffs(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4, 12, 4), PartPose.offset(1.9F, 12F, 0F));
+		
+		return LayerDefinition.create(mesh, 64, 64);
 	}
 	
-	protected Iterable<ModelRenderer> getHeadParts()
+	protected Iterable<ModelPart> headParts()
 	{
-	   return ImmutableList.of(this.bipedHead);
+	   return ImmutableList.of(this.head);
 	}
 	
-	protected Iterable<ModelRenderer> getBodyParts()
+	protected Iterable<ModelPart> bodyParts()
 	{
-		return ImmutableList.of(this.bipedBody, this.bipedRightArm, this.bipedLeftArm, this.bipedRightLeg, this.bipedLeftLeg);
+		return ImmutableList.of(this.body, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg);
 	}
 
     /**
@@ -94,173 +85,170 @@ public class ModelPatronWitchCrone extends BipedModel<EntityPatronWitch> impleme
      * "far" arms and legs can swing at most.
      */
     @SuppressWarnings("incomplete-switch")
-    public void setRotationAngles(EntityPatronWitch entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+    public void setupAnim(EntityPatronWitch entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
     {
-        boolean isFlying = entityIn.getTicksElytraFlying() > 4;
-        this.bipedHead.rotateAngleY = netHeadYaw * 0.017453292F;
+        boolean isFlying = entityIn.getFallFlyingTicks() > 4;
+        this.head.yRot = netHeadYaw * 0.017453292F;
         
         if(isFlying)
-            this.bipedHead.rotateAngleX = -((float)Math.PI / 4F);
+            this.head.xRot = -((float)Math.PI / 4F);
         else
-            this.bipedHead.rotateAngleX = headPitch * 0.017453292F;
+            this.head.xRot = headPitch * 0.017453292F;
 
-        this.bipedBody.rotateAngleY = 0.0F;
-        this.bipedRightArm.rotationPointZ = -2F;
-        this.bipedRightArm.rotationPointX = -5.0F;
-        this.bipedLeftArm.rotationPointZ = -2F;
-        this.bipedLeftArm.rotationPointX = 5.0F;
+        this.body.yRot = 0.0F;
+        this.rightArm.z = -2F;
+        this.rightArm.x = -5.0F;
+        this.leftArm.z = -2F;
+        this.leftArm.x = 5.0F;
         float f = 1.0F;
         if(isFlying)
         {
-        	Vector3d motion = entityIn.getMotion();
-            f = (float)(motion.getX() * motion.getX() + motion.getY() * motion.getY() + motion.getZ() * motion.getZ());
+            f = (float)entityIn.getDeltaMovement().lengthSqr();
             f = f / 0.2F;
             f = f * f * f;
         }
         
         if(f < 1.0F) f = 1.0F;
         
-        this.bipedRightArm.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F / f;
-        this.bipedLeftArm.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F / f;
-        this.bipedRightArm.rotateAngleZ = 0.0F;
-        this.bipedLeftArm.rotateAngleZ = 0.0F;
-        this.bipedRightLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount / f;
-        this.bipedLeftLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount / f;
-        this.bipedRightLeg.rotateAngleY = 0.0F;
-        this.bipedLeftLeg.rotateAngleY = 0.0F;
-        this.bipedRightLeg.rotateAngleZ = 0.0F;
-        this.bipedLeftLeg.rotateAngleZ = 0.0F;
+        this.rightArm.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 2.0F * limbSwingAmount * 0.5F / f;
+        this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F / f;
+        this.rightArm.zRot = 0.0F;
+        this.leftArm.zRot = 0.0F;
+        this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount / f;
+        this.leftLeg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount / f;
+        this.rightLeg.yRot = 0.0F;
+        this.leftLeg.yRot = 0.0F;
+        this.rightLeg.zRot = 0.0F;
+        this.leftLeg.zRot = 0.0F;
 
-        if(this.isSitting)
+        if(this.riding)
         {
-            this.bipedRightArm.rotateAngleX += -((float)Math.PI / 5F);
-            this.bipedLeftArm.rotateAngleX += -((float)Math.PI / 5F);
-            this.bipedRightLeg.rotateAngleX = -1.4137167F;
-            this.bipedRightLeg.rotateAngleY = ((float)Math.PI / 10F);
-            this.bipedRightLeg.rotateAngleZ = 0.07853982F;
-            this.bipedLeftLeg.rotateAngleX = -1.4137167F;
-            this.bipedLeftLeg.rotateAngleY = -((float)Math.PI / 10F);
-            this.bipedLeftLeg.rotateAngleZ = -0.07853982F;
+            this.rightArm.xRot += -((float)Math.PI / 5F);
+            this.leftArm.xRot += -((float)Math.PI / 5F);
+            this.rightLeg.xRot = -1.4137167F;
+            this.rightLeg.yRot = ((float)Math.PI / 10F);
+            this.rightLeg.zRot = 0.07853982F;
+            this.leftLeg.xRot = -1.4137167F;
+            this.leftLeg.yRot = -((float)Math.PI / 10F);
+            this.leftLeg.zRot = -0.07853982F;
         }
         
-        this.bipedRightArm.rotateAngleY = 0.0F;
-        this.bipedRightArm.rotateAngleZ = 0.0F;
+        this.rightArm.yRot = 0.0F;
+        this.rightArm.zRot = 0.0F;
 
         switch(this.leftArmPose)
         {
             case EMPTY:
-                this.bipedLeftArm.rotateAngleY = 0.0F;
+                this.leftArm.yRot = 0.0F;
                 break;
             case BLOCK:
-                this.bipedLeftArm.rotateAngleX = this.bipedLeftArm.rotateAngleX * 0.5F - 0.9424779F;
-                this.bipedLeftArm.rotateAngleY = 0.5235988F;
+                this.leftArm.xRot = this.leftArm.xRot * 0.5F - 0.9424779F;
+                this.leftArm.yRot = 0.5235988F;
                 break;
             case ITEM:
-                this.bipedLeftArm.rotateAngleX = this.bipedLeftArm.rotateAngleX * 0.5F - ((float)Math.PI / 10F);
-                this.bipedLeftArm.rotateAngleY = 0.0F;
+                this.leftArm.xRot = this.leftArm.xRot * 0.5F - ((float)Math.PI / 10F);
+                this.leftArm.yRot = 0.0F;
         }
         
         switch (this.rightArmPose)
         {
             case EMPTY:
-                this.bipedRightArm.rotateAngleY = 0.0F;
+                this.rightArm.yRot = 0.0F;
                 break;
             case BLOCK:
-                this.bipedRightArm.rotateAngleX = this.bipedRightArm.rotateAngleX * 0.5F - 0.9424779F;
-                this.bipedRightArm.rotateAngleY = -0.5235988F;
+                this.rightArm.xRot = this.rightArm.xRot * 0.5F - 0.9424779F;
+                this.rightArm.yRot = -0.5235988F;
                 break;
             case ITEM:
-                this.bipedRightArm.rotateAngleX = this.bipedRightArm.rotateAngleX * 0.5F - ((float)Math.PI / 10F);
-                this.bipedRightArm.rotateAngleY = 0.0F;
+                this.rightArm.xRot = this.rightArm.xRot * 0.5F - ((float)Math.PI / 10F);
+                this.rightArm.yRot = 0.0F;
         }
         
-        if(this.swingProgress > 0.0F)
+        if(this.attackTime > 0.0F)
         {
-            HandSide enumhandside = this.getMainHand(entityIn);
-            ModelRenderer modelrenderer = this.getArmForSide(enumhandside);
-            float f1 = this.swingProgress;
-            this.bipedBody.rotateAngleY = MathHelper.sin(MathHelper.sqrt(f1) * ((float)Math.PI * 2F)) * 0.2F;
+            HumanoidArm enumhandside = entityIn.getMainArm();
+            ModelPart modelrenderer = this.getArm(enumhandside);
+            float f1 = this.attackTime;
+            this.body.yRot = Mth.sin(Mth.sqrt(f1) * ((float)Math.PI * 2F)) * 0.2F;
             
-            if (enumhandside == HandSide.LEFT)
-            {
-                this.bipedBody.rotateAngleY *= -1.0F;
-            }
-
-            this.bipedRightArm.rotationPointZ = MathHelper.sin(this.bipedBody.rotateAngleY) * 5.0F;
-            this.bipedRightArm.rotationPointX = -MathHelper.cos(this.bipedBody.rotateAngleY) * 5.0F;
-            this.bipedLeftArm.rotationPointZ = -MathHelper.sin(this.bipedBody.rotateAngleY) * 5.0F;
-            this.bipedLeftArm.rotationPointX = MathHelper.cos(this.bipedBody.rotateAngleY) * 5.0F;
-            this.bipedRightArm.rotateAngleY += this.bipedBody.rotateAngleY;
-            this.bipedLeftArm.rotateAngleY += this.bipedBody.rotateAngleY;
-            this.bipedLeftArm.rotateAngleX += this.bipedBody.rotateAngleY;
-            f1 = 1.0F - this.swingProgress;
+            if (enumhandside == HumanoidArm.LEFT)
+                this.body.yRot *= -1.0F;
+            
+            this.rightArm.z = Mth.sin(this.body.yRot) * 5.0F;
+            this.rightArm.x = -Mth.cos(this.body.yRot) * 5.0F;
+            this.leftArm.z = -Mth.sin(this.body.yRot) * 5.0F;
+            this.leftArm.x = Mth.cos(this.body.yRot) * 5.0F;
+            this.rightArm.yRot += this.body.yRot;
+            this.leftArm.yRot += this.body.yRot;
+            this.leftArm.xRot += this.body.yRot;
+            f1 = 1.0F - this.attackTime;
             f1 = f1 * f1;
             f1 = f1 * f1;
             f1 = 1.0F - f1;
-            float f2 = MathHelper.sin(f1 * (float)Math.PI);
-            float f3 = MathHelper.sin(this.swingProgress * (float)Math.PI) * -(this.bipedHead.rotateAngleX - 0.7F) * 0.75F;
-            modelrenderer.rotateAngleX = (float)((double)modelrenderer.rotateAngleX - ((double)f2 * 1.2D + (double)f3));
-            modelrenderer.rotateAngleY += this.bipedBody.rotateAngleY * 2.0F;
-            modelrenderer.rotateAngleZ += MathHelper.sin(this.swingProgress * (float)Math.PI) * -0.4F;
+            float f2 = Mth.sin(f1 * (float)Math.PI);
+            float f3 = Mth.sin(this.attackTime * (float)Math.PI) * -(this.head.xRot - 0.7F) * 0.75F;
+            modelrenderer.xRot = (float)((double)modelrenderer.xRot - ((double)f2 * 1.2D + (double)f3));
+            modelrenderer.yRot += this.body.yRot * 2.0F;
+            modelrenderer.zRot += Mth.sin(this.attackTime * (float)Math.PI) * -0.4F;
         }
         
-        if(this.isSneak)
+        if(this.crouching)
         {
-            this.bipedBody.rotateAngleX = 0.5F;
-            this.bipedRightArm.rotateAngleX += 0.4F;
-            this.bipedLeftArm.rotateAngleX += 0.4F;
-            this.bipedRightLeg.rotationPointZ = 4.0F;
-            this.bipedLeftLeg.rotationPointZ = 4.0F;
-            this.bipedRightLeg.rotationPointY = 9.0F;
-            this.bipedLeftLeg.rotationPointY = 9.0F;
-            this.bipedHead.rotationPointY = 1.0F;
+            this.body.xRot = 0.5F;
+            this.rightArm.xRot += 0.4F;
+            this.leftArm.xRot += 0.4F;
+            this.rightLeg.z = 4.0F;
+            this.leftLeg.z = 4.0F;
+            this.rightLeg.y = 9.0F;
+            this.leftLeg.y = 9.0F;
+            this.head.y = 1.0F;
         }
         else
         {
-            this.bipedBody.rotateAngleX = 0.0F;
-            this.bipedRightLeg.rotationPointZ = 0.1F;
-            this.bipedLeftLeg.rotationPointZ = 0.1F;
-            this.bipedRightLeg.rotationPointY = 12.0F;
-            this.bipedLeftLeg.rotationPointY = 12.0F;
-            this.bipedHead.rotationPointY = 0.0F;
+            this.body.xRot = 0.0F;
+            this.rightLeg.z = 0.1F;
+            this.leftLeg.z = 0.1F;
+            this.rightLeg.y = 12.0F;
+            this.leftLeg.y = 12.0F;
+            this.head.y = 0.0F;
         }
         
-        this.bipedRightArm.rotateAngleZ += MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-        this.bipedLeftArm.rotateAngleZ -= MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-        this.bipedRightArm.rotateAngleX += MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
-        this.bipedLeftArm.rotateAngleX -= MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
+        this.rightArm.zRot += Mth.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+        this.leftArm.zRot -= Mth.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+        this.rightArm.xRot += Mth.sin(ageInTicks * 0.067F) * 0.05F;
+        this.leftArm.xRot -= Mth.sin(ageInTicks * 0.067F) * 0.05F;
         
         if (this.rightArmPose == ArmPose.BOW_AND_ARROW)
         {
-            this.bipedRightArm.rotateAngleY = -0.1F + this.bipedHead.rotateAngleY;
-            this.bipedLeftArm.rotateAngleY = 0.1F + this.bipedHead.rotateAngleY + 0.4F;
-            this.bipedRightArm.rotateAngleX = -((float)Math.PI / 2F) + this.bipedHead.rotateAngleX;
-            this.bipedLeftArm.rotateAngleX = -((float)Math.PI / 2F) + this.bipedHead.rotateAngleX;
+            this.rightArm.yRot = -0.1F + this.head.yRot;
+            this.leftArm.yRot = 0.1F + this.head.yRot + 0.4F;
+            this.rightArm.xRot = -((float)Math.PI / 2F) + this.head.xRot;
+            this.leftArm.xRot = -((float)Math.PI / 2F) + this.head.xRot;
         }
         else if (this.leftArmPose == ArmPose.BOW_AND_ARROW)
         {
-            this.bipedRightArm.rotateAngleY = -0.1F + this.bipedHead.rotateAngleY - 0.4F;
-            this.bipedLeftArm.rotateAngleY = 0.1F + this.bipedHead.rotateAngleY;
-            this.bipedRightArm.rotateAngleX = -((float)Math.PI / 2F) + this.bipedHead.rotateAngleX;
-            this.bipedLeftArm.rotateAngleX = -((float)Math.PI / 2F) + this.bipedHead.rotateAngleX;
+            this.rightArm.yRot = -0.1F + this.head.yRot - 0.4F;
+            this.leftArm.yRot = 0.1F + this.head.yRot;
+            this.rightArm.xRot = -((float)Math.PI / 2F) + this.head.xRot;
+            this.leftArm.xRot = -((float)Math.PI / 2F) + this.head.xRot;
         }
         
-        ponytailAnchor.copyModelAngles(bipedHead);
-        this.skirting.rotateAngleX = ModelUtils.toRadians(2D) + Math.max(this.bipedLeftLeg.rotateAngleX, this.bipedRightLeg.rotateAngleX);
-    	this.ponytail.rotateAngleX = Math.max(bipedBody.rotateAngleX - bipedHead.rotateAngleX, -0.259F);
+        ponytailAnchor.copyFrom(head);
+        this.skirting.xRot = ModelUtils.toRadians(2D) + Math.max(this.leftLeg.xRot, this.rightLeg.xRot);
+    	this.ponytail.xRot = Math.max(body.xRot - head.xRot, -0.259F);
     }
     
     public void setPonytailHeight(float par1Float)
     {
-    	this.ponytailAnchor2.rotationPointY = par1Float;
+    	this.ponytailAnchor2.y = par1Float;
     }
     
     public void setPonytailRotation(float par1Float, float par2Float, boolean par3Bool)
     {
-    	this.ponytail.rotationPointY = Math.min(5.6F, par2Float / 15F) + (par3Bool ? 3.5F : 0F);
+    	this.ponytail.y = Math.min(5.6F, par2Float / 15F) + (par3Bool ? 3.5F : 0F);
     }
     
-    public void renderPonytail(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn)
+    public void renderPonytail(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn)
     {
     	this.ponytailAnchor.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
     }

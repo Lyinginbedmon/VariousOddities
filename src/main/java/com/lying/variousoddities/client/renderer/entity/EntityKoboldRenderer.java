@@ -1,16 +1,17 @@
 package com.lying.variousoddities.client.renderer.entity;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelKobold;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerHeldItemPride;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -27,16 +28,16 @@ public class EntityKoboldRenderer extends MobRenderer<EntityKobold, ModelKobold>
 	public final ResourceLocation textureOrange = new ResourceLocation(resourceBase+"orange.png");
 	public final ResourceLocation textureZombie = new ResourceLocation(resourceBase+"zombie.png");
 	
-	public EntityKoboldRenderer(EntityRendererManager manager) 
+	public EntityKoboldRenderer(EntityRendererProvider.Context manager) 
 	{
-		super(manager, new ModelKobold(), 0.5F);
-		this.addLayer(new BipedArmorLayer<>(this, new ModelKobold(0.5F), new ModelKobold(1.0F)));
-		this.addLayer(new LayerHeldItemPride<>(this));
+		super(manager, new ModelKobold(manager.bakeLayer(VOModelLayers.KOBOLD)), 0.5F);
+		this.addLayer(new HumanoidArmorLayer<>(this, new ModelKobold(manager.bakeLayer(VOModelLayers.KOBOLD_ARMOR_INNER)), new ModelKobold(manager.bakeLayer(VOModelLayers.KOBOLD_ARMOR_OUTER))));
+		this.addLayer(new LayerHeldItemPride<>(this, manager.getItemInHandRenderer()));
 		
 //        this.addLayer(new LayerArmorKobold(this));
 	}
 	
-	public ResourceLocation getEntityTexture(EntityKobold entity) 
+	public ResourceLocation getTextureLocation(EntityKobold entity) 
 	{
 		switch(entity.getColor())
 		{
@@ -51,23 +52,23 @@ public class EntityKoboldRenderer extends MobRenderer<EntityKobold, ModelKobold>
     /**
      * Allows the render to do state modifications necessary before the model is rendered.
      */
-    protected void preRenderCallback(EntityKobold koboldIn, MatrixStack matrixStackIn, float partialTickTime)
+    protected void scale(EntityKobold koboldIn, PoseStack matrixStackIn, float partialTickTime)
     {
     	float totalScale = SCALE;
-    	if(koboldIn.isChild())
+    	if(koboldIn.isBaby())
     	{
-    		this.shadowSize = 0.25F;
+    		this.shadowRadius = 0.25F;
         	totalScale = SCALE * (1F-(koboldIn.getGrowth()*koboldIn.getAgeProgress()));
     	}
     	else
-    		this.shadowSize = 0.5F;
+    		this.shadowRadius = 0.5F;
     	
     	matrixStackIn.scale(totalScale, totalScale, totalScale);
     }
 	
 	public static class RenderFactory implements IRenderFactory<EntityKobold>
 	{
-		public EntityRenderer<? super EntityKobold> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntityKobold> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityKoboldRenderer(manager);
 		}

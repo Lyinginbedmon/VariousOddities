@@ -16,26 +16,26 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketUnconsciousAwaken;
 import com.lying.variousoddities.utility.VOHelper;
 
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.LoadingGui;
 import net.minecraft.client.gui.chat.NarratorChatListener;
 import net.minecraft.client.gui.components.toasts.TutorialToast;
+import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.gui.screens.social.SocialInteractionsScreen;
-import net.minecraft.client.multiplayer.PlayerController;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.settings.PointOfView;
 import net.minecraft.client.tutorial.Tutorial;
-import net.minecraft.entity.player.ChatVisibility;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.Player;
 
 @Mixin(Minecraft.class)
 public class MinecraftMixin
 {
-	private static final Component field_244596_I = Component.translatable("multiplayer.socialInteractions.not_available");
+	private static final Component SOCIAL_NOT_AVAILABLE = Component.translatable("multiplayer.socialInteractions.not_available");
 	@Shadow
 	private Tutorial tutorial;
 	@Shadow
@@ -45,14 +45,14 @@ public class MinecraftMixin
 	@Shadow
 	public Screen currentScreen;
 	@Shadow
-	public LoadingGui loadingGui;
+	public Overlay overlay;
 	@Shadow
-	public PlayerController playerController;
+	public MultiPlayerGameMode gameMode;
 	@Shadow
-	private TutorialToast field_244598_aV;
+	private TutorialToast tutorialToast;
 	
-	@Inject(method = "processKeyBinds()V", at = @At("HEAD"), cancellable = true)
-	public void processKeyBinds(final CallbackInfo ci)
+	@Inject(method = "handleKeybinds()V", at = @At("HEAD"), cancellable = true)
+	public void handleKeybinds(final CallbackInfo ci)
 	{
 		Player player = ((Minecraft)(Object)this).player;
 		if(player == null)
@@ -69,7 +69,7 @@ public class MinecraftMixin
 		else
 			ci.cancel();
 		
-		while(mc.gameSettings.keyBindInventory.isPressed())
+		while(mc.options.keyInventory.consumeClick())
 		{
 			switch(data.getBodyCondition())
 			{
@@ -90,53 +90,53 @@ public class MinecraftMixin
 		
 		processVitalKeys(mc);
 		
-		if(this.player.isHandActive())
-			this.playerController.onStoppedUsingItem(this.player);
+		if(this.player.isUsingItem())
+			this.gameMode.releaseUsingItem(this.player);
 		
 		this.sendClickBlockToController(false);
 	}
 	
 	private void processVitalKeys(Minecraft mc)
 	{
-		for(; mc.gameSettings.keyBindTogglePerspective.isPressed(); mc.worldRenderer.setDisplayListEntitiesDirty())
+		for(; mc.options.keyTogglePerspective.consumeClick(); mc.levelRenderer.needsUpdate())
 		{
-			PointOfView pointofview = mc.gameSettings.getPointOfView();
-			mc.gameSettings.setPointOfView(mc.gameSettings.getPointOfView().func_243194_c());
-			if(pointofview.func_243192_a() != mc.gameSettings.getPointOfView().func_243192_a())
-				mc.gameRenderer.loadEntityShader(mc.gameSettings.getPointOfView().func_243192_a() ? mc.getRenderViewEntity() : null);
+			CameraType pointofview = mc.options.getCameraType();
+			mc.options.setCameraType(mc.options.getCameraType().cycle());
+			if(pointofview.isFirstPerson() != mc.options.getCameraType().isFirstPerson())
+				mc.gameRenderer.checkEntityPostEffect(mc.options.getCameraType().isFirstPerson() ? mc.getCameraEntity() : null);
 		}
 		
-		while(mc.gameSettings.keyBindSmoothCamera.isPressed())
-			mc.gameSettings.smoothCamera = !mc.gameSettings.smoothCamera;
+		while(mc.options.keySmoothCamera.consumeClick())
+			mc.options.smoothCamera = !mc.options.smoothCamera;
 		
-		while(mc.gameSettings.field_244602_au.isPressed())
+		while(mc.options.keySocialInteractions.consumeClick())
 		{
 			if(!this.func_244600_aM())
 			{
-				this.player.sendStatusMessage(field_244596_I, true);
-				NarratorChatListener.INSTANCE.say(field_244596_I.getSerializedName());
+				this.player.displayClientMessage(SOCIAL_NOT_AVAILABLE, true);
+				NarratorChatListener.INSTANCE.sayNow(SOCIAL_NOT_AVAILABLE);
 			}
 			else
 			{
-				if(this.field_244598_aV != null)
+				if(this.tutorialToast != null)
 				{
-					this.tutorial.func_244697_a(this.field_244598_aV);
-					this.field_244598_aV = null;
+					this.tutorial.removeTimedToast(this.tutorialToast);
+					this.tutorialToast = null;
 				}
 				
 				this.displayGuiScreen(new SocialInteractionsScreen());
 			}
 		}
 		
-		while(mc.gameSettings.keyBindAdvancements.isPressed())
-			this.displayGuiScreen(new AdvancementsScreen(this.player.connection.getAdvancementManager()));
+		while(mc.options.keyAdvancements.consumeClick())
+			this.displayGuiScreen(new AdvancementsScreen(this.player.connection.getAdvancements()));
 		
-		if(mc.gameSettings.chatVisibility != ChatVisibility.HIDDEN)
+		if(mc.options.chatVisibility().get() != ChatVisiblity.HIDDEN)
 		{
-			while(mc.gameSettings.keyBindChat.isPressed())
+			while(mc.options.keyChat.consumeClick())
 				this.openChatScreen("");
 			
-			if(this.currentScreen == null && this.loadingGui == null && mc.gameSettings.keyBindCommand.isPressed())
+			if(this.currentScreen == null && this.overlay == null && mc.options.keyCommand.consumeClick())
 				this.openChatScreen("/");
 		}
 	}

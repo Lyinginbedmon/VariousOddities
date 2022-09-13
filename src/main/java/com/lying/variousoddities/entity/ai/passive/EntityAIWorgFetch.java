@@ -7,10 +7,10 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.Goal.Flag;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ArmorItem;
@@ -75,7 +75,7 @@ public class EntityAIWorgFetch extends Goal
 	
 	public void startExecuting()
 	{
-		theWorg.getLookControl().setLookPositionWithEntity(theBone, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
+		theWorg.getLookControl().setLookAt(theBone, (float)(theWorg.getMaxHeadXRot() + 20), (float)theWorg.getMaxHeadYRot());
 	}
 	
 	public void stop()
@@ -85,7 +85,7 @@ public class EntityAIWorgFetch extends Goal
 	
 	public void tick()
 	{
-		theWorg.getLookControl().setLookPositionWithEntity(theBone, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
+		theWorg.getLookControl().setLookAt(theBone, (float)(theWorg.getMaxHeadXRot() + 20), (float)theWorg.getMaxHeadYRot());
 		if(theWorg.distanceToSqr(theBone) >= 1D)
 		{
 			if(theNavigator.isDone())
@@ -99,7 +99,7 @@ public class EntityAIWorgFetch extends Goal
 				heldStack.hurtAndBreak(1, theWorg, (player) -> {});
 			
 			theWorg.setItemInHand(InteractionHand.MAIN_HAND, heldStack);
-			theBone.remove();
+			theBone.setRemoved(RemovalReason.KILLED);
 			theNavigator.moveTo(theOwner, 1.0D);
 		}
 	}

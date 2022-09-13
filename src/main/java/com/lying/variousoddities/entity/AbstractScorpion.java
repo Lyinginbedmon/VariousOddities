@@ -8,11 +8,6 @@ import com.google.common.base.Predicate;
 import com.lying.variousoddities.client.renderer.entity.EntityScorpionRenderer;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -31,12 +26,17 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -63,11 +63,11 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
 	
 	protected void registerGoals()
 	{
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 1.0D));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
-		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
+		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 		
 	    this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
 	}
@@ -91,18 +91,18 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     public void setBabies(boolean par1Bool){ DataHelper.Booleans.setBooleanByte(getEntityData(), par1Bool, BABIES); }
     public abstract AbstractScorpion createBaby(Level worldIn);
     
-    public void writeAdditional(CompoundTag compound)
+    public void addAdditionalSaveData(CompoundTag compound)
     {
-    	super.writeAdditional(compound);
+    	super.addAdditionalSaveData(compound);
     	CompoundTag display = new CompoundTag();
     		display.putBoolean("Babies", getBabies());
     		display.putInt("Breed", getBreed());
     	compound.put("Display", display);
     }
     
-    public void readAdditional(CompoundTag compound)
+    public void readAdditionalSaveData(CompoundTag compound)
     {
-    	super.readAdditional(compound);
+    	super.readAdditionalSaveData(compound);
     	CompoundTag display = compound.getCompound("Display");
     	setBabies(display.getBoolean("Babies"));
     	setBreed(display.getInt("Breed"));
@@ -136,7 +136,7 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     			Vec3 position = position();
     			double posX = position.x + (this.getRandom().nextDouble() - 0.5D);
     			double posZ = position.z + (this.getRandom().nextDouble() - 0.5D);
-    			baby.setPositionAndRotation(posX, position.y + 0.5F, posZ, 360.0F*this.getRandom().nextFloat(), 0F);
+    			baby.absMoveTo(posX, position.y + 0.5F, posZ, 360.0F*this.getRandom().nextFloat(), 0F);
     			this.level.addFreshEntity(baby);
     		}
     	}
@@ -158,7 +158,7 @@ public abstract class AbstractScorpion extends EntityOddityAgeable
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag)
     {
 		Random rand = new Random(this.getUUID().getLeastSignificantBits());
 		DataHelper.Booleans.setBooleanByte(getEntityData(), rand.nextInt(8) == 0, BABIES);

@@ -14,11 +14,17 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ItemSteerable;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PlayerRideableJumping;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -29,6 +35,8 @@ import net.minecraft.world.entity.animal.horse.Llama;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.HorseArmorItem;
 import net.minecraft.world.item.ItemStack;
@@ -38,8 +46,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CarpetBlock;
+import net.minecraft.world.phys.Vec3;
 
-public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpingMount, IMountInventory, IInventoryChangedListener
+public class EntityWarg extends AbstractGoblinWolf implements ItemSteerable, PlayerRideableJumping, IMountInventory, ContainerListener
 {
 	private static final EntityDataAccessor<Boolean> REARING	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.BOOLEAN);
 	private static final EntityDataAccessor<Boolean> SITTING	= SynchedEntityData.defineId(EntityWarg.class, EntityDataSerializers.BOOLEAN);
@@ -61,7 +70,6 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	public EntityWarg(EntityType<? extends EntityWarg> type, Level worldIn)
 	{
 		super(type, worldIn);
-	    this.stepHeight = 1.0F;
 	    this.initWargChest();
 	}
 	
@@ -97,6 +105,8 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return null;
 	}
 	
+	public float getStepHeight() { return 1F; }
+	
 	public void initWargChest()
 	{
 		Inventory inventory = this.wargChest;
@@ -116,9 +126,9 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		this.wargChest.addListener(this);
 	}
     
-    public void writeAdditional(CompoundTag compound)
+    public void addAdditionalSaveData(CompoundTag compound)
     {
-    	super.writeAdditional(compound);
+    	super.addAdditionalSaveData(compound);
     	
     	compound.putBoolean("Sitting", isOrderedToSit());
     	compound.putBoolean("Chest", hasChest());
@@ -138,9 +148,9 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		compound.put("Inventory", inventory);
     }
     
-    public void readAdditional(CompoundTag compound)
+    public void readAdditionalSaveData(CompoundTag compound)
     {
-    	super.readAdditional(compound);
+    	super.readAdditionalSaveData(compound);
     	
     	setOrderedToSit(compound.getBoolean("Sitting"));
     	setSleeping(isOrderedToSit());
@@ -167,15 +177,15 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 	
 	public int inventoryColumns(){ return 5; }
 	
-	protected void dropInventory()
+	protected void dropEquipment()
 	{
-		super.dropInventory();
+		super.dropEquipment();
 		if(this.wargChest != null)
 			for(int i=0; i<this.wargChest.getSizeInventory(); ++i)
 			{
 				ItemStack itemStack = this.wargChest.getStackInSlot(i);
 				if(!itemStack.isEmpty() && !EnchantmentHelper.hasVanishingCurse(itemStack))
-					this.entityDropItem(itemStack);
+					spawnAtLocation(itemStack);
 			};
 	}
 	
@@ -213,7 +223,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return false;
 	}
 	
-	public void travelTowards(Vec3d travelVec)
+	public void travelTowards(Vec3 travelVec)
 	{
 		super.travel(travelVec);
 	}
@@ -246,7 +256,7 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return false;
 	}
 	
-	public void travel(Vec3d travelVector)
+	public void travel(Vec3 travelVector)
 	{
 		if(!this.isAlive())
 			return;
@@ -278,31 +288,31 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 			{
 				double jump = this.jumpPower * this.getJumpFactor();
 				double boost;
-				if(isPotionActive(Effects.JUMP_BOOST))
-					boost = jump + (double)((float)(getActivePotionEffect(Effects.JUMP_BOOST).getAmplifier() + 1) * 0.1F);
+				if(hasEffect(MobEffects.JUMP))
+					boost = jump + (double)((float)(getEffect(MobEffects.JUMP).getAmplifier() + 1) * 0.1F);
 				else
 					boost = jump;
 				
-				Vec3d motion = this.getMotion();
-				this.setMotion(motion.x, boost, motion.z);
+				Vec3 motion = this.getDeltaMovement();
+				this.setDeltaMovement(motion.x, boost, motion.z);
 				this.setJumping(true);
 				this.isAirBorne = true;
 				net.minecraftforge.common.ForgeHooks.onLivingJump(this);
 				if(forward > 0F || !isRiderControlling())
 				{
-					float sine = MathHelper.sin(this.rotationYaw * ((float)Math.PI / 180F));
-					float cosine = MathHelper.cos(this.rotationYaw * ((float)Math.PI / 180F));
-					this.setMotion(this.getMotion().add(-0.4F * sine * this.jumpPower, 0D, 0.4F * cosine * this.jumpPower));
+					float sine = Mth.sin(this.rotationYaw * ((float)Math.PI / 180F));
+					float cosine = Mth.cos(this.rotationYaw * ((float)Math.PI / 180F));
+					this.setDeltaMovement(this.getDeltaMovement().add(-0.4F * sine * this.jumpPower, 0D, 0.4F * cosine * this.jumpPower));
 				}
 				
 				this.jumpPower = 0F;
 			}
 			
-			this.jumpMovementFactor = this.getAIMoveSpeed() * 0.1F;
+			this.jumpMovementFactor = this.getSpeed() * 0.1F;
 			if(canPassengerSteer())
 			{
 				this.setAIMoveSpeed((float)this.getAttributeValue(Attributes.MOVEMENT_SPEED));
-				super.travel(new Vec3d(strafe, travelVector.y, forward));
+				super.travel(new Vec3(strafe, travelVector.y, forward));
 			}
 			
 			if(this.onGround)
@@ -323,30 +333,30 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		return (float)getAttributeValue(Attributes.MOVEMENT_SPEED) * 0.225F;
 	}
 	
-	public ActionResultType func_230254_b_(Player player, Hand hand)
+	public InteractionResult mobInteract(Player player, InteractionHand hand)
 	{
-		ItemStack heldStack = player.getHeldItem(hand);
+		ItemStack heldStack = player.getItemInHand(hand);
 		
-		if(ItemTags.CARPETS.contains(heldStack.getItem()))
+		if(ItemTags.WOOL_CARPETS.contains(heldStack.getItem()))
 			if(this.wargChest != null && this.wargChest.getStackInSlot(1).isEmpty())
 			{
 				this.wargChest.setInventorySlotContents(1, heldStack.split(1));
-				return ActionResultType.func_233537_a_(this.level.isClientSide);
+				return InteractionResult.sidedSuccess(this.level.isClientSide);
 			}
 		
-		if(!isChild())
+		if(!isBaby())
 		{
 			if(!isSaddled() && heldStack.getItem() == Items.SADDLE)
 			{
 				this.wargChest.setInventorySlotContents(0, heldStack.split(1));
-				return ActionResultType.func_233537_a_(this.level.isClientSide);
+				return InteractionResult.sidedSuccess(this.level.isClientSide);
 			}
 			
 			if(heldStack.getItem() instanceof HorseArmorItem)
 				if(this.wargChest != null && this.wargChest.getStackInSlot(2).isEmpty())
 				{
 					this.wargChest.setInventorySlotContents(2, heldStack.split(1));
-					return ActionResultType.func_233537_a_(this.level.isClientSide);
+					return InteractionResult.sidedSuccess(this.level.isClientSide);
 				}
 			
 			if(!hasChest() && Block.getBlockFromItem(heldStack.getItem()) == Blocks.CHEST)
@@ -357,23 +367,23 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 					heldStack.shrink(1);
 				
 				initWargChest();
-				return ActionResultType.func_233537_a_(this.level.isClientSide);
+				return InteractionResult.sidedSuccess(this.level.isClientSide);
 			}
 			
 			if(!isBeingRidden() && !player.isSecondaryUseActive())
 			{
-				if(!this.getEntityWorld().isClientSide && (isTamed() || player.isCreative()))
+				if(!this.getLevel().isClientSide && (isTamed() || player.isCreative()))
 					player.startRiding(this);
-				return ActionResultType.func_233537_a_(this.getEntityWorld().isClientSide);
+				return InteractionResult.sidedSuccess(this.getLevel().isClientSide);
 			}
 		}
 		
-		return super.func_230254_b_(player, hand);
+		return super.mobInteract(player, hand);
 	}
 	
 	protected void playChestEquipSound()
 	{
-		playSound(SoundEvents.ENTITY_DONKEY_CHEST, 1F, (this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1F);
+		playSound(SoundEvents.DONKEY_CHEST, 1F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1F);
 	}
 	
 	public boolean isSaddled(){ return getEntityData().get(SADDLE).booleanValue(); }
@@ -456,22 +466,22 @@ public class EntityWarg extends AbstractGoblinWolf implements IRideable, IJumpin
 		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerWarg(window, player, this.wargChest, this), this.getDisplayName()));
 	}
 	
-	public void onInventoryChanged(IInventory invBasic)
+	public void slotChanged(AbstractContainerMenu invBasic, int slot, ItemStack stack)
 	{
-		ItemStack armour = this.getItemStackFromSlot(EquipmentSlot.CHEST);
+		ItemStack armour = this.getItemBySlot(EquipmentSlot.CHEST);
 		updateArmour();
-		if(this.ticksExisted > 20 && !getItemStackFromSlot(EquipmentSlot.CHEST).isEmpty() && armour.getItem() != getItemStackFromSlot(EquipmentSlot.CHEST).getItem())
-			playSound(SoundEvents.ENTITY_HORSE_ARMOR, 0.5F, 1.0F);
+		if(this.tickCount > 20 && !getItemBySlot(EquipmentSlot.CHEST).isEmpty() && armour.getItem() != getItemBySlot(EquipmentSlot.CHEST).getItem())
+			playSound(SoundEvents.HORSE_ARMOR, 0.5F, 1.0F);
 		
 		boolean saddled = isSaddled();
 		updateSaddle();
-		if(this.ticksExisted > 20 && !saddled && this.isSaddled())
-			playSound(SoundEvents.ENTITY_HORSE_SADDLE, 0.5F, 1F);
+		if(this.tickCount > 20 && !saddled && this.isSaddled())
+			playSound(SoundEvents.HORSE_SADDLE, 0.5F, 1F);
 		
 		DyeColor carpet = getCarpetColor();
 		updateCarpet();
-		if(this.ticksExisted > 20 && getCarpetColor() != null && carpet != getCarpetColor())
-			playSound(SoundEvents.ENTITY_LLAMA_SWAG, 0.5F, 1.0F);
+		if(this.tickCount > 20 && getCarpetColor() != null && carpet != getCarpetColor())
+			playSound(SoundEvents.LLAMA_SWAG, 0.5F, 1.0F);
 	}
 	
 	private void updateArmour()

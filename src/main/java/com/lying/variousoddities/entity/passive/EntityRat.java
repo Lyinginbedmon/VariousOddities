@@ -86,9 +86,9 @@ public class EntityRat extends AbstractRat
     public void setMinion(boolean par1Bool){ getEntityData().set(MINION, par1Bool); }
     public boolean isMinion(){ return getEntityData().get(MINION).booleanValue(); }
     
-    public void writeAdditional(CompoundTag compound)
+    public void addAdditionalSaveData(CompoundTag compound)
     {
-    	super.writeAdditional(compound);
+    	super.addAdditionalSaveData(compound);
     	if(isMinion())
     		compound.putBoolean("Minion", isMinion());
     }

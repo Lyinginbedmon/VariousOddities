@@ -1,42 +1,44 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelCrab;
 import com.lying.variousoddities.client.model.entity.ModelCrabBarnacles;
 import com.lying.variousoddities.entity.AbstractCrab;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.model.geom.EntityModelSet;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.IEntityRenderer;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class LayerCrabBarnacles extends LayerRenderer<AbstractCrab, ModelCrab> 
+public class LayerCrabBarnacles extends RenderLayer<AbstractCrab, ModelCrab> 
 {
 	private static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/crab/barnacles.png");
 	private final ModelCrabBarnacles model;
 	
-	public LayerCrabBarnacles(IEntityRenderer<AbstractCrab, ModelCrab> entityRendererIn)
+	public LayerCrabBarnacles(RenderLayerParent<AbstractCrab, ModelCrab> entityRendererIn, EntityModelSet modelsIn)
 	{
 		super(entityRendererIn);
-		this.model = new ModelCrabBarnacles();
+		this.model = new ModelCrabBarnacles(modelsIn.bakeLayer(VOModelLayers.CRAB_BARNACLES));
 	}
 	
-	public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, AbstractCrab crabIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
+	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, AbstractCrab crabIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(crabIn.hasBarnacles())
 		{
-			model.setLivingAnimations(crabIn, limbSwing, limbSwingAmount, partialTicks);
-			this.getEntityModel().copyModelAttributesTo(model);
-			IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getArmorCutoutNoCull(getEntityTexture(crabIn)));
-			model.setRotationAngles(crabIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-			model.render(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 0.5F, 0.5F, 0.5F, 1.0F);
+			model.prepareMobModel(crabIn, limbSwing, limbSwingAmount, partialTicks);
+			this.getParentModel().copyPropertiesTo(model);
+			VertexConsumer ivertexbuilder = bufferIn.getBuffer(RenderType.armorCutoutNoCull(getEntityTexture(crabIn)));
+			model.setupAnim(crabIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+			model.renderToBuffer(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 0.5F, 0.5F, 0.5F, 1.0F);
 		}
 	}
 	

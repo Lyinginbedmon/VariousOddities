@@ -49,17 +49,17 @@ public class EntityBodyCorpse extends AbstractBody
 		getEntityData().define(LOAD_POS, BlockPos.ZERO);
 	}
 	
-	public void readAdditional(CompoundTag compound)
+	public void readAdditionalSaveData(CompoundTag compound)
 	{
-		super.readAdditional(compound);
+		super.readAdditionalSaveData(compound);
 		getEntityData().set(TIMER, compound.getInt("TicksRemaining"));
 		getEntityData().set(LOADED, compound.getBoolean("ChunkLoading"));
 		getEntityData().set(LOAD_POS, NbtUtils.readBlockPos(compound.getCompound("ChunkLoadPos")));
 	}
 	
-	public void writeAdditional(CompoundTag compound)
+	public void addAdditionalSaveData(CompoundTag compound)
 	{
-		super.writeAdditional(compound);
+		super.addAdditionalSaveData(compound);
 		compound.putInt("TicksRemaining", getTicksRemaining());
 		compound.putBoolean("ChunkLoading", getEntityData().get(LOADED).booleanValue());
 		compound.put("ChunkLoadPos", NbtUtils.writeBlockPos(getEntityData().get(LOAD_POS)));
@@ -127,16 +127,18 @@ public class EntityBodyCorpse extends AbstractBody
 		if(getLevel().isClientSide) return;
 		
 		ServerLevel world = (ServerLevel)getLevel();
+		ChunkPos chunk = this.chunkPosition();
 		for(int x=-1; x<2; x++)
 			for(int z=-1; z<2; z++)
-				ForgeChunkManager.forceChunk(world, Reference.ModInfo.MOD_ID, this, this.chunkCoordX + x, this.chunkCoordZ + z, true, true);
+				ForgeChunkManager.forceChunk(world, Reference.ModInfo.MOD_ID, this, chunk.x + x, chunk.z + z, true, true);
 		
 		getEntityData().set(LOADED, true);
 	}
 	
 	public void unloadChunks()
 	{
-		unloadChunks(this.chunkCoordX, this.chunkCoordZ);
+		ChunkPos chunk = this.chunkPosition();
+		unloadChunks(chunk.x, chunk.z);
 	}
 	
 	public void unloadChunks(int chunkX, int chunkZ)

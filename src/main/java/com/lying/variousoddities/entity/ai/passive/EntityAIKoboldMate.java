@@ -65,7 +65,7 @@ public class EntityAIKoboldMate extends Goal
 				return false;
 			
 			// 1F == full moon
-			if(theWorld.getMoonFactor() != 1F)
+			if(theWorld.getMoonBrightness() != 1F)
 				return false;
 			
 			long dayTime = theWorld.getDayTime();
@@ -137,7 +137,7 @@ public class EntityAIKoboldMate extends Goal
 				}
 				else if(targetMate.distanceTo(theKobold) > 1F)
 				{
-					theKobold.getLookController().setLookPositionWithEntity(targetMate, 30F, 30F);
+					theKobold.getLookControl().setLookAt(targetMate, 30F, 30F);
 					theNavigator.moveTo(targetMate, 1D);
 					if(theNavigator.isDone())
 						this.targetMate = null;
@@ -154,7 +154,7 @@ public class EntityAIKoboldMate extends Goal
 					this.currentState = State.SEARCHING_MATE;
 				else
 				{
-					theKobold.getLookController().setLookPositionWithEntity(targetMate, 30F, 30F);
+					theKobold.getLookControl().setLookAt(targetMate, 30F, 30F);
 					if(targetMate.distanceTo(theKobold) > 1F)
 						theKobold.getNavigation().moveTo(targetMate, 1D);
 					else if(matingTime < (Reference.Values.TICKS_PER_SECOND * 15))
@@ -255,7 +255,7 @@ public class EntityAIKoboldMate extends Goal
 	public boolean isPositionValidForEgg(BlockPos pos)
 	{
 		if(pos != null)
-			if(theWorld.isEmptyBlock(pos) && Block.hasSolidSideOnTop(theWorld, pos.below()))
+			if(theWorld.isEmptyBlock(pos) && Block.canSupportRigidBlock(theWorld, pos.below()))
 				return theWorld.isAreaLoaded(pos, 1) && !theWorld.canSeeSky(pos);
 		return false;
 	}
@@ -263,7 +263,7 @@ public class EntityAIKoboldMate extends Goal
 	public boolean hasSolidNeighbour(BlockPos pos)
 	{
 		for(Direction face : Direction.Plane.HORIZONTAL)
-			if(theWorld.getBlockState(pos.relative(face)).isOpaqueCube(theWorld, pos.relative(face)))
+			if(theWorld.getBlockState(pos.relative(face)).isSolidRender(theWorld, pos.relative(face)))
 				return true;
 		return false;
 	}

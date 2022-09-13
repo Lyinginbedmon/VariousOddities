@@ -30,7 +30,9 @@ import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
 
 import net.minecraft.ChatFormatting;
@@ -43,6 +45,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -62,6 +65,7 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollingEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.ScreenEvent.MouseScrolled;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
@@ -101,7 +105,7 @@ public class VOBusClient
 	}
 	
 	@SubscribeEvent
-	public static void onMouseScroll(GuiScreenEvent.MouseScrollEvent.Pre event)
+	public static void onMouseScroll(MouseScrolled.Pre event)
 	{
 		if(mc.screen != null && mc.screen instanceof IScrollableGUI)
 		{
@@ -133,7 +137,7 @@ public class VOBusClient
 			LivingData data = LivingData.forEntity(event.getEntity());
 			Abilities abilities = data.getAbilities();
 			Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
-			if(player.movementInput.jump && abilities.canBonusJump)
+			if(player.input.jumping && abilities.canBonusJump)
 			{
 				if(AbilitySwim.isEntitySwimming(player))
 				{
@@ -148,7 +152,7 @@ public class VOBusClient
 					if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
 					{
 						abilities.doAirJump();
-						player.connection.sendPacket(new CEntityActionPacket(player, CEntityActionPacket.Action.START_FALL_FLYING));
+						player.connection.send(new ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 						PacketHandler.sendToServer(new PacketBonusJump());
 					}
 				}
@@ -170,7 +174,7 @@ public class VOBusClient
 		handleMistNotification(localPlayer, phylacteries);
 		spawnMistParticles(localPlayer, phylacteries);
 		
-		if(Minecraft.isGuiEnabled())
+		if(Minecraft.renderNames())
 			displayConditions(event.getMatrixStack(), localPlayer);
 	}
 	
@@ -203,12 +207,12 @@ public class VOBusClient
 		
 		Vec3 mobPos = mob.position().add(0D, mob.getBbHeight() + (scale * 0.5D) + 0.1D, 0D);
 		if(renderNameplateEvent.getResult() != Event.Result.DENY)
-			if(renderNameplateEvent.getResult() == Event.Result.ALLOW || (mob.getAlwaysRenderNameTagForRender() && mob.hasCustomName()) || mob.getType() == EntityType.PLAYER)
+			if(renderNameplateEvent.getResult() == Event.Result.ALLOW || (mob.shouldShowName() && mob.hasCustomName()) || mob.getType() == EntityType.PLAYER)
 				mobPos = mobPos.add(0D, 0.5D, 0D);
 		
-		Vec3 viewVec = mc.getRenderManager().info.getProjectedView();
+		Vec3 viewVec = mc.getEntityRenderDispatcher().camera.getPosition();
 		Vec3 iconPos = mobPos.subtract(viewVec);
-		Vec3 direction = iconPos.normalize().multiply(1D, 0D, 1D).rotateYaw((float)Math.toRadians(90D));
+		Vec3 direction = iconPos.normalize().multiply(1D, 0D, 1D).yRot((float)Math.toRadians(90D));
 		
 		double iconSep = 0.1D;
 		
@@ -239,12 +243,12 @@ public class VOBusClient
 		double yOff = scale;
 		double zOff = direction.z * scale;
 		
-        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-		Matrix4f matrix = stack.getLast().getMatrix();
-		stack.push();
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+		Matrix4f matrix = stack.last().pose();
+		stack.pushPose();
 			RenderSystem.enableBlend();
-			mc.getTextureManager().bindTexture(condition.getIconTexture(affecting));
-			buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+			RenderSystem.setShaderTexture(0, condition.getIconTexture(affecting));
+			buffer.begin(7, DefaultVertexFormat.POSITION_TEX);
 				buffer.pos(matrix, (float)(pos.getX() - xOff), (float)(pos.getY() + yOff), (float)(pos.getZ() - zOff)).tex(1, 0).endVertex();
 				buffer.pos(matrix, (float)(pos.getX() + xOff), (float)(pos.getY() + yOff), (float)(pos.getZ() + zOff)).tex(0, 0).endVertex();
 				buffer.pos(matrix, (float)(pos.getX() + xOff), (float)(pos.getY() - yOff), (float)(pos.getZ() + zOff)).tex(0, 1).endVertex();
@@ -252,7 +256,7 @@ public class VOBusClient
 			buffer.finishDrawing();
     		WorldVertexBufferUploader.draw(buffer);
     		RenderSystem.disableBlend();
-		stack.pop();
+		stack.popPose();
 	}
 	
 	private static void spawnMistParticles(Player localPlayer, List<TileEntityPhylactery> phylacteries)
@@ -377,10 +381,10 @@ public class VOBusClient
 			{
 	            event.setCanceled(true);
 	            IRenderTypeBuffer.Impl iRenderTypeBuffer = mc.getRenderTypeBuffers().getBufferSource();
-	            event.getMatrixStack().push();
+	            event.getPoseStack().pushPose();
 	            	skipRenderEvent = true;
-	            	event.getRenderer().render(renderTarget, renderTarget.rotationYaw, event.getPartialRenderTick(), event.getMatrixStack(), iRenderTypeBuffer, 0xffffff);
-	            event.getMatrixStack().pop();
+	            	event.getRenderer().render(renderTarget, renderTarget.yBodyRot(), event.getPartialTick(), event.getPoseStack(), iRenderTypeBuffer, 0xffffff);
+	            event.getPoseStack().popPose();
 	        }
 		}
 	}
@@ -395,7 +399,7 @@ public class VOBusClient
 			return;
 		
 		float scale = size.getScale();
-		event.getMatrixStack().scale(scale, scale, scale);
+		event.getPoseStack().scale(scale, scale, scale);
 	}
 	
 	@SubscribeEvent
@@ -432,11 +436,11 @@ public class VOBusClient
 			
 			RenderSystem.disableDepthTest();
 		    RenderSystem.depthMask(false);
-		    RenderSystem.color4f(1.0F, 1.0F, 1.0F, alpha);
-			mc.getTextureManager().bindTexture(new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/misc/vignette_dazzled.png"));
-		    Tessellator tessellator = Tessellator.getInstance();
-		    BufferBuilder bufferbuilder = tessellator.getBuffer();
-		    bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+		    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+			RenderSystem.setShaderTexture(0, new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/misc/vignette_dazzled.png"));
+		    Tesselator tessellator = Tesselator.getInstance();
+		    BufferBuilder bufferbuilder = tessellator.getBuilder();
+		    bufferbuilder.begin(7, DefaultVertexFormat.POSITION_TEX);
 			    bufferbuilder.pos(0.0D, (double)scaledHeight, -90.0D).tex(0.0F, 1.0F).endVertex();
 			    bufferbuilder.pos((double)scaledWidth, (double)scaledHeight, -90.0D).tex(1.0F, 1.0F).endVertex();
 			    bufferbuilder.pos((double)scaledWidth, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
@@ -456,7 +460,7 @@ public class VOBusClient
 	public static void onMountUIOpen(GuiOpenEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.getRidingEntity() != null && player.getRidingEntity() instanceof IMountInventory && event.getGui() instanceof InventoryScreen)
+		if(player != null && player.getVehicle() != null && player.getVehicle() instanceof IMountInventory && event.getGui() instanceof InventoryScreen)
 		{
 			event.setGui(null);
 			PacketHandler.sendToServer(new PacketMountGui());

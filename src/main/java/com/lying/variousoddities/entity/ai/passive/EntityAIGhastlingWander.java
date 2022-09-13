@@ -79,7 +79,7 @@ public class EntityAIGhastlingWander extends Goal
 				dest = getRandomPosition();
 				
 				AABB bounds = this.creature.getBoundingBox().move(dest);
-				if(!this.world.hasNoCollisions(this.creature, bounds))
+				if(!this.world.noCollision(this.creature, bounds))
 					dest = null;
 				else if(owner != null && owner.distanceToSqr(dest) > RANGE_MAX && owner.distanceToSqr(dest) > (ownerDist * 0.75D))
 					dest = null;
@@ -127,7 +127,7 @@ public class EntityAIGhastlingWander extends Goal
 			return false;
 		if(!canTeleportTo(new BlockPos(x, y, z)))
 			return false;
-		this.creature.setLocationAndAngles(x + 0.5D, y + 0.5D, z + 0.5D, this.creature.rotationYaw, this.creature.rotationPitch);
+		this.creature.absMoveTo(x + 0.5D, y + 0.5D, z + 0.5D, this.creature.getYRot(), this.creature.getXRot());
 		this.controller.clearMotion();
 		return true;
 	}
@@ -140,7 +140,7 @@ public class EntityAIGhastlingWander extends Goal
 		else
 		{
 			BlockPos blockpos = pos.subtract(this.creature.blockPosition());
-			return this.world.hasNoCollisions(this.creature, this.creature.getBoundingBox().move(blockpos));
+			return this.world.noCollision(this.creature, this.creature.getBoundingBox().move(blockpos));
 		}
 	}
 }

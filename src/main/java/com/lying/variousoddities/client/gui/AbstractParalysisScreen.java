@@ -4,21 +4,21 @@ import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketParalysisResignation;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.realmsclient.RealmsMainScreen;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screen.ConfirmOpenLinkScreen;
-import net.minecraft.client.gui.screen.DirtMessageScreen;
-import net.minecraft.client.gui.screen.MainMenuScreen;
-import net.minecraft.client.gui.screen.MultiplayerScreen;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.ShareToLanScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.achievement.StatsScreen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.realms.RealmsBridgeScreen;
 import net.minecraft.world.entity.player.Player;
 
 public abstract class AbstractParalysisScreen extends Screen
@@ -39,94 +39,92 @@ public abstract class AbstractParalysisScreen extends Screen
 	
 	public void init()
 	{
-		this.minecraft.keyboardListener.enableRepeatEvents(true);
+		this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 		
-		this.addButton(new Button(this.width / 2 - 102, this.height / 4 + 24 + -16, 204, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.resignation"), (button2) ->
+		this.addRenderableWidget(new Button(this.width / 2 - 102, this.height / 4 + 24 + -16, 204, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.resignation"), (button2) ->
 			{
 				PacketHandler.sendToServer(new PacketParalysisResignation());
 			}));
 		
-		this.addButton(new Button(this.width / 2 - 102, this.height / 4 + 48 + -16, 98, 20, Component.translatable("gui.advancements"), (button2) ->
+		this.addRenderableWidget(new Button(this.width / 2 - 102, this.height / 4 + 48 + -16, 98, 20, Component.translatable("gui.advancements"), (button2) ->
 			{
-			this.minecraft.displayGuiScreen(new AdvancementsScreen(this.minecraft.player.connection.getAdvancementManager()));
+			this.minecraft.setScreen(new AdvancementsScreen(this.minecraft.player.connection.getAdvancements()));
 			}));
 		
-		this.addButton(new Button(this.width / 2 + 4, this.height / 4 + 48 + -16, 98, 20, Component.translatable("gui.stats"), (button2) ->
+		this.addRenderableWidget(new Button(this.width / 2 + 4, this.height / 4 + 48 + -16, 98, 20, Component.translatable("gui.stats"), (button2) ->
 			{
-			this.minecraft.displayGuiScreen(new StatsScreen(this, this.minecraft.player.getStats()));
+			this.minecraft.setScreen(new StatsScreen(this, this.minecraft.player.getStats()));
 			}));
 		
-		String s = SharedConstants.getVersion().isStable() ? "https://aka.ms/javafeedback?ref=game" : "https://aka.ms/snapshotfeedback?ref=game";
-		this.addButton(new Button(this.width / 2 - 102, this.height / 4 + 72 + -16, 98, 20, Component.translatable("menu.sendFeedback"), (button2) ->
+		String s = SharedConstants.getCurrentVersion().isStable() ? "https://aka.ms/javafeedback?ref=game" : "https://aka.ms/snapshotfeedback?ref=game";
+		this.addRenderableWidget(new Button(this.width / 2 - 102, this.height / 4 + 72 + -16, 98, 20, Component.translatable("menu.sendFeedback"), (button2) ->
 			{
-			this.minecraft.displayGuiScreen(new ConfirmOpenLinkScreen((open) ->
+			this.minecraft.setScreen(new ConfirmLinkScreen((open) ->
 				{
 					if(open)
-						Util.getOSType().openURI(s);
+						Util.getPlatform().openUri(s);
 					
-					this.minecraft.displayGuiScreen(this);
+					this.minecraft.setScreen(this);
 				}, s, true));
 			}));
 		
-		this.addButton(new Button(this.width / 2 + 4, this.height / 4 + 72 + -16, 98, 20, Component.translatable("menu.reportBugs"), (button2) ->
+		this.addRenderableWidget(new Button(this.width / 2 + 4, this.height / 4 + 72 + -16, 98, 20, Component.translatable("menu.reportBugs"), (button2) ->
 			{
-			this.minecraft.displayGuiScreen(new ConfirmOpenLinkScreen((open) ->
+			this.minecraft.setScreen(new ConfirmLinkScreen((open) ->
 				{
 					if(open)
-					Util.getOSType().openURI("https://aka.ms/snapshotbugs?ref=game");
+					Util.getPlatform().openUri("https://aka.ms/snapshotbugs?ref=game");
 					
-					this.minecraft.displayGuiScreen(this);
+					this.minecraft.setScreen(this);
 				}, "https://aka.ms/snapshotbugs?ref=game", true));
 			}));
 		
-		this.addButton(new Button(this.width / 2 - 102, this.height / 4 + 96 + -16, 98, 20, Component.translatable("menu.options"), (button2) ->
+		this.addRenderableWidget(new Button(this.width / 2 - 102, this.height / 4 + 96 + -16, 98, 20, Component.translatable("menu.options"), (button2) ->
 			{
-				this.minecraft.displayGuiScreen(new OptionsScreen(this, this.minecraft.gameSettings));
+				this.minecraft.setScreen(new OptionsScreen(this, this.minecraft.options));
 			}));
 		
-		Button button = this.addButton(new Button(this.width / 2 + 4, this.height / 4 + 96 + -16, 98, 20, Component.translatable("menu.shareToLan"), (button2) ->
+		Button button = this.addRenderableWidget(new Button(this.width / 2 + 4, this.height / 4 + 96 + -16, 98, 20, Component.translatable("menu.shareToLan"), (button2) ->
 			{
-				this.minecraft.displayGuiScreen(new ShareToLanScreen(this));
+				this.minecraft.setScreen(new ShareToLanScreen(this));
 			}));
-		button.active = this.minecraft.isSingleplayer() && !this.minecraft.getIntegratedServer().getPublic();
+		button.active = this.minecraft.hasSingleplayerServer() && !this.minecraft.getSingleplayerServer().isPublished();
 		
-		Button button1 = this.addButton(new Button(this.width / 2 - 102, this.height / 4 + 120 + -16, 204, 20, Component.translatable("menu.returnToMenu"), (button2) ->
+		Button button1 = this.addRenderableWidget(new Button(this.width / 2 - 102, this.height / 4 + 120 + -16, 204, 20, Component.translatable("menu.returnToMenu"), (button2) ->
 			{
-				boolean flag = this.minecraft.isIntegratedServerRunning();
-				boolean flag1 = this.minecraft.isConnectedToRealms();
+				boolean localServer = this.minecraft.isLocalServer();
+				boolean onRealms = this.minecraft.isConnectedToRealms();
 				button2.active = false;
-				this.minecraft.level.sendQuittingDisconnectingPacket();
+				this.minecraft.level.disconnect();
 				
-				if(flag)
-					this.minecraft.unloadWorld(new DirtMessageScreen(Component.translatable("menu.savingLevel")));
+				if(localServer)
+					this.minecraft.clearLevel(new GenericDirtMessageScreen(Component.translatable("menu.savingLevel")));
 				else
-					this.minecraft.unloadWorld();
-			
-				if(flag)
-					this.minecraft.displayGuiScreen(new MainMenuScreen());
-				else if(flag1)
-				{
-					RealmsBridgeScreen realmsbridgescreen = new RealmsBridgeScreen();
-					realmsbridgescreen.func_231394_a_(new MainMenuScreen());
-				}
+					this.minecraft.clearLevel();
+				
+				TitleScreen titleScreen = new TitleScreen();
+				if(localServer)
+					this.minecraft.setScreen(titleScreen);
+				else if(onRealms)
+					this.minecraft.setScreen(new RealmsMainScreen(titleScreen));
 				else
-					this.minecraft.displayGuiScreen(new MultiplayerScreen(new MainMenuScreen()));
+					this.minecraft.setScreen(new JoinMultiplayerScreen(titleScreen));
 			
 			}));
 		
-		if(!this.minecraft.isIntegratedServerRunning())
+		if(!this.minecraft.isLocalServer())
 			button1.setMessage(Component.translatable("menu.disconnect"));
 	}
 	
 	public void tick()
 	{
 		if(shouldClose() || !thePlayer.isAlive())
-			closeScreen();
+			onClose();
 	}
 	
 	public void onClose()
 	{
-		this.minecraft.keyboardListener.enableRepeatEvents(false);
+		this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
 	}
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)

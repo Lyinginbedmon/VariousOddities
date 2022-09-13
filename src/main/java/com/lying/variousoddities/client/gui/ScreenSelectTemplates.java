@@ -245,10 +245,8 @@ public class ScreenSelectTemplates extends Screen
 		}
 	}
 	
-    public void init(Minecraft minecraft, int width, int height)
+    public void init()
     {
-    	super.init(minecraft, width, height);
-    	
 		this.listAvailable = new TemplateList(minecraft, this, 200, this.height, false, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.allowed"));
 		this.listAvailable.setLeftPos(this.width / 2 - this.listAvailable.getRowWidth() - LIST_SEP);
 		this.listAvailable.setEntries(getViableTemplates());
@@ -267,10 +265,10 @@ public class ScreenSelectTemplates extends Screen
 		
         this.buttons.clear();
         int midX = width / 2;
-    	this.addButton(new Button(midX - 50, this.height - 22, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
-    	this.addButton(new Button(midX - 62, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
-    	this.addButton(clearButton = new Button(midX + 2, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
-    	this.addButton(new Button(3, 3, 20, 20, Component.literal("<"), (button) -> { Minecraft.getInstance().displayGuiScreen(new ScreenSelectSpecies(player, this.targetPower, this.randomise, this.baseSpecies)); },
+    	this.addRenderableWidget(new Button(midX - 50, this.height - 22, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
+    	this.addRenderableWidget(new Button(midX - 62, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
+    	this.addRenderableWidget(clearButton = new Button(midX + 2, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
+    	this.addRenderableWidget(new Button(3, 3, 20, 20, Component.literal("<"), (button) -> { Minecraft.getInstance().setScreen(new ScreenSelectSpecies(player, this.targetPower, this.randomise, this.baseSpecies)); },
     			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select"), x, y); }));
     }
     
@@ -291,7 +289,7 @@ public class ScreenSelectTemplates extends Screen
     	this.listApplied.getTemplates().forEach((template) -> { templateNames.add(template.getRegistryName()); });
     	
 		PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUUID(), this.baseSpecies.getRegistryName(), this.customTypes != null, templateNames.toArray(new ResourceLocation[0])));
-		Minecraft.getInstance().displayGuiScreen(null);
+		Minecraft.getInstance().setScreen(null);
     }
     
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
@@ -330,8 +328,8 @@ public class ScreenSelectTemplates extends Screen
 	private void displayBaseStats(PoseStack matrixStack, int mouseX, int mouseY, int xPos)
     {
 		// Describe base creature
-		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURES);
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.setShaderTexture(0, TEXTURES);
 		int yPos = 20 + this.font.lineHeight;
 		this.blit(matrixStack, xPos - 100, 20 + this.font.lineHeight, 0, 65, 100, 120);
 		xPos -= 8;
@@ -351,9 +349,9 @@ public class ScreenSelectTemplates extends Screen
 		yPos += 1;
 		Types baseTypes = new Types(getBaseTypes());
 		Component baseTypesText = baseTypes.toHeader();
-		if(baseTypesText.getSerializedName().length() > 15)
-			baseTypesText = Component.literal(baseTypesText.getSerializedName().substring(0, 15) + "...");
-		drawString(matrixStack, this.font, baseTypesText, xPos - this.font.width(baseTypesText.getSerializedName()), yPos, 16777215);
+		if(baseTypesText.getString().length() > 15)
+			baseTypesText = Component.literal(baseTypesText.getString().substring(0, 15) + "...");
+		drawString(matrixStack, this.font, baseTypesText, xPos - this.font.width(baseTypesText.getString()), yPos, 16777215);
 		yPos += this.font.lineHeight + 5;
 		Map<ResourceLocation, Ability> baseAbilities = getBaseAbilities();
 		
@@ -374,7 +372,7 @@ public class ScreenSelectTemplates extends Screen
 		
 		yPos += this.font.lineHeight + 5;
 		Component abilityCount = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.ability_tally", baseAbilities.size());
-		drawString(matrixStack, this.font, abilityCount, xPos - this.font.width(abilityCount.getSerializedName()), yPos, 16777215);
+		drawString(matrixStack, this.font, abilityCount, xPos - this.font.width(abilityCount.getString()), yPos, 16777215);
 		
 		if(mouseX <= xPos && mouseY <= (yPos + font.lineHeight) && mouseY >= 29)
 			renderCharacterSummary(matrixStack, mouseX, mouseY, baseTypes, baseAbilities);
@@ -384,8 +382,8 @@ public class ScreenSelectTemplates extends Screen
     @SuppressWarnings("deprecation")
 	private void displayTemplatedStats(PoseStack matrixStack, int mouseX, int mouseY, int xPos)
     {
-		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		Minecraft.getInstance().getTextureManager().bindTexture(TEXTURES);
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.setShaderTexture(0, TEXTURES);
 		
 		int yPos = 20 + this.font.lineHeight;
 		this.blit(matrixStack, xPos, yPos, 0, 65, 100, 120);
@@ -418,8 +416,8 @@ public class ScreenSelectTemplates extends Screen
 		yPos += 1;
 		Pair<Types, Map<ResourceLocation, Ability>> selection = getProcessedTemplates();
 		Component selectionTypesText = selection.getFirst().toHeader();
-		if(selectionTypesText.getSerializedName().length() > 15)
-			selectionTypesText = Component.literal(selectionTypesText.getSerializedName().substring(0, 15) + "...");
+		if(selectionTypesText.getString().length() > 15)
+			selectionTypesText = Component.literal(selectionTypesText.getString().substring(0, 15) + "...");
 		drawString(matrixStack, this.font, selectionTypesText, xPos, yPos, 16777215);
 		yPos += this.font.lineHeight + 5;
 		
@@ -451,8 +449,8 @@ public class ScreenSelectTemplates extends Screen
     {
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder bufferbuilder = tessellator.getBuilder();
-		this.minecraft.getTextureManager().bindTexture(Screen.BACKGROUND_LOCATION);
-		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.setShaderTexture(0, Screen.BACKGROUND_LOCATION);
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		int listStart = 32;
         bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 	        bufferbuilder.vertex(0.0D, (double)listStart, 0.0D).uv(0.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();

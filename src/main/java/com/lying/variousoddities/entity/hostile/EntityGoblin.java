@@ -35,11 +35,17 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, ISettlementEntity, IDefaultSpecies
 {
@@ -74,11 +80,11 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
 	protected void registerGoals()
 	{
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 1.0D));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
-		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
+		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 	}
 	
 	protected void addControllers()
@@ -128,7 +134,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	public EntityGoblin getOtherParent()
 	{
 		EntityGoblin child = VOEntities.GOBLIN.create(getLevel());
-		child.readAdditional(getEntityData().get(CARRYING));
+		child.readAdditionalSaveData(getEntityData().get(CARRYING));
 		return child;
 	}
 	public void setCarryingFrom(EntityGoblin parent)
@@ -138,7 +144,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 		else
 		{
 			CompoundTag parentData = new CompoundTag();
-			parent.writeAdditional(parentData);
+			parent.addAdditionalSaveData(parentData);
 			getEntityData().set(CARRYING, parentData);
 		}
 	}
@@ -153,9 +159,9 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
      */
 	public float getAgeProgress(){ return 0F; }
 	
-	public void writeAdditional(CompoundTag compound)
+	public void addAdditionalSaveData(CompoundTag compound)
 	{
-		super.writeAdditional(compound);
+		super.addAdditionalSaveData(compound);
 		CompoundTag displayData = new CompoundTag();
 			displayData.putInt("Color", getColor());
 			displayData.putBoolean("Nose", getNose());
@@ -202,11 +208,11 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
     protected float getSoundVolume(){ return this.isBaby() ? super.getSoundVolume() * 0.3F : super.getSoundVolume(); }
     
-    public void livingTick()
+    public void aiStep()
     {
     	/** If goblin has just become an adult OR is pregnant, set growing age to max */
     	boolean child = isBaby();
-    	super.livingTick();
+    	super.aiStep();
     	if(isCarrying() || isBaby() != child)
     		setAge(72000);
     	
@@ -259,7 +265,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	public boolean isNoDespawnRequired(){ return true; }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	setAge(Reference.Values.TICKS_PER_DAY + getRandom().nextInt(Reference.Values.TICKS_PER_DAY * 2));
 		return spawnDataIn;

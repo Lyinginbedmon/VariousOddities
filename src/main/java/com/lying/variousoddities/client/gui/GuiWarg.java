@@ -8,15 +8,14 @@ import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 
-public class GuiWarg extends ContainerScreen<ContainerWarg>
+public class GuiWarg extends AbstractContainerScreen<ContainerWarg>
 {
 	private static final ResourceLocation HORSE_GUI_TEXTURES = new ResourceLocation("textures/gui/container/horse.png");
 	private final EntityWarg wargEntity;
@@ -24,7 +23,7 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
 	
 	private Button sitButton;
 	
-	public GuiWarg(ContainerWarg wargContainer, PlayerInventory playerContainer, Component nameIn)
+	public GuiWarg(ContainerWarg wargContainer, Inventory playerContainer, Component nameIn)
 	{
 		super(wargContainer, playerContainer, nameIn);
 		this.wargEntity = wargContainer.theWarg;
@@ -35,42 +34,39 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
      * Adds the buttons (and other controls) to the screen in question. Called when the GUI is displayed and when the
      * window resizes, the buttonList is cleared beforehand.
      */
-    public void init(Minecraft minecraft, int width, int height)
+    public void init()
     {
-    	super.init(minecraft, width, height);
-    	
-		int i = (this.width - this.xSize) / 2;
-		int j = (this.height - this.ySize) / 2;
-    	addButton(sitButton = new Button(i - 32, j, 30, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".warg.sit"), (button) -> 
+		int i = (this.width - this.getXSize()) / 2;
+		int j = (this.height - this.getYSize()) / 2;
+    	addRenderableWidget(sitButton = new Button(i - 32, j, 30, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".warg.sit"), (button) -> 
     	{
-    		boolean sit = !wargEntity.isSitting();
-    		PacketHandler.sendToServer(new PacketSit(this.minecraft.player.getUniqueID(), sit));
+    		boolean sit = !wargEntity.isOrderedToSit();
+    		PacketHandler.sendToServer(new PacketSit(this.minecraft.player.getUUID(), sit));
     	}));
     }
 	
-    public void tick()
+    public void containerTick()
     {
-    	super.tick();
+    	super.containerTick();
     	sitButton.active = wargEntity.isTamed();
     }
     
-	@SuppressWarnings("deprecation")
-	protected void drawGuiContainerBackgroundLayer(PoseStack matrixStack, float partialTicks, int x, int y)
+	protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y)
 	{
-		RenderSystem.color4f(1F, 1F, 1F, 1F);
-		this.minecraft.getTextureManager().bindTexture(HORSE_GUI_TEXTURES);
-		int i = (this.width - this.xSize) / 2;
-		int j = (this.height - this.ySize) / 2;
-		this.blit(matrixStack, i, j, 0, 0, this.xSize, this.ySize);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+		RenderSystem.setShaderTexture(0, HORSE_GUI_TEXTURES);
+		int i = (this.width - this.getXSize()) / 2;
+		int j = (this.height - this.getYSize()) / 2;
+		this.blit(matrixStack, i, j, 0, 0, this.getXSize(), this.getYSize());
 		
-		this.blit(matrixStack, i + 7, j + 35 - 18, 18, this.ySize + 54, 18, 18); // Saddle
-		this.blit(matrixStack, i + 7, j + 35, 36, this.ySize + 54, 18, 18); // Carpet
-		this.blit(matrixStack, i + 7, j + 35 + 18, 0, this.ySize + 54, 18, 18); // Armour
+		this.blit(matrixStack, i + 7, j + 35 - 18, 18, this.getYSize() + 54, 18, 18); // Saddle
+		this.blit(matrixStack, i + 7, j + 35, 36, this.getYSize() + 54, 18, 18); // Carpet
+		this.blit(matrixStack, i + 7, j + 35 + 18, 0, this.getYSize() + 54, 18, 18); // Armour
 		
 		if(wargEntity.hasChest())
-			this.blit(matrixStack, i + 79, j + 17, 0, this.ySize, 5 * 18, 54);	// Columns of inventory
+			this.blit(matrixStack, i + 79, j + 17, 0, this.getYSize(), 5 * 18, 54);	// Columns of inventory
 		
-		InventoryScreen.drawEntityOnScreen(i + 51, j + 60, 17, (float)(i + 51) - this.mousePosX, (float)(j + 75 - 50) - this.mousePosY, this.wargEntity);
+		InventoryScreen.renderEntityInInventory(i + 51, j + 60, 17, (float)(i + 51) - this.mousePosX, (float)(j + 75 - 50) - this.mousePosY, this.wargEntity);
 	}
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
@@ -79,6 +75,6 @@ public class GuiWarg extends ContainerScreen<ContainerWarg>
 		this.mousePosX = (float)mouseX;
 		this.mousePosY = (float)mouseY;
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
-		this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+		this.renderTooltip(matrixStack, mouseX, mouseY);
 	}
 }

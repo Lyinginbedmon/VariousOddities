@@ -5,34 +5,36 @@ import javax.annotation.Nonnull;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.core.Registry;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.tags.EntityTypeTagsProvider;
-import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.registries.tags.ITag;
 
-public class VOEntityTags extends EntityTypeTagsProvider
+public class VOEntityTags extends TagsProvider<EntityType<?>>
 {
-    public static final ITag.INamedTag<EntityType<?>> CRABS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_ID+".crabs");
-    public static final ITag.INamedTag<EntityType<?>> RATS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_ID+".rats");
-    public static final ITag.INamedTag<EntityType<?>> SCORPIONS = EntityTypeTags.getTagById(Reference.ModInfo.MOD_ID+".scorpions");
+    public static final TagKey<EntityType<?>> CRABS = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(Reference.ModInfo.MOD_ID,"crabs"));
+    public static final TagKey<EntityType<?>> RATS = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(Reference.ModInfo.MOD_ID,"rats"));
+    public static final TagKey<EntityType<?>> SCORPIONS = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(Reference.ModInfo.MOD_ID,"scorpions"));
     
+	@SuppressWarnings("deprecation")
 	public VOEntityTags(DataGenerator p_i50784_1_, ExistingFileHelper existingFileHelper)
 	{
-		super(p_i50784_1_, Reference.ModInfo.MOD_ID, existingFileHelper);
+		super(p_i50784_1_, Registry.ENTITY_TYPE, Reference.ModInfo.MOD_ID, existingFileHelper);
 	}
 	
 	@Nonnull
 	public String getName(){ return "Various Oddities entity tags"; }
 	
-	protected void registerTags()
+	protected void addTags()
 	{
-		getOrCreateBuilder(CRABS)
+		tag(CRABS)
 			.add(VOEntities.CRAB, VOEntities.CRAB_GIANT);
-		getOrCreateBuilder(RATS)
+		tag(RATS)
 			.add(VOEntities.RAT, VOEntities.RAT_GIANT);
-		getOrCreateBuilder(SCORPIONS)
+		tag(SCORPIONS)
 			.add(VOEntities.SCORPION, VOEntities.SCORPION_GIANT);
 	}
 }

@@ -1,28 +1,32 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelPatronKirin;
 import com.lying.variousoddities.client.model.entity.ModelPatronKirinHorns;
 import com.lying.variousoddities.client.renderer.entity.EntityPatronKirinRenderer;
 import com.lying.variousoddities.entity.wip.EntityPatronKirin;
 
-import net.minecraft.client.renderer.entity.layers.EnergyLayer;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.EntityModelSet;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.EnergySwirlLayer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
-public class LayerPatronKirinHorns extends EnergyLayer<EntityPatronKirin, ModelPatronKirin>
+public class LayerPatronKirinHorns extends EnergySwirlLayer<EntityPatronKirin, ModelPatronKirin>
 {
     public static final ResourceLocation LIGHTNING_TEXTURE = new ResourceLocation(EntityPatronKirinRenderer.RESOURCE_BASE+"lightning.png");
-	private static final ModelPatronKirinHorns hornModel = new ModelPatronKirinHorns();
+	private final ModelPatronKirinHorns hornModel;
 	
-	public LayerPatronKirinHorns(EntityPatronKirinRenderer rendererIn)
+	public LayerPatronKirinHorns(RenderLayerParent<EntityPatronKirin, ModelPatronKirin> rendererIn, EntityModelSet modelsIn)
 	{
 		super(rendererIn);
+		this.hornModel = new ModelPatronKirinHorns(modelsIn.bakeLayer(VOModelLayers.PATRON_KIRIN_HORNS));
 	}
 	
-	protected float func_225634_a_(float p_225634_1_){ return MathHelper.cos(p_225634_1_ * 0.004F) * 3.0F; }
+	protected float xOffset(float p_225634_1_){ return Mth.cos(p_225634_1_ * 0.004F) * 3.0F; }
 	
-	protected ResourceLocation func_225633_a_(){ return LIGHTNING_TEXTURE; }
+	protected ResourceLocation getTextureLocation(){ return LIGHTNING_TEXTURE; }
 	
-	protected EntityModel<EntityPatronKirin> func_225635_b_(){ return hornModel; }
+	protected EntityModel<EntityPatronKirin> model(){ return hornModel; }
 }

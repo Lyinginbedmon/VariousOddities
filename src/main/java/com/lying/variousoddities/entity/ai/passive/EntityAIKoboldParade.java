@@ -95,14 +95,14 @@ public class EntityAIKoboldParade extends Goal
         {
         	// Occasionally wave flag
         	if(this.kobold.getMainHandItem().isEmpty() || this.kobold.getMainHandItem().getItem() instanceof ItemHeldFlag)
-	        	if(!this.kobold.isSwingInProgress && rand.nextInt(Reference.Values.TICKS_PER_SECOND * 5) == 0)
+	        	if(!this.kobold.swinging && rand.nextInt(Reference.Values.TICKS_PER_SECOND * 5) == 0)
 	        		this.kobold.swing(InteractionHand.MAIN_HAND);
         	
         	// Move towards parade leader
             double dist = (double)this.kobold.distanceTo(paradeLeader);
             if(dist > 4D)
             {
-            	this.kobold.getLookController().setLookPositionWithEntity(this.paradeLeader, 10.0F, (float)this.kobold.getVerticalFaceSpeed());
+            	this.kobold.getLookControl().setLookAt(this.paradeLeader, 10.0F, (float)this.kobold.getMaxHeadXRot());
             	
             	Vec3 leaderPos = paradeLeader.position();
             	Vec3 koboldPos = this.kobold.position();

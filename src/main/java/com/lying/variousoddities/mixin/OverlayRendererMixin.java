@@ -6,23 +6,23 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.OverlayRenderer;
+import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-@Mixin(OverlayRenderer.class)
+@Mixin(ScreenEffectRenderer.class)
 public class OverlayRendererMixin
 {
-	@Inject(method = "renderTexture(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lcom/mojang/blaze3d/matrix/MatrixStack;)V", at = @At("HEAD"), cancellable = true)
-	private static void renderBlockOverlay(Minecraft minecraftIn, TextureAtlasSprite spriteIn, MatrixStack stackIn, CallbackInfo ci)
+	@Inject(method = "renderTexture(Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lcom/mojang/blaze3d/vertex/PoseStack;)V", at = @At("HEAD"), cancellable = true)
+	private static void renderBlockOverlay(TextureAtlasSprite spriteIn, PoseStack stackIn, CallbackInfo ci)
 	{
-		Player living = minecraftIn.player;
+		Player living = Minecraft.getInstance().player;
 		if(IPhasingAbility.isPhasing(living))
 			ci.cancel();
 //		Collection<IPhasingAbility> phasings = AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class);

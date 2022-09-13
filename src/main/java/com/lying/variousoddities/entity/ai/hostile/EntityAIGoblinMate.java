@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.math.Vector3d;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -150,7 +149,7 @@ public class EntityAIGoblinMate extends Goal
 							for(int i=0; i < (1 + theGoblin.getRandom().nextInt(2)); i++)
 							{
 								EntityGoblin child = (EntityGoblin)theGoblin.getBreedOffspring((ServerLevel)theWorld, parent);
-								child.copyLocationAndAnglesFrom(theGoblin);
+								child.copyPosition(theGoblin);
 								child.setAge(-4000);
 								theWorld.addFreshEntity(child);
 							}

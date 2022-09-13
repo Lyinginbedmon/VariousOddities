@@ -6,18 +6,18 @@ import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.EntityBodyCorpse;
 import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 public class EntityCorpseRenderer extends AbstractBodyRenderer
 {
-	public EntityCorpseRenderer(EntityRendererManager rendererManager)
+	public EntityCorpseRenderer(EntityRendererProvider.Context rendererManager)
 	{
-		super(rendererManager, new BipedModel<AbstractBody>(0F), 0.5F);
+		super(rendererManager, new HumanoidModel<AbstractBody>(0F), 0.5F);
 	}
 	
 	protected void poseEntity(LivingEntity body, Random rand)
@@ -27,14 +27,14 @@ public class EntityCorpseRenderer extends AbstractBodyRenderer
 		body.deathTime = 20;
 	}
 	
-	public ResourceLocation getEntityTexture(AbstractBody entity)
+	public ResourceLocation getTextureLocation(AbstractBody entity)
 	{
 		return new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/corpse.png");
 	}
 	
 	public static class RenderFactory implements IRenderFactory<EntityBodyCorpse>
 	{
-		public EntityRenderer<? super EntityBodyCorpse> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntityBodyCorpse> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityCorpseRenderer(manager);
 		}

@@ -9,10 +9,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.init.VOTileEntities;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
@@ -44,12 +42,12 @@ public class BeaconTileEntityMixin
 		int duration = (9 + levels * 2) * 20;
 		AABB area = new AABB(tile.getBlockPos()).inflate(range).inflate(0D, tile.getLevel().getHeight(), 0D);
 		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
-		world.loadedBlockEntityList.forEach((tileEntity) -> // FIXME Requires accessor in Level
-		{
-			BlockPos pos = tileEntity.getPos();
-			if(tileEntity.getType() == VOTileEntities.PHYLACTERY && area.contains(pos.getX(), pos.getY(), pos.getZ()))
-				phylacteries.add((TileEntityPhylactery)tileEntity);
-		});
+//		world.loadedBlockEntityList.forEach((tileEntity) -> // FIXME Requires accessor in Level
+//		{
+//			BlockPos pos = tileEntity.getPos();
+//			if(tileEntity.getType() == VOTileEntities.PHYLACTERY && area.contains(pos.getX(), pos.getY(), pos.getZ()))
+//				phylacteries.add((TileEntityPhylactery)tileEntity);
+//		});
 		
 		boolean hasSecondary = levels >= 4 && primaryEffect != secondaryEffect && secondaryEffect != null;
 		for(TileEntityPhylactery phylactery : phylacteries)

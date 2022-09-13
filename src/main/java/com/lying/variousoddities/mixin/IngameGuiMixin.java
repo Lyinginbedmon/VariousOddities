@@ -1,7 +1,5 @@
 package com.lying.variousoddities.mixin;
 
-import javax.swing.text.JTextComponent.KeyBinding;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,12 +12,13 @@ import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -27,21 +26,21 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-@Mixin(IngameGui.class)
+@Mixin(Gui.class)
 public class IngameGuiMixin
 {
 	private static final int ICON_SIZE = 9;
 	
 	@Shadow
-	protected int scaledHeight;
+	protected int screenHeight;
 	@Shadow
-	protected int scaledWidth;
+	protected int screenWidth;
 	
 	@Shadow
-	public FontRenderer getFontRenderer(){ return null; }
+	public Font getFont(){ return null; }
 	
-	@Inject(method = "func_238454_b_(Lcom/mojang/blaze3d/matrix/MatrixStack;I)V", at = @At("HEAD"), cancellable = true)
-	public void func_238454_b_(MatrixStack matrixStack, int xPos, final CallbackInfo ci)
+	@Inject(method = "renderExperienceBar(Lcom/mojang/blaze3d/matrix/PoseStack;I)V", at = @At("HEAD"), cancellable = true)
+	public void renderExperienceBar(PoseStack matrixStack, int xPos, final CallbackInfo ci)
 	{
 		Minecraft mc = Minecraft.getInstance();
 		Player player = mc.player;
@@ -54,35 +53,30 @@ public class IngameGuiMixin
 		ci.cancel();
 		Screen gui = (Screen)(Object)this;
 		Component displayText = null;
+		KeyMapping inv = mc.options.keyInventory;
 		switch(data.getBodyCondition())
 		{
 			case DEAD:
 				float progress = 1F - data.timeToRespawnable();
-				mc.getProfiler().startSection("expBar");
-					mc.getTextureManager().bindTexture(Screen.GUI_ICONS_LOCATION);
+				mc.getProfiler().push("expBar");
+					RenderSystem.setShaderTexture(0, Screen.GUI_ICONS_LOCATION);
 					int k = (int)(progress * 183.0F);
-					int l = this.scaledHeight - 32 + 3;
+					int l = this.screenHeight - 32 + 3;
 					gui.blit(matrixStack, xPos, l, 0, 64, 182, 5);
 					if (k > 0)
 						gui.blit(matrixStack, xPos, l, 0, 69, k, 5);
-				mc.getProfiler().endSection();
+				mc.getProfiler().pop();
 				
 				if(progress >= 1F)
-				{
-					KeyBinding inv = mc.gameSettings.keyBindInventory;
-					displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".dead_player_respawn", inv.func_238171_j_().getSerializedName().toUpperCase());
-				}
+					displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".dead_player_respawn", inv.getTranslatedKeyMessage().getString().toUpperCase());
 				break;
 			case UNCONSCIOUS:
 				if(data.getSoulCondition() == SoulCondition.ALIVE)
 					if(!LivingData.unconscious(player))
-					{
-						KeyBinding inv = mc.gameSettings.keyBindInventory;
-						displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.awaken", inv.func_238171_j_().getSerializedName().toUpperCase());
-					}
+						displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.awaken", inv.getTranslatedKeyMessage().getString().toUpperCase());
 					else
 					{
-						if(player.getActivePotionEffect(VOPotions.SLEEP) != null && player.getActivePotionEffect(VOPotions.SLEEP).getDuration() > 0)
+						if(player.getEffect(VOPotions.SLEEP) != null && player.getEffect(VOPotions.SLEEP).getDuration() > 0)
 							displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.sleep");
 						else
 						{
@@ -92,10 +86,10 @@ public class IngameGuiMixin
 							
 							int totalHearts = (int)Math.ceil(healthToWaking * 0.5D);
 							int heartsWidth = (totalHearts * ICON_SIZE) + (totalHearts - 1);
-							int heartX = (scaledWidth / 2) - (heartsWidth / 2);
-							int heartY = this.scaledHeight - 38 + getFontRenderer().FONT_HEIGHT + 1;
+							int heartX = (screenWidth / 2) - (heartsWidth / 2);
+							int heartY = this.screenHeight - 38 + getFont().lineHeight + 1;
 							
-							Minecraft.getInstance().getTextureManager().bindTexture(GuiHandler.HUD_ICONS);
+							RenderSystem.setShaderTexture(0, GuiHandler.HUD_ICONS);
 							for(int heart = healthToWaking; heart >= 0; --heart)
 								if(heart%2 > 0)
 								{
@@ -104,7 +98,7 @@ public class IngameGuiMixin
 									this.blitIcon(matrixStack, heartX, heartY, texX, texY);
 									heartX += ICON_SIZE + 1;
 								}
-							Minecraft.getInstance().getTextureManager().bindTexture(Screen.GUI_ICONS_LOCATION);
+							RenderSystem.setShaderTexture(0, Screen.GUI_ICONS_LOCATION);
 						}
 					}
 				break;
@@ -114,19 +108,19 @@ public class IngameGuiMixin
 		
 		if(displayText != null)
 		{
-			String s = displayText.getSerializedName();
-			int textX = (scaledWidth - getFontRenderer().getStringWidth(s)) / 2;
-			int textY = this.scaledHeight - 31 - 7;
-			FontRenderer fontRenderer = getFontRenderer();
-			fontRenderer.drawString(matrixStack, s, (float)(textX + 1), (float)textY, 0);
-			fontRenderer.drawString(matrixStack, s, (float)(textX - 1), (float)textY, 0);
-			fontRenderer.drawString(matrixStack, s, (float)textX, (float)(textY + 1), 0);
-			fontRenderer.drawString(matrixStack, s, (float)textX, (float)(textY - 1), 0);
-			fontRenderer.drawString(matrixStack, s, (float)textX, (float)textY, -1);
+			String s = displayText.getString();
+			int textX = (screenWidth - getFont().width(s)) / 2;
+			int textY = this.screenHeight - 31 - 7;
+			Font fontRenderer = getFont();
+			fontRenderer.draw(matrixStack, s, (float)(textX + 1), (float)textY, 0);
+			fontRenderer.draw(matrixStack, s, (float)(textX - 1), (float)textY, 0);
+			fontRenderer.draw(matrixStack, s, (float)textX, (float)(textY + 1), 0);
+			fontRenderer.draw(matrixStack, s, (float)textX, (float)(textY - 1), 0);
+			fontRenderer.draw(matrixStack, s, (float)textX, (float)textY, -1);
 		}
 	}
 	
-	private void blitIcon(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset)
+	private void blitIcon(PoseStack matrixStack, int x, int y, int uOffset, int vOffset)
 	{
 		Screen.blit(matrixStack, x, y, 0, (float)uOffset, (float)vOffset, ICON_SIZE, ICON_SIZE, 256, 256);
 	}

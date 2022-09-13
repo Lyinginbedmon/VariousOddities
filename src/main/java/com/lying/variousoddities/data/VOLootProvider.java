@@ -14,24 +14,24 @@ import com.lying.variousoddities.reference.Reference;
 import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.LootTableProvider;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.loot.ConstantRange;
 import net.minecraft.loot.ItemLootEntry;
 import net.minecraft.loot.LootEntry;
 import net.minecraft.loot.LootParameterSet;
 import net.minecraft.loot.LootParameterSets;
-import net.minecraft.loot.LootPool;
-import net.minecraft.loot.LootTable;
 import net.minecraft.loot.LootTableManager;
 import net.minecraft.loot.RandomValueRange;
 import net.minecraft.loot.StandaloneLootEntry;
 import net.minecraft.loot.TableLootEntry;
 import net.minecraft.loot.ValidationTracker;
 import net.minecraft.loot.functions.SetCount;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourcePackType;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class VOLootProvider extends LootTableProvider

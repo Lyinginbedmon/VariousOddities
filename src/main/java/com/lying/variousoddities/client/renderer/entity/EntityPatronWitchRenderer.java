@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelPatronWitchChangeling;
 import com.lying.variousoddities.client.model.entity.ModelPatronWitchCrone;
 import com.lying.variousoddities.client.model.entity.ModelPatronWitchElf;
@@ -13,59 +14,64 @@ import com.lying.variousoddities.client.renderer.entity.layer.LayerOddityGlow;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerPatronWitchPonytail;
 import com.lying.variousoddities.entity.wip.EntityPatronWitch;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.LivingRenderer;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.FoxEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Fox;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
-public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch, BipedModel<EntityPatronWitch>>
+public class EntityPatronWitchRenderer extends MobRenderer<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>
 {
 	private static long lastRenderTime = -1;
 	private static EnumAppearance appearance = EnumAppearance.HUMAN;
 	
 	/** Redmaker-esque */
-	private static final ModelPatronWitchHuman humanWitch = new ModelPatronWitchHuman();
+	private final HumanoidModel<EntityPatronWitch> humanWitch;
 	private static final ResourceLocation humanWitchTexture = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch.png");
 	
 	/** Elven */
-	private static final ModelPatronWitchElf elfWitch = new ModelPatronWitchElf();
+	private final HumanoidModel<EntityPatronWitch> elfWitch;
 	private static final ResourceLocation elfWitchTexture = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_elf.png");
     
     /** Crone */
-    private static final ModelPatronWitchCrone croneWitch = new ModelPatronWitchCrone();
+    private final HumanoidModel<EntityPatronWitch> croneWitch;
     private static final ResourceLocation croneWitchTexture = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_crone.png");
     
     /** Changeling */
-    private static final ModelPatronWitchChangeling changelingWitch = new ModelPatronWitchChangeling();
+    private final HumanoidModel<EntityPatronWitch> changelingWitch;
 	private static final ResourceLocation changelingWitchTexture = EntityChangelingRenderer.changelingTexture;
 	
-	public EntityPatronWitchRenderer(EntityRendererManager rendererManager)
+	public EntityPatronWitchRenderer(EntityRendererProvider.Context rendererManager)
 	{
-		super(rendererManager, humanWitch, 0.5F);
+		super(rendererManager, new ModelPatronWitchHuman(rendererManager.bakeLayer(VOModelLayers.PATRON_WITCH_HUMAN)), 0.5F);
+		
+		this.humanWitch = this.model;
+		this.elfWitch = new ModelPatronWitchElf(rendererManager.bakeLayer(VOModelLayers.PATRON_WITCH_ELF));
+	    this.croneWitch = new ModelPatronWitchCrone(rendererManager.bakeLayer(VOModelLayers.PATRON_WITCH_CRONE));
+	    this.changelingWitch = new ModelPatronWitchChangeling(rendererManager.bakeLayer(VOModelLayers.PATRON_WITCH_CHANGELING));
 		
 //		this.addLayer(new LayerPatronWitchHat(this));	// Needs injection by VE
 		this.addLayer(new LayerPatronWitchPonytail(this, EnumAppearance.HUMAN::isActive, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_ponytail.png")));
-		this.addLayer(new LayerConditional<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_glow.png")), EnumAppearance.HUMAN::isActive));
+		this.addLayer(new LayerConditional<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_glow.png")), EnumAppearance.HUMAN::isActive));
 		
 		this.addLayer(new LayerPatronWitchPonytail(this, EnumAppearance.CRONE::isActive, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_crone_ponytail.png")));
-		this.addLayer(new LayerConditional<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_crone_glow.png")), EnumAppearance.CRONE::isActive));
+		this.addLayer(new LayerConditional<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_crone_glow.png")), EnumAppearance.CRONE::isActive));
 		
 //		this.addLayer(new LayerPatronWitchCrown(this));	// Needs injection by VE
 		this.addLayer(new LayerPatronWitchPonytail(this, EnumAppearance.ELF::isActive, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_elf_ponytail.png")));
-		this.addLayer(new LayerConditional<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_elf_glow.png")), EnumAppearance.ELF::isActive));
+		this.addLayer(new LayerConditional<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/patron_witch/patron_witch_elf_glow.png")), EnumAppearance.ELF::isActive));
 		
-//		this.addLayer(new LayerConditional<EntityPatronWitch, BipedModel<EntityPatronWitch>>(new LayerPatronWitchChangeling(this), EnumAppearance.CHANGELING::isActive));
-		this.addLayer(new LayerConditional<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, BipedModel<EntityPatronWitch>>(this, EntityChangelingRenderer.changelingTextureGlow), EnumAppearance.CHANGELING::isActive));
+//		this.addLayer(new LayerConditional<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(new LayerPatronWitchChangeling(this), EnumAppearance.CHANGELING::isActive));
+		this.addLayer(new LayerConditional<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, new LayerOddityGlow<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>(this, EntityChangelingRenderer.changelingTextureGlow), EnumAppearance.CHANGELING::isActive));
 	}
     
     public static EnumAppearance getCurrentAppearance()
@@ -73,7 +79,7 @@ public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch,
     	return appearance;
     }
 	
-	public ResourceLocation getEntityTexture(EntityPatronWitch entity)
+	public ResourceLocation getTextureLocation(EntityPatronWitch entity)
 	{
 		switch(appearance)
 		{
@@ -89,7 +95,7 @@ public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch,
 		}
 	}
     
-    public BipedModel<EntityPatronWitch> getEntityModel()
+    public HumanoidModel<EntityPatronWitch> getEntityModel()
     {
 		switch(appearance)
 		{
@@ -104,7 +110,7 @@ public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch,
 		}
     }
     
-    public void render(EntityPatronWitch entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn)
+    public void render(EntityPatronWitch entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn)
     {
     	long time = System.currentTimeMillis();
     	if(lastRenderTime > 0 && (time - lastRenderTime) / 1000 > 5)
@@ -115,15 +121,15 @@ public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch,
     		while(appearance == lastAppearance)
     			appearance = EnumAppearance.getRandom(rand);
     		
-    		this.entityModel = getEntityModel();
+    		this.model = getEntityModel();
     	}
     	lastRenderTime = time;
     	
     	switch(appearance)
     	{
     		case FOX:
-    			FoxEntity fox = EntityType.FOX.create(entityIn.getEntityWorld());
-    			fox.read(entityIn.writeWithoutTypeId(new CompoundNBT()));
+    			Fox fox = EntityType.FOX.create(entityIn.getLevel());
+    			fox.read(entityIn.writeWithoutTypeId(new CompoundTag()));
     			Minecraft.getInstance().getRenderManager().renderEntityStatic(fox, 0, 0, 0, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
     			break;
     		default:
@@ -135,13 +141,13 @@ public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch,
     /**
      * Allows the render to do state modifications necessary before the model is rendered.
      */
-    protected void preRenderCallback(EntityPatronWitch koboldIn, MatrixStack matrixStackIn, float partialTickTime)
+    protected void preRenderCallback(EntityPatronWitch koboldIn, PoseStack matrixStackIn, float partialTickTime)
     {
     	float totalScale = appearance.scale;
     	if(EnumAppearance.FOX.isActive(koboldIn))
-    		this.shadowSize = 0F;
+    		this.shadowRadius = 0F;
     	else
-    		this.shadowSize = 0.5F * totalScale;
+    		this.shadowRadius = 0.5F * totalScale;
     	matrixStackIn.scale(totalScale, totalScale, totalScale);
     }
 	
@@ -179,7 +185,7 @@ public class EntityPatronWitchRenderer extends LivingRenderer<EntityPatronWitch,
 	
 	public static class RenderFactory implements IRenderFactory<EntityPatronWitch>
 	{
-		public EntityRenderer<? super EntityPatronWitch> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntityPatronWitch> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityPatronWitchRenderer(manager);
 		}

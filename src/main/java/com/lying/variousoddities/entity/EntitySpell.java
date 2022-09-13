@@ -9,10 +9,13 @@ import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -50,9 +53,9 @@ public class EntitySpell extends Entity
 		setItem(stackIn);
 	}
 	
-	public IPacket<?> createSpawnPacket()
+	public Packet<?> getAddEntityPacket()
 	{
-		return new SSpawnObjectPacket(this);
+		return new ClientboundAddEntityPacket(this);
 	}
 	
 	protected void defineSynchedData()
@@ -62,7 +65,7 @@ public class EntitySpell extends Entity
 		getEntityData().define(SPELLDATA, new CompoundTag());
 	}
 	
-	protected void readAdditional(CompoundTag compound)
+	protected void readAdditionalSaveData(CompoundTag compound)
 	{
 		ItemStack item = ItemStack.of(compound.getCompound("Item"));
         setItem(item);
@@ -98,7 +101,7 @@ public class EntitySpell extends Entity
         }
 	}
 	
-	protected void writeAdditional(CompoundTag compound)
+	protected void addAdditionalSaveData(CompoundTag compound)
 	{
 		compound.put("Item", this.getItem().save(new CompoundTag()));
 		compound.putInt("SpellID", getSpellID());
@@ -134,16 +137,16 @@ public class EntitySpell extends Entity
 //    	getEntityData().setDirty(ITEM);
     }
 	
-    public ActionResultType processInitialInteract(Player player, InteractionHand hand)
+    public InteractionResult processInitialInteract(Player player, InteractionHand hand)
     {
     	if(!player.getLevel().isClientSide)
     	{
     		SpellData data = SpellManager.get(getLevel()).getSpellByID(getSpellID());
-        	if(data.castTime() <= 0) return ActionResultType.FAIL;
-        	return data.dismiss(getLevel(), player) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
+        	if(data.castTime() <= 0) return InteractionResult.FAIL;
+        	return data.dismiss(getLevel(), player) ? InteractionResult.SUCCESS : InteractionResult.FAIL;
     	}
     	
-    	return ActionResultType.FAIL;
+    	return InteractionResult.FAIL;
     }
 	
 	public void tick()
@@ -162,20 +165,20 @@ public class EntitySpell extends Entity
      */
     public void onKillCommand()
     {
-        this.attackEntityFrom(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
+        this.hurt(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
     }
     
     /**
      * Called when the entity is attacked.
      */
-    public boolean attackEntityFrom(DamageSource source, float amount)
+    public boolean hurt(DamageSource source, float amount)
     {
         if(isInvulnerable()) return false;
         else if(this.level.isClientSide) return false;
         else if(source == DamageSource.OUT_OF_WORLD)
         {
             if(!this.isAlive()) return false;
-            onDeath(source);
+            die(source);
             setRemoved(Entity.RemovalReason.KILLED);
             return true;
         }
@@ -183,9 +186,9 @@ public class EntitySpell extends Entity
         return false;
     }
     
-    public void onDeath(DamageSource cause)
+    public void die(DamageSource cause)
     {
-    	getLevel().setEntityState(this, (byte)3);
+    	getLevel().broadcastEntityEvent(this, (byte)3);
 //		if(!getLevel().isClientSide)
 //			PacketHandler.sendToNearby(new PacketSpellDispel(posX, posY + height / 2, posZ), getLevel(), this);
     }

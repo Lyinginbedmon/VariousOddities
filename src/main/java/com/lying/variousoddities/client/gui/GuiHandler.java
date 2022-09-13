@@ -1,6 +1,5 @@
 package com.lying.variousoddities.client.gui;
 
-import java.lang.annotation.ElementType;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -22,20 +21,28 @@ import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 import com.lying.variousoddities.utility.VOHelper;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.ForgeGui;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 @OnlyIn(Dist.CLIENT)
 public class GuiHandler
@@ -45,7 +52,7 @@ public class GuiHandler
 	public static final ResourceLocation TRACKING_EYE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/tracking.png");
 	
 	public static Minecraft mc;
-	public static IProfiler profiler;
+	public static ProfilerFiller profiler;
 	public static Player player;
 	
 	private static final double ICON_SIZE = 9D;
@@ -54,21 +61,21 @@ public class GuiHandler
 	
 	public static int trackingEyeTicks = 0;
 	
-	public static void renderAbilityOverlay(RenderGameOverlayEvent.Pre event)
+	public static void renderAbilityOverlay(RenderGuiOverlayEvent.Pre event)
 	{
 		mc = Minecraft.getInstance();
 		profiler = mc.getProfiler();
 		
-		if(event.getType() == ElementType.CROSSHAIRS)
+		if(event.getOverlay().id() == VanillaGuiOverlay.CROSSHAIR.id())
 		{
-			PoseStack matrix = event.getMatrixStack();
-			float partialTicks = event.getPartialTicks();
+			PoseStack matrix = event.getPoseStack();
+			float partialTicks = event.getPartialTick();
 			
 			if(trackingEyeTicks > 0 && --trackingEyeTicks > 0)
 			{
-				profiler.startSection("varodd-hud-tracking");
-				int right = mc.getMainWindow().getScaledWidth() / 2;
-				int top = (mc.getMainWindow().getScaledHeight() - 20) / 2;
+				profiler.push("varodd-hud-tracking");
+				int right = mc.getWindow().getWidth() / 2;
+				int top = (mc.getWindow().getHeight() - 20) / 2;
 				
 				int index = 3 - (trackingEyeTicks / 5);
 				int size = 16;
@@ -84,15 +91,15 @@ public class GuiHandler
 				int endY = startY + size;
 				
 				matrix.pushPose();
-					mc.getTextureManager().bindTexture(TRACKING_EYE);
-					blit(matrix.getLast().getMatrix(), (int)startX, (int)endX, (int)startY, (int)endY, 0, texXMin / 16F, texXMax / 16F, texYMin / 64F, texYMax / 64F, 1F, 1F, 1F, 1F);
+					RenderSystem.setShaderTexture(0, TRACKING_EYE);
+					blit(matrix.last().pose(), (int)startX, (int)endX, (int)startY, (int)endY, 0, texXMin / 16F, texXMax / 16F, texYMin / 64F, texYMax / 64F, 1F, 1F, 1F, 1F);
 				matrix.popPose();
-				profiler.endSection();
+				profiler.pop();
 			}
 			
 			if(!ConfigVO.CLIENT.hideAbilities.get())
 			{
-				profiler.startSection("varodd-hud-abilities");
+				profiler.push("varodd-hud-abilities");
 					player = Minecraft.getInstance().player;
 					if(player != null)
 					{
@@ -105,27 +112,27 @@ public class GuiHandler
 							drawFavouritedAbilities(matrix, event.getWindow(), partialTicks, corner);
 						}
 					}
-				profiler.endSection();
+				profiler.pop();
 			}
 		}
 	}
 	
-	private static final EnumSet<ElementType> CURTAIL_EXCEPTIONS = EnumSet.of
+	private static final EnumSet<VanillaGuiOverlay> CURTAIL_EXCEPTIONS = EnumSet.of
 			(
-				ElementType.ALL, 
-				ElementType.EXPERIENCE, 
-				ElementType.VIGNETTE,
-				ElementType.TEXT,
-				ElementType.CHAT,
-				ElementType.PLAYER_LIST,
-				ElementType.FPS_GRAPH,
-				ElementType.DEBUG,
-				ElementType.SUBTITLES,
-				ElementType.CROSSHAIRS);
+//				VanillaGuiOverlay.ALL, 
+				VanillaGuiOverlay.EXPERIENCE_BAR, 
+				VanillaGuiOverlay.VIGNETTE,
+//				VanillaGuiOverlay.TEXT,
+				VanillaGuiOverlay.CHAT_PANEL,
+				VanillaGuiOverlay.PLAYER_LIST,
+				VanillaGuiOverlay.FPS_GRAPH,
+				VanillaGuiOverlay.DEBUG_TEXT,
+				VanillaGuiOverlay.SUBTITLES,
+				VanillaGuiOverlay.CROSSHAIR);
 	
-	public static void curtailHUDWhenAbnormal(RenderGameOverlayEvent.Pre event)
+	public static void curtailHUDWhenAbnormal(RenderGuiOverlayEvent.Pre event)
 	{
-		if(!CURTAIL_EXCEPTIONS.contains(event.getType()))
+		if(!CURTAIL_EXCEPTIONS.contains(event.getOverlay()))
 		{
 			Player localPlayer = Minecraft.getInstance().player;
 			if(!PlayerData.isPlayerNormalFunction(localPlayer) && !VOHelper.isCreativeOrSpectator(localPlayer))
@@ -133,22 +140,21 @@ public class GuiHandler
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
-	public static void renderBludgeoning(RenderGameOverlayEvent.Pre event)
+	public static void renderBludgeoning(RenderGuiOverlayEvent.Pre event)
 	{
 		mc = Minecraft.getInstance();
-		if(event.getType() != RenderGameOverlayEvent.ElementType.HEALTH || event.isCanceled() || !PlayerData.isPlayerNormalFunction(mc.player) || VOHelper.isCreativeOrSpectator(mc.player))
+		if(event.getOverlay().id() != VanillaGuiOverlay.PLAYER_HEALTH.id() || event.isCanceled() || !PlayerData.isPlayerNormalFunction(mc.player) || VOHelper.isCreativeOrSpectator(mc.player))
 			return;
 		
 		profiler = mc.getProfiler();
-		profiler.startSection("varodd-hud-bludgeoning");
+		profiler.push("varodd-hud-bludgeoning");
 			player = Minecraft.getInstance().player;
 			if(player != null)
 			{
 				LivingData data = LivingData.forEntity(player);
 				if(data != null && !PlayerData.isPlayerBodyAsleep(player))
 				{
-					mc.getTextureManager().bindTexture(HUD_ICONS);
+					RenderSystem.setShaderTexture(0, HUD_ICONS);
 					
 					float bludgeoning = data.getBludgeoning();
 					float val = Mth.clamp(bludgeoning / player.getHealth(), 0F, 1F);
@@ -156,25 +162,25 @@ public class GuiHandler
 					int width = (int)(val * 81);
 					int height = 9;
 					
-					int right = mc.getMainWindow().getScaledWidth() / 2 - 91;
-					int top = mc.getMainWindow().getScaledHeight() - ForgeIngameGui.right_height;
+					int right = mc.getWindow().getWidth() / 2 - 91;
+					int top = mc.getWindow().getHeight() - ((ForgeGui)mc.gui).rightHeight;
 					
 					RenderSystem.enableBlend();
-					RenderSystem.color4f(1F, 1F, 1F, 0.75F);
+					RenderSystem.setShaderColor(1F, 1F, 1F, 0.75F);
 					RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-					mc.ingameGUI.blit(event.getMatrixStack(), right, top, 0, 0, width, height);
+					mc.gui.blit(event.getPoseStack(), right, top, 0, 0, width, height);
 					RenderSystem.disableBlend();
-					RenderSystem.color4f(1F, 1F, 1F, 1F);
+					RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 					
-					mc.getTextureManager().bindTexture(Screen.GUI_ICONS_LOCATION);
+					RenderSystem.setShaderTexture(0, Screen.GUI_ICONS_LOCATION);
 				}
 			}
-		profiler.endSection();
+		profiler.pop();
 	}
 	
-	private static void drawFavouritedAbilities(PoseStack matrix, MainWindow window, float partialTicks, EnumCorner corner)
+	private static void drawFavouritedAbilities(PoseStack matrix, Window window, float partialTicks, EnumCorner corner)
 	{
-		profiler.startSection("abilities");
+		profiler.push("abilities");
 		
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 		Abilities abilities = LivingData.forEntity(player).getAbilities();
@@ -191,14 +197,14 @@ public class GuiHandler
 				break;
 			case BOTTOM_LEFT:
 				posXInc = -3F;
-				posYStart = (float)(window.getScaledHeight() - (Abilities.FAVOURITE_SLOTS * posYInc) - 5F);
+				posYStart = (float)(window.getGuiScaledHeight() - (Abilities.FAVOURITE_SLOTS * posYInc) - 5F);
 				break;
 			case BOTTOM_RIGHT:
-				posXStart = (float)(window.getScaledWidth() - (Abilities.FAVOURITE_SLOTS * 3F));
-				posYStart = (float)(window.getScaledHeight() - (Abilities.FAVOURITE_SLOTS * posYInc) - 5F);
+				posXStart = (float)(window.getGuiScaledWidth() - (Abilities.FAVOURITE_SLOTS * 3F));
+				posYStart = (float)(window.getGuiScaledHeight() - (Abilities.FAVOURITE_SLOTS * posYInc) - 5F);
 				break;
 			case TOP_RIGHT:
-				posXStart = (float)(window.getScaledWidth() - (Abilities.FAVOURITE_SLOTS * 3F) - ICON_SIZE);
+				posXStart = (float)(window.getGuiScaledWidth() - (Abilities.FAVOURITE_SLOTS * 3F) - ICON_SIZE);
 				posXInc = -3F;
 				break;
 		}
@@ -242,15 +248,15 @@ public class GuiHandler
 			}
 		matrix.popPose();
 		
-		profiler.endSection();
+		profiler.pop();
 	}
 	
-	public static float getStartX(SideX side, MainWindow window)
+	public static float getStartX(SideX side, Window window)
 	{
 		float inc = 3F;
 		switch(side)
 		{
-			case RIGHT:	return (float)(window.getScaledWidth() - 5F - ICON_SIZE - (Abilities.FAVOURITE_SLOTS * inc));
+			case RIGHT:	return (float)(window.getGuiScaledWidth() - 5F - ICON_SIZE - (Abilities.FAVOURITE_SLOTS * inc));
 			default:	return 5F + Abilities.FAVOURITE_SLOTS * inc;
 		}
 	}
@@ -274,8 +280,8 @@ public class GuiHandler
 		double endY = posY + sizeY;
 		
 		matrix.pushPose();
-			mc.getTextureManager().bindTexture(ABILITY_ICONS);
-			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
+			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
+			blit(matrix.last().pose(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
 		matrix.popPose();
 	}
 	
@@ -297,8 +303,8 @@ public class GuiHandler
 		posY += sizeY * yMin;
 		
 		matrix.pushPose();
-			mc.getTextureManager().bindTexture(ABILITY_ICONS);
-			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
+			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
+			blit(matrix.last().pose(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);
 		matrix.popPose();
 	}
 	
@@ -338,7 +344,7 @@ public class GuiHandler
 			
 			if(displayStyle != EnumNameDisplay.SNEAKING || player.isCrouching())
 			{
-				int textColor = ability.isActive() ? TextFormatting.GOLD.getColor() : canTrigger ? -1 : 10526880;
+				int textColor = ability.isActive() ? ChatFormatting.GOLD.getColor() : canTrigger ? -1 : 10526880;
 				String name = ability.getDisplayName().getString();
 				String displayName = name;
 				if(name.length() > 15 && displayStyle == EnumNameDisplay.CROPPED)
@@ -363,24 +369,22 @@ public class GuiHandler
 				}
 				
 				int textPos = side == SideX.RIGHT ? (int)(endX + 5D) : (int)(startX - 5D - mc.font.width(displayName));
-				mc.font.drawString(matrix, displayName, textPos, (int)startY + 1, textColor);
+				mc.font.draw(matrix, displayName, textPos, (int)startY + 1, textColor);
 			}
 		matrix.popPose();
 	}
 	
-	@SuppressWarnings("deprecation")
 	private static void blit(Matrix4f matrix, int startX, int endX, int startY, int endY, int blitOffset, float texXMin, float texXMax, float texYMin, float texYMax, float red, float green, float blue, float alpha)
 	{
-		GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR.param, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR.param, GlStateManager.SourceFactor.ONE.param, GlStateManager.DestFactor.ZERO.param);
-		GlStateManager.color4f(1F, 1F, 1F, 1F);
-		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormat.POSITION_COLOR_TEX);
-			bufferbuilder.pos(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMax).endVertex();
-			bufferbuilder.pos(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMax).endVertex();
-			bufferbuilder.pos(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMax, texYMin).endVertex();
-			bufferbuilder.pos(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).tex(texXMin, texYMin).endVertex();
-		bufferbuilder.finishDrawing();
-		RenderSystem.enableAlphaTest();
-		WorldVertexBufferUploader.draw(bufferbuilder);
+		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+			bufferbuilder.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMax).endVertex();
+			bufferbuilder.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMax).endVertex();
+			bufferbuilder.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMin).endVertex();
+			bufferbuilder.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMin).endVertex();
+		RenderSystem.enableDepthTest();
+		BufferUploader.drawWithShader(bufferbuilder.end());
 	}
 }

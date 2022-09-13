@@ -9,35 +9,35 @@ import com.lying.variousoddities.faction.FactionReputation.EnumInteraction;
 import com.lying.variousoddities.world.savedata.FactionManager;
 import com.lying.variousoddities.world.savedata.FactionManager.Faction;
 
-import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
 public class EntityAITargetHostileFaction extends TargetGoal
 {
-	private final Mob entity;
+	private final PathfinderMob entity;
 	private final int targetChance;
 	
-	private final EntityPredicate targetEntitySelector;
+	private final TargetingConditions targetEntitySelector;
 	
 	private LivingEntity nearestTarget = null;
 	
-	public EntityAITargetHostileFaction(Mob goalOwnerIn, boolean checkSight)
+	public EntityAITargetHostileFaction(PathfinderMob goalOwnerIn, boolean checkSight)
 	{
 		this(goalOwnerIn, checkSight, false);
 	}
 	
-	public EntityAITargetHostileFaction(Mob goalOwnerIn, boolean checkSight, boolean nearbyOnlyIn)
+	public EntityAITargetHostileFaction(PathfinderMob goalOwnerIn, boolean checkSight, boolean nearbyOnlyIn)
 	{
 		this(goalOwnerIn, 10, checkSight, nearbyOnlyIn);
 	}
 	
-	public EntityAITargetHostileFaction(Mob goalOwnerIn, int targetChanceIn, boolean checkSight, boolean nearbyOnlyIn)
+	public EntityAITargetHostileFaction(PathfinderMob goalOwnerIn, int targetChanceIn, boolean checkSight, boolean nearbyOnlyIn)
 	{
 		super(goalOwnerIn, checkSight, nearbyOnlyIn);
 		this.entity = goalOwnerIn;
@@ -77,7 +77,7 @@ public class EntityAITargetHostileFaction extends TargetGoal
 				}
 			};
 		
-	    this.targetEntitySelector = (new EntityPredicate()).setDistance(this.getFollowDistance()).setCustomPredicate(targetPredicate);
+		this.targetEntitySelector = TargetingConditions.forCombat().range(this.getFollowDistance()).selector(targetPredicate);
 	}
 	
 	public boolean canUse()
@@ -86,7 +86,7 @@ public class EntityAITargetHostileFaction extends TargetGoal
 			return false;
 		
 		AABB targetArea = entity.getBoundingBox().inflate(getFollowDistance(), 4D, getFollowDistance());
-		this.nearestTarget = entity.getLevel().func_225318_b(LivingEntity.class, this.targetEntitySelector, entity, entity.getX(), entity.getEyeY(), entity.getZ(), targetArea);
+		this.nearestTarget = entity.getLevel().getNearestEntity(LivingEntity.class, this.targetEntitySelector, entity, entity.getX(), entity.getEyeY(), entity.getZ(), targetArea);
 		return this.nearestTarget != null;
 	}
 	

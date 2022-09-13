@@ -6,94 +6,108 @@ import java.util.List;
 import com.lying.variousoddities.client.model.EnumLimbPosition;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.AbstractCrab;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.Model;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.HandSide;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.LivingEntity;
 
 public class ModelCrab extends EntityModel<AbstractCrab>
 {
-	ModelRenderer body;
-	ModelClaw rightClaw, leftClaw;
-	List<ModelLeg> leftLegs = new ArrayList<ModelLeg>();
-	List<ModelLeg> rightLegs = new ArrayList<ModelLeg>();
+	ModelPart body;
+	ClawHandler rightClaw, leftClaw;
+	List<LegHandler> leftLegs = new ArrayList<LegHandler>();
+	List<LegHandler> rightLegs = new ArrayList<LegHandler>();
 	
 	private static final float legOffset = 7F;
 	
 	private boolean bigLeft, bigRight;
 	private boolean scuttle;
 	
-	public ModelCrab()
+	public ModelCrab(ModelPart partsIn)
 	{
-		this.textureHeight = 64;
-		this.textureWidth = 64;
+		this.body = partsIn.getChild("body");
 		
-		this.body = ModelUtils.freshRenderer(this);
-		this.body.rotationPointY = 17F;
-		this.body.setTextureOffset(0, 0).addBox(-7F, -4F, -6F, 14, 6, 12, 1.5F);
-		this.body.setTextureOffset(0, 0).addBox(-5F, -2F, -7.8F, 2, 2, 1, 0.2F);
-		this.body.setTextureOffset(46, 0).addBox(3.5F, -2F, -7.8F, 2, 2, 1, 0.2F);
-		
-		ModelRenderer carapace = ModelUtils.freshRenderer(this);
-		carapace.rotationPointY = -3.5F;
-		carapace.rotationPointZ = 1.7F;
-		carapace.rotateAngleX = -ModelUtils.degree10;
-		carapace.setTextureOffset(0, 18).addBox(-8F, -1.5F, -8F, 16, 3, 15, 1.5F);
-		this.body.addChild(carapace);
-		
-		this.rightClaw = new ModelClaw(EnumLimbPosition.LEFT, this);
-		this.leftClaw = new ModelClaw(EnumLimbPosition.RIGHT, this);
+		this.rightClaw = new ClawHandler(EnumLimbPosition.LEFT, partsIn.getChild("right_claw"));
+		this.leftClaw = new ClawHandler(EnumLimbPosition.RIGHT, partsIn.getChild("left_claw"));
 		
 		for(int i=-1; i<2; i++)
 		{
-			leftLegs.add(new ModelLeg(i, EnumLimbPosition.LEFT, this));
-			rightLegs.add(new ModelLeg(i, EnumLimbPosition.RIGHT, this));
+			leftLegs.add(new LegHandler(i, EnumLimbPosition.LEFT, partsIn.getChild("leg_"+i+"_left")));
+			rightLegs.add(new LegHandler(i, EnumLimbPosition.RIGHT, partsIn.getChild("leg_"+i+"_right")));
 		}
 	}
 	
-	public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+	public static LayerDefinition createBodyLayer(CubeDeformation deformation)
 	{
-		matrixStackIn.push();
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition part = mesh.getRoot();
+		
+		part.addOrReplaceChild("body", CubeListBuilder.create()
+			.texOffs(0, 0).addBox(-7F, -4F, -6F, 14, 6, 12, deformation.extend(1.5F))
+			.texOffs(0, 0).addBox(-5F, -2F, -7.8F, 2, 2, 1, deformation.extend(0.2F))
+			.texOffs(46, 0).addBox(3.5F, -2F, -7.8F, 2, 2, 1, deformation.extend(0.2F)), PartPose.offset(0F, 17F, 0F))
+			.addOrReplaceChild("carapace", CubeListBuilder.create().texOffs(0, 18).addBox(-8F, -1.5F, -8F, 16, 3, 15, deformation.extend(1.5F)), PartPose.offsetAndRotation(0F, -3.5F, 1.7F, -ModelUtils.degree10, 0F, 0F));
+		
+		ClawHandler.addClaw(EnumLimbPosition.RIGHT, part, deformation);
+		ClawHandler.addClaw(EnumLimbPosition.LEFT, part, deformation);
+		
+		for(int i=-1; i<2; i++)
+		{
+			LegHandler.addLeg(i, EnumLimbPosition.LEFT, part, deformation);
+			LegHandler.addLeg(i, EnumLimbPosition.RIGHT, part, deformation);
+		}
+		
+		return LayerDefinition.create(mesh, 64, 64);
+	}
+	
+	public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+	{
+		matrixStackIn.pushPose();
 			if(this.scuttle)
-	    		matrixStackIn.rotate(Vector3f.YP.rotationDegrees(90F));
+	    		matrixStackIn.mulPose(Vector3f.YP.rotationDegrees(90F));
 			
 			this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 			
 			float bigScale = 1.2F;
-			matrixStackIn.push();
+			matrixStackIn.pushPose();
 				if(this.bigLeft)
 				{
 					matrixStackIn.scale(bigScale, bigScale, bigScale);
 		    		matrixStackIn.translate(-0.05F, -0.15F, 0.05F);
 				}
-				this.leftClaw.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-			matrixStackIn.pop();
-			matrixStackIn.push();
+				this.leftClaw.getClaw().render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+			matrixStackIn.popPose();
+			matrixStackIn.pushPose();
 				if(this.bigRight)
 				{
 					matrixStackIn.scale(bigScale, bigScale, bigScale);
 		    		matrixStackIn.translate(0.05F, -0.15F, 0.05F);
 				}
-				this.rightClaw.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-			matrixStackIn.pop();
+				this.rightClaw.getClaw().render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+			matrixStackIn.popPose();
 			
-			for(ModelLeg leg : leftLegs)
+			for(LegHandler leg : leftLegs)
 				leg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 			
-			for(ModelLeg leg : rightLegs)
+			for(LegHandler leg : rightLegs)
 				leg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-		matrixStackIn.pop();
+		matrixStackIn.popPose();
 	}
 	
-	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public void setupAnim(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		this.bigLeft = entityIn.hasBigLeftClaw();
 		this.bigRight = entityIn.hasBigRightClaw();
@@ -102,7 +116,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 		if(entityIn.isPartying())
 		{
 			float wiggle = (float)Math.sin(ageInTicks);
-			this.body.rotationPointX = wiggle;
+			this.body.x = wiggle;
 			this.rightClaw.setXOffset(wiggle);
 			this.leftClaw.setXOffset(wiggle);
 			
@@ -114,7 +128,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 		}
 		else
 		{
-			this.body.rotationPointX = 0F;
+			this.body.x = 0F;
 			this.rightClaw.setXOffset(0F);
 			this.leftClaw.setXOffset(0F);
 			
@@ -127,94 +141,53 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 		
     	for(int i=0; i<leftLegs.size(); i++)
     	{
-    		leftLegs.get(i).setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-    		rightLegs.get(i).setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+    		leftLegs.get(i).setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+    		rightLegs.get(i).setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     	}
     	
-    	rightClaw.swingProgress = this.swingProgress;
-    	rightClaw.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-    	leftClaw.swingProgress = this.swingProgress;
-    	leftClaw.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+    	rightClaw.swingProgress = this.attackTime;
+    	rightClaw.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+    	
+    	leftClaw.swingProgress = this.attackTime;
+    	leftClaw.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 	}
-	
-    /**
-     * Sets the models various rotation angles then renders the model.
-     */
-//    public void render(Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale)
-//    {
-//    	this.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, (AbstractCrab)entityIn);
-//    	AbstractCrab theCrab = (AbstractCrab)entityIn;
-//    	boolean shouldScuttle = AbstractCrab.shouldScuttle(theCrab);
-//    	if(shouldScuttle)
-//    	{
-//    		GlStateManager.pushMatrix();
-//    		GlStateManager.rotate(90F, 0F, 1F, 0F);
-//    	}
-//    	body.render(scale);
-//    	
-//    	float bigScale = 1.2F;
-//    	boolean bigLeft = theCrab.getBigHand(HandSide.LEFT);
-//    	if(bigLeft)
-//    	{
-//    		GlStateManager.pushMatrix();
-//    		GlStateManager.scale(bigScale, bigScale, bigScale);
-//    		GlStateManager.translate(-0.05F, -0.15F, 0.05F);
-//    	}
-//    	leftClaw.render(scale);
-//    	if(bigLeft){ GlStateManager.popMatrix(); }
-//
-//    	boolean bigRight = theCrab.getBigHand(HandSide.RIGHT);
-//    	if(bigRight)
-//    	{
-//    		GlStateManager.pushMatrix();
-//    		GlStateManager.scale(bigScale, bigScale, bigScale);
-//    		GlStateManager.translate(0.05F, -0.15F, 0.05F);
-//    	}
-//    	rightClaw.render(scale);
-//    	if(bigRight){ GlStateManager.popMatrix(); }
-//    	
-//    	for(ModelLeg leg : leftLegs){ leg.render(scale); }
-//    	for(ModelLeg leg : rightLegs){ leg.render(scale); }
-//    	
-//    	if(shouldScuttle)
-//    	{
-//    		GlStateManager.popMatrix();
-//    	}
-//    }
     
-    public class ModelClaw
+    public class ClawHandler
     {
     	public float swingProgress;
     	
     	private final EnumLimbPosition side;
     	private final boolean isLeft;
     	
-    	ModelRenderer theArm;
-    	ModelRenderer theClaw;
+    	ModelPart theArm;
+    	ModelPart theClaw;
     	
     	private final float defaultRotationX;
     	private float offsetRotationX = 0F;
     	
-    	public ModelClaw(EnumLimbPosition side, Model theModel)
+    	public static void addClaw(EnumLimbPosition side, PartDefinition theModel, CubeDeformation deformation)
+    	{
+    		boolean isLeft = side == EnumLimbPosition.LEFT;
+    		float defaultRotationX = 8F * (isLeft ? -1F : 1F);
+    		
+    		PartDefinition theArm = theModel.addOrReplaceChild((isLeft ? "left_claw" : "right_claw"), CubeListBuilder.create(), PartPose.offset(defaultRotationX, 13.5F, -6F));
+    			theArm.addOrReplaceChild("base", CubeListBuilder.create().texOffs(16, 36).addBox(-1.5F, -1F, -1.5F, 3, 5, 3), PartPose.ZERO);
+    		
+    		CubeListBuilder clawCubes = CubeListBuilder.create();
+    		if(isLeft)
+    			clawCubes.mirror();
+    		clawCubes.texOffs(28, 36).addBox(-2F, 0F, -2F, 4, 6, 4, deformation.extend(1F));
+    		clawCubes.texOffs(28, 46).addBox(2F * (isLeft ? 1F : -1.6F), -0.5F, -1F, 1, 3, 2, deformation.extend(0.75F));
+    			theArm.addOrReplaceChild("claw", clawCubes, PartPose.offset(0F, 4F, 0F));
+    	}
+    	
+    	public ClawHandler(EnumLimbPosition side, ModelPart armIn)
     	{
     		this.side = side;
-    		this.isLeft = this.side == EnumLimbPosition.LEFT;
-    		
-    		ModelRenderer armBase = ModelUtils.freshRenderer(theModel);
-    		armBase.mirror = isLeft;
-    		armBase.setTextureOffset(16, 36).addBox(-1.5F, -1F, -1.5F, 3, 5, 3);
-    		
-    		this.theArm = ModelUtils.freshRenderer(theModel);
-    		defaultRotationX = 8F * (isLeft ? -1F : 1F);
-    		theArm.setRotationPoint(defaultRotationX, 13.5F, -6F);
-    		theArm.addChild(armBase);
-    		
-    		this.theClaw = ModelUtils.freshRenderer(theModel);
-    		theClaw.mirror = isLeft;
-    		theClaw.rotationPointY = 4F;
-    		theClaw.setTextureOffset(28, 36).addBox(-2F, 0F, -2F, 4, 6, 4, 1F);
-    		theClaw.setTextureOffset(28, 46).addBox(2F * (isLeft ? 1F : -1.6F), -0.5F, -1F, 1, 3, 2, 0.75F);
-    		theArm.addChild(theClaw);
+    		this.isLeft = side == EnumLimbPosition.LEFT;
+    		this.theArm = armIn;
+    		this.theClaw = armIn.getChild("claw");
+    		this.defaultRotationX = 8F * (this.isLeft ? -1F : 1F);
     	}
     	
     	public void setXOffset(float par1Float)
@@ -227,110 +200,96 @@ public class ModelCrab extends EntityModel<AbstractCrab>
          * and legs, where par1 represents the time(so that arms and legs swing back and forth) and par2 represents how
          * "far" arms and legs can swing at most.
          */
-    	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+    	public void setupAnim(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
         {
-    		this.theArm.rotationPointX = defaultRotationX + offsetRotationX;
+    		this.theArm.x = defaultRotationX + offsetRotationX;
             if(swingProgress > 0.0F && swingSideMatches(this.getMainHand(entityIn)))
         	{
-            	theClaw.rotateAngleZ = 0F;
+            	theClaw.zRot = 0F;
             	
-            	theArm.rotateAngleX = -ModelUtils.degree90;
-            	theArm.rotateAngleY = 0F;
-            	theArm.rotateAngleZ = 0F;
+            	theArm.xRot = -ModelUtils.degree90;
+            	theArm.yRot = 0F;
+            	theArm.zRot = 0F;
             	
                 float f1 = 1.0F - swingProgress;
                 f1 = f1 * f1;
                 f1 = f1 * f1;
                 f1 = 1.0F - f1;
-                float f2 = MathHelper.sin(f1 * (float)Math.PI);
-                float f3 = MathHelper.sin(swingProgress * (float)Math.PI) * 0.7F * 0.75F;
-                theArm.rotateAngleY = (float)((double)theArm.rotateAngleY - ((double)f2 * 1.2D + (double)f3)) * (isLeft ? -1F : 1F);
-                theArm.rotateAngleZ += MathHelper.sin(swingProgress * (float)Math.PI) * -0.4F;
+                float f2 = Mth.sin(f1 * (float)Math.PI);
+                float f3 = Mth.sin(swingProgress * (float)Math.PI) * 0.7F * 0.75F;
+                theArm.yRot = (float)((double)theArm.yRot - ((double)f2 * 1.2D + (double)f3)) * (isLeft ? -1F : 1F);
+                theArm.zRot += Mth.sin(swingProgress * (float)Math.PI) * -0.4F;
         	}
             else
             {
-            	theClaw.rotateAngleZ = ModelUtils.degree10 * 4F * (isLeft ? -1F : 1F);
+            	theClaw.zRot = ModelUtils.degree10 * 4F * (isLeft ? -1F : 1F);
             	
-            	theArm.rotateAngleX = -ModelUtils.degree180 * 0.75F;
-            	theArm.rotateAngleX += (float)Math.cos(entityIn.ticksExisted / 20F) * ModelUtils.degree10 * 0.5F;
-            	theArm.rotateAngleY = ModelUtils.degree90 * 0.5F * (isLeft ? 1F : -1F);
-            	theArm.rotateAngleZ = this.offsetRotationX * 0.5F;
+            	theArm.xRot = -ModelUtils.degree180 * 0.75F;
+            	theArm.xRot += (float)Math.cos(entityIn.tickCount / 20F) * ModelUtils.degree10 * 0.5F;
+            	theArm.yRot = ModelUtils.degree90 * 0.5F * (isLeft ? 1F : -1F);
+            	theArm.zRot = this.offsetRotationX * 0.5F;
             }
         }
-
-    	public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
-    	{
-    		theArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-    	}
     	
-    	public boolean swingSideMatches(HandSide handIn)
+    	public boolean swingSideMatches(HumanoidArm handIn)
     	{
-    		if(handIn == HandSide.LEFT && this.side == EnumLimbPosition.LEFT){ return true; }
-    		if(handIn == HandSide.RIGHT && this.side == EnumLimbPosition.RIGHT){ return true; }
+    		if(handIn == HumanoidArm.LEFT && this.side == EnumLimbPosition.LEFT){ return true; }
+    		if(handIn == HumanoidArm.RIGHT && this.side == EnumLimbPosition.RIGHT){ return true; }
     		return false;
     	}
-
-        protected HandSide getMainHand(Entity entityIn)
+    	
+        protected HumanoidArm getMainHand(Entity entityIn)
         {
             if (entityIn instanceof LivingEntity)
             {
                 LivingEntity LivingEntity = (LivingEntity)entityIn;
-                HandSide HandSide = LivingEntity.getPrimaryHand();
-                return LivingEntity.swingingHand == Hand.MAIN_HAND ? HandSide : HandSide.opposite();
+                HumanoidArm HumanoidArm = LivingEntity.getMainArm();
+                return LivingEntity.swingingArm == InteractionHand.MAIN_HAND ? HumanoidArm : HumanoidArm.getOpposite();
             }
             else
-            {
-                return HandSide.RIGHT;
-            }
+                return HumanoidArm.RIGHT;
         }
         
-        public ModelRenderer getClaw(){ return this.theArm; }
+        public ModelPart getClaw(){ return this.theArm; }
     }
     
-    public class ModelLeg
+    public class LegHandler
     {
     	private final int index;
     	private final EnumLimbPosition side;
     	private final boolean isLeft;
     	
-    	private ModelRenderer theLegUpper;
-    	private ModelRenderer theLegLower;
+    	private ModelPart theLegUpper;
+    	private ModelPart theLegLower;
     	
     	private final float defaultRotationX;
     	private float offsetRotationX = 0F;
     	
-    	public ModelLeg(int index, EnumLimbPosition side, Model theModel)
+    	public static void addLeg(int index, EnumLimbPosition side, PartDefinition theModel, CubeDeformation deformation)
+    	{
+    		boolean isLeft = side == EnumLimbPosition.LEFT;
+    		
+    		float pol = (isLeft ? 1F : -1F);
+			float defaultRotationX = (legOffset + (index%2 == 0 ? 1.5F : 0F)) * pol;
+			
+			PartDefinition legUpper = theModel.addOrReplaceChild("leg_"+index+"_"+side.name().toLowerCase(), CubeListBuilder.create(), PartPose.offsetAndRotation(defaultRotationX, 18F, index * 5.2F, 0F, -ModelUtils.toRadians(10D) * index * pol + (isLeft ? ModelUtils.toRadians(180D) : 0F), -ModelUtils.degree10 * pol));
+				legUpper.addOrReplaceChild("leg", CubeListBuilder.create().texOffs(0, 36).addBox(0-1.5F, 0F, -1.5F, 3, 6, 3), PartPose.rotation(0F, 0F, ModelUtils.toRadians(-90D)));
+			
+			PartDefinition legLower = legUpper.addOrReplaceChild("lower", CubeListBuilder.create(), PartPose.offsetAndRotation(5F, 0F, 0F, 0F, 0F, ModelUtils.degree90 / 1.5F));
+				legLower.addOrReplaceChild("leg", CubeListBuilder.create().texOffs(0, 45).addBox(-1F, 0F, -1F, 2, 8, 2, deformation.extend(0.2F)), PartPose.rotation(0F, 0F, ModelUtils.toRadians(-90D)));
+    	}
+    	
+    	public LegHandler(int index, EnumLimbPosition side, ModelPart legUpper)
     	{
     		this.index = index;
     		this.side = side;
     		this.isLeft = this.side == EnumLimbPosition.LEFT;
     		
     		float pol = (isLeft ? 1F : -1F);
+			this.defaultRotationX = (legOffset + (index%2 == 0 ? 1.5F : 0F)) * pol;
     		
-    		// Leg parts are treated as horizontal for the orientation code
-    		// But are generated vertically for ease of texturing
-    		ModelRenderer upperLeg = ModelUtils.freshRenderer(theModel);
-    		upperLeg.rotateAngleZ = -ModelUtils.degree90;
-    		upperLeg.setTextureOffset(0, 36).addBox(0-1.5F, 0F, -1.5F, 3, 6, 3);
-			
-			ModelRenderer lowerLeg = ModelUtils.freshRenderer(theModel);
-			lowerLeg.rotateAngleZ = -ModelUtils.degree90;
-			lowerLeg.setTextureOffset(0, 45).addBox(-1F, 0F, -1F, 2, 8, 2, 0.2F);
-    		
-			// Main leg elements, these control the rotation so the parts are always properly oriented
-			this.theLegUpper = ModelUtils.freshRenderer(theModel);
-			defaultRotationX = (legOffset + (index%2 == 0 ? 1.5F : 0F)) * pol;
-			theLegUpper.setRotationPoint(defaultRotationX, 18F, index * 5.2F);
-			theLegUpper.rotateAngleZ = -ModelUtils.degree10 * pol;
-			theLegUpper.rotateAngleY = -ModelUtils.toRadians(10D) * index * pol;
-			if(!isLeft){ theLegUpper.rotateAngleY += ModelUtils.toRadians(180D); }
-			theLegUpper.addChild(upperLeg);
-			
-			this.theLegLower = ModelUtils.freshRenderer(theModel);
-			theLegLower.rotateAngleZ = ModelUtils.degree90 / 1.5F;
-			theLegLower.rotationPointX = 5F;
-			theLegLower.addChild(lowerLeg);
-			theLegUpper.addChild(theLegLower);
+			this.theLegUpper = legUpper;
+			this.theLegLower = legUpper.getChild("lower");
     	}
     	
     	public void setOffsetX(float par1Float){ this.offsetRotationX = par1Float; }
@@ -340,24 +299,24 @@ public class ModelCrab extends EntityModel<AbstractCrab>
          * and legs, where par1 represents the time(so that arms and legs swing back and forth) and par2 represents how
          * "far" arms and legs can swing at most.
          */
-    	public void setRotationAngles(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+    	public void setupAnim(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
         {
-        	float legBase = MathHelper.cos(limbSwing * 1.5F + (float)Math.PI) * 2F * limbSwingAmount;
+        	float legBase = Mth.cos(limbSwing * 1.5F + (float)Math.PI) * 2F * limbSwingAmount;
         	boolean limbPolarity = (isLeft ? index%2 == 0 : index%2 != 0);
         	
-    		this.theLegUpper.rotationPointX = defaultRotationX + offsetRotationX;
+    		this.theLegUpper.x = defaultRotationX + offsetRotationX;
         	
-    		theLegUpper.rotateAngleZ = Math.min(-ModelUtils.degree10, (legBase * (limbPolarity ? 1 : -1)) - ModelUtils.degree10) * (isLeft ? 1F : -1F);
-    		theLegUpper.rotateAngleZ += offsetRotationX * ModelUtils.toRadians(22.5D);
+    		theLegUpper.zRot = Math.min(-ModelUtils.degree10, (legBase * (limbPolarity ? 1 : -1)) - ModelUtils.degree10) * (isLeft ? 1F : -1F);
+    		theLegUpper.zRot += offsetRotationX * ModelUtils.toRadians(22.5D);
     		
-    		theLegUpper.rotateAngleY = !isLeft ? ModelUtils.degree180 : 0F;
-    		theLegUpper.rotateAngleY += (MathHelper.cos(limbSwing * 0.66682F + (float)Math.PI) * 0.8F * limbSwingAmount) * (limbPolarity ? 1F : -1F);
+    		theLegUpper.yRot = !isLeft ? ModelUtils.degree180 : 0F;
+    		theLegUpper.yRot += (Mth.cos(limbSwing * 0.66682F + (float)Math.PI) * 0.8F * limbSwingAmount) * (limbPolarity ? 1F : -1F);
     		
-    		theLegLower.rotateAngleZ = ModelUtils.degree90 / 1.5F;
-    		theLegLower.rotateAngleZ -= ((((isLeft ? 1F : -1F )*ModelUtils.degree10) + theLegUpper.rotateAngleZ) * 1F) * (isLeft ? 1F : -1F);
+    		theLegLower.zRot = ModelUtils.degree90 / 1.5F;
+    		theLegLower.zRot -= ((((isLeft ? 1F : -1F )*ModelUtils.degree10) + theLegUpper.zRot) * 1F) * (isLeft ? 1F : -1F);
         }
 
-    	public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+    	public void render(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
     	{
     		this.theLegUpper.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     	}

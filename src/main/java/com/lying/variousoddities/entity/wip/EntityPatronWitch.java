@@ -54,9 +54,9 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
 		return null;
 	}
     
-    public void livingTick()
+    public void aiStep()
     {
-    	super.livingTick();
+    	super.aiStep();
         if(this.openJawCounter > 0 && ++this.openJawCounter > 20)
         {
             this.openJawCounter = 0;
@@ -73,7 +73,7 @@ public class EntityPatronWitch extends EntityOddityAgeable implements IChangelin
         
     	updatePonytail();
 		
-		if(!isFlapping())
+		if(!areWingsFlapping())
 		{
 			if(getRandom().nextInt(80) == 0)
 				getEntityData().set(FLAP_TIME, Reference.Values.TICKS_PER_SECOND);

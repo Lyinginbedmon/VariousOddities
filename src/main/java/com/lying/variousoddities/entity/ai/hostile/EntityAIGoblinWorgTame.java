@@ -11,6 +11,7 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.Wolf;
@@ -83,7 +84,7 @@ public class EntityAIGoblinWorgTame extends Goal
 			currentState = null;
 			return;
 		}
-		else theGoblin.getLookController().setLookPositionWithEntity(targetWolf, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
+		else theGoblin.getLookControl().setLookAt(targetWolf, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
 		
 		switch(currentState)
 		{
@@ -112,18 +113,18 @@ public class EntityAIGoblinWorgTame extends Goal
 					if(targetWolf.hasCustomName())
 						theWorg.setCustomName(targetWolf.getCustomName());
 					
-					theWorg.setPositionAndRotation(targetWolf.getX(), targetWolf.getY(), targetWolf.getZ(), targetWolf.getYRot(), targetWolf.getXRot());
+					theWorg.absMoveTo(targetWolf.getX(), targetWolf.getY(), targetWolf.getZ(), targetWolf.getYRot(), targetWolf.getXRot());
 					
-					targetWolf.remove();
+					targetWolf.setRemoved(RemovalReason.DISCARDED);
 					theWorld.addFreshEntity(theWorg);
-					theWorld.setEntityState(theWorg, (byte)7);
+					theWorld.broadcastEntityEvent(theWorg, (byte)7);
 					
 					currentState = null;
 				}
 				else if(tamingTimer%Reference.Values.TICKS_PER_SECOND == 0)
 				{
 					theGoblin.swing(InteractionHand.MAIN_HAND, true);
-					theWorld.setEntityState(targetWolf, (byte)6);
+					theWorld.broadcastEntityEvent(targetWolf, (byte)6);
 				}
 				break;
 			default: currentState = null; return;

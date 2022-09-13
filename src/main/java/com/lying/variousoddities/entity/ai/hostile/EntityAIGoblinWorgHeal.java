@@ -9,8 +9,8 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.Goal.Flag;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
@@ -82,7 +82,7 @@ public class EntityAIGoblinWorgHeal extends Goal
 			currentState = null;
 			return;
 		}
-		theGoblin.getLookController().setLookPositionWithEntity(theWorg, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
+		theGoblin.getLookControl().setLookAt(theWorg, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
 		
 		switch(currentState)
 		{
@@ -108,9 +108,9 @@ public class EntityAIGoblinWorgHeal extends Goal
 				{
 					if(--healTimer <= 0)
 					{
-						theGoblin.swingArm(InteractionHand.MAIN_HAND);
-						theWorg.heal(Items.ROTTEN_FLESH.getFood().getHealing());
-						theWorld.setEntityState(theWorg, (byte)7);
+						theGoblin.swing(InteractionHand.MAIN_HAND);
+						theWorg.heal(Items.ROTTEN_FLESH.getFoodProperties(new ItemStack(Items.ROTTEN_FLESH), theWorg).getNutrition());
+						theWorld.broadcastEntityEvent(theWorg, (byte)7);
 						currentState = null;
 					}
 				}

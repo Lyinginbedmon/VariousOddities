@@ -5,9 +5,11 @@ import com.lying.variousoddities.init.VOItems;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.HorseArmorItem;
@@ -17,25 +19,25 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
 
-public class ContainerWarg extends InventoryMenu
+public class ContainerWarg extends AbstractContainerMenu
 {
-	public static ContainerWarg fromNetwork(int windowId, InventoryMenu inv, FriendlyByteBuf buf)
+	public static ContainerWarg fromNetwork(int windowId, Inventory inv, FriendlyByteBuf buf)
 	{
-		Entity mount = inv.owner.getVehicle();
+		Entity mount = inv.player.getVehicle();
 		if(mount instanceof EntityWarg)
 			return new ContainerWarg(windowId, inv, ((EntityWarg)mount).wargChest, ((EntityWarg)mount));
 		return null;
 	}
 	
 	public final EntityWarg theWarg;
-	private final Inventory wargInventory;
+	private final Container wargInventory;
 	
-	public ContainerWarg(int windowId, InventoryMenu playerInventory, Inventory wargInventory, final EntityWarg wargIn)
+	public ContainerWarg(int windowId, Inventory playerInventory, Container wargInventory, final EntityWarg wargIn)
 	{
 		super(VOItems.CONTAINER_WARG, windowId);
 		this.theWarg = wargIn;
 		this.wargInventory = wargInventory;
-		wargInventory.openInventory(playerInventory.owner);
+		wargInventory.startOpen(playerInventory.player);
 		// Warg saddle
 		this.addSlot(new Slot(wargInventory, 0, 8, 18)
 		{
@@ -50,7 +52,7 @@ public class ContainerWarg extends InventoryMenu
 		{
 			public boolean mayPlace(ItemStack stack)
 			{
-				return ItemTags.WOOL_CARPETS.contains(stack.getItem()) && !this.hasItem();
+				return stack.is(ItemTags.WOOL_CARPETS) && !this.hasItem();
 			}
 			
 			@OnlyIn(Dist.CLIENT)
@@ -89,7 +91,7 @@ public class ContainerWarg extends InventoryMenu
 		return theWarg.isAlive() && playerIn.isAlive() && (playerIn.getVehicle() == theWarg || playerIn.distanceTo(theWarg) <= playerIn.getAttributeValue(ForgeMod.REACH_DISTANCE.get()));
 	}
 	
-	public ItemStack transferStackInSlot(Player playerIn, int index)
+	public ItemStack quickMoveStack(Player playerIn, int index)
 	{
 		ItemStack itemStack = ItemStack.EMPTY;
 		Slot slot = this.slots.get(index);
@@ -163,4 +165,6 @@ public class ContainerWarg extends InventoryMenu
 		super.removed(playerIn);
 		this.wargInventory.stopOpen(playerIn);
 	}
+	
+	public boolean stillValid(Player playerIn) { return this.wargInventory.stillValid(playerIn); }
 }

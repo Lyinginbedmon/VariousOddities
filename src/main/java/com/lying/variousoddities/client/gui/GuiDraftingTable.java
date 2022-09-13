@@ -45,7 +45,7 @@ public class GuiDraftingTable extends Screen
 	
 	public static void open(TileEntityDraftingTable tableIn)
 	{
-		Minecraft.getInstance().displayGuiScreen(new GuiDraftingTable(tableIn));
+		Minecraft.getInstance().setScreen(new GuiDraftingTable(tableIn));
 	}
 	
 	public boolean isPauseScreen(){ return false; }
@@ -54,34 +54,33 @@ public class GuiDraftingTable extends Screen
      * Adds the buttons (and other controls) to the screen in question. Called when the GUI is displayed and when the
      * window resizes, the buttonList is cleared beforehand.
      */
-    public void init(Minecraft minecraft, int width, int height)
+    public void init()
     {
-    	super.init(minecraft, width, height);
         this.buttons.clear();
-        this.minecraft.keyboardListener.enableRepeatEvents(true);
+        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
         int midX = width / 2;
         int midY = height / 2;
         
-    	this.addWidget(minXUp = new BoundsButton(midX - 80, midY - 40, Axis.X, AxisDirection.POSITIVE, true, this));
-    	this.addWidget(minYUp = new BoundsButton(midX - 60, midY - 40, Axis.Y, AxisDirection.POSITIVE, true, this));
-    	this.addWidget(minZUp = new BoundsButton(midX - 40, midY - 40, Axis.Z, AxisDirection.POSITIVE, true, this));
-    	this.addWidget(minXDown = new BoundsButton(midX - 80, midY - 0, Axis.X, AxisDirection.NEGATIVE, true, this));
-    	this.addWidget(minYDown = new BoundsButton(midX - 60, midY - 0, Axis.Y, AxisDirection.NEGATIVE, true, this));
-    	this.addWidget(minZDown = new BoundsButton(midX - 40, midY - 0, Axis.Z, AxisDirection.NEGATIVE, true, this));
+    	this.addRenderableWidget(minXUp = new BoundsButton(midX - 80, midY - 40, Axis.X, AxisDirection.POSITIVE, true, this));
+    	this.addRenderableWidget(minYUp = new BoundsButton(midX - 60, midY - 40, Axis.Y, AxisDirection.POSITIVE, true, this));
+    	this.addRenderableWidget(minZUp = new BoundsButton(midX - 40, midY - 40, Axis.Z, AxisDirection.POSITIVE, true, this));
+    	this.addRenderableWidget(minXDown = new BoundsButton(midX - 80, midY - 0, Axis.X, AxisDirection.NEGATIVE, true, this));
+    	this.addRenderableWidget(minYDown = new BoundsButton(midX - 60, midY - 0, Axis.Y, AxisDirection.NEGATIVE, true, this));
+    	this.addRenderableWidget(minZDown = new BoundsButton(midX - 40, midY - 0, Axis.Z, AxisDirection.NEGATIVE, true, this));
     	
-    	this.addWidget(maxXUp = new BoundsButton(midX + 20, midY - 40, Axis.X, AxisDirection.POSITIVE, false, this));
-    	this.addWidget(maxYUp = new BoundsButton(midX + 40, midY - 40, Axis.Y, AxisDirection.POSITIVE, false, this));
-    	this.addWidget(maxZUp = new BoundsButton(midX + 60, midY - 40, Axis.Z, AxisDirection.POSITIVE, false, this));
-    	this.addWidget(maxXDown = new BoundsButton(midX + 20, midY - 0, Axis.X, AxisDirection.NEGATIVE, false, this));
-    	this.addWidget(maxYDown = new BoundsButton(midX + 40, midY - 0, Axis.Y, AxisDirection.NEGATIVE, false, this));
-    	this.addWidget(maxZDown = new BoundsButton(midX + 60, midY - 0, Axis.Z, AxisDirection.NEGATIVE, false, this));
+    	this.addRenderableWidget(maxXUp = new BoundsButton(midX + 20, midY - 40, Axis.X, AxisDirection.POSITIVE, false, this));
+    	this.addRenderableWidget(maxYUp = new BoundsButton(midX + 40, midY - 40, Axis.Y, AxisDirection.POSITIVE, false, this));
+    	this.addRenderableWidget(maxZUp = new BoundsButton(midX + 60, midY - 40, Axis.Z, AxisDirection.POSITIVE, false, this));
+    	this.addRenderableWidget(maxXDown = new BoundsButton(midX + 20, midY - 0, Axis.X, AxisDirection.NEGATIVE, false, this));
+    	this.addRenderableWidget(maxYDown = new BoundsButton(midX + 40, midY - 0, Axis.Y, AxisDirection.NEGATIVE, false, this));
+    	this.addRenderableWidget(maxZDown = new BoundsButton(midX + 60, midY - 0, Axis.Z, AxisDirection.NEGATIVE, false, this));
     	
-        this.addWidget(new Button(midX - 17, midY - 40, 34, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".drafting_table.button.showbb"), (button) -> 
+        this.addRenderableWidget(new Button(midX - 17, midY - 40, 34, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".drafting_table.button.showbb"), (button) -> 
     	{
     		theTable.toggleBoundaries();
     	}));
     	
-    	this.addWidget(functionSelect = new Button(midX - 50, midY - 65, 100, 20, theTable.getFunction().getName(), (button) -> 
+    	this.addRenderableWidget(functionSelect = new Button(midX - 50, midY - 65, 100, 20, theTable.getFunction().getName(), (button) -> 
     		{
 	    		EnumRoomFunction currentFunction = theTable.getFunction();
 	    		theTable.setFunction(EnumRoomFunction.values()[(currentFunction.ordinal() + 1) % EnumRoomFunction.values().length]);
@@ -100,7 +99,7 @@ public class GuiDraftingTable extends Screen
     	if(theTable.canAlter(8))
     		this.setFocused(this.nameField);
         
-        this.addWidget(signButton = new Button(midX - 35, midY + 30, 70, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".drafting_table.button.save"), (button) -> 
+        this.addRenderableWidget(signButton = new Button(midX - 35, midY + 30, 70, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".drafting_table.button.save"), (button) -> 
         	{
         		theTable.setMask(15);
         		sendToServer();
@@ -139,8 +138,8 @@ public class GuiDraftingTable extends Screen
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		this.renderBackground(matrixStack);
-		RenderSystem.color4f(1F, 1F, 1F, 1F);
-		this.minecraft.getTextureManager().bindTexture(SCREEN_TEXTURE);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+		RenderSystem.setShaderTexture(0, SCREEN_TEXTURE);
 		int width = 170;
         int i = (this.width - 176) / 2 + 3;
         int j = (this.height - 166) / 2 - 18;

@@ -23,6 +23,7 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -46,12 +47,12 @@ public class ClientProxy extends CommonProxy
 	public void registerHandlers()
 	{
 		IEventBus busMod = FMLJavaModLoadingContext.get().getModEventBus();
-		busMod.addListener(RendererHandler::registerTileRenderers);
+		busMod.addListener(EventPriority.NORMAL, RendererHandler::registerTileRenderers);
         
 		IEventBus busForge = MinecraftForge.EVENT_BUS;
-		busForge.addListener(GuiHandler::renderAbilityOverlay);
-		busForge.addListener(GuiHandler::curtailHUDWhenAbnormal);
-		busForge.addListener(GuiHandler::renderBludgeoning);
+		busForge.addListener(EventPriority.NORMAL, GuiHandler::renderAbilityOverlay);
+		busForge.addListener(EventPriority.NORMAL, GuiHandler::curtailHUDWhenAbnormal);
+		busForge.addListener(EventPriority.NORMAL, GuiHandler::renderBludgeoning);
 	}
 	
 	public void onLoadComplete(FMLLoadCompleteEvent event)

@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.Widget;
@@ -18,7 +19,6 @@ import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.LanguageMap;
-import net.minecraft.util.text.TextFormatting;
 
 public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListEntry>
 {
@@ -37,8 +37,8 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 	
 	protected void renderHeader(PoseStack p_230448_1_, int p_230448_2_, int p_230448_3_, Tesselator p_230448_4_)
 	{
-		Component itextcomponent = (Component.literal("")).append(this.title).mergeStyle(TextFormatting.UNDERLINE, TextFormatting.BOLD);
-		this.minecraft.font.func_243248_b(p_230448_1_, itextcomponent, (float)(p_230448_2_ + this.width / 2 - this.minecraft.font.getStringPropertyWidth(itextcomponent) / 2), (float)Math.min(this.y0 + 3, p_230448_3_), 16777215);
+		Component itextcomponent = (Component.literal("")).append(this.title).withStyle(ChatFormatting.UNDERLINE, ChatFormatting.BOLD);
+		this.minecraft.font.func_243248_b(p_230448_1_, itextcomponent, (float)(p_230448_2_ + this.width / 2 - this.minecraft.font.width(itextcomponent) / 2), (float)Math.min(this.y0 + 3, p_230448_3_), 16777215);
 	}
 	
 	public int getRowWidth(){ return this.width; }
@@ -89,7 +89,7 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 		
 		private FormattedText func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
 		{
-			int i = p_244424_0_.font.getStringPropertyWidth(p_244424_1_);
+			int i = p_244424_0_.font.width(p_244424_1_);
 			if (i > 157)
 			{
 				ITextProperties itextproperties = ITextProperties.func_240655_a_(p_244424_0_.font.func_238417_a_(p_244424_1_, 157 - p_244424_0_.font.width("...")), ITextProperties.func_240652_a_("..."));

@@ -1,203 +1,123 @@
 package com.lying.variousoddities.client.model.entity;
 
-import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.compress.utils.Lists;
 
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
 public class ModelKobold extends HumanoidModel<EntityKobold>
 {
-	ModelPart snout;
-	ModelPart horns;
+	private final ModelPart snout;
+	private final ModelPart horns;
 	private final float JAW_RANGE = ModelUtils.toRadians(6D);
-	ModelPart jaw;
-	ModelPart belly;
+	private final ModelPart jaw;
+	private final ModelPart belly;
 	ModelPart tail;
-	ArrayList<ModelPart> tailSegments = new ArrayList<ModelPart>();
+	List<ModelPart> tailSegments = Lists.newArrayList();
 	
-	public ModelKobold()
+	public ModelKobold(ModelPart partsIn)
 	{
-		this(0F);
-	}
-	
-	public ModelKobold(float size)
-	{
-		super(RenderType::getEntityCutoutNoCull, 1F, 0.0F, 80, 96);
+		super(partsIn);
 		
-		/** Head */
-		this.bipedHeadwear = ModelUtils.freshRenderer(this);
-		this.bipedHeadwear.setTextureOffset(30, 0).addBox(-4, -6, -5, 8, 6, 7, 0.5F);
-		
-		this.bipedHead = ModelUtils.freshRenderer(this).setTextureOffset(0, 0).addBox(-4, -6, -5, 8, 6, 7);
-		
-		// Snout & jaw
-		snout = ModelUtils.freshRenderer(this);
-		snout.setTextureOffset(0, 13).addBox(-3F, -3.5F, -10, 6, 2, 5);
-		snout.setTextureOffset(39, 13).addBox(-2F, -4.5F, -7.5F, 4, 1, 3);
-    	snout.rotateAngleX = (float)(Math.toRadians(3D));
-		
-		jaw = ModelUtils.freshRenderer(this).setTextureOffset(22, 13).addBox(-1.5F, -1.5F, -9, 3, 1, 6);
-			snout.addChild(jaw);
-		
-		// Horns
-			int hornX = 45, hornY = 13;
-		horns = ModelUtils.freshRenderer(this);
-		ModelPart hornRight = ModelUtils.freshRenderer(this).setTextureOffset(hornX, hornY).addBox(-4.2F, -6.5F, -2F, 2, 2, 8);
-		hornRight.rotateAngleX = ModelUtils.degree10;
-		hornRight.rotateAngleY = -ModelUtils.degree5;
-			horns.addChild(hornRight);
-		
-		ModelPart hornLeft = ModelUtils.freshRenderer(this);
-		hornLeft.mirror = true;
-		hornLeft.setTextureOffset(hornX, hornY).addBox(2.2F, -6.5F, -2F, 2, 2, 8);
-		hornLeft.rotateAngleX = ModelUtils.degree10;
-		hornLeft.rotateAngleY = ModelUtils.degree5;
-			horns.addChild(hornLeft);
-		
-		this.bipedHead.addChild(snout);
-		this.bipedHead.addChild(horns);
-		
-		/** Body */
-		this.bipedBody = ModelUtils.freshRenderer(this);
-		this.bipedBody.setTextureOffset(0, 23).addBox(-4F, 0F, -2F, 8, 5, 4);
-		
-		this.belly = ModelUtils.freshRenderer(this).setTextureOffset(24, 23).addBox(-3.5F, 4.8F, -1.5F, 7, 7, 3);
-		this.bipedBody.addChild(this.belly);
+		this.snout = this.head.getChild("snout");
+		this.jaw = this.snout.getChild("jaw");
+		this.horns = this.head.getChild("horns");
+		this.belly = this.body.getChild("belly");
 		
 		// Tail
-		tail = ModelUtils.freshRenderer(this).setTextureOffset(0, 33).addBox(-1F, -1F, 2F, 2, 2, 8);
-		tail.setRotationPoint(0F, 9F, -1F);
+		tail = this.body.getChild("tail_root");
 		tailSegments.add(tail);
 		
+		ModelPart prev = tail;
 		for(int i=0; i<2; i++)
-		{
-			ModelPart segment = makeTailSegment(i);
-			tailSegments.get(i).addChild(segment);
-			tailSegments.add(segment);
-		}
-		
-		this.bipedBody.addChild(tail);
-		
-		/** Arms */
-        ModelPart upper = ModelUtils.freshRenderer(this);
-        upper.setTextureOffset(0, 43).addBox(-2.0F, -2.0F, -1.5F, 3, 6, 3, 0.01F);
-        upper.rotateAngleX = ModelUtils.degree10;
-
-        ModelPart lower = ModelUtils.freshRenderer(this).setTextureOffset(12, 43);
-        lower.addBox(-2.0F, 2.5F, 1.0F, 3, 6, 3, 0.2F);
-        lower.rotateAngleX = (float)(Math.toRadians(-30));
-
-		this.bipedRightArm = ModelUtils.freshRenderer(this);
-        this.bipedRightArm.setRotationPoint(-5.0F, 2.0F, 0.0F);
-        this.bipedRightArm.addChild(upper);
-        this.bipedRightArm.addChild(lower);
-        
-        upper = ModelUtils.freshRenderer(this);
-        upper.mirror=true;
-        upper.setTextureOffset(24, 43).addBox(-1.0F, -2.0F, -1.5F, 3, 6, 3, 0.01F);
-        upper.rotateAngleX = ModelUtils.degree10;
-
-        lower = ModelUtils.freshRenderer(this);
-        lower.mirror=true;
-        lower.setTextureOffset(36, 43).addBox(-1.0F, 2.5F, 1.0F, 3, 6, 3, 0.2F);
-        lower.rotateAngleX = (float)(Math.toRadians(-30));
-        
-        this.bipedLeftArm = ModelUtils.freshRenderer(this);
-        this.bipedLeftArm.setRotationPoint(5.0F, 2.0F, 0.0F);
-        this.bipedLeftArm.addChild(upper);
-        this.bipedLeftArm.addChild(lower);
-		
-		/** Legs */
-	        // Thigh
-	        ModelPart thigh = ModelUtils.freshRenderer(this).setTextureOffset(0, 52);
-	        thigh.addBox(-2F, -2F, -6.5F, 4, 3, 9);
-	        thigh.rotateAngleX = (float)(Math.toRadians(35D));
-			
-	        // Ankle
-	        ModelPart ankle = ModelUtils.freshRenderer(this).setTextureOffset(26, 52);
-	        ankle.addBox(-1.5F, 3.5F, -2F, 3, 2, 7);
-	        ankle.rotateAngleX = (float)(Math.toRadians(-30D));
-	        
-	        // Foot
-	        ModelPart foot = ModelUtils.freshRenderer(this).setTextureOffset(46, 52);
-	        foot.addBox(-1.5F, 10F, -3F, 3, 2, 5);
-	        ModelPart bridge = ModelUtils.freshRenderer(this).setTextureOffset(46, 59);
-	        bridge.addBox(-1F, 3.5F, -9.75F, 2, 2, 6);
-	        bridge.rotateAngleX = (float)(Math.toRadians(70D));
-	        foot.addChild(bridge);
-		this.bipedRightLeg = ModelUtils.freshRenderer(this);
-        this.bipedRightLeg.setRotationPoint(-2.4F, 12.0F, 0.0F);
-        this.bipedRightLeg.addChild(thigh);
-        this.bipedRightLeg.addChild(ankle);
-        this.bipedRightLeg.addChild(foot);
-
-	        // Thigh
-	        thigh = ModelUtils.freshRenderer(this).setTextureOffset(0, 67);
-	        thigh.mirror=true;
-	        thigh.addBox(-2F, -2F, -6.5F, 4, 3, 9);
-	        thigh.rotateAngleX = (float)(Math.toRadians(35D));
-			
-	        // Ankle
-	        ankle = ModelUtils.freshRenderer(this).setTextureOffset(26, 67);
-	        ankle.mirror=true;
-	        ankle.addBox(-1.5F, 3.5F, -2F, 3, 2, 7);
-	        ankle.rotateAngleX = (float)(Math.toRadians(-30D));
-	        
-	        // Foot
-	        foot = ModelUtils.freshRenderer(this).setTextureOffset(46, 67);
-	        foot.mirror=true;
-	        foot.addBox(-1.5F, 10F, -3F, 3, 2, 5);
-	        bridge = ModelUtils.freshRenderer(this).setTextureOffset(46, 74);
-	        bridge.mirror=true;
-	        bridge.addBox(-1F, 3.5F, -9.75F, 2, 2, 6);
-	        bridge.rotateAngleX = (float)(Math.toRadians(70D));
-	        foot.addChild(bridge);
-		this.bipedLeftLeg = ModelUtils.freshRenderer(this);
-		this.bipedLeftLeg.addChild(thigh);
-		this.bipedLeftLeg.addChild(ankle);
-		this.bipedLeftLeg.addChild(foot);
-		this.bipedLeftLeg.setRotationPoint(2.4F, 12F, 0F);
+			tailSegments.add(prev = prev.getChild("child"));
 	}
-    
-    private ModelPart makeTailSegment(int tailPosition)
-    {
-    	ModelPart segment = ModelUtils.freshRenderer(this).setTextureOffset(20+(20*tailPosition), 33).addBox(-1F, -1F, 0F, 2, 2, 8 - (2*tailPosition));
-    	segment.rotationPointZ = 9.5F - (2*tailPosition);
-    	
-    	return segment;
-    }
 	
-	public void setRotationAngles(EntityKobold entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public static LayerDefinition createBodyLayer(CubeDeformation deformation)
 	{
-		super.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+		MeshDefinition mesh = HumanoidModel.createMesh(deformation, 0F);
+		PartDefinition part = mesh.getRoot();
+		
+		part.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(30, 0).addBox(-4, -6, -5, 8, 6, 7, deformation.extend(0.5F)), PartPose.ZERO);
+		
+		PartDefinition head = part.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4, -6, -5, 8, 6, 7), PartPose.ZERO);
+		PartDefinition snout = head.addOrReplaceChild("snout", CubeListBuilder.create()
+			.texOffs(0, 13).addBox(-3F, -3.5F, -10, 6, 2, 5)
+			.texOffs(39, 13).addBox(-2F, -4.5F, -7.5F, 4, 1, 3), PartPose.rotation(ModelUtils.toRadians(3D), 0F, 0F));
+			snout.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(22, 13).addBox(-1.5F, -1.5F, -9, 3, 1, 6), PartPose.ZERO);
+			int hornX = 45, hornY = 13;
+		PartDefinition horns = head.addOrReplaceChild("horns", CubeListBuilder.create(), PartPose.ZERO);
+			horns.addOrReplaceChild("right_horn", CubeListBuilder.create().texOffs(hornX, hornY).addBox(-4.2F, -6.5F, -2F, 2, 2, 8), PartPose.rotation(ModelUtils.degree10, -ModelUtils.degree5, 0F));
+			horns.addOrReplaceChild("left_horn", CubeListBuilder.create().mirror().texOffs(hornX, hornY).addBox(2.2F, -6.5F, -2F, 2, 2, 8), PartPose.rotation(ModelUtils.degree10, ModelUtils.degree5, 0F));
+		
+		PartDefinition body = part.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 23).addBox(-4F, 0F, -2F, 8, 5, 4), PartPose.ZERO);
+			body.addOrReplaceChild("belly", CubeListBuilder.create().texOffs(24, 23).addBox(-3.5F, 4.8F, -1.5F, 7, 7, 3), PartPose.ZERO);
+			PartDefinition tailRoot = body.addOrReplaceChild("tail_root", CubeListBuilder.create().texOffs(0, 33).addBox(-1F, -1F, 2F, 2, 2, 8), PartPose.offset(0F, 9F, -1F));
+			PartDefinition prev = tailRoot;
+			for(int i=0; i<2; i++)
+				prev = prev.addOrReplaceChild("child", CubeListBuilder.create().texOffs(20+(20*i), 33).addBox(-1F, -1F, 0F, 2, 2, 8 - (2*i)), PartPose.offset(0F, 0F, 9.5F - i*2));
+		
+		PartDefinition rightArm = part.addOrReplaceChild("right_arm", CubeListBuilder.create(), PartPose.offset(-5.0F, 2.0F, 0.0F));
+			rightArm.addOrReplaceChild("upper", CubeListBuilder.create().texOffs(0, 43).addBox(-2.0F, -2.0F, -1.5F, 3, 6, 3, deformation.extend(0.01F)), PartPose.rotation(ModelUtils.degree10, 0F, 0F));
+			rightArm.addOrReplaceChild("lower", CubeListBuilder.create().texOffs(12, 43).addBox(-2.0F, 2.5F, 1.0F, 3, 6, 3, deformation.extend(0.2F)), PartPose.rotation(ModelUtils.toRadians(-30D), 0F, 0F));
+		
+        PartDefinition leftArm = part.addOrReplaceChild("left_arm", CubeListBuilder.create().mirror(), PartPose.offset(5.0F, 2.0F, 0.0F));
+	        leftArm.addOrReplaceChild("upper", CubeListBuilder.create().mirror().texOffs(24, 43).addBox(-1.0F, -2.0F, -1.5F, 3, 6, 3, deformation.extend(0.01F)), PartPose.rotation(ModelUtils.degree10, 0F, 0F));
+	        leftArm.addOrReplaceChild("lower", CubeListBuilder.create().mirror().texOffs(36, 43).addBox(-1.0F, 2.5F, 1.0F, 3, 6, 3, deformation.extend(0.2F)), PartPose.rotation(ModelUtils.toRadians(-30D), 0F, 0F));
+
+        PartDefinition rightLeg = part.addOrReplaceChild("right_leg", CubeListBuilder.create(), PartPose.offset(-2.4F, 12.0F, 0.0F));
+	        rightLeg.addOrReplaceChild("thigh", CubeListBuilder.create().texOffs(0, 52).addBox(-2F, -2F, -6.5F, 4, 3, 9), PartPose.rotation(ModelUtils.toRadians(35D), 0F, 0F));
+	        rightLeg.addOrReplaceChild("ankle", CubeListBuilder.create().texOffs(26, 52).addBox(-1.5F, 3.5F, -2F, 3, 2, 7), PartPose.rotation(ModelUtils.toRadians(-30D), 0F, 0F));
+	        PartDefinition rightFoot = rightLeg.addOrReplaceChild("foot", CubeListBuilder.create().texOffs(46, 52).addBox(-1.5F, 10F, -3F, 3, 2, 5), PartPose.ZERO);
+	        	rightFoot.addOrReplaceChild("bridge", CubeListBuilder.create().texOffs(46, 59).addBox(-1F, 3.5F, -9.75F, 2, 2, 6), PartPose.rotation(ModelUtils.toRadians(70D), 0F, 0F));
+	    
+		PartDefinition leftLeg = part.addOrReplaceChild("left_leg", CubeListBuilder.create().mirror(), PartPose.offset(2.4F, 12F, 0F));
+			leftLeg.addOrReplaceChild("thigh", CubeListBuilder.create().mirror().texOffs(0, 67).addBox(-2F, -2F, -6.5F, 4, 3, 9), PartPose.rotation(ModelUtils.toRadians(35D), 0F, 0F));
+			leftLeg.addOrReplaceChild("ankle", CubeListBuilder.create().mirror().texOffs(26, 67).addBox(-1.5F, 3.5F, -2F, 3, 2, 7), PartPose.rotation(ModelUtils.toRadians(-30D), 0F, 0F));
+			PartDefinition leftFoot = leftLeg.addOrReplaceChild("foot", CubeListBuilder.create().mirror().texOffs(46, 67).addBox(-1.5F, 10F, -3F, 3, 2, 5), PartPose.ZERO);
+				leftFoot.addOrReplaceChild("bridge", CubeListBuilder.create().mirror().texOffs(46, 74).addBox(-1F, 3.5F, -9.75F, 2, 2, 6), PartPose.rotation(ModelUtils.toRadians(70D), 0F, 0F));
+	    
+		return LayerDefinition.create(mesh, 80, 96);
+	}
+	
+	public void setupAnim(EntityKobold entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	{
+		super.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 		
 		float partialTicks = 0F;
-		jaw.rotateAngleX = entityIn.getJawState(partialTicks) * JAW_RANGE;
+		jaw.xRot = entityIn.getJawState(partialTicks) * JAW_RANGE;
 		
-		snout.rotationPointZ = (entityIn.getShortSnout() ? 2F : 0.5F);
-		horns.showModel = entityIn.getHorns();
+		snout.z = (entityIn.getShortSnout() ? 2F : 0.5F);
+		horns.visible = entityIn.getHorns();
 		
 		float time = ((float)Math.sin(ageInTicks / 20)) * 0.5F;
 		for(ModelPart segment : tailSegments)
 		{
-			segment.rotateAngleY = time / 3;
-			segment.rotateAngleX = (time * Math.signum(time)) / 8;
+			segment.yRot = time / 3;
+			segment.xRot = (time * Math.signum(time)) / 8;
 		}
 		
-		float dif = this.bipedBody.rotateAngleY - this.bipedHead.rotateAngleY;
-		this.bipedHead.rotateAngleZ = Math.max(-0.6F, Math.min(0.6F, dif/4));
-		this.bipedHeadwear.copyModelAngles(this.bipedHead);
+		float dif = this.body.yRot - this.head.yRot;
+		this.head.zRot = Math.max(-0.6F, Math.min(0.6F, dif/4));
+		this.hat.copyFrom(this.head);
 		
-		belly.rotationPointY = (this.isSneak ? -1.3F : 0F);
+		belly.y = (this.crouching ? -1.3F : 0F);
 		
 //	    if(VOHelper.isCreatureAttribute(entityIn, EnumCreatureAttribute.UNDEAD))
 //	    {
-//	    	this.bipedLeftArm.rotateAngleX -= ModelUtils.degree90;
-//	    	this.bipedRightArm.rotateAngleX -= ModelUtils.degree90;
+//	    	this.leftArm.xRot -= ModelUtils.degree90;
+//	    	this.rightArm.xRot -= ModelUtils.degree90;
 //	    }
 	}
 }

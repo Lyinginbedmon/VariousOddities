@@ -55,11 +55,11 @@ public class EntityAIGoblinWorgFight extends Goal
 	
 	public void startExecuting()
 	{
-		theGoblin.getLookController().setLookPositionWithEntity(theGoblin.getRandom().nextBoolean() ? worgA : worgB, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
-		theGoblin.swingArm(InteractionHand.MAIN_HAND);
+		theGoblin.getLookControl().setLookAt(theGoblin.getRandom().nextBoolean() ? worgA : worgB, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
+		theGoblin.swing(InteractionHand.MAIN_HAND);
 		worgA.setTarget(worgB);
-		theWorld.setEntityState(worgA, (byte)6);
+		theWorld.broadcastEntityEvent(worgA, (byte)6);
 		worgB.setTarget(worgA);
-		theWorld.setEntityState(worgB, (byte)6);
+		theWorld.broadcastEntityEvent(worgB, (byte)6);
 	}
 }

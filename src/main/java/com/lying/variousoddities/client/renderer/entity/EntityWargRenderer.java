@@ -1,5 +1,6 @@
 package com.lying.variousoddities.client.renderer.entity;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelWarg;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerWargArmour;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerWargChest;
@@ -7,13 +8,13 @@ import com.lying.variousoddities.client.renderer.entity.layer.LayerWargDecor;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerWargSaddle;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -26,17 +27,17 @@ public class EntityWargRenderer extends MobRenderer<EntityWarg, ModelWarg>
 	private static final ResourceLocation TEXTURE_BLACK = new ResourceLocation(resourceBase+"warg_black.png");
 	private static final ResourceLocation TEXTURE_WHITE = new ResourceLocation(resourceBase+"warg_white.png");
 	
-	public EntityWargRenderer(EntityRendererManager manager)
+	public EntityWargRenderer(EntityRendererProvider.Context manager)
 	{
-		super(manager, new ModelWarg(), 1F);
+		super(manager, new ModelWarg(manager.bakeLayer(VOModelLayers.WARG)), 1F);
 		
-		addLayer(new LayerWargChest(this));
-		addLayer(new LayerWargDecor(this));
-		addLayer(new LayerWargArmour(this));
-		addLayer(new LayerWargSaddle(this));
+		addLayer(new LayerWargChest(this, manager.getModelSet()));
+		addLayer(new LayerWargDecor(this, manager.getModelSet()));
+		addLayer(new LayerWargArmour(this, manager.getModelSet()));
+		addLayer(new LayerWargSaddle(this, manager.getModelSet()));
 	}
 	
-	public ResourceLocation getEntityTexture(EntityWarg entity)
+	public ResourceLocation getTextureLocation(EntityWarg entity)
 	{
 		switch(entity.getColor())
 		{
@@ -49,33 +50,33 @@ public class EntityWargRenderer extends MobRenderer<EntityWarg, ModelWarg>
 		}
 	}
 	
-	public void render(EntityWarg wargIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn)
+	public void render(EntityWarg wargIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn)
 	{
 		if(wargIn.isWet())
 		{
 			float f = wargIn.getShadingWhileWet(partialTicks);
-			this.entityModel.setTint(f, f, f);
+			this.model.setColor(f, f, f);
 		}
 		
 		super.render(wargIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 		
 		if(wargIn.isWet())
-			this.entityModel.setTint(1F, 1F, 1F);
+			this.model.setColor(1F, 1F, 1F);
 	}
 	
     /**
      * Allows the render to do state modifications necessary before the model is rendered.
      */
-    protected void preRenderCallback(EntityWarg wargIn, MatrixStack matrixStackIn, float partialTickTime)
+    protected void scale(EntityWarg wargIn, PoseStack matrixStackIn, float partialTickTime)
     {
-    	super.preRenderCallback(wargIn, matrixStackIn, partialTickTime);
+    	super.scale(wargIn, matrixStackIn, partialTickTime);
     	float fullScale = 1.75F;
     	matrixStackIn.scale(fullScale, fullScale, fullScale);
     }
 	
 	public static class RenderFactory implements IRenderFactory<EntityWarg>
 	{
-		public EntityRenderer<? super EntityWarg> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntityWarg> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityWargRenderer(manager);
 		}

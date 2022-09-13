@@ -11,6 +11,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -79,13 +80,13 @@ public class EntityWorg extends AbstractGoblinWolf
     
     public void unSpook(){ getEntityData().set(SPOOKED, false); }
     
-    public ActionResultType func_230254_b_(Player player, InteractionHand hand)
+    public InteractionResult mobInteract(Player player, InteractionHand hand)
     {
     	ItemStack heldItem = player.getItemInHand(hand);
     	if(getLevel().isClientSide)
     	{
     		boolean flag = this.isOwnedBy(player) || this.isTame() || heldItem.getItem() == Items.BONE && !this.isTame() && getTarget() == null;
-    		return flag ? ActionResultType.SUCCESS : ActionResultType.PASS;
+    		return flag ? InteractionResult.SUCCESS : InteractionResult.PASS;
     	}
     	else
     	{
@@ -97,7 +98,7 @@ public class EntityWorg extends AbstractGoblinWolf
 		    		if(!player.isCreative())
 		    			heldItem.shrink(1);
 		    		
-		    		return ActionResultType.func_233537_a_(this.level.isClientSide);
+		    		return InteractionResult.sidedSuccess(this.level.isClientSide);
 		    	}
 				
 				if(heldItem.getItem() == Items.BONE && getAge() == 0)
@@ -107,7 +108,7 @@ public class EntityWorg extends AbstractGoblinWolf
 	    			if(!player.isCreative())
 	    				heldItem.shrink(1);
 	    			
-		    		return ActionResultType.func_233537_a_(this.level.isClientSide);
+		    		return InteractionResult.sidedSuccess(this.level.isClientSide);
 				}
 				
 				if(this.isOwnedBy(player))
@@ -115,7 +116,7 @@ public class EntityWorg extends AbstractGoblinWolf
 					if(player.isCrouching())
 					{
 						this.setOrderedToSit(!this.isOrderedToSit());
-						return ActionResultType.SUCCESS;
+						return InteractionResult.SUCCESS;
 					}
 					else
 					{
@@ -136,15 +137,15 @@ public class EntityWorg extends AbstractGoblinWolf
 	    			this.navigation.stop();
 	    			this.setTarget(null);
 	    			this.setOrderedToSit(true);
-	    			this.getLevel().setEntityState(this, (byte)7);
+	    			this.getLevel().broadcastEntityEvent(this, (byte)7);
 	    		}
 	    		else
-	    			this.getLevel().setEntityState(this, (byte)6);
+	    			this.getLevel().broadcastEntityEvent(this, (byte)6);
 	    		
-	    		return ActionResultType.SUCCESS;
+	    		return InteractionResult.SUCCESS;
 	    	}
 	    	
-	    	return super.func_230254_b_(player, hand);
+	    	return super.mobInteract(player, hand);
     	}
     }
     

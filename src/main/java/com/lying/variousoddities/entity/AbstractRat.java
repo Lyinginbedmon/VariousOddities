@@ -14,7 +14,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.DifficultyInstance;
@@ -28,10 +27,14 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 public abstract class AbstractRat extends PathfinderMob
 {
@@ -63,8 +66,8 @@ public abstract class AbstractRat extends PathfinderMob
 	{
 		this.goalSelector.addGoal(3, new EntityAIRatStand(this));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-		this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, Player.class, 6.0F));
+		this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
 		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 		
 	    if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
@@ -137,9 +140,9 @@ public abstract class AbstractRat extends PathfinderMob
 	
 	public abstract int getRandomBreed();
     
-    public void writeAdditional(CompoundTag compound)
+    public void addAdditionalSaveData(CompoundTag compound)
     {
-    	super.writeAdditional(compound);
+    	super.addAdditionalSaveData(compound);
     	CompoundTag display = new CompoundTag();
 	    	display.putBoolean("Eyes", getEyesGlow());
 	        display.putInt("Breed", getBreed());
@@ -151,7 +154,7 @@ public abstract class AbstractRat extends PathfinderMob
         compound.put("Standing", standing);
     }
     
-    public void readAdditional(CompoundTag compound)
+    public void readAdditionalSaveData(CompoundTag compound)
     {
     	super.readAdditionalSaveData(compound);
     	CompoundTag display = compound.getCompound("Display");
@@ -169,15 +172,16 @@ public abstract class AbstractRat extends PathfinderMob
 		setStandTime(getStandTime() + (getStanding() ? 1 : -(int)Math.signum(getStandTime())));
 	}
 	
-    protected void updateAITasks()
+    protected void customServerAiStep()
     {
-    	super.updateAITasks();
-		if(getStanding()){ setStanding(--standTimer > 0); }
+    	super.customServerAiStep();
+		if(getStanding())
+			setStanding(--standTimer > 0);
     }
     
-	public boolean attackEntityAsMob(Entity entityIn)
+	public boolean doHurtTarget(Entity entityIn)
 	{
-		if(super.attackEntityAsMob(entityIn))
+		if(super.doHurtTarget(entityIn))
 		{
 	    	if(entityIn instanceof LivingEntity && this.getRatBreed() == EnumRatBreed.PLAGUE)
 	    		((LivingEntity)entityIn).addEffect(new MobEffectInstance(MobEffects.POISON, 10, ratSize()));
@@ -187,11 +191,11 @@ public abstract class AbstractRat extends PathfinderMob
 		return false;
 	}
     
-    protected void collideWithEntity(Entity entityIn)
+    protected void doPush(Entity entityIn)
     {
     	if(entityIn instanceof AbstractRat && ((AbstractRat)entityIn).ratSize() != ratSize())
     		return;
-    	super.collideWithEntity(entityIn);
+    	super.doPush(entityIn);
     }
 	
 	public int ratSize(){ return this.size; }
@@ -212,7 +216,7 @@ public abstract class AbstractRat extends PathfinderMob
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	int random = getRandomBreed();
 		setBreed(random);

@@ -1,33 +1,34 @@
 package com.lying.variousoddities.client.renderer.entity;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelMindFlayer;
 import com.lying.variousoddities.entity.hostile.EntityMindFlayer;
 import com.lying.variousoddities.reference.Reference;
 
-import net.minecraft.client.renderer.entity.BipedRenderer;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
-public class EntityMindFlayerRenderer extends BipedRenderer<EntityMindFlayer, ModelMindFlayer>
+public class EntityMindFlayerRenderer extends MobRenderer<EntityMindFlayer, ModelMindFlayer>
 {
-	public EntityMindFlayerRenderer(EntityRendererManager rendererManager)
+	public EntityMindFlayerRenderer(EntityRendererProvider.Context context)
 	{
-		super(rendererManager, new ModelMindFlayer(0F), 0.5F);
-		this.addLayer(new BipedArmorLayer<>(this, new BipedModel<EntityMindFlayer>(0.5F), new BipedModel<EntityMindFlayer>(1F)));
+		super(context, new ModelMindFlayer(context.bakeLayer(VOModelLayers.MIND_FLAYER)), 0.5F);
+		this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel<EntityMindFlayer>(context.bakeLayer(VOModelLayers.MIND_FLAYER_ARMOR_INNER)), new HumanoidModel<EntityMindFlayer>(context.bakeLayer(VOModelLayers.MIND_FLAYER_ARMOR_OUTER))));
 	}
 	
-	public ResourceLocation getEntityTexture(EntityMindFlayer entity)
+	public ResourceLocation getTextureLocation(EntityMindFlayer entity)
 	{
 		return new ResourceLocation(Reference.ModInfo.MOD_ID,"textures/entity/mind_flayer/mind_flayer.png");
 	}
 	
 	public static class RenderFactory implements IRenderFactory<EntityMindFlayer>
 	{
-		public EntityRenderer<? super EntityMindFlayer> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super EntityMindFlayer> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityMindFlayerRenderer(manager);
 		}

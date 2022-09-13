@@ -4,11 +4,14 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelFoxAccessories;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.minecraft.client.model.FoxModel;
+import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
@@ -27,27 +30,27 @@ public class LayerFoxAccessories extends RenderLayer<Fox, FoxModel<Fox>>
 	private static final ResourceLocation TEXTURE_BLUE = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/fox_accessories_2.png");
 	private final ModelFoxAccessories<Fox> model;
 	
-	public LayerFoxAccessories(RenderLayerParent<Fox, FoxModel<Fox>> entityRendererIn)
+	public LayerFoxAccessories(RenderLayerParent<Fox, FoxModel<Fox>> entityRendererIn, EntityModelSet modelsIn)
 	{
 		super(entityRendererIn);
-		this.model = new ModelFoxAccessories<Fox>();
+		this.model = new ModelFoxAccessories<Fox>(modelsIn.bakeLayer(VOModelLayers.FOX_ACCESSORIES));
 	}
 	
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Fox entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(isWinter())
 		{
-			model.setLivingAnimations(entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks);
-			this.getEntityModel().copyModelAttributesTo(model);
-			IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getArmorCutoutNoCull(getEntityTexture(entitylivingbaseIn)));
-			model.setRotationAngles(entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-			model.render(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 0.5F, 0.5F, 0.5F, 1.0F);
+			model.prepareMobModel(entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks);
+			this.getParentModel().copyPropertiesTo(model);
+			VertexConsumer ivertexbuilder = bufferIn.getBuffer(RenderType.armorCutoutNoCull(getEntityTexture(entitylivingbaseIn)));
+			model.setupAnim(entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+			model.renderToBuffer(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 0.5F, 0.5F, 0.5F, 1.0F);
 		}
 	}
 	
 	public ResourceLocation getEntityTexture(Fox entitylivingbaseIn)
 	{
-		Random rand = new Random(entitylivingbaseIn.getUniqueID().getMostSignificantBits());
+		Random rand = new Random(entitylivingbaseIn.getUUID().getMostSignificantBits());
 		switch(rand.nextInt(3))
 		{
 			case 0:	return TEXTURE_RED;

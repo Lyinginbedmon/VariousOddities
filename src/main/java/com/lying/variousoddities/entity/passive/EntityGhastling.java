@@ -21,6 +21,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
@@ -32,6 +33,9 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.LandOnOwnersShoulderGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
@@ -48,6 +52,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -61,8 +66,8 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 	{
 		super(type, worldIn);
 		this.moveController = new MovementControllerGhastling(this);
-	    this.setPathPriority(PathNodeType.DANGER_FIRE, 0.0F);
-	    this.setPathPriority(PathNodeType.DAMAGE_FIRE, 0.0F);
+	    setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 0.0F);
+	    setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, 0.0F);
 	}
 	
 	public void defineSynchedData()
@@ -73,12 +78,12 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 	
 	public void registerGoals()
 	{
-	    this.goalSelector.addGoal(2, new SitGoal(this));
+	    this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
 		this.goalSelector.addGoal(5, new EntityAIGhastlingFireball(this));
 		this.goalSelector.addGoal(7, new LandOnOwnersShoulderGoal(this));
 		this.goalSelector.addGoal(8, new EntityAIGhastlingWander(this, 0.1F));
-		this.goalSelector.addGoal(10, new LookAtGoal(this, Player.class, 8.0F));
-		this.goalSelector.addGoal(10, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 8.0F));
+		this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
 		
 		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.GHASTLING))
 		{
@@ -128,7 +133,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 		return super.hurt(source, amount);
 	}
 	
-	public ActionResultType func_230254_b_(Player player, InteractionHand hand)
+	public InteractionResult mobInteract(Player player, InteractionHand hand)
 	{
 		ItemStack heldStack = player.getItemInHand(hand);
 		if(!this.isTame())
@@ -143,13 +148,13 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 					if(this.getRandom().nextInt(10) == 0 && !net.minecraftforge.event.ForgeEventFactory.onAnimalTame(this, player))
 					{
 						this.tame(player);
-						this.getLevel().setEntityState(this, (byte)7);
+						this.getLevel().broadcastEntityEvent(this, (byte)7);
 						this.setEmotion(Emotion.HAPPY);
 					}
 					else
-						this.getLevel().setEntityState(this, (byte)6);
+						this.getLevel().broadcastEntityEvent(this, (byte)6);
 				}
-				return ActionResultType.func_233537_a_(this.getLevel().isClientSide);
+				return InteractionResult.sidedSuccess(this.getLevel().isClientSide);
 			}
 		}
 		else if(this.isTame())
@@ -161,17 +166,17 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 				
 				this.heal(1F + getRandom().nextFloat() * 3F);
 				this.setEmotion(Emotion.HAPPY);
-				this.getLevel().setEntityState(this, (byte)7);
+				this.getLevel().broadcastEntityEvent(this, (byte)7);
 			}
 			else if(this.isOwnedBy(player))
 			{
 				if(!this.getLevel().isClientSide)
 					this.setOrderedToSit(!this.isOrderedToSit());
-				return ActionResultType.func_233537_a_(this.getLevel().isClientSide);
+				return InteractionResult.sidedSuccess(this.getLevel().isClientSide);
 			}
 		}
 		
-		return super.func_230254_b_(player, hand);
+		return super.mobInteract(player, hand);
 	}
 	
 	public AgeableMob getBreedOffspring(ServerLevel p_241840_1_, AgeableMob p_241840_2_)
@@ -199,9 +204,9 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 		return false;
 	}
 	
-	public void livingTick()
+	public void aiStep()
 	{
-		super.livingTick();
+		super.aiStep();
 		
 		if(getEmotion() == Emotion.SLEEP)
 		{
@@ -244,18 +249,18 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 		if(this.isInWater())
 		{
 			this.moveRelative(0.02F, travelVector);
-			this.move(MoverType.SELF, this.getMotion());
-			this.setMotion(this.getMotion().scale((double)0.8F));
+			this.move(MoverType.SELF, this.getDeltaMovement());
+			this.setDeltaMovement(this.getDeltaMovement().scale((double)0.8F));
 		}
 		else if(this.isInLava())
 		{
 			this.moveRelative(0.02F, travelVector);
-			this.move(MoverType.SELF, this.getMotion());
-			this.setMotion(this.getMotion().scale(0.5D));
+			this.move(MoverType.SELF, this.getDeltaMovement());
+			this.setDeltaMovement(this.getDeltaMovement().scale(0.5D));
 		}
 		else
 		{
-			BlockPos ground = new BlockPos(this.getPosX(), this.getPosY() - 1.0D, this.getPosZ());
+			BlockPos ground = new BlockPos(this.getX(), this.getY() - 1.0D, this.getZ());
 			float f = 0.91F;
 			if (this.onGround)
 			f = this.level.getBlockState(ground).getSlipperiness(this.level, ground, this) * 0.91F;
@@ -266,8 +271,8 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 				f = this.level.getBlockState(ground).getSlipperiness(this.level, ground, this) * 0.91F;
 			
 			this.moveRelative(this.onGround ? 0.1F * f1 : 0.02F, travelVector);
-			this.move(MoverType.SELF, this.getMotion());
-			this.setMotion(this.getMotion().scale((double)f));
+			this.move(MoverType.SELF, this.getDeltaMovement());
+			this.setDeltaMovement(this.getDeltaMovement().scale((double)f));
 		}
 		
 		this.func_233629_a_(this, false);
@@ -299,4 +304,6 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 		@OnlyIn(Dist.CLIENT)
 		public ResourceLocation texture(){ return new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/entity/ghastling/ghastling_"+name().toLowerCase()+".png"); }
 	}
+	
+	public boolean isFlying() { return true; }
 }

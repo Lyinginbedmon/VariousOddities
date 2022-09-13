@@ -93,7 +93,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 	
 	public void startExecuting()
 	{
-		theGoblin.getLookController().setLookPositionWithEntity(worgA, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
+		theGoblin.getLookControl().setLookAt(worgA, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
 		currentState = State.MOVING_TO_A;
 	}
 	
@@ -108,7 +108,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 		switch(currentState)
 		{
 			case MOVING_TO_A:
-				theGoblin.getLookController().setLookPositionWithEntity(worgA, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
+				theGoblin.getLookControl().setLookAt(worgA, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
 				if(theGoblin.distanceTo(worgA) > 1.5D)
 				{
 					if(theNavigator.isDone())
@@ -131,7 +131,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 				{
 					if(--breedingTimer <= 0)
 					{
-						theGoblin.swingArm(InteractionHand.MAIN_HAND);
+						theGoblin.swing(InteractionHand.MAIN_HAND);
 						worgA.setInLove(null);
 						worgA.setOrderedToSit(false);
 						worgA.getNavigation().moveTo(worgB, 1D);
@@ -141,7 +141,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 				else currentState = State.MOVING_TO_A;
 				break;
 			case MOVING_TO_B:
-				theGoblin.getLookController().setLookPositionWithEntity(worgB, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
+				theGoblin.getLookControl().setLookAt(worgB, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
 				if(theGoblin.distanceTo(worgB) > 1.5D)
 				{
 					if(theNavigator.isDone())
@@ -164,7 +164,7 @@ public class EntityAIGoblinWorgBreed extends Goal
 				{
 					if(--breedingTimer <= 0)
 					{
-						theGoblin.swingArm(InteractionHand.MAIN_HAND);
+						theGoblin.swing(InteractionHand.MAIN_HAND);
 						worgB.setInLove(null);
 						worgB.setOrderedToSit(false);
 						worgB.getNavigation().moveTo(worgA, 1D);

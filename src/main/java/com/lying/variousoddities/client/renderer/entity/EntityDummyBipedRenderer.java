@@ -2,137 +2,138 @@ package com.lying.variousoddities.client.renderer.entity;
 
 import com.lying.variousoddities.client.ClientPlayerDummy;
 import com.lying.variousoddities.entity.EntityDummyBiped;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.math.Vector3d;
+import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.LivingRenderer;
-import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.client.renderer.entity.layers.ElytraLayer;
-import net.minecraft.client.renderer.entity.layers.HeadLayer;
-import net.minecraft.client.renderer.entity.layers.HeldItemLayer;
-import net.minecraft.client.renderer.entity.model.BipedModel;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.HandSide;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
-public class EntityDummyBipedRenderer extends LivingRenderer<EntityDummyBiped, PlayerModel<EntityDummyBiped>>
+public class EntityDummyBipedRenderer extends LivingEntityRenderer<EntityDummyBiped, PlayerModel<EntityDummyBiped>>
 {
 	@SuppressWarnings("rawtypes")
-	public EntityDummyBipedRenderer(EntityRendererManager renderManagerIn, boolean useSmallArms)
+	public EntityDummyBipedRenderer(EntityRendererProvider.Context context, boolean useSmallArms)
 	{
-		super(renderManagerIn, new PlayerModel<EntityDummyBiped>(0F, useSmallArms), 0.5F);
-		this.addLayer(new BipedArmorLayer<>(this, new BipedModel(0.5F), new BipedModel(1.0F)));
-		this.addLayer(new HeldItemLayer<>(this));
-	    this.addLayer(new HeadLayer<>(this));
-	    this.addLayer(new ElytraLayer<>(this));
+		super(context, new PlayerModel<EntityDummyBiped>(context.bakeLayer(useSmallArms ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), useSmallArms), 0.5F);
+		this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel(0.5F), new HumanoidModel(1.0F)));
+		this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
+	    this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
+	    this.addLayer(new ElytraLayer<>(this, context.getModelSet()));
 	}
 	
-	protected boolean canRenderName(EntityDummyBiped entityIn)
+	protected boolean shouldShowName(EntityDummyBiped entityIn)
     {
-		return super.canRenderName(entityIn) && (entityIn.getAlwaysRenderNameTagForRender() || entityIn.hasCustomName() && entityIn == this.renderManager.pointedEntity);
+		return super.shouldShowName(entityIn) && (entityIn.shouldShowName() || entityIn.hasCustomName() && entityIn == this.entityRenderDispatcher.crosshairPickEntity);
     }
 	
-	public ResourceLocation getEntityTexture(EntityDummyBiped entity)
+	public ResourceLocation getTextureLocation(EntityDummyBiped entity)
 	{
 		if(!entity.hasGameProfile())
-			return DefaultPlayerSkin.getDefaultSkin(entity.getUniqueID());
-		ClientPlayerDummy player = new ClientPlayerDummy((ClientWorld)entity.getEntityWorld(), entity.getGameProfile());
-		return player.getLocationSkin();
+			return DefaultPlayerSkin.getDefaultSkin(entity.getUUID());
+		ClientPlayerDummy player = new ClientPlayerDummy((ClientLevel)entity.getLevel(), entity.getGameProfile());
+		return player.getSkinTextureLocation();
 	}
 	
-	protected void preRenderCallback(LocalPlayer entitylivingbaseIn, MatrixStack matrixStackIn, float partialTickTime)
+	protected void scale(LocalPlayer entitylivingbaseIn, PoseStack matrixStackIn, float partialTickTime)
 	{
 		float scale = 0.9375F;
 		matrixStackIn.scale(scale, scale, scale);
 	}
 	
-	public void render(EntityDummyBiped entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn)
+	public void render(EntityDummyBiped entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn)
 	{
 		this.setModelVisibilities(entityIn);
 		super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 	}
 	
-	public Vector3d getRenderOffset(EntityDummyBiped entityIn, float partialTicks)
+	public Vec3 getRenderOffset(EntityDummyBiped entityIn, float partialTicks)
 	{
-		return entityIn.isCrouching() ? new Vector3d(0.0D, -0.125D, 0.0D) : super.getRenderOffset(entityIn, partialTicks);
+		return entityIn.isCrouching() ? new Vec3(0.0D, -0.125D, 0.0D) : super.getRenderOffset(entityIn, partialTicks);
 	}
 	
 	private void setModelVisibilities(EntityDummyBiped clientPlayer)
 	{
-		PlayerModel<EntityDummyBiped> model = this.getEntityModel();
-		ClientPlayerDummy player = new ClientPlayerDummy((ClientWorld)clientPlayer.getEntityWorld(), clientPlayer.getGameProfile());
+		PlayerModel<EntityDummyBiped> model = this.getModel();
+		ClientPlayerDummy player = new ClientPlayerDummy((ClientLevel)clientPlayer.getLevel(), clientPlayer.getGameProfile());
 		if(clientPlayer.isSpectator())
 		{
-			model.setVisible(false);
-			model.bipedHead.showModel = true;
-			model.bipedHeadwear.showModel = true;
+			model.setAllVisible(false);
+			model.head.visible = true;
+			model.hat.visible = true;
 		}
 		else
 		{
-			model.setVisible(true);
-			model.bipedHeadwear.showModel = player.isWearing(PlayerModelPart.HAT);
-			model.bipedBodyWear.showModel = player.isWearing(PlayerModelPart.JACKET);
-			model.bipedLeftLegwear.showModel = player.isWearing(PlayerModelPart.LEFT_PANTS_LEG);
-			model.bipedRightLegwear.showModel = player.isWearing(PlayerModelPart.RIGHT_PANTS_LEG);
-			model.bipedLeftArmwear.showModel = player.isWearing(PlayerModelPart.LEFT_SLEEVE);
-			model.bipedRightArmwear.showModel = player.isWearing(PlayerModelPart.RIGHT_SLEEVE);
-			model.isSneak = clientPlayer.isCrouching();
-			BipedModel.ArmPose armPoseMain = getPoseForHand(clientPlayer, InteractionHand.MAIN_HAND);
-			BipedModel.ArmPose armPoseOff = getPoseForHand(clientPlayer, InteractionHand.OFF_HAND);
-			if(armPoseMain.func_241657_a_())
-				armPoseOff = clientPlayer.getHeldItemOffhand().isEmpty() ? BipedModel.ArmPose.EMPTY : BipedModel.ArmPose.ITEM;
-		
-			if (clientPlayer.getPrimaryHand() == HandSide.RIGHT)
-			{
-				model.rightArmPose = armPoseMain;
-				model.leftArmPose = armPoseOff;
-			}
-			else
+			model.setAllVisible(true);
+			model.hat.visible = player.isModelPartShown(PlayerModelPart.HAT);
+			model.jacket.visible = player.isModelPartShown(PlayerModelPart.JACKET);
+			model.leftPants.visible = player.isModelPartShown(PlayerModelPart.LEFT_PANTS_LEG);
+			model.rightPants.visible = player.isModelPartShown(PlayerModelPart.RIGHT_PANTS_LEG);
+			model.leftSleeve.visible = player.isModelPartShown(PlayerModelPart.LEFT_SLEEVE);
+			model.rightSleeve.visible = player.isModelPartShown(PlayerModelPart.RIGHT_SLEEVE);
+			model.crouching = clientPlayer.isCrouching();
+			HumanoidModel.ArmPose armPoseMain = getPoseForHand(clientPlayer, InteractionHand.MAIN_HAND);
+			HumanoidModel.ArmPose armPoseOff = getPoseForHand(clientPlayer, InteractionHand.OFF_HAND);
+			if(armPoseMain.isTwoHanded())
+				armPoseOff = clientPlayer.getOffhandItem().isEmpty() ? HumanoidModel.ArmPose.EMPTY : HumanoidModel.ArmPose.ITEM;
+			
+			if (clientPlayer.isLeftHanded())
 			{
 				model.rightArmPose = armPoseOff;
 				model.leftArmPose = armPoseMain;
 			}
+			else
+			{
+				model.rightArmPose = armPoseMain;
+				model.leftArmPose = armPoseOff;
+			}
 		}
 	}
 	
-	private static BipedModel.ArmPose getPoseForHand(EntityDummyBiped entityIn, InteractionHand handIn)
+	private static HumanoidModel.ArmPose getPoseForHand(EntityDummyBiped entityIn, InteractionHand handIn)
 	{
-		ItemStack heldItem = entityIn.getHeldItem(handIn);
+		ItemStack heldItem = entityIn.getItemInHand(handIn);
 		if(heldItem.isEmpty())
-			return BipedModel.ArmPose.EMPTY;
+			return HumanoidModel.ArmPose.EMPTY;
 		
-		if(entityIn.getActiveHand() == handIn && entityIn.getItemInUseCount() > 0)
+		if(entityIn.getUsedItemHand() == handIn && entityIn.getTicksUsingItem() > 0)
 		{
-			switch(heldItem.getUseAction())
+			switch(heldItem.getUseAnimation())
 			{
 				case BLOCK:
-					return BipedModel.ArmPose.BLOCK;
+					return HumanoidModel.ArmPose.BLOCK;
 				case BOW:
-					return BipedModel.ArmPose.BOW_AND_ARROW;
+					return HumanoidModel.ArmPose.BOW_AND_ARROW;
 				case CROSSBOW:
-					if(handIn == entityIn.getActiveHand())
-						return BipedModel.ArmPose.CROSSBOW_CHARGE;
+					if(handIn == entityIn.getUsedItemHand())
+						return HumanoidModel.ArmPose.CROSSBOW_CHARGE;
 					break;
 				case SPEAR:
-					return BipedModel.ArmPose.THROW_SPEAR;
+					return HumanoidModel.ArmPose.THROW_SPEAR;
 				default:
 					break;
 			
 			}
 		}
-		else if(!entityIn.isSwingInProgress && heldItem.getItem() == Items.CROSSBOW && CrossbowItem.isCharged(heldItem))
-			return BipedModel.ArmPose.CROSSBOW_HOLD;
+		else if(!entityIn.swinging && heldItem.getItem() == Items.CROSSBOW && CrossbowItem.isCharged(heldItem))
+			return HumanoidModel.ArmPose.CROSSBOW_HOLD;
 		
-		return BipedModel.ArmPose.ITEM;
+		return HumanoidModel.ArmPose.ITEM;
 	}
 }

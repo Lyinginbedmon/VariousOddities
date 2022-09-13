@@ -13,6 +13,7 @@ import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -34,7 +35,7 @@ public class ElytraMixinClient extends PlayerEntityMixin
 	{
 		LocalPlayer living = (LocalPlayer)(Object)this;
 		if(isElytraFlying && canElytraFly() && !isElytraFlying() && !isSneaking() && !isOnGround())
-			living.connection.send(new CEntityActionPacket(living, CEntityActionPacket.Action.START_FALL_FLYING));
+			living.connection.send(new ServerboundPlayerCommandPacket(living, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 	}
 	
 	private boolean canElytraFly()

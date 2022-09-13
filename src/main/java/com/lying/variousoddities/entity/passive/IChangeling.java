@@ -33,7 +33,7 @@ public interface IChangeling extends IFactionMob
 		return null;
 	}
 	
-	public default boolean isFlapping()
+	public default boolean areWingsFlapping()
 	{
 		return getFlappingTime() > 0;
 	}

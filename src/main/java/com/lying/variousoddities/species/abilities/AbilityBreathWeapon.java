@@ -14,6 +14,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.minecraft.commands.arguments.ParticleArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -47,7 +48,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	private BreathType type;
 	private double distance;
-	private IParticleData particle = ParticleTypes.FLAME;
+	private ParticleOptions particle = ParticleTypes.FLAME;
 	
 	private DamageType damage;
 	private Pair<Float, Float> dmgAmount;
@@ -79,7 +80,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
 	
-	public AbilityBreathWeapon setParticle(IParticleData particleIn){ this.particle = particleIn; return this; }
+	public AbilityBreathWeapon setParticle(ParticleOptions particleIn){ this.particle = particleIn; return this; }
 	
 	public AbilityBreathWeapon setBlock(BlockState state){ this.blockToPlace = state; return this; }
 	
@@ -105,7 +106,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 				damageData.put("BlockToPlace", NbtUtils.writeBlockState(this.blockToPlace));
 		compound.put("Damage", damageData);
 		
-		compound.putString("Particle", this.particle.getParameters());
+		compound.putString("Particle", this.particle.writeToString());
 		return compound;
 	}
 	
@@ -136,7 +137,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		{
 			try
 			{
-				this.particle = ParticleArgument.parseParticle(new StringReader(compound.getString("Particle")));
+				this.particle = ParticleArgument.readParticle(new StringReader(compound.getString("Particle")));
 			}
 			catch(CommandSyntaxException e)
 			{
@@ -207,7 +208,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 							case CONE:
 								for(int i=0; i<entity.getRandom().nextInt(4) + 1; i++)
 								{
-									Vec3 dir = direction.rotatePitch((float)Math.toRadians(entity.getRandom().nextInt(10) - 5)).rotateYaw((float)Math.toRadians(entity.getRandom().nextInt(90) - 45));
+									Vec3 dir = direction.xRot((float)Math.toRadians(entity.getRandom().nextInt(10) - 5)).yRot((float)Math.toRadians(entity.getRandom().nextInt(90) - 45));
 									ignoreList.addAll(shootLine(world, eyePos, dir, breath, entity, activeTicks%Reference.Values.TICKS_PER_SECOND == 0, ignoreList));
 								}
 								break;
@@ -334,7 +335,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 			return Component.translatable("ability."+Reference.ModInfo.MOD_ID+".breath_weapon."+getSerializedName(), type.getTranslated());
 		}
 		
-		public void makeParticles(Level world, IParticleData particleType, Vec3 origin, Vec3 direction, double distance)
+		public void makeParticles(Level world, ParticleOptions particleType, Vec3 origin, Vec3 direction, double distance)
 		{
 			if(distance <= 0D || !world.isClientSide)
 				return;
@@ -353,13 +354,13 @@ public class AbilityBreathWeapon extends ActivatedAbility
 						double mult = random.nextDouble() * distance;
 						Vec3 pos = origin.add(direction.multiply(mult, mult, mult));
 						double speed = 0.05D;
-						world.addOptionalParticle(particleType, true, pos.x, pos.y, pos.z, (random.nextDouble() - 0.5D) * speed, (random.nextDouble() - 0.5D) * speed, (random.nextDouble() - 0.5D) * speed);
+						world.addParticle(particleType, true, pos.x, pos.y, pos.z, (random.nextDouble() - 0.5D) * speed, (random.nextDouble() - 0.5D) * speed, (random.nextDouble() - 0.5D) * speed);
 					}
 					break;
 				case CONE:
 					for(int i=0; i<random.nextInt(4) + 1; i++)
 					{
-						Vec3 dir = direction.rotatePitch((float)Math.toRadians(random.nextInt(10) - 5)).rotateYaw((float)Math.toRadians(random.nextInt(90) - 45));
+						Vec3 dir = direction.xRot((float)Math.toRadians(random.nextInt(10) - 5)).yRot((float)Math.toRadians(random.nextInt(90) - 45));
 						LINE.makeParticles(world, particleType, origin, dir, distance);
 					}
 					break;
@@ -399,10 +400,10 @@ public class AbilityBreathWeapon extends ActivatedAbility
 			
 			if(compound.contains("Particle", 8))
 			{
-				IParticleData particle = null;
+				ParticleOptions particle = null;
 				try
 				{
-					particle = ParticleArgument.parseParticle(new StringReader(compound.getString("Particle")));
+					particle = ParticleArgument.readParticle(new StringReader(compound.getString("Particle")));
 				}
 				catch(CommandSyntaxException e){ }
 				if(particle != null)

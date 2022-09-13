@@ -14,14 +14,13 @@ import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
-import com.mojang.math.Vector3d;
 
+import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -34,10 +33,15 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal;
@@ -45,6 +49,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -94,22 +100,22 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
 	public void registerGoals()
 	{
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new SwimGoal(this));
-		this.goalSelector.addGoal(2, new SitGoal(this));
+		this.goalSelector.addGoal(1, new FloatGoal(this));
+		this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
 		this.goalSelector.addGoal(5, new EntityAIWorgFollowGoblin(this));
 		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0D, 10.0F, 2.0F, false));
 		this.goalSelector.addGoal(8, new EntityAIWargWander(this, 1.0D));
 		this.goalSelector.addGoal(9, new EntityAIGoblinWolfBeg(this, 8F));
-		this.goalSelector.addGoal(10, new LookAtGoal(this, Player.class, 8.0F));
-		this.goalSelector.addGoal(10, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 8.0F));
+		this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
 		
 		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(getType()))
 		{
 		    this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
 			this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
 			this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
-			this.targetSelector.addGoal(3, (new HurtByTargetGoal(this, AbstractGoblinWolf.class)).setCallsForHelp());
+			this.targetSelector.addGoal(3, (new HurtByTargetGoal(this, AbstractGoblinWolf.class)).setAlertOthers());
 		}
 		
 		applyGeneticAI();
@@ -120,16 +126,16 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         return level.getDifficulty() != Difficulty.PEACEFUL && super.checkSpawnRules(world, reason);
     }
     
-    public void writeAdditional(CompoundTag compound)
+    public void addAdditionalSaveData(CompoundTag compound)
     {
-    	super.writeAdditional(compound);
+    	super.addAdditionalSaveData(compound);
     	compound.putInt("Genes", getEntityData().get(GENETICS).intValue());
     	CompoundTag display = new CompoundTag();
     		display.putInt("Color", getColor());
     	compound.put("Display", display);
     }
     
-    public void readAdditional(CompoundTag compound)
+    public void readAdditionalSaveData(CompoundTag compound)
     {
     	super.readAdditionalSaveData(compound);
     	setGenetics(compound.getInt("Genes"));
@@ -235,7 +241,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         	this.isWet = true;
         	if(this.isShaking && !getLevel().isClientSide)
         	{
-        		this.getLevel().setEntityState(this, (byte)56);
+        		this.getLevel().broadcastEntityEvent(this, (byte)56);
         		resetShaking();
         	}
         }
@@ -255,7 +261,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         	if(this.timeShaking > 0.4F)
         	{
         		int i = (int)(Mth.sin((this.timeShaking - 0.4F) * (float)Math.PI) * 7F);
-        		Vector3d motion = this.getMotion();
+        		Vec3 motion = this.getDeltaMovement();
         		do
         		{
         			double randX = getX() + ((getRandom().nextDouble() * 2D - 1D) - getBbWidth() * 0.5D);
@@ -279,9 +285,9 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     	this.prevTimeShaking = 0F;
     }
     
-    public void livingTick()
+    public void aiStep()
     {
-        super.livingTick();
+        super.aiStep();
         
         // Head tilting for begging
         this.headRotationCourseOld = this.headRotationCourse;
@@ -303,7 +309,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         {
         	resetShaking();
         	this.isShaking = true;
-        	this.getLevel().setEntityState(this, (byte)8);
+        	this.getLevel().broadcastEntityEvent(this, (byte)8);
         }
         
         // Tameability affected by interaction with goblins
@@ -319,8 +325,8 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         	if(this.canEatItem(heldItem))
         		if(this.eatTicks > 600)
         		{
-        			heal(heldItem.getItem().getFood().getHealing());
-        			ItemStack heldItemUsed = heldItem.onItemUse(getLevel(), this);
+        			heal(heldItem.getItem().getFoodProperties(heldItem, this).getNutrition());
+        			ItemStack heldItemUsed = heldItem.finishUsingItem(getLevel(), this);
         			if(!heldItemUsed.isEmpty())
         				this.setItemSlot(EquipmentSlot.MAINHAND, heldItemUsed);
         			this.eatTicks = 0;
@@ -328,7 +334,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
         		else if(this.eatTicks > 560 && this.random.nextFloat() < 0.1F)
         		{
         			this.playSound(this.getEatingSound(heldItem), 1F, 1F);
-        			this.getLevel().setEntityState(this, (byte)45);
+        			this.getLevel().broadcastEntityEvent(this, (byte)45);
         		}
         }
     }
@@ -337,11 +343,11 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     
     public boolean canEatItem(ItemStack itemStackIn)
     {
-    	return itemStackIn.getItem().isFood() && this.getTarget() == null;
+    	return itemStackIn.getItem().getFoodProperties(itemStackIn, this) != null && this.getTarget() == null;
     }
     
     @OnlyIn(Dist.CLIENT)
-    public void handleStatusUpdate(byte id)
+    public void handleEntityEvent(byte id)
     {
     	switch(id)
     	{
@@ -355,15 +361,15 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
 	    		if(!heldItem.isEmpty())
 	    			for(int i = 0; i < 8; ++i)
 	    			{
-	    				Vector3d pos = (new Vector3d(((double)this.random.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D)).rotatePitch(-this.rotationPitch * ((float)Math.PI / 180F)).rotateYaw(-this.rotationYaw * ((float)Math.PI / 180F));
-	    				this.level.addParticle(new ItemParticleData(ParticleTypes.ITEM, heldItem), this.getX() + this.getLookAngle().x / 2.0D, this.getY(), this.getZ() + this.getLookAngle().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
+	    				Vec3 pos = (new Vec3(((double)this.random.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D)).xRot(-this.getXRot() * ((float)Math.PI / 180F)).yRot(-this.getYRot() * ((float)Math.PI / 180F));
+	    				this.level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, heldItem), this.getX() + this.getLookAngle().x / 2.0D, this.getY(), this.getZ() + this.getLookAngle().z / 2.0D, pos.x, pos.y + 0.05D, pos.z);
 	    			}
 	    		break;
 	    	case 56:
 	    		resetShaking();
 	    		break;
     		default:
-    			super.handleStatusUpdate(id);
+    			super.handleEntityEvent(id);
     			break;
     	}
     }
@@ -411,23 +417,23 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     	super.setTarget(target);
     }
     
-    protected void spawnDrops(DamageSource source)
+    protected void dropAllDeathLoot(DamageSource source)
     {
     	for(EquipmentSlot slot : EquipmentSlot.values())
     	{
     		ItemStack heldStack = getItemBySlot(slot);
     		if(!heldStack.isEmpty())
     		{
-    			entityDropItem(heldStack);
-    			setItemStackToSlot(slot, ItemStack.EMPTY);
+    			spawnAtLocation(heldStack);
+    			setItemSlot(slot, ItemStack.EMPTY);
     		}
     	}
     	
-    	super.spawnDrops(source);
+    	super.dropAllDeathLoot(source);
     }
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag)
     {
     	setColor(getRandom().nextInt(3));
 		return spawnDataIn;

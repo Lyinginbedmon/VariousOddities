@@ -3,9 +3,6 @@ package com.lying.variousoddities.entity.hostile;
 import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.init.VODamageSource;
 
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.RandomWalkingGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -13,6 +10,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
@@ -35,10 +35,10 @@ public class EntityMindFlayer extends EntityOddity
 	protected void registerGoals()
 	{
 		super.registerGoals();
-		this.goalSelector.addGoal(0, new SwimGoal(this));
-		this.goalSelector.addGoal(8, new RandomWalkingGoal(this, 0.6D));
-		this.goalSelector.addGoal(9, new LookAtGoal(this, Player.class, 15.0F, 1.0F));
-		this.goalSelector.addGoal(10, new LookAtGoal(this, Mob.class, 15.0F));
+		this.goalSelector.addGoal(0, new FloatGoal(this));
+		this.goalSelector.addGoal(8, new RandomStrollGoal(this, 0.6D));
+		this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 15.0F, 1.0F));
+		this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Mob.class, 15.0F));
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
 		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, AbstractVillager.class, false));
 	}
@@ -81,7 +81,7 @@ public class EntityMindFlayer extends EntityOddity
 	    						stack.hurtAndBreak((int)amount * 3, ent, (player) -> {});
 	    					else if(this.getRandom().nextInt(20) == 0)
 	    					{
-	    						entityDropItem(stack);
+	    						spawnAtLocation(stack);
 	    						setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
 	    					}
 	    				}

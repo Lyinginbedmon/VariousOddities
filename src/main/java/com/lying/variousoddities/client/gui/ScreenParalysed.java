@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 
@@ -38,7 +39,7 @@ public class ScreenParalysed extends AbstractParalysisScreen
 		
 		Component duration;
 		if(ticksToDisplay() >= 0)
-			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.temporary", StringUtils.ticksToElapsedTime(Mth.floor((float)ticksToDisplay())));
+			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.temporary", StringUtil.ticksToElapsedTime(Mth.floor((float)ticksToDisplay())));
 		else
 			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.permanent");
 		

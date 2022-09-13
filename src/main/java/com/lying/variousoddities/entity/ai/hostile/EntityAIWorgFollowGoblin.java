@@ -58,7 +58,7 @@ public class EntityAIWorgFollowGoblin extends Goal
 	
 	public void startExecuting()
 	{
-		theWorg.getLookController().setLookPositionWithEntity(nearestGoblin, (float)(theWorg.getHorizontalFaceSpeed() + 20), (float)theWorg.getVerticalFaceSpeed());
+		theWorg.getLookControl().setLookAt(nearestGoblin, (float)(theWorg.getMaxHeadXRot() + 20), (float)theWorg.getMaxHeadYRot());
 		theWorg.setGoblinSight(Reference.Values.TICKS_PER_DAY);
 		theNavigator.moveTo(nearestGoblin, 1.0D);
 	}

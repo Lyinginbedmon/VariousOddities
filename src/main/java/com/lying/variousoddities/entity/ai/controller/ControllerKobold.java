@@ -11,9 +11,9 @@ import com.lying.variousoddities.entity.ai.passive.EntityAIKoboldPlaceTorch;
 import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.init.VOEntities;
 
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 
 public class ControllerKobold extends EntityController<EntityKobold>
@@ -26,9 +26,9 @@ public class ControllerKobold extends EntityController<EntityKobold>
 		
 		this.theKobold = par1Entity;
 		
-		addBehaviour(0, new SwimGoal(par1Entity));
+		addBehaviour(0, new FloatGoal(par1Entity));
 		addBehaviour(3, par1Entity.getOperateRoomTask());
-		addBehaviour(6, new WaterAvoidingRandomWalkingGoal(par1Entity, 1.0D));
+		addBehaviour(6, new WaterAvoidingRandomStrollGoal(par1Entity, 1.0D));
 		
 		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
 			addBehaviour(2, new HurtByTargetGoal(par1Entity));

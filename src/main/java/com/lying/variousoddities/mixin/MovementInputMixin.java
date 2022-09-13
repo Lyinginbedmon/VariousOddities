@@ -16,6 +16,8 @@ import com.lying.variousoddities.init.VOPotions;
 import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,14 +27,14 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-@Mixin(MovementInputFromOptions.class)
+@Mixin(KeyboardInput.class)
 public class MovementInputMixin
 {
 	@Shadow
 	@Final
-	GameSettings gameSettings;
+	Options options;
 	
-	@Inject(method = "tickMovement(Z)V", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "tick(Z)V", at = @At("HEAD"), cancellable = true)
 	public void dazedPreventMovement(boolean forceDown, final CallbackInfo ci)
 	{
 		Player player = Minecraft.getInstance().player;
@@ -47,13 +49,13 @@ public class MovementInputMixin
 		}
 	}
 	
-	@Inject(method = "tickMovement(Z)V", at = @At("RETURN"), cancellable = true)
+	@Inject(method = "tick(Z)V", at = @At("RETURN"), cancellable = true)
 	public void afraidPreventMovement(boolean forceDown, final CallbackInfo ci)
 	{
 		Player player = Minecraft.getInstance().player;
 		if(player != null)
 		{
-			MovementInput input = (MovementInput)(Object)this;
+			KeyboardInput input = (KeyboardInput)(Object)this;
 			handleTerror(player, input, ci);
 			
 			PlayerData data = PlayerData.forPlayer(player);
@@ -68,24 +70,24 @@ public class MovementInputMixin
 	
 	private void clearInputs()
 	{
-		clearInputs((MovementInput)(Object)this);
+		clearInputs((KeyboardInput)(Object)this);
 	}
 	
-	private static void clearInputs(MovementInput input)
+	private static void clearInputs(KeyboardInput input)
 	{
 		clearMoveInputs(input);
-		input.jump = false;
-		input.sneaking = false;
+		input.jumping = false;
+		input.shiftKeyDown = false;
 	}
 	
-	private static void clearMoveInputs(MovementInput input)
+	private static void clearMoveInputs(KeyboardInput input)
 	{
-		input.forwardKeyDown = false;
-		input.backKeyDown = false;
-		input.leftKeyDown = false;
-		input.rightKeyDown = false;
-		input.moveForward = 0F;
-		input.moveStrafe = 0F;
+		input.up = false;
+		input.down = false;
+		input.left = false;
+		input.right = false;
+		input.forwardImpulse = 0F;
+		input.leftImpulse = 0F;
 	}
 	
 	private static Vec3 getAbsoluteMotion(Vec3 relative, float p_213299_1_, float facing)
@@ -100,7 +102,7 @@ public class MovementInputMixin
 		return new Vec3(vector3d.x * (double)f1 - vector3d.z * (double)f, vector3d.y, vector3d.z * (double)f1 + vector3d.x * (double)f);
 	}
 	
-	private static void handleTerror(Player player, MovementInput input, final CallbackInfo ci)
+	private static void handleTerror(Player player, KeyboardInput input, final CallbackInfo ci)
 	{
 		LivingData data = LivingData.forEntity(player);
 		if(data == null)
@@ -111,12 +113,12 @@ public class MovementInputMixin
 			return;
 		
 		Vec3 currentPos = player.position();
-		Vec3 move = getAbsoluteMotion(new Vec3(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
+		Vec3 move = getAbsoluteMotion(new Vec3(input.leftImpulse, 0D, input.forwardImpulse), 1F, player.yHeadRot).normalize();
 		
 		float slow = 1F;
 		for(LivingEntity terroriser : terrorisers)
 		{
-			if(terroriser.isInvisibleTo(player) || !player.canEntityBeSeen(terroriser))
+			if(terroriser.isInvisibleTo(player) || !player.hasLineOfSight(terroriser))
 				continue;
 			
 			double dist = terroriser.distanceTo(player);
@@ -134,15 +136,15 @@ public class MovementInputMixin
 		
 		if(slow < 1F)
 		{
-			input.moveForward *= slow;
-			input.moveStrafe *= slow;
+			input.forwardImpulse *= slow;
+			input.leftImpulse *= slow;
 		}
 	}
 	
-	private static void handleBound(Player player, Vec3 boundPos, double maxDist, MovementInput input, final CallbackInfo ci)
+	private static void handleBound(Player player, Vec3 boundPos, double maxDist, KeyboardInput input, final CallbackInfo ci)
 	{
 		Vec3 currentPos = player.position();
-		Vec3 move = getAbsoluteMotion(new Vec3(input.moveStrafe, 0D, input.moveForward), 1F, player.rotationYawHead).normalize();
+		Vec3 move = getAbsoluteMotion(new Vec3(input.leftImpulse, 0D, input.forwardImpulse), 1F, player.yHeadRot).normalize();
 		
 		double dist = boundPos.distanceTo(currentPos);
 		double distB = boundPos.distanceTo(currentPos.add(move));
@@ -150,7 +152,7 @@ public class MovementInputMixin
 		if(distB >= maxDist)
 		{
 			clearMoveInputs(input);
-			input.jump = false;
+			input.jumping = false;
 			ci.cancel();
 			return;
 		}
@@ -161,8 +163,8 @@ public class MovementInputMixin
 			distB -= maxDist;
 			
 			float slow = 1F - (float)(distB / maxDist);
-			input.moveForward *= slow;
-			input.moveStrafe *= slow;
+			input.forwardImpulse *= slow;
+			input.leftImpulse *= slow;
 		}
 	}
 }

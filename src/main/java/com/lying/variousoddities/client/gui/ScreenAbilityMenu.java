@@ -21,9 +21,9 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.ActivatedAbility;
 import com.lying.variousoddities.utility.VOHelper;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -35,9 +35,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -107,17 +105,17 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 			abilitySet.addAll(this.abilities.subList(index, indexEnd));
 		}
 		
-    	this.addWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
+    	this.addRenderableWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
     		{
-    			Minecraft.getInstance().displayGuiScreen(new ScreenCharacterSheet());
+    			Minecraft.getInstance().setScreen(new ScreenCharacterSheet());
     		})
     			{
     				@SuppressWarnings("deprecation")
 					public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
     				{
-    					Minecraft.getInstance().getTextureManager().bindTexture(ScreenCharacterSheet.SHEET_GUI_TEXTURES);
-    					RenderSystem.color4f(1F, 1F, 1F, 1F);
-    					Screen.blit(matrixStack, this.x, this.y, 160, 212 + (this.isHovered() ? 20 : 0), this.width, this.height, 512, 512);
+    					RenderSystem.setShaderTexture(0, ScreenCharacterSheet.SHEET_GUI_TEXTURES);
+    					RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+    					Screen.blit(matrixStack, this.x, this.y, 160, 212 + (this.isHoveredOrFocused() ? 20 : 0), this.width, this.height, 512, 512);
     				}
     			});
 	}
@@ -308,23 +306,23 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 					ActivatedAbility ability = abilitySet.get(index);
 					matrixStack.pushPose();
 						float angle = angleInc * (index + 1);
-						matrixStack.rotate(Vector3f.ZP.rotationDegrees(angleInc * (index + 1)));
+						matrixStack.mulPose(Vector3f.ZP.rotationDegrees(angleInc * (index + 1)));
 						matrixStack.translate(0, 60, 0);
 						matrixStack.pushPose();
 							if(angle%90 == 0)
-								matrixStack.rotate(Vector3f.ZP.rotationDegrees(-angle));
+								matrixStack.mulPose(Vector3f.ZP.rotationDegrees(-angle));
 							else
 							{
-								matrixStack.rotate(Vector3f.ZP.rotationDegrees(-90F));
+								matrixStack.mulPose(Vector3f.ZP.rotationDegrees(-90F));
 								if(angle > 180)
-									matrixStack.rotate(Vector3f.ZP.rotationDegrees(-180F));
+									matrixStack.mulPose(Vector3f.ZP.rotationDegrees(-180F));
 							}
 							
 							List<FormattedText> messageLines = VOHelper.getWrappedText(ability.getDisplayName(), font, 90);
 							int textX = 0;
 							for(FormattedText line : messageLines)
 							{
-								int length = font.getStringWidth(line.getSerializedName());
+								int length = font.width(line.getString());
 								if(length > 80)
 									textX = Math.min(textX, length - 80);
 							}
@@ -333,7 +331,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 							int textY = (int)(messageLines.size() * font.lineHeight * -0.5D);
 							for(FormattedText line : messageLines)
 							{
-								drawCenteredString(matrixStack, font, line.getSerializedName(), textX, textY, textCol);
+								drawCenteredString(matrixStack, font, line.getString(), textX, textY, textCol);
 								textY += font.lineHeight;
 							}
 						matrixStack.popPose();
@@ -363,8 +361,8 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		RenderSystem.enableTexture();
 		RenderSystem.shadeModel(GL11.GL_FLAT);
 		matrix.pushPose();
-			Minecraft.getInstance().getTextureManager().bindTexture(ABILITY_ICONS);
-			blit(matrix.getLast().getMatrix(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, bright);
+			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
+			blit(matrix.last().pose(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, bright);
 		matrix.popPose();
 	}
 	
@@ -377,9 +375,9 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		RenderSystem.shadeModel(GL11.GL_FLAT);
 		
 		stackIn.pushPose();
-			Matrix4f matrix4f = stackIn.getLast().getMatrix();
-			BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-			buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
+			Matrix4f matrix4f = stackIn.last().pose();
+			BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+			buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
 				// Centre vertex
 				buffer.vertex(matrix4f, originX, originY, 0F).color(255, 255, 255, 255).endVertex();
 				
@@ -426,7 +424,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers)
 	{
-		if(KeyBindings.ABILITY_MENU.matchesKey(keyCode, scanCode) && !ConfigVO.CLIENT.holdKeyForMenu.get())
+		if(KeyBindings.ABILITY_MENU.matches(keyCode, scanCode) && !ConfigVO.CLIENT.holdKeyForMenu.get())
 		{
 			this.closeScreen();
 			return true;
@@ -437,7 +435,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	
 	public boolean keyReleased(int key, int scanCode, int modifiers)
 	{
-		if(KeyBindings.ABILITY_MENU.matchesKey(key, scanCode) && ConfigVO.CLIENT.holdKeyForMenu.get())
+		if(KeyBindings.ABILITY_MENU.matches(key, scanCode) && ConfigVO.CLIENT.holdKeyForMenu.get())
 		{
 			this.closeScreen();
 			return true;
@@ -458,15 +456,14 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		int red = bright ? 255 : 100;
 		int green = bright ? 170 : 100;
 		int blue = bright ? 0 : 100;
-		GlStateManager.color4f(1F, 1F, 1F, 1F);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
 			buffer.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, 255).uv(texXMin, texYMax).endVertex();
 			buffer.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, 255).uv(texXMax, texYMax).endVertex();
 			buffer.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, 255).uv(texXMax, texYMin).endVertex();
 			buffer.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, 255).uv(texXMin, texYMin).endVertex();
-		buffer.finishDrawing();
-		RenderSystem.enableAlphaTest();
-		WorldVertexBufferUploader.draw(buffer);
+		BufferUploader.drawWithShader(buffer.end());
+		RenderSystem.enableDepthTest();
 	}
 }

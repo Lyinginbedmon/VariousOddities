@@ -11,12 +11,13 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.SpeciesRegistry;
 
+import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.DirectoryCache;
+import net.minecraft.data.DataProvider;
 import net.minecraft.data.IDataProvider;
 import net.minecraft.resources.ResourceLocation;
 
-public class VOSpeciesProvider implements IDataProvider
+public class VOSpeciesProvider implements DataProvider
 {
 	private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
 	private final DataGenerator dataGenerator;
@@ -28,7 +29,7 @@ public class VOSpeciesProvider implements IDataProvider
 	
 	public String getName(){ return "Various Oddities species"; }
 	
-	public void act(DirectoryCache cache) throws IOException
+	public void run(CachedOutput cache) throws IOException
 	{
 		Path path = this.dataGenerator.getOutputFolder();
 		Map<ResourceLocation, Species> map = Maps.newHashMap();
@@ -43,7 +44,7 @@ public class VOSpeciesProvider implements IDataProvider
 				Path filePath = getPath(path, name);
 				try
 				{
-					IDataProvider.save(GSON, cache, species.toJson(), filePath);
+					DataProvider.save(GSON, cache, species.toJson(), filePath);
 				}
 				catch(IOException e)
 				{

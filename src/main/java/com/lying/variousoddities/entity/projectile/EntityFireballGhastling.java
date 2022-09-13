@@ -29,15 +29,15 @@ public class EntityFireballGhastling extends SmallFireball
 		if(!getLevel().isClientSide)
 		{
 			Entity hitEntity = result.getEntity();
-			if(!hitEntity.isImmuneToFire())
+			if(!hitEntity.fireImmune())
 			{
-				Entity shooter = func_234616_v_();
+				Entity shooter = getResponsibleEntity();
 				int i = hitEntity.getFireTimer();
 				hitEntity.setSecondsOnFire(3);
-				if(!hitEntity.attackEntityFrom(DamageSource.func_233547_a_(this, shooter), 2.0F))
-						hitEntity.forceFireTicks(i);
+				if(!hitEntity.hurt(DamageSource.func_233547_a_(this, shooter), 2.0F))
+					hitEntity.setRemainingFireTicks(i);
 				else if(shooter instanceof LivingEntity)
-					applyEnchantments((LivingEntity)shooter, hitEntity);
+					doEnchantDamageEffects((LivingEntity)shooter, hitEntity);
 			}
 		}
 	}
@@ -47,14 +47,14 @@ public class EntityFireballGhastling extends SmallFireball
 		super.onImpact(result);
 		if(!getLevel().isClientSide)
 		{
-			getLevel().createExplosion((Entity)null, this.getPosX(), this.getPosY(), this.getPosZ(), 0.5F, false, Explosion.Mode.NONE);
+			getLevel().createExplosion((Entity)null, this.getX(), this.getY(), this.getZ(), 0.5F, false, Explosion.Mode.NONE);
 			remove();
 		}
 	}
 	
 	protected void func_230299_a_(BlockHitResult result)
 	{
-		BlockState blockstate = this.level.getBlockState(result.getPos());
-		blockstate.onProjectileCollision(this.level, blockstate, result, this);
+		BlockState blockstate = this.level.getBlockState(result.getBlockPos());
+		blockstate.onProjectileHit(this.level, blockstate, result, this);
 	}
 }

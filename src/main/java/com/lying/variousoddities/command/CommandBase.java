@@ -11,15 +11,15 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 
-import net.minecraft.command.Commands.EnvironmentType;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands.CommandSelection;
 import net.minecraft.util.Tuple;
 
 public abstract class CommandBase
 {
-    protected static EnvironmentType getEnvironmentType()
+    protected static CommandSelection getEnvironmentType()
     {
-        return EnvironmentType.ALL;
+        return CommandSelection.ALL;
     }
     
     protected static LiteralArgumentBuilder<CommandSourceStack> build()
@@ -65,11 +65,11 @@ public abstract class CommandBase
          * List of child trees, commands are directly baked into rootNode
          */
         private final List<CommandTree> childTrees;
-        private final List<Tuple<Supplier<EnvironmentType>, Supplier<LiteralArgumentBuilder<CommandSourceStack>>>> childNodes;
+        private final List<Tuple<Supplier<CommandSelection>, Supplier<LiteralArgumentBuilder<CommandSourceStack>>>> childNodes;
         /**
          * Target environment type.
          */
-        private final EnvironmentType buildWhenOn;
+        private final CommandSelection buildWhenOn;
         private final String commandName;
 
         /**
@@ -77,7 +77,7 @@ public abstract class CommandBase
          */
         protected static CommandTree newRootNode()
         {
-            return new CommandTree(EnvironmentType.ALL, Reference.ModInfo.MOD_ID);
+            return new CommandTree(CommandSelection.ALL, Reference.ModInfo.MOD_ID);
         }
 
         /**
@@ -85,7 +85,7 @@ public abstract class CommandBase
          *
          * @param commandName root vertex name
          */
-        protected CommandTree(final EnvironmentType environment, final String commandName)
+        protected CommandTree(final CommandSelection environment, final String commandName)
         {
             this.childTrees = new ArrayList<>();
             this.childNodes = new ArrayList<>();
@@ -112,7 +112,7 @@ public abstract class CommandBase
          * @param commandEnviroment command's enviroment getter
          * @return this
          */
-        protected CommandTree addNode(final Supplier<LiteralArgumentBuilder<CommandSourceStack>> commandBuilder, final Supplier<EnvironmentType> commandEnviroment)
+        protected CommandTree addNode(final Supplier<LiteralArgumentBuilder<CommandSourceStack>> commandBuilder, final Supplier<CommandSelection> commandEnviroment)
         {
             childNodes.add(new Tuple<>(commandEnviroment, commandBuilder));
             return this;
@@ -123,7 +123,7 @@ public abstract class CommandBase
          *
          * @return tree as command node
          */
-        protected Optional<LiteralArgumentBuilder<CommandSourceStack>> build(final EnvironmentType environment)
+        protected Optional<LiteralArgumentBuilder<CommandSourceStack>> build(final CommandSelection environment)
         {
             if (!checkEnvironment(environment, buildWhenOn))
             {
@@ -132,7 +132,7 @@ public abstract class CommandBase
 
             final LiteralArgumentBuilder<CommandSourceStack> rootNode = newLiteral(commandName);
 
-            for (final Tuple<Supplier<EnvironmentType>, Supplier<LiteralArgumentBuilder<CommandSourceStack>>> node : childNodes)
+            for (final Tuple<Supplier<CommandSelection>, Supplier<LiteralArgumentBuilder<CommandSourceStack>>> node : childNodes)
             {
                 if (checkEnvironment(environment, node.getA().get()))
                 {
@@ -150,8 +150,8 @@ public abstract class CommandBase
 
             return childNodes.isEmpty() && childTrees.isEmpty() ? Optional.empty() : Optional.of(rootNode);
         }
-
-        protected void register(final CommandDispatcher<CommandSourceStack> commandDispatcher, final EnvironmentType serverEnvironmentType)
+        
+        protected void register(final CommandDispatcher<CommandSourceStack> commandDispatcher, final CommandSelection serverEnvironmentType)
         {
             final Optional<LiteralArgumentBuilder<CommandSourceStack>> builtTree = build(serverEnvironmentType);
 
@@ -162,11 +162,11 @@ public abstract class CommandBase
         }
 
         /**
-         * @return true if either of arguments is {@link EnvironmentType#ALL} or arguments are of the same type
+         * @return true if either of arguments is {@link CommandSelection#ALL} or arguments are of the same type
          */
-        private boolean checkEnvironment(final EnvironmentType server, final EnvironmentType command)
+        private boolean checkEnvironment(final CommandSelection server, final CommandSelection command)
         {
-            return server == EnvironmentType.ALL || command == EnvironmentType.ALL || server == command;
+            return server == CommandSelection.ALL || command == CommandSelection.ALL || server == command;
         }
     }
 }

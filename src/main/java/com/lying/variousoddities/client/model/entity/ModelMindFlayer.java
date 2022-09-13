@@ -79,12 +79,12 @@ public class ModelMindFlayer extends HumanoidModel<EntityMindFlayer>
 		return LayerDefinition.create(mesh, 64, 64);
 	}
 	
-	protected Iterable<ModelPart> getHeadParts()
+	protected Iterable<ModelPart> headParts()
 	{
 		return ImmutableList.of(this.head);
 	}
 
-	protected Iterable<ModelPart> getBodyParts()
+	protected Iterable<ModelPart> bodyParts()
 	{
 		return ImmutableList.of(this.body, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg);
 	}

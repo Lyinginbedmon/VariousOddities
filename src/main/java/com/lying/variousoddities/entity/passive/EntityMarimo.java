@@ -8,7 +8,6 @@ import com.lying.variousoddities.entity.EntityOddity;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.DataHelper;
-import com.mojang.math.Vector3d;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -17,9 +16,11 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -33,6 +34,7 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityMarimo extends EntityOddity implements IMysticSource
 {
@@ -53,7 +55,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
 	public Iterable<ItemStack> getArmorInventoryList() { return Collections.emptyList(); }
 	public ItemStack getItemStackFromSlot(EquipmentSlot slotIn) { return ItemStack.EMPTY; }
 	public void setItemStackToSlot(EquipmentSlot slotIn, ItemStack stack){ }
-	public HandSide getPrimaryHand() { return HandSide.RIGHT; }
+	public HumanoidArm getMainArm() { return HumanoidArm.RIGHT; }
 	
 	protected void defineSynchedData()
 	{
@@ -78,34 +80,34 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     /**
      * (abstract) Protected helper method to write subclass entity data to NBT.
      */
-    public void writeAdditional(CompoundTag compound)
+    public void addAdditionalSaveData(CompoundTag compound)
     {
-        super.writeAdditional(compound);
+        super.addAdditionalSaveData(compound);
         compound.putInt("Color", getColor().getId());
         compound.putBoolean("Mystic", isMagical());
     }
     
-    public void readAdditional(CompoundTag compound)
+    public void readAdditionalSaveData(CompoundTag compound)
     {
-        super.readAdditional(compound);
+        super.readAdditionalSaveData(compound);
         setColor(compound.getInt("Color"));
         setMagical(compound.getBoolean("Mystic"));
     }
     
     public boolean isNoDespawnRequired(){ return true; }
 	
-    public ActionResultType applyPlayerInteraction(Player player, InteractionHand hand)
+    public InteractionResult applyPlayerInteraction(Player player, InteractionHand hand)
     {
         ItemStack itemstack = player.getItemInHand(hand);
         if(itemstack.getItem() == Items.POTION && PotionUtils.getPotion(itemstack) == Potions.WATER)
         {
         	itemstack.shrink(1);
-        	player.addItemStackToInventory(getItemStack());
-        	this.setDead();
-        	return ActionResultType.SUCCESS;
+        	player.addItem(getItemStack());
+        	this.remove(RemovalReason.DISCARDED);
+        	return InteractionResult.SUCCESS;
         }
         
-        return ActionResultType.FAIL;
+        return InteractionResult.FAIL;
     }
     
     public ItemStack getItemStack()
@@ -124,22 +126,24 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
         return true;
     }
     
-    public void livingTick()
+    public void aiStep()
     {
-    	super.livingTick();
-    	if(!this.isInWater() && !this.isInvulnerable() && this.hurtResistantTime == 0) this.hurt(DamageSource.DROWN, 1.0F);
-    	else if(this.isInWater() && this.getHealth() < this.getMaxHealth() && getLevel().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0) this.heal(1.0F);
+    	super.aiStep();
+    	if(!this.isInWater() && !this.isInvulnerable() && this.invulnerableTime == 0)
+    		this.hurt(DamageSource.DROWN, 1.0F);
+    	else if(this.isInWater() && this.getHealth() < this.getMaxHealth() && getLevel().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
+    		this.heal(1.0F);
     	
     	if(this.isInWater() && this.isAlive() && !getLevel().isClientSide)
     	{
     		
     		if(this.random.nextInt(Reference.Values.TICKS_PER_SECOND * 5) == 0)
     		{
-    			Vector3d motion = getMotion();
+    			Vec3 motion = getDeltaMovement();
     			double motionX = motion.x + (this.random.nextDouble() - 0.5D) * 0.05D;
     			double motionY = motion.y + (this.random.nextDouble() - 0.5D) * 0.025D;
     			double motionZ = motion.z + (this.random.nextDouble() - 0.5D) * 0.05D;
-    			setMotion(new Vector3d(motionX, motionY, motionZ));
+    			setDeltaMovement(new Vec3(motionX, motionY, motionZ));
     		}
     		
     		if(this.random.nextInt(Reference.Values.TICKS_PER_MINUTE) == 0)

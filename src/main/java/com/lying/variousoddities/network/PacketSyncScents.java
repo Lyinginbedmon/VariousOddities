@@ -18,7 +18,7 @@ public class PacketSyncScents
 	public PacketSyncScents(){ }
 	public PacketSyncScents(ScentsManager manager)
 	{
-		scentData = manager.write(new CompoundTag());
+		scentData = manager.save(new CompoundTag());
 	}
 	
 	public static PacketSyncScents decode(FriendlyByteBuf par1Buffer)

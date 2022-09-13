@@ -6,9 +6,11 @@ import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -18,7 +20,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
 
-public class ContainerPlayerBody extends InventoryMenu
+public class ContainerPlayerBody extends AbstractContainerMenu
 {
 	private static final ResourceLocation[] ARMOR_SLOT_TEXTURES = new ResourceLocation[]{
 			InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS, 
@@ -53,7 +55,7 @@ public class ContainerPlayerBody extends InventoryMenu
 	}
 	
 	public final AbstractBody theBody;
-	private final Inventory bodyInventory;
+	private final Container bodyInventory;
 	
 	public ContainerPlayerBody(int windowId, Inventory playerInventory, Inventory bodyInventory, final AbstractBody bodyIn)
 	{
@@ -136,7 +138,7 @@ public class ContainerPlayerBody extends InventoryMenu
 		return theBody.isAlive() && playerIn.isAlive() && playerIn.distanceTo(theBody) <= playerIn.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
 	}
 	
-	public ItemStack transferStackInSlot(Player playerIn, int index)
+	public ItemStack quickMoveStack(Player playerIn, int index)
 	{
 		ItemStack itemStack = ItemStack.EMPTY;
 		Slot slot = this.slots.get(index);
@@ -210,4 +212,6 @@ public class ContainerPlayerBody extends InventoryMenu
 		super.removed(playerIn);
 		this.bodyInventory.stopOpen(playerIn);
 	}
+	
+	public boolean stillValid(Player playerIn) { return this.bodyInventory.stillValid(playerIn); }
 }

@@ -11,7 +11,6 @@ import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityDimensions;
@@ -19,6 +18,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -28,6 +28,7 @@ import net.minecraft.world.entity.animal.Ocelot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 public class EntityRatGiant extends AbstractRat
 {
@@ -98,16 +99,16 @@ public class EntityRatGiant extends AbstractRat
 	}
     
     @Nullable
-    public ILivingEntityData onInitialSpawn(ServerLevel worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag)
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag)
     {
-    	super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+    	super.finalizeSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     	if(reason == MobSpawnType.SPAWNER)
 	    	for(int i=0; i<getRandom().nextInt(4); i++)
 	    	{
 	    		EntityRat rat = VOEntities.RAT.create(getLevel());
 	    		rat.setMinion(true);
 	    		rat.setBreed(getBreed());
-	    		rat.setLocationAndAngles(getX(), getY(), getZ(), getRandom().nextFloat() * 360F, 0F);
+	    		rat.absMoveTo(getX(), getY(), getZ(), getRandom().nextFloat() * 360F, 0F);
 	    		getLevel().addFreshEntity(rat);
 	    	}
 		return spawnDataIn;

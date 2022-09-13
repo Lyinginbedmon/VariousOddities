@@ -42,13 +42,13 @@ public class EntityAIGhastlingFireball extends Goal
 	public void tick()
 	{
 		LivingEntity target = this.theGhastling.getTarget();
-		this.theGhastling.getLookController().setLookPositionWithEntity(target, 30F, 30F);
-		if(target.distanceToSqr(theGhastling) < 4096D && this.theGhastling.canEntityBeSeen(target))
+		this.theGhastling.getLookControl().setLookAt(target, 30F, 30F);
+		if(target.distanceToSqr(theGhastling) < 4096D && this.theGhastling.hasLineOfSight(target))
 		{
 			Level world = this.theGhastling.getLevel();
 			++this.attackTimer;
 			if(this.attackTimer == 10 && !this.theGhastling.isSilent())
-				world.playEvent((Player)null, 1015, this.theGhastling.getPosition(), 0);
+				world.levelEvent((Player)null, 1015, this.theGhastling.blockPosition(), 0);
 			
 			if(this.attackTimer == 20)
 			{
@@ -57,12 +57,12 @@ public class EntityAIGhastlingFireball extends Goal
 				double moveY = dirToTarget.y * 4D;
 				double moveZ = dirToTarget.z * 4D; 
 				if(!this.theGhastling.isSilent())
-					world.playEvent((Player)null, 1016, this.theGhastling.getPosition(), 0);
+					world.levelEvent((Player)null, 1016, this.theGhastling.blockPosition(), 0);
 				
-				Vec3 direction = this.theGhastling.getLook(1F);
+				Vec3 direction = this.theGhastling.getLookAngle();
 				EntityFireballGhastling fireball = new EntityFireballGhastling(world, this.theGhastling, moveX, moveY, moveZ);
-				fireball.setPosition(this.theGhastling.getX() + direction.x * this.theGhastling.getBbWidth(), this.theGhastling.getY(0.5D), this.theGhastling.getZ() + direction.z * this.theGhastling.getBbWidth());
-				fireball.setShooter(theGhastling);
+				fireball.setPos(this.theGhastling.getX() + direction.x * this.theGhastling.getBbWidth(), this.theGhastling.getY(0.5D), this.theGhastling.getZ() + direction.z * this.theGhastling.getBbWidth());
+				fireball.setOwner(theGhastling);
 				world.addFreshEntity(fireball);
 				this.attackTimer -= 40;
 				this.theGhastling.setEmotion(Emotion.ANGRY);

@@ -10,15 +10,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
 
 public class EntityAIOperateRoom extends Goal
 {
 	protected final Level theWorld;
-	protected final Monster theMob;
+	protected final PathfinderMob theMob;
 	protected final PathNavigation theNavigator;
 	
 	protected BoxRoom targetRoom = null;
@@ -27,7 +27,7 @@ public class EntityAIOperateRoom extends Goal
 	
 	protected boolean discontinue = false;
 	
-	public EntityAIOperateRoom(Monster creatureIn)
+	public EntityAIOperateRoom(PathfinderMob creatureIn)
 	{
 		theWorld = creatureIn.getLevel();
 		theMob = creatureIn;

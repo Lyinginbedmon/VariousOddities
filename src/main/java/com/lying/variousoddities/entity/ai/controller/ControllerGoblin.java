@@ -13,8 +13,8 @@ import com.lying.variousoddities.entity.ai.hostile.EntityAIGoblinWorgTame;
 import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.entity.hostile.EntityGoblin.GoblinType;
 
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WaterAvoidingRandomWalkingGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 
 public class ControllerGoblin
@@ -31,9 +31,9 @@ public class ControllerGoblin
 						}
 					});
 			
-			addBehaviour(0, new SwimGoal(par1Entity));
+			addBehaviour(0, new FloatGoal(par1Entity));
 			addBehaviour(1, new EntityAIGoblinFlee(par1Entity, 1.0D));
-			addBehaviour(6, new WaterAvoidingRandomWalkingGoal(par1Entity, 1.0D));
+			addBehaviour(6, new WaterAvoidingRandomStrollGoal(par1Entity, 1.0D));
 		}
 	}
 	
@@ -54,9 +54,9 @@ public class ControllerGoblin
 		{
 			super(priorityIn, par1Entity, activatorIn);
 			
-			addBehaviour(0, new SwimGoal(par1Entity));
+			addBehaviour(0, new FloatGoal(par1Entity));
 			addBehaviour(3, par1Entity.getOperateRoomTask());
-			addBehaviour(6, new WaterAvoidingRandomWalkingGoal(par1Entity, 1.0D));
+			addBehaviour(6, new WaterAvoidingRandomStrollGoal(par1Entity, 1.0D));
 			
 	    	addBehaviour(6, new EntityAIGoblinMate(par1Entity));
 			addBehaviour(6, new EntityAIGoblinWorgHurt(par1Entity));

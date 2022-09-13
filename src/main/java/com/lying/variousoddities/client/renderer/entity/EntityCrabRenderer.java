@@ -1,15 +1,16 @@
 package com.lying.variousoddities.client.renderer.entity;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelCrab;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerCrabBarnacles;
 import com.lying.variousoddities.entity.AbstractCrab;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -24,19 +25,19 @@ public class EntityCrabRenderer extends MobRenderer<AbstractCrab, ModelCrab>
 	private static final ResourceLocation TEXTURE_GREEN = new ResourceLocation(resourceBase+"green.png");
 	private static final ResourceLocation TEXTURE_BLUE = new ResourceLocation(resourceBase+"blue.png");
 	
-	public EntityCrabRenderer(EntityRendererManager manager, float renderScale) 
+	public EntityCrabRenderer(EntityRendererProvider.Context manager, float renderScale) 
 	{
-		super(manager, new ModelCrab(), 0.5F * (renderScale / 1.5F));
+		super(manager, new ModelCrab(manager.bakeLayer(VOModelLayers.CRAB)), 0.5F * (renderScale / 1.5F));
 		scale = renderScale;
-		addLayer(new LayerCrabBarnacles(this));
+		addLayer(new LayerCrabBarnacles(this, manager.getModelSet()));
 	}
 	
-	public EntityCrabRenderer(EntityRendererManager manager)
+	public EntityCrabRenderer(EntityRendererProvider.Context manager)
 	{
 		this(manager, 0.5F);
 	}
 	
-	public ResourceLocation getEntityTexture(AbstractCrab entity) 
+	public ResourceLocation getTextureLocation(AbstractCrab entity) 
 	{
 		switch(entity.getColor())
 		{
@@ -49,14 +50,14 @@ public class EntityCrabRenderer extends MobRenderer<AbstractCrab, ModelCrab>
     /**
      * Allows the render to do state modifications necessary before the model is rendered.
      */
-    protected void preRenderCallback(AbstractCrab ratIn, MatrixStack matrixStackIn, float partialTickTime)
+    protected void scale(AbstractCrab ratIn, PoseStack matrixStackIn, float partialTickTime)
     {
     	matrixStackIn.scale(scale, scale, scale);
     }
 	
 	public static class RenderFactorySmall implements IRenderFactory<AbstractCrab>
 	{
-		public EntityRenderer<? super AbstractCrab> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super AbstractCrab> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityCrabRenderer(manager);
 		}
@@ -64,7 +65,7 @@ public class EntityCrabRenderer extends MobRenderer<AbstractCrab, ModelCrab>
 	
 	public static class RenderFactoryLarge implements IRenderFactory<AbstractCrab>
 	{
-		public EntityRenderer<? super AbstractCrab> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super AbstractCrab> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityCrabRenderer(manager, 1.5F);
 		}

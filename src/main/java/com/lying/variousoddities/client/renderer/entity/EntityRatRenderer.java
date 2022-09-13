@@ -1,15 +1,16 @@
 package com.lying.variousoddities.client.renderer.entity;
 
+import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelRat;
 import com.lying.variousoddities.client.renderer.entity.layer.LayerGlowRat;
 import com.lying.variousoddities.entity.AbstractRat;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -21,19 +22,19 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
 	
 	public static final String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/rat/rat_";
 	
-	public EntityRatRenderer(EntityRendererManager manager, float renderScale) 
+	public EntityRatRenderer(EntityRendererProvider.Context manager, float renderScale) 
 	{
-		super(manager, new ModelRat(), 0.5F * (renderScale / 1.5F));
+		super(manager, new ModelRat(manager.bakeLayer(VOModelLayers.RAT)), 0.5F * (renderScale / 1.5F));
 		scale = renderScale;
 		addLayer(new LayerGlowRat(this));
 	}
 	
-	public EntityRatRenderer(EntityRendererManager manager)
+	public EntityRatRenderer(EntityRendererProvider.Context manager)
 	{
 		this(manager, 0.6F);
 	}
 	
-	public ResourceLocation getEntityTexture(AbstractRat entity) 
+	public ResourceLocation getTextureLocation(AbstractRat entity) 
 	{
 		return new ResourceLocation(resourceBase+entity.getRatBreed().getName()+".png");
 	}
@@ -41,7 +42,7 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
     /**
      * Allows the render to do state modifications necessary before the model is rendered.
      */
-    protected void preRenderCallback(AbstractRat ratIn, MatrixStack matrixStackIn, float partialTickTime)
+    protected void scale(AbstractRat ratIn, PoseStack matrixStackIn, float partialTickTime)
     {
     	float fullScale = this.scale * ratIn.getRatBreed().getScale();
     	matrixStackIn.scale(fullScale, fullScale, fullScale);
@@ -49,7 +50,7 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
 	
 	public static class RenderFactorySmall implements IRenderFactory<AbstractRat>
 	{
-		public EntityRenderer<? super AbstractRat> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super AbstractRat> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityRatRenderer(manager);
 		}
@@ -57,7 +58,7 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
 	
 	public static class RenderFactoryLarge implements IRenderFactory<AbstractRat>
 	{
-		public EntityRenderer<? super AbstractRat> createRenderFor(EntityRendererManager manager) 
+		public EntityRenderer<? super AbstractRat> createRenderFor(EntityRendererProvider.Context manager) 
 		{
 			return new EntityRatRenderer(manager, 1.6F);
 		}

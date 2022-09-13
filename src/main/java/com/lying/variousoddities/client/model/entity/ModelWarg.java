@@ -1,271 +1,247 @@
 package com.lying.variousoddities.client.model.entity;
 
-import java.util.Arrays;
-
+import com.google.common.collect.ImmutableList;
 import com.lying.variousoddities.client.model.ModelUtils;
 import com.lying.variousoddities.entity.AbstractGoblinWolf.Genetics;
 import com.lying.variousoddities.entity.mount.EntityWarg;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.entity.model.TintedAgeableModel;
-import net.minecraft.client.renderer.model.Model;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.ColorableAgeableListModel;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
 
-public class ModelWarg extends TintedAgeableModel<EntityWarg>
+public class ModelWarg extends ColorableAgeableListModel<EntityWarg>
 {
-    public ModelRenderer head;
-    public ModelRenderer earLeft, earRight;
-    public ModelRenderer muzzle;
-    public ModelRenderer jaw;
-    public ModelRenderer tongue;
+    public ModelPart head;
+    public ModelPart earLeft, earRight;
+    public ModelPart muzzle;
+    public ModelPart jaw;
+    public ModelPart tongue;
     
-    public ModelRenderer body;
-    public ModelRenderer mane;
-    public ModelRenderer mane2;
+    public ModelPart body;
+    public ModelPart mane;
+    public ModelPart mane2;
     
-    public ModelRearLeg legRearRight;
-    public ModelRearLeg legRearLeft;
-    public ModelRenderer legFrontRight;
-    public ModelRenderer legFrontLeft;
+    public RearLegHandler legRearRight;
+    public RearLegHandler legRearLeft;
+    public ModelPart legFrontRight;
+    public ModelPart legFrontLeft;
     
-    public ModelRenderer tail;
+    public ModelPart tail;
     
 	private final float JAW_RANGE = ModelUtils.toRadians(15D);
 	private final float TONGUE_GAP = ModelUtils.toRadians(3D);
 	private final float LEG_SPACE = 2.5F;
 	private float scaleFactor = 0F;
     
-    public ModelWarg()
+    public ModelWarg(ModelPart partsIn)
     {
-    	this(0F);
+        this.head = partsIn.getChild("head");
+        this.earRight = this.head.getChild("right_ear");
+        this.earLeft = this.head.getChild("left_ear");
+        
+        this.muzzle = this.head.getChild("muzzle");
+        this.jaw = this.muzzle.getChild("jaw");
+		this.tongue = this.jaw.getChild("tongue");
+        
+        this.body = partsIn.getChild("body");
+        
+        this.mane = partsIn.getChild("mane");
+    	this.mane2 = this.mane.getChild("child");
+        
+        this.legFrontRight = partsIn.getChild("right_front_leg");
+        this.legFrontLeft = partsIn.getChild("left_front_leg");
+        
+        this.legRearRight = new RearLegHandler(partsIn.getChild("right_hind_leg"));
+        this.legRearLeft = new RearLegHandler(partsIn.getChild("left_rear_leg"));
+        
+        this.tail = partsIn.getChild("tail");
     }
-    
-    public ModelWarg(float scaleIn)
-    {
-    	this.textureWidth = 64;
-    	this.textureHeight = 128;
-    	
-        this.head = ModelUtils.freshRenderer(this);
-        this.head.setRotationPoint(0.0F, 14.0F, -7.5F);
-        this.head.setTextureOffset(0, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, scaleIn);
-        	// Headwear
-        this.head.setTextureOffset(20, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, scaleIn + 0.25F);
-        	// Fangs
-        this.head.setTextureOffset(14, 10).addBox(-1.5F, 2.0F, -6.0F, 3, 1, 4, scaleIn + 0.01F);
-        float earSpace = 2.75F;
-        	// Right ear
-	        earRight = ModelUtils.freshRenderer(this);
-	        earRight.setRotationPoint(-earSpace, -2.25F, 0.5F);
-	        earRight.rotateAngleX = -ModelUtils.toRadians(20D);
-	        earRight.rotateAngleY = ModelUtils.toRadians(20D);
-	        earRight.rotateAngleZ = -ModelUtils.toRadians(30D);
-	        earRight.setTextureOffset(28, 10).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, scaleIn);
-        this.head.addChild(earRight);
-        	// Left ear
-	        earLeft = ModelUtils.freshRenderer(this);
-	        earLeft.setRotationPoint(earSpace, -2.25F, 0.5F);
-	        earLeft.mirror = true;
-	        earLeft.rotateAngleX = -ModelUtils.toRadians(20D);
-	        earLeft.rotateAngleY = -ModelUtils.toRadians(20D);
-	        earLeft.rotateAngleZ = ModelUtils.toRadians(30D);
-	        earLeft.setTextureOffset(28, 14).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, scaleIn);
-        this.head.addChild(earLeft);
-        
-        this.muzzle = ModelUtils.freshRenderer(this);
-        this.muzzle.setTextureOffset(0, 10).addBox(-1.5F, 0.0F, -6.0F, 3, 2, 4, scaleIn);
-        	this.head.addChild(this.muzzle);
-        
-        this.jaw = ModelUtils.freshRenderer(this);
-        this.jaw.setRotationPoint(0F, 2.5F, -2F);
-        this.jaw.setTextureOffset(0, 16).addBox(-1.5F, -0.5F, -4, 3, 1, 3, scaleIn);
-		this.muzzle.addChild(jaw);
+	
+	public static LayerDefinition createBodyLayer(float scaleIn, CubeDeformation deformation)
+	{
+		MeshDefinition mesh = HumanoidModel.createMesh(deformation, 0F);
+		PartDefinition part = mesh.getRoot();
 		
-		this.tongue = ModelUtils.freshRenderer(this);
-		this.tongue.rotateAngleZ = ModelUtils.toRadians(10D);
-		this.tongue.setTextureOffset(16, 0).addBox(-2F, -0.7F, -3.75F, 1, 2, 2, scaleIn - 0.25F);
-		this.jaw.addChild(this.tongue);
+        PartDefinition head = part.addOrReplaceChild("head", CubeListBuilder.create()
+        	.texOffs(0, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, deformation.extend(scaleIn))
+        	.texOffs(20, 0).addBox(-2.5F, -2.0F, -3.0F, 5, 5, 5, deformation.extend(scaleIn + 0.25F))
+        	.texOffs(14, 10).addBox(-1.5F, 2.0F, -6.0F, 3, 1, 4, deformation.extend(scaleIn + 0.01F)), PartPose.offset(0.0F, 14.0F, -7.5F));
+        float earSpace = 2.75F;
+    	// Right ear
+    	head.addOrReplaceChild("right_ear", CubeListBuilder.create()
+    		.texOffs(28, 10).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, deformation.extend(scaleIn)), PartPose.offsetAndRotation(-earSpace, -2.5F, 0.5F, ModelUtils.toRadians(-20D), ModelUtils.toRadians(20D), ModelUtils.toRadians(-30D)));
+    	// Left ear
+    	head.addOrReplaceChild("left_ear", CubeListBuilder.create().mirror()
+    		.texOffs(28, 14).addBox(-1.0F, -1.0F, -0.5F, 2, 3, 1, deformation.extend(scaleIn)), PartPose.offsetAndRotation(earSpace, -2.25F, 0.5F, ModelUtils.toRadians(-20D), ModelUtils.toRadians(-20D), ModelUtils.toRadians(30D)));
         
-        this.body = ModelUtils.freshRenderer(this);
-        this.body.setRotationPoint(0.0F, 14.0F, 2.0F);
-        this.body.setTextureOffset(0, 20).addBox(-3.0F, 2.5F, -2F, 6, 4, 5, scaleIn);
-        this.body.setTextureOffset(0, 29).addBox(-2.5F, -1F, -1.5F, 5, 4, 4, scaleIn);
+        PartDefinition muzzle = head.addOrReplaceChild("muzzle", CubeListBuilder.create().texOffs(0, 10).addBox(-1.5F, 0.0F, -6.0F, 3, 2, 4, deformation.extend(scaleIn)), PartPose.ZERO);  
+        PartDefinition jaw = muzzle.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(0, 16).addBox(-1.5F, -0.5F, -4, 3, 1, 3, deformation.extend(scaleIn)), PartPose.offset(0F, 2.5F, -2F));
+        	jaw.addOrReplaceChild("tongue", CubeListBuilder.create().texOffs(16, 0).addBox(-2F, -0.7F, -3.75F, 1, 2, 2, deformation.extend(scaleIn - 0.25F)), PartPose.rotation(0F, 0F, ModelUtils.toRadians(10D)));
         
-        this.mane = ModelUtils.freshRenderer(this);
-        this.mane.setRotationPoint(-1.0F, 14.0F, 2F);
-        this.mane.setTextureOffset(22, 20).addBox(-3.0F, -3.0F, -3F, 8, 5, 8, scaleIn);
-        	this.mane2 = ModelUtils.freshRenderer(this);
-        	this.mane2.setRotationPoint(0F, 3F, 4F);
-        	this.mane2.setTextureOffset(22, 33).addBox(-2.0F, -1.0F, -7F, 6, 2, 7, scaleIn);
-    	this.mane.addChild(mane2);
+        part.addOrReplaceChild("body", CubeListBuilder.create()
+	        .texOffs(0, 20).addBox(-3.0F, 2.5F, -2F, 6, 4, 5, deformation.extend(scaleIn))
+	        .texOffs(0, 29).addBox(-2.5F, -1F, -1.5F, 5, 4, 4, deformation.extend(scaleIn)), PartPose.offset(0.0F, 14.0F, 2.0F));
         
-        this.legFrontRight = ModelUtils.freshRenderer(this);
-        this.legFrontRight.setRotationPoint(-3F, 16F, -4F);
-        this.legFrontRight.setTextureOffset(20, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, scaleIn);
-        this.legFrontRight.setTextureOffset(20, 42 + 10).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, scaleIn + 0.25F);
+        PartDefinition mane = part.addOrReplaceChild("mane", CubeListBuilder.create().texOffs(22, 20).addBox(-3.0F, -3.0F, -3F, 8, 5, 8, deformation.extend(scaleIn)), PartPose.offset(-1.0F, 14.0F, 2F));
+        	mane.addOrReplaceChild("child", CubeListBuilder.create().texOffs(22, 33).addBox(-2.0F, -1.0F, -7F, 6, 2, 7, deformation.extend(scaleIn)), PartPose.offset(0F, 3F, 4F));
         
-        this.legFrontLeft = ModelUtils.freshRenderer(this);
-        this.legFrontLeft.setRotationPoint(1F, 16F, -4F);
-        this.legFrontLeft.setTextureOffset(0, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, scaleIn);
-        this.legFrontLeft.setTextureOffset(0, 42 + 10).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, scaleIn + 0.25F);
+        part.addOrReplaceChild("right_front_leg", CubeListBuilder.create()
+	        .texOffs(20, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, deformation.extend(scaleIn))
+	        .texOffs(20, 52).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, deformation.extend(scaleIn + 0.25F)), PartPose.offset(-3F, 16F, -4F));
         
-        this.legRearRight = new ModelRearLeg(this, scaleIn, 20, 58);
-        this.legRearRight.setRotationPoint(-2.5F, 16.0F, 7.0F);
+        part.addOrReplaceChild("left_front_leg", CubeListBuilder.create()
+	        .texOffs(0, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 8, 2, deformation.extend(scaleIn))
+	        .texOffs(0, 52).addBox(-1.0F, 4.0F, -1.0F, 2, 4, 2, deformation.extend(scaleIn + 0.25F)), PartPose.offset(1F, 16F, -4F));
         
-        this.legRearLeft = new ModelRearLeg(this, scaleIn, 0, 58);
-        this.legRearLeft.setRotationPoint(0.5F, 16.0F, 7.0F);
+        RearLegHandler.createRearLeg("right_hind_leg", part, scaleIn, deformation, 20, 58, -2.5F);
+        RearLegHandler.createRearLeg("left_hind_leg", part, scaleIn, deformation, 0, 58, 0.5F);
         
-        this.tail = ModelUtils.freshRenderer(this);
-        this.tail.setRotationPoint(0.0F, 12.5F, 8.0F);
-        this.tail.setTextureOffset(12, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 6, 2, scaleIn);
-        this.tail.setTextureOffset(12, 50).addBox(-1.0F, 3.0F, -1.0F, 2, 4, 2, scaleIn + 0.2F);
-    }
+        part.addOrReplaceChild("tail", CubeListBuilder.create()
+              .texOffs(12, 42).addBox(-1.0F, 0.0F, -1.0F, 2, 6, 2, deformation.extend(scaleIn))
+              .texOffs(12, 50).addBox(-1.0F, 3.0F, -1.0F, 2, 4, 2, deformation.extend(scaleIn + 0.2F)), PartPose.offset(0F, 12.5F, 8F));
+		
+		return LayerDefinition.create(mesh, 64, 128);
+	}
     
-	protected Iterable<ModelRenderer> getBodyParts()
+	protected Iterable<ModelPart> bodyParts()
 	{
-		return Arrays.asList(this.body, this.mane, this.legFrontLeft, this.legFrontRight, this.legRearLeft, this.legRearRight, this.tail);
+		return ImmutableList.of(this.body, this.mane, this.legFrontLeft, this.legFrontRight, this.legRearLeft.upperLeg, this.legRearRight.upperLeg, this.tail);
 	}
 	
-	protected Iterable<ModelRenderer> getHeadParts()
+	protected Iterable<ModelPart> headParts()
 	{
-		return Arrays.asList(this.head);
+		return ImmutableList.of(this.head);
 	}
 	
-	public void setLivingAnimations(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)
+	public void prepareMobModel(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)
 	{
-		super.setLivingAnimations(entityIn, limbSwing, limbSwingAmount, partialTickTime);
+		super.prepareMobModel(entityIn, limbSwing, limbSwingAmount, partialTickTime);
 		this.scaleFactor = partialTickTime;
 		
-        if(entityIn.getAttackTarget() != null) tail.rotateAngleY = 0.0F;
-        else tail.rotateAngleY = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+        if(entityIn.getTarget() != null) tail.yRot = 0.0F;
+        else tail.yRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
         
         Genetics genetics = entityIn.getGenetics();
-        this.earRight.rotateAngleX = genetics.gene(0) ? ModelUtils.toRadians(20D) : -ModelUtils.toRadians(20D);
-        this.earLeft.rotateAngleX = genetics.gene(1) ? ModelUtils.toRadians(20D) : -ModelUtils.toRadians(20D);
-        this.muzzle.rotationPointZ = genetics.gene(2) ? 1F : 0F;
-        this.tongue.showModel = genetics.gene(3);
+        this.earRight.xRot = genetics.gene(0) ? ModelUtils.toRadians(20D) : -ModelUtils.toRadians(20D);
+        this.earLeft.xRot = genetics.gene(1) ? ModelUtils.toRadians(20D) : -ModelUtils.toRadians(20D);
+        this.muzzle.z = genetics.gene(2) ? 1F : 0F;
+        this.tongue.visible = genetics.gene(3);
         
         float frontLegSpace = LEG_SPACE;
         float rearLegSpace = LEG_SPACE * 0.6F + 1F;
-        if(entityIn.isEntitySleeping())
+        if(entityIn.isSleeping())
         {
-            mane.setRotationPoint(-1.0F, 16.0F, -3.0F);
-            mane.rotateAngleX = ((float)Math.PI * 2F / 5F);
-            mane.rotateAngleY = 0.0F;
+            mane.setPos(-1.0F, 16.0F, -3.0F);
+            mane.xRot = ((float)Math.PI * 2F / 5F);
+            mane.yRot = 0.0F;
             
-            mane2.rotateAngleX = -ModelUtils.toRadians(12.5D);
+            mane2.xRot = -ModelUtils.toRadians(12.5D);
             
-            body.setRotationPoint(0.0F, 18.0F, 0.0F);
-            body.rotateAngleX = ((float)Math.PI / 4F);
+            body.setPos(0.0F, 18.0F, 0.0F);
+            body.xRot = ((float)Math.PI / 4F);
             
-            tail.setRotationPoint(0.0F, 21.0F, 6.0F);
-            tail.rotateAngleY = (float)Math.cos(entityIn.ticksExisted / 10F) * (float)Math.toRadians(25D);
+            tail.setPos(0.0F, 21.0F, 6.0F);
+            tail.yRot = (float)Math.cos(entityIn.tickCount / 10F) * (float)Math.toRadians(25D);
             
-            legRearRight.setRotationPoint(-rearLegSpace, 22.0F, 2.0F);
-            legRearRight.rotateAngleX(ModelUtils.toRadians(-115D));
-            legRearLeft.setRotationPoint(rearLegSpace, 22.0F, 2.0F);
-            legRearLeft.rotateAngleX(ModelUtils.toRadians(-115D));
+            legRearRight.setPos(-rearLegSpace, 22.0F, 2.0F);
+            legRearRight.xRot(ModelUtils.toRadians(-115D));
+            legRearLeft.setPos(rearLegSpace, 22.0F, 2.0F);
+            legRearLeft.xRot(ModelUtils.toRadians(-115D));
             
-            legFrontRight.setRotationPoint(-frontLegSpace, 17.0F, -4.0F);
-            legFrontRight.rotateAngleX = 5.811947F;
-            legFrontLeft.setRotationPoint(frontLegSpace, 17.0F, -4.0F);
-            legFrontLeft.rotateAngleX = 5.811947F;
+            legFrontRight.setPos(-frontLegSpace, 17.0F, -4.0F);
+            legFrontRight.xRot = 5.811947F;
+            legFrontLeft.setPos(frontLegSpace, 17.0F, -4.0F);
+            legFrontLeft.xRot = 5.811947F;
         }
         else
         {
-            body.setRotationPoint(0.0F, 14.0F, 2.0F);
-            body.rotateAngleX = ((float)Math.PI / 2F);
-            mane.setRotationPoint(-1.0F, 15F, -3.0F);
-            mane.rotateAngleX = body.rotateAngleX;
+            body.setPos(0.0F, 14.0F, 2.0F);
+            body.xRot = ((float)Math.PI / 2F);
+            mane.setPos(-1.0F, 15F, -3.0F);
+            mane.xRot = body.xRot;
             
-            mane2.rotateAngleX = 0F;
+            mane2.xRot = 0F;
             
-            tail.setRotationPoint(0.0F, 12.5F, 8.0F);
+            tail.setPos(0.0F, 12.5F, 8.0F);
             
-            legRearRight.setRotationPoint(-rearLegSpace, 14.0F, 6.5F);
-            legRearRight.rotateAngleX(MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount);
-            legRearLeft.setRotationPoint(rearLegSpace, 14.0F, 6.5F);
-            legRearLeft.rotateAngleX(MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount);
+            legRearRight.setPos(-rearLegSpace, 14.0F, 6.5F);
+            legRearRight.xRot(Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount);
+            legRearLeft.setPos(rearLegSpace, 14.0F, 6.5F);
+            legRearLeft.xRot(Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount);
             
-            legFrontRight.setRotationPoint(-frontLegSpace, 16.0F, -4.0F);
-            legFrontRight.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
-            legFrontLeft.setRotationPoint(frontLegSpace, 16.0F, -4.0F);
-            legFrontLeft.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+            legFrontRight.setPos(-frontLegSpace, 16.0F, -4.0F);
+            legFrontRight.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+            legFrontLeft.setPos(frontLegSpace, 16.0F, -4.0F);
+            legFrontLeft.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
         }
         
-        head.rotationPointY = 14.0F + limbSwingAmount / 2F;
+        head.y = 14.0F + limbSwingAmount / 2F;
         
-        head.rotateAngleZ = entityIn.getInterestedAngle(partialTickTime) + entityIn.getShakeAngle(partialTickTime, 0.0F);
-        mane.rotateAngleZ = entityIn.getShakeAngle(partialTickTime, -0.08F);
-        body.rotateAngleZ = entityIn.getShakeAngle(partialTickTime, -0.16F);
-        tail.rotateAngleZ = entityIn.getShakeAngle(partialTickTime, -0.2F);
+        head.zRot = entityIn.getInterestedAngle(partialTickTime) + entityIn.getShakeAngle(partialTickTime, 0.0F);
+        mane.zRot = entityIn.getShakeAngle(partialTickTime, -0.08F);
+        body.zRot = entityIn.getShakeAngle(partialTickTime, -0.16F);
+        tail.zRot = entityIn.getShakeAngle(partialTickTime, -0.2F);
 	}
 	
-	public void setRotationAngles(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public void setupAnim(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-        head.rotateAngleX = headPitch * 0.017453292F;
-        head.rotateAngleY = netHeadYaw * 0.017453292F;
+        head.xRot = headPitch * 0.017453292F;
+        head.yRot = netHeadYaw * 0.017453292F;
         
         boolean tongue = entityIn.getGenetics().gene(3);
-        jaw.rotateAngleX = (tongue ? TONGUE_GAP : 0F) + entityIn.getJawState(scaleFactor) * (JAW_RANGE - (tongue ? TONGUE_GAP : 0F));
-        jaw.rotationPointZ = -2F + jaw.rotateAngleX;
+        jaw.xRot = (tongue ? TONGUE_GAP : 0F) + entityIn.getJawState(scaleFactor) * (JAW_RANGE - (tongue ? TONGUE_GAP : 0F));
+        jaw.z = -2F + jaw.xRot;
         
-        tail.rotateAngleX = entityIn.getTailRotation() + (entityIn.isEntitySleeping() ? (float)Math.toRadians(45D) : 0F);
+        tail.xRot = entityIn.getTailRotation() + (entityIn.isSleeping() ? (float)Math.toRadians(45D) : 0F);
 	}
     
-    public class ModelRearLeg extends ModelRenderer
+    public class RearLegHandler
     {
-    	ModelRenderer upperLeg, lowerLeg;
+    	public ModelPart upperLeg;
+    	private ModelPart lowerLeg;
     	
-    	public ModelRearLeg(Model base, float scaleIn, int textureX, int textureY)
+    	public RearLegHandler(ModelPart upperLegIn)
     	{
-    		super(base);
-			this.upperLeg = ModelUtils.freshRenderer(base);
-	        this.upperLeg.setRotationPoint(-2.4F, 12.0F, 0.0F);
-		        // Thigh
-		        ModelRenderer thigh = ModelUtils.freshRenderer(base);
-		        thigh.rotateAngleX = (float)(Math.toRadians(35D));
-			        ModelRenderer boxRotThigh = ModelUtils.freshRenderer(base);
-			        boxRotThigh.rotationPointY = -1F;
-			        boxRotThigh.setTextureOffset(textureX, textureY).addBox(-1.5F, -6F, -2F, 3, 7, 3, scaleIn - 0.1F);
-			        boxRotThigh.rotateAngleX = ModelUtils.degree90;
-		        thigh.addChild(boxRotThigh);
-	        this.upperLeg.addChild(thigh);
+    		this.upperLeg = upperLegIn;
+    		this.lowerLeg = upperLegIn.getChild("lower_leg");
+    	}
+    	
+    	public static void createRearLeg(String name, PartDefinition base, float scaleIn, CubeDeformation deformation, int textureX, int textureY, float xOffset)
+    	{
+			PartDefinition upperLeg = base.addOrReplaceChild(name, CubeListBuilder.create(), PartPose.offset(xOffset, 16F, 7F));
+        	PartDefinition thigh = upperLeg.addOrReplaceChild("thigh", CubeListBuilder.create(), PartPose.rotation(ModelUtils.toRadians(35D), 0F, 0F));
+        		thigh.addOrReplaceChild("box_rot", CubeListBuilder.create().texOffs(textureX, textureY).addBox(-1.5F, -6F, -2F, 3, 7, 3, deformation.extend(scaleIn - 0.1F)), PartPose.offsetAndRotation(0F, -1F, 0F, ModelUtils.degree90, 0F, 0F));
 	        
-	        this.lowerLeg = ModelUtils.freshRenderer(base);
-	        this.lowerLeg.setRotationPoint(0F, 3.5F, -4F);
-		        // Foot
-		        ModelRenderer foot = ModelUtils.freshRenderer(base);
-		        foot.rotationPointZ = -1.5F;
-		        foot.setTextureOffset(textureX, textureY + 17).addBox(-1F, 3F, -1.5F, 2, 2, 4, scaleIn);
-		        ModelRenderer bridge = ModelUtils.freshRenderer(base);
-		        bridge.rotateAngleX = (float)(Math.toRadians(70D));
-			        ModelRenderer boxRotBridge = ModelUtils.freshRenderer(base);
-			        boxRotBridge.rotationPointY = 5F;
-			        boxRotBridge.setTextureOffset(textureX, textureY + 10).addBox(-1F, -3.75F, 1.5F, 2, 5, 2, scaleIn - 0.1F);
-			        boxRotBridge.rotateAngleX = ModelUtils.degree90;
-		        bridge.addChild(boxRotBridge);
-		        foot.addChild(bridge);
-	        this.lowerLeg.addChild(foot);
-	        this.upperLeg.addChild(lowerLeg);
+	        PartDefinition lowerLeg = upperLeg.addOrReplaceChild("lower_leg", CubeListBuilder.create(), PartPose.offset(0F, 3.5F, -4F));
+        	PartDefinition foot = lowerLeg.addOrReplaceChild("foot", CubeListBuilder.create().texOffs(textureX, textureY + 17).addBox(-1F, 3F, -1.5F, 2, 2, 4, deformation.extend(scaleIn)), PartPose.offset(0F, 0F, -1.5F));
+	        PartDefinition bridge = foot.addOrReplaceChild("bridge", CubeListBuilder.create(), PartPose.rotation(ModelUtils.toRadians(70D), 0F, 0F));
+		    	bridge.addOrReplaceChild("box_rot", CubeListBuilder.create().texOffs(textureX, textureY + 10).addBox(-1F, -3.75F, 1.5F, 2, 5, 2, deformation.extend(scaleIn - 0.1F)), PartPose.offsetAndRotation(0F, 5F, 0F, ModelUtils.degree90, 0F, 0F));
     	}
     	
-    	public void setRotationPoint(float x, float y, float z)
+    	public void setPos(float x, float y, float z)
     	{
-    		upperLeg.setRotationPoint(x, y, z);
+    		upperLeg.setPos(x, y, z);
     	}
-    	    	
-    	public void rotateAngleX(float x)
+    	
+    	public void xRot(float x)
     	{
     		x += ModelUtils.degree10 * 4;
-    		upperLeg.rotateAngleX = x;
+    		upperLeg.xRot = x;
     		
     		float lowerLegX = Math.max(-ModelUtils.degree10 * 4, -x);
-    		lowerLeg.rotateAngleX = lowerLegX;
+    		lowerLeg.xRot = lowerLegX;
     	}
     	
-    	public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
+    	public void render(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha)
     	{
     		this.upperLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     	}

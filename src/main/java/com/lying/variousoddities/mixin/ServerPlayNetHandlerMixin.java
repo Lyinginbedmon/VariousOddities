@@ -12,19 +12,20 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 
-import net.minecraft.network.play.ServerPlayNetHandler;
-import net.minecraft.network.play.client.CEntityActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket.Action;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
-@Mixin(ServerPlayNetHandler.class)
+@Mixin(ServerGamePacketListenerImpl.class)
 public class ServerPlayNetHandlerMixin
 {
 	@Shadow
 	public ServerPlayer player;
 	
-	@Inject(method = "processEntityAction(Lnet/minecraft/network/play/client/CEntityActionPacket;)V", at = @At("HEAD"), cancellable = true)
-	public void processEntityAction(CEntityActionPacket packetIn, final CallbackInfo ci)
+	@Inject(method = "handlePlayerCommand(Lnet/minecraft/network/protocol/game/ServerboundPlayerCommandPacket;)V", at = @At("HEAD"), cancellable = true)
+	public void handlePlayerCommand(ServerboundPlayerCommandPacket packetIn, final CallbackInfo ci)
 	{
 		if(packetIn.getAction() == Action.START_FALL_FLYING && player.isFallFlying() && !player.isOnGround() && canElytraFly())
 			ci.cancel();

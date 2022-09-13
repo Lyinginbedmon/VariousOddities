@@ -66,9 +66,9 @@ public abstract class EntityOddityAgeable extends AgeableMob
 	}
 	
 	@SuppressWarnings("rawtypes")
-	protected void updateAITasks()
+	protected void customServerAiStep()
 	{
-		super.updateAITasks();
+		super.customServerAiStep();
 		
 		if(!this.controllers.isEmpty())
 		{
@@ -106,9 +106,9 @@ public abstract class EntityOddityAgeable extends AgeableMob
     		getEntityData().set(AGE, getAge());
     }
     
-    public void livingTick()
+    public void aiStep()
     {
-	    super.livingTick();
+	    super.aiStep();
 	    
 	    if(isInLove())
 	    {

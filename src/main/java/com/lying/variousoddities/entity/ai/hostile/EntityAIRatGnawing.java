@@ -1,13 +1,12 @@
 package com.lying.variousoddities.entity.ai.hostile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
 import com.lying.variousoddities.entity.AbstractRat;
+import com.lying.variousoddities.init.VOBlocks;
 
-import net.minecraft.block.CropsBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -16,11 +15,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.Vec3;
 
 public class EntityAIRatGnawing extends Goal
@@ -36,18 +31,6 @@ public class EntityAIRatGnawing extends Goal
 	
 	private int breakingTime;
 	private int breakingProgPrev = -1;
-	
-	/**
-	 * List of specific blocks to gnaw on
-	 */
-	private static final List<Block> gnawables = Arrays.asList
-				(
-					Blocks.MELON,
-					Blocks.PUMPKIN,
-					Blocks.CARVED_PUMPKIN,
-					Blocks.HAY_BLOCK,
-					Blocks.CAKE
-				);
 	
 	private int pathingAbandon = 0;
 	
@@ -85,7 +68,7 @@ public class EntityAIRatGnawing extends Goal
 	
 	public void start()
 	{
-		theRat.getLookController().setLookPosition(gnawSite.getX() + 0.5D, gnawSite.getY() + 0.5D, gnawSite.getZ() + 0.5D, 10F, theRat.getVerticalFaceSpeed());
+		theRat.getLookControl().setLookAt(gnawSite.getX() + 0.5D, gnawSite.getY() + 0.5D, gnawSite.getZ() + 0.5D, 10F, theRat.getMaxHeadYRot());
 		if(getDistanceTo(gnawSite) > 0.75D)
 			theNavigator.moveTo(gnawSite.getX(), gnawSite.getY(), gnawSite.getZ(), 1D);
 	}
@@ -98,7 +81,7 @@ public class EntityAIRatGnawing extends Goal
 			return;
 		}
 		
-		theRat.getLookController().setLookPosition(gnawSite.getX() + 0.5D, gnawSite.getY() + 0.5D, gnawSite.getZ() + 0.5D, 10F, theRat.getVerticalFaceSpeed());
+		theRat.getLookControl().setLookAt(gnawSite.getX() + 0.5D, gnawSite.getY() + 0.5D, gnawSite.getZ() + 0.5D, 10F, theRat.getMaxHeadYRot());
 		switch((getDistanceTo(gnawSite) > Math.max(1.0D, theRat.getBbWidth())) ? 0 : 1)
 		{
 			case 0: // Approaching
@@ -116,19 +99,19 @@ public class EntityAIRatGnawing extends Goal
 				theRat.getNavigation().stop();
 				
 				BlockState theBlock = theWorld.getBlockState(gnawSite);
-				int timeToBreak = (int)Math.max(20, theBlock.getBlockHardness(theWorld, gnawSite) * 80);
+				int timeToBreak = (int)Math.max(20, theBlock.getDestroySpeed(theWorld, gnawSite) * 80);
 				
 		        ++this.breakingTime;
 		        int breakProgress = (int)((float)this.breakingTime / (float)timeToBreak * 10.0F);
 		        if(breakProgress != this.breakingProgPrev)
 		        {
-		            this.theWorld.sendBlockBreakProgress(this.theRat.getEntityId(), this.gnawSite, breakProgress);
+		            this.theWorld.destroyBlockProgress(this.theRat.getId(), this.gnawSite, breakProgress);
 		            this.breakingProgPrev = breakProgress;
 		        }
 		        
 		        if(this.breakingTime >= timeToBreak)
 		        {
-		        	if(shouldHeal(theWorld.getBlockState(gnawSite).getBlock()))
+		        	if(theWorld.getBlockState(gnawSite).is(VOBlocks.GNAWABLE_HEALING))
 		        		this.theRat.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
 		        	
 		            this.theWorld.destroyBlock(gnawSite, false);
@@ -192,19 +175,8 @@ public class EntityAIRatGnawing extends Goal
 	{
 		if(par1BlockState == null || theWorld == null)
 			return false;
-		else
-		{
-			float hardness = par1BlockState.getBlockHardness(theWorld, gnawSite);
-			Material material = par1BlockState.getMaterial();
-			if(hardness <= 2F && material == Material.WOOD)
-				return true;
-		}
-		return shouldHeal(par1BlockState.getBlock());
-	}
-	
-	public boolean shouldHeal(Block theBlock)
-	{
-		return gnawables.contains(theBlock) || theBlock instanceof CropsBlock || theBlock instanceof StemBlock;
+		
+		return par1BlockState.is(VOBlocks.GNAWABLE);
 	}
 	
 	private boolean canPathTo(BlockPos par1BlockPos)

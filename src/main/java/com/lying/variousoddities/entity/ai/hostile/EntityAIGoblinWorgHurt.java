@@ -9,7 +9,6 @@ import com.lying.variousoddities.entity.passive.EntityWorg;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.Goal.Flag;
 import net.minecraft.world.level.Level;
 
 public class EntityAIGoblinWorgHurt extends Goal
@@ -50,13 +49,13 @@ public class EntityAIGoblinWorgHurt extends Goal
 	
 	public void startExecuting()
 	{
-		theGoblin.getLookController().setLookPositionWithEntity(targetWorg, (float)(theGoblin.getHorizontalFaceSpeed() + 20), (float)theGoblin.getVerticalFaceSpeed());
-		theGoblin.swingArm(InteractionHand.OFF_HAND);
-		targetWorg.attackEntityFrom(DamageSource.mobAttack(theGoblin), 0F);
+		theGoblin.getLookControl().setLookAt(targetWorg, (float)(theGoblin.getMaxHeadXRot() + 20), (float)theGoblin.getMaxHeadYRot());
+		theGoblin.swing(InteractionHand.OFF_HAND);
+		targetWorg.hurt(DamageSource.mobAttack(theGoblin), 0F);
 		
 		for(EntityGoblin child : theWorld.getEntitiesOfClass(EntityGoblin.class, targetWorg.getBoundingBox().inflate(12, 2, 12), new Predicate<EntityGoblin>()
 			{
-				public boolean apply(EntityGoblin input){ return input.isBaby() && input.canEntityBeSeen(targetWorg) && input.canEntityBeSeen(theGoblin); }
+				public boolean apply(EntityGoblin input){ return input.isBaby() && input.hasLineOfSight(targetWorg) && input.hasLineOfSight(theGoblin); }
 			}))
 			child.setViolent(true);
 	}

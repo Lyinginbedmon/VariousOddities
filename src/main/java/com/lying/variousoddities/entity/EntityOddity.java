@@ -7,11 +7,12 @@ import com.lying.variousoddities.entity.ai.controller.EntityController;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
-public abstract class EntityOddity extends Mob
+public abstract class EntityOddity extends PathfinderMob
 {
     /** A list of EntityControllers able to influence this entity */
 	@SuppressWarnings("rawtypes")
@@ -52,9 +53,9 @@ public abstract class EntityOddity extends Mob
 	}
 	
 	@SuppressWarnings("rawtypes")
-	protected void updateAITasks()
+	protected void customServerAiStep()
 	{
-		super.updateAITasks();
+		super.customServerAiStep();
 		
 		if(!this.controllers.isEmpty())
 		{

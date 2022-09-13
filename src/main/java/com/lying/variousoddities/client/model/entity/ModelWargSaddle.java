@@ -1,65 +1,62 @@
 package com.lying.variousoddities.client.model.entity;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import com.lying.variousoddities.client.model.ModelUtils;
+import com.google.common.collect.ImmutableList;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 
-import net.minecraft.client.renderer.entity.model.TintedAgeableModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.client.model.ColorableAgeableListModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class ModelWargSaddle extends TintedAgeableModel<EntityWarg>
+public class ModelWargSaddle extends ColorableAgeableListModel<EntityWarg>
 {
-    public ModelRenderer body;
-    public ModelRenderer mane;
-    public ModelRenderer mane2;
+    public ModelPart saddle;
     
-    public ModelRenderer saddle;
-    
-    public ModelWargSaddle()
+    public ModelWargSaddle(ModelPart partsIn)
     {
-    	this(0F);
+    	this.saddle = partsIn.getChild("saddle");
     }
-    
-    public ModelWargSaddle(float scaleIn)
-    {
-    	this.textureWidth = 64;
-    	this.textureHeight = 32;
-    	
-    	this.saddle = ModelUtils.freshRenderer(this);
-    	this.saddle.setRotationPoint(0F, 11F, 2F);
-    	this.saddle.setTextureOffset(0, 0).addBox(-3F, 0F, -1F, 6, 6, 6, scaleIn);
-    	this.saddle.setTextureOffset(24, 0).addBox(-3.5F, -1F, -2F, 7, 6, 1, scaleIn);
-    }
-    
-	protected Iterable<ModelRenderer> getBodyParts()
+	
+	public static LayerDefinition createBodyLayer(CubeDeformation deformation, float scaleIn)
 	{
-		return Arrays.asList(this.saddle);
+		MeshDefinition mesh = new MeshDefinition();
+		PartDefinition part = mesh.getRoot();
+		
+		part.addOrReplaceChild("saddle", CubeListBuilder.create()
+	    	.texOffs(0, 0).addBox(-3F, 0F, -1F, 6, 6, 6, deformation.extend(scaleIn))
+	    	.texOffs(24, 0).addBox(-3.5F, -1F, -2F, 7, 6, 1, deformation.extend(scaleIn)), PartPose.offset(0F, 11F, 2F));
+		
+		return LayerDefinition.create(mesh, 64, 32);
+	}
+    
+	protected Iterable<ModelPart> bodyParts()
+	{
+		return ImmutableList.of(this.saddle);
 	}
 	
-	protected Iterable<ModelRenderer> getHeadParts(){ return new ArrayList<ModelRenderer>(); }
+	protected Iterable<ModelPart> headParts(){ return ImmutableList.of(); }
 	
-	public void setLivingAnimations(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)
+	public void prepareMobModel(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)
 	{
-		super.setLivingAnimations(entityIn, limbSwing, limbSwingAmount, partialTickTime);
+		super.prepareMobModel(entityIn, limbSwing, limbSwingAmount, partialTickTime);
 		
-        if(entityIn.isEntitySleeping())
+        if(entityIn.isSleeping())
         {
-            this.saddle.setRotationPoint(0.0F, 15.0F, 2.0F);
-            this.saddle.rotateAngleX = -((float)Math.PI / 4F);
+            this.saddle.setPos(0.0F, 15.0F, 2.0F);
+            this.saddle.xRot = -((float)Math.PI / 4F);
         }
         else
         {
-        	this.saddle.setRotationPoint(0.0F, 11.0F, 2.0F);
-            this.saddle.rotateAngleX = 0F;
+        	this.saddle.setPos(0.0F, 11.0F, 2.0F);
+            this.saddle.xRot = 0F;
         }
         
-        this.saddle.rotateAngleZ = entityIn.getShakeAngle(partialTickTime, -0.16F);
+        this.saddle.zRot = entityIn.getShakeAngle(partialTickTime, -0.16F);
 	}
 	
-	public void setRotationAngles(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
-	{
-		
-	}
+	public void setupAnim(EntityWarg entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch){ }
 }
