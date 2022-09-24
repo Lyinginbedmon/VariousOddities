@@ -1,6 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
 
@@ -63,7 +63,7 @@ public class AbilityLightSensitivity extends Ability
 			
 			int light = Math.max(block, sky);
 			if(light > ((AbilityLightSensitivity)AbilityRegistry.getAbilityByName(entity, REGISTRY_NAME)).lightLimit)
-				entity.addEffect(new MobEffectInstance(VOPotions.DAZZLED, Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
+				entity.addEffect(new MobEffectInstance(VOMobEffects.DAZZLED, Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
 		}
 	}
 	

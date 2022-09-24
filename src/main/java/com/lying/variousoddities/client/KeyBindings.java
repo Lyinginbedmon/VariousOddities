@@ -21,11 +21,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 @OnlyIn(Dist.CLIENT)
 public class KeyBindings
@@ -53,10 +53,11 @@ public class KeyBindings
 		return binding;
 	}
 	
-	public static void register()
+	public static void registerKeybinds(RegisterKeyMappingsEvent event)
 	{
 		MinecraftForge.EVENT_BUS.register(new KeyBindings());
-		KEYS.forEach((key) -> { ClientRegistry.registerKeyBinding(key); });
+		for(KeyMapping key : KEYS)
+			event.register(key);
 	}
 	
 	@SubscribeEvent

@@ -8,6 +8,7 @@ import net.minecraft.client.color.item.ItemColors;
 
 public class ColorHandler
 {
+	@SuppressWarnings("deprecation")
 	public static void registerColorHandlers()
 	{
 		ItemColors registry = Minecraft.getInstance().getItemColors();

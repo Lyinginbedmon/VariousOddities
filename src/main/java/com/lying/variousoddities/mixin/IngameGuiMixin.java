@@ -10,7 +10,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.SoulCondition;
 import com.lying.variousoddities.client.gui.GuiHandler;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -76,7 +76,7 @@ public class IngameGuiMixin
 						displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.awaken", inv.getTranslatedKeyMessage().getString().toUpperCase());
 					else
 					{
-						if(player.getEffect(VOPotions.SLEEP) != null && player.getEffect(VOPotions.SLEEP).getDuration() > 0)
+						if(player.getEffect(VOMobEffects.SLEEP) != null && player.getEffect(VOMobEffects.SLEEP).getDuration() > 0)
 							displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.sleep");
 						else
 						{

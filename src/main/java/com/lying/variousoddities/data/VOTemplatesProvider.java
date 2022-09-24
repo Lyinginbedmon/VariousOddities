@@ -2,11 +2,10 @@ package com.lying.variousoddities.data;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.common.collect.Sets;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.TemplateRegistry;
@@ -14,47 +13,43 @@ import com.lying.variousoddities.species.TemplateRegistry;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
-import net.minecraft.data.IDataProvider;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class VOTemplatesProvider implements DataProvider
 {
-	private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
-	private final DataGenerator dataGenerator;
+	private final DataGenerator.PathProvider pathProvider;
+	protected ExistingFileHelper fileHelper;
 	
-	public VOTemplatesProvider(DataGenerator generatorIn)
+	public VOTemplatesProvider(DataGenerator generatorIn, ExistingFileHelper fileHelperIn)
 	{
-		this.dataGenerator = generatorIn;
+		this.pathProvider = generatorIn.createPathProvider(DataGenerator.Target.DATA_PACK, "templates");
+		this.fileHelper = fileHelperIn;
 	}
 	
 	public String getName(){ return "Various Oddities templates"; }
 	
 	public void run(CachedOutput cache) throws IOException
 	{
-		Path path = this.dataGenerator.getOutputFolder();
-		Map<ResourceLocation, Template> map = Maps.newHashMap();
-		TemplateRegistry.getDefaultTemplates().forEach((template) -> 
+		Set<ResourceLocation> set = Sets.newHashSet();
+		Consumer<Template> consumer = (template) ->
+		{
+			if(!set.add(template.getRegistryName()))
+				throw new IllegalStateException("Duplicate template "+template.getRegistryName());
+			else
 			{
-				if(map.put(template.getRegistryName(), template) != null)
-					throw new IllegalStateException("Duplicate template "+template.getRegistryName());
-			});
-		
-		map.forEach((name, template) -> 
-			{
-				Path filePath = getPath(path, name);
+				Path path = this.pathProvider.json(template.getRegistryName());
 				try
 				{
-					IDataProvider.save(GSON, cache, template.toJson(), filePath);
+					DataProvider.saveStable(cache, template.toJson(), path);
 				}
 				catch(IOException e)
 				{
-					VariousOddities.log.error("Couldn't save template {}", filePath, e);
+					VariousOddities.log.error("Couldn't save template {}", path, e);
 				}
-			});
-	}
-	
-	private static Path getPath(Path pathIn, ResourceLocation id)
-	{
-		return pathIn.resolve("data/"+id.getNamespace()+"/templates/"+id.getPath()+".json");
+			}
+		};
+		
+		TemplateRegistry.getDefaultTemplates().forEach(consumer);
 	}
 }

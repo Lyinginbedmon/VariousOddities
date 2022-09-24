@@ -34,9 +34,8 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -225,8 +224,7 @@ public class ScreenSelectSpecies extends Screen
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
 	}
     
-	@SuppressWarnings("deprecation")
-	public static void drawListBorder(PoseStack matrixStack, ExtendedList<?> listIn, int heightIn, int texX, int texY, int growth, ResourceLocation texture)
+	public static void drawListBorder(PoseStack matrixStack, ObjectSelectionList<?> listIn, int heightIn, int texX, int texY, int growth, ResourceLocation texture)
 	{
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		RenderSystem.setShaderTexture(0, texture);
@@ -255,8 +253,7 @@ public class ScreenSelectSpecies extends Screen
 		Screen.blit(matrixStack, listLeft + 6, listBottom, sideWidth, 6, texX + 6, texY + 26, 20, 6, 256, 256);
 	}
 	
-    @SuppressWarnings("deprecation")
-	private void hideListEdge()
+    private void hideListEdge()
     {
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder bufferbuilder = tessellator.getBuilder();
@@ -269,7 +266,7 @@ public class ScreenSelectSpecies extends Screen
 	        bufferbuilder.vertex((double)listRight, (double)listStart, 0.0D).uv((float)listRight / 32.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex((double)listRight, (double)0, 0.0D).uv((float)listRight / 32.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex(0.0D, (double)0, 0.0D).uv(0.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
-	    tessellator.draw();
+	    BufferUploader.drawWithShader(bufferbuilder.end());
 		
 		int listEnd = this.height - 51;
         bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -277,14 +274,13 @@ public class ScreenSelectSpecies extends Screen
 	        bufferbuilder.vertex((double)listRight, (double)this.height, 0.0D).uv((float)listRight / 32.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex((double)listRight, (double)listEnd, 0.0D).uv((float)listRight / 32.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex(0.0D, (double)listEnd, 0.0D).uv(0.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
-        tessellator.draw();
+        BufferUploader.drawWithShader(bufferbuilder.end());
 		RenderSystem.enableTexture();
-		RenderSystem.shadeModel(7424);
-		RenderSystem.enableAlphaTest();
+//		RenderSystem.shadeModel(7424);
+		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
     }
 	
-	@SuppressWarnings("deprecation")
 	public void renderBackgroundLayer(PoseStack matrixStack, float partialTicks)
 	{
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -340,7 +336,7 @@ public class ScreenSelectSpecies extends Screen
 	
     public void init()
     {
-        this.buttons.clear();
+    	clearWidgets();
         
         int midX = width / 2;
     	
@@ -349,11 +345,11 @@ public class ScreenSelectSpecies extends Screen
 		this.speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
 		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
 		if(!this.randomise)
-			this.children.add(this.speciesList);
+			addWidget(this.speciesList);
 		
 		int listWidth = 165;
 		this.abilityList = new AbilityList(minecraft, (this.width - listWidth) / 2, listWidth, this.height, 20);
-		this.children.add(this.abilityList);
+		addWidget(this.abilityList);
     	
     	this.addRenderableWidget(selectButton = new Button(midX - 50, 35, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
     		{
@@ -445,7 +441,6 @@ public class ScreenSelectSpecies extends Screen
 		matrix.popPose();
     }
 	
-	@SuppressWarnings("deprecation")
 	private static void blit(Matrix4f matrix, int startX, int endX, int startY, int endY, int blitOffset, float texXMin, float texXMax, float texYMin, float texYMax, float red, float green, float blue, float alpha)
 	{
 		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);

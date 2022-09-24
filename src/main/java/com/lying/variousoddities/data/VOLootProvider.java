@@ -15,28 +15,27 @@ import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.loot.LootTableProvider;
-import net.minecraft.loot.ConstantRange;
-import net.minecraft.loot.ItemLootEntry;
-import net.minecraft.loot.LootEntry;
-import net.minecraft.loot.LootParameterSet;
-import net.minecraft.loot.LootParameterSets;
-import net.minecraft.loot.LootTableManager;
-import net.minecraft.loot.RandomValueRange;
-import net.minecraft.loot.StandaloneLootEntry;
-import net.minecraft.loot.TableLootEntry;
-import net.minecraft.loot.ValidationTracker;
-import net.minecraft.loot.functions.SetCount;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.resources.ResourcePackType;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.LootTables;
+import net.minecraft.world.level.storage.loot.ValidationContext;
+import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.entries.LootPoolSingletonContainer;
+import net.minecraft.world.level.storage.loot.entries.LootTableReference;
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSet;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 public class VOLootProvider extends LootTableProvider
 {
-    private final List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootParameterSet>> tables = new ArrayList<>();
+    private final List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootContextParamSet>> tables = new ArrayList<>();
     private final ExistingFileHelper existingFileHelper;
     
 	public VOLootProvider(DataGenerator dataGeneratorIn, ExistingFileHelper existingFileHelperIn)
@@ -52,7 +51,7 @@ public class VOLootProvider extends LootTableProvider
 	}
 	
     @Override
-    protected List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootParameterSet>> getTables()
+    protected List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootContextParamSet>> getTables()
     {
         tables.clear();
         addBlockLootTables();
@@ -63,64 +62,64 @@ public class VOLootProvider extends LootTableProvider
     
     private void addBlockLootTables()
     {
-    	addBlockLootTable(VOLootTables.SCALE_LAYER.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()
+    	addBlockLootTable(VOLootTables.SCALE_LAYER.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()
     					.name("main")
-    					.rolls(ConstantRange.of(1))
-    					.addEntry(itemEntry(VOItems.SCALE_KOBOLD, 1).acceptFunction(SetCount.builder(RandomValueRange.of(1.0F, 2.0F))))));
+    					.setRolls(ConstantValue.exactly(1))
+    					.add(itemEntry(VOItems.SCALE_KOBOLD, 1).apply(SetItemCountFunction.setCount(UniformGenerator.between(1.0F, 2.0F))))));
     }
     
     private void addEntityLootTables()
     {
-    	addEntityLootTable(VOLootTables.KOBOLD.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()
+    	addEntityLootTable(VOLootTables.KOBOLD.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()
     					.name("main")
-    					.rolls(ConstantRange.of(1))
-    					.addEntry(itemEntry(VOItems.SCALE_KOBOLD, 1).acceptFunction(SetCount.builder(RandomValueRange.of(0.0F, 3.0F))))));
-    	addEntityLootTable(VOLootTables.GOBLIN.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.RAT.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.GIANT_RAT.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.CRAB.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.GIANT_CRAB.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.SCORPION.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.GIANT_SCORPION.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.GHASTLING.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()
+    					.setRolls(ConstantValue.exactly(1))
+    					.add(itemEntry(VOItems.SCALE_KOBOLD, 1).apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 3.0F))))));
+    	addEntityLootTable(VOLootTables.GOBLIN.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.RAT.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.GIANT_RAT.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.CRAB.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.GIANT_CRAB.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.SCORPION.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.GIANT_SCORPION.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.GHASTLING.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()
     					.name("main")
-    					.rolls(ConstantRange.of(3))
-    					.addEntry(itemEntry(Items.GUNPOWDER, 5))
-    					.addEntry(itemEntry(Items.GHAST_TEAR, 1))));
-    	addEntityLootTable(VOLootTables.WORG.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
-    	addEntityLootTable(VOLootTables.WARG.getPath(), LootTable.builder().addLootPool(
-    			LootPool.builder()));
+    					.setRolls(ConstantValue.exactly(3))
+    					.add(itemEntry(Items.GUNPOWDER, 5))
+    					.add(itemEntry(Items.GHAST_TEAR, 1))));
+    	addEntityLootTable(VOLootTables.WORG.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
+    	addEntityLootTable(VOLootTables.WARG.getPath(), LootTable.lootTable().withPool(
+    			LootPool.lootPool()));
     }
     
     private void addChestLootTables()
     {
-//        addChestLootTable("inject/chests/village/village_weaponsmith", LootTable.builder().addLootPool(
-//                LootPool.builder()
+//        addChestLootTable("inject/chests/village/village_weaponsmith", LootTable.lootPool().withPool(
+//                LootPool.lootPool()
 //                        .name("main")
-//                        .rolls(ConstantRange.of(1))
-//                        .acceptCondition(RandomChance.builder(0.06F))
-//                        .addEntry(itemEntry(VEItems.COATING_SILVER, 1))
+//                        .rolls(ConstantValue.exactly(1))
+//                        .acceptCondition(RandomChance.lootPool(0.06F))
+//                        .add(itemEntry(VEItems.COATING_SILVER, 1))
 //                )
 //        );
     }
     
-    private void addLootTable(String location, LootTable.Builder lootTable, LootParameterSet lootParameterSet)
+    private void addLootTable(String location, LootTable.Builder lootTable, LootContextParamSet lootParameterSet)
     {
         if(location.startsWith("inject/"))
         {
             String actualLocation = location.replace("inject/", "");
-            Preconditions.checkArgument(existingFileHelper.exists(new ResourceLocation("loot_tables/" + actualLocation + ".json"), ResourcePackType.SERVER_DATA), "Loot table %s does not exist in any known data pack", actualLocation);
+            Preconditions.checkArgument(existingFileHelper.exists(new ResourceLocation("loot_tables/" + actualLocation + ".json"), PackType.SERVER_DATA), "Loot table %s does not exist in any known data pack", actualLocation);
         }
         tables.add(Pair.of
         		(
@@ -130,34 +129,34 @@ public class VOLootProvider extends LootTableProvider
     }
     
     @SuppressWarnings("unused")
-	private static LootEntry.Builder<?> tableEntry(ResourceLocation table, int weight)
+	private static LootPoolSingletonContainer.Builder<?> tableEntry(ResourceLocation table, int weight)
     {
-        return TableLootEntry.builder(table).weight(weight);
+        return LootTableReference.lootTableReference(table).setWeight(weight);
     }
     
-	private static StandaloneLootEntry.Builder<?> itemEntry(Item item, int weight)
+	private static LootPoolSingletonContainer.Builder<?> itemEntry(Item item, int weight)
     {
-        return ItemLootEntry.builder(item).weight(weight);
+        return LootItem.lootTableItem(item).setWeight(weight);
     }
     
 	private void addBlockLootTable(String location, LootTable.Builder lootTable)
 	{
-		addLootTable(location, lootTable, LootParameterSets.BLOCK);
+		addLootTable(location, lootTable, LootContextParamSets.BLOCK);
 	}
 	
     @SuppressWarnings("unused")
 	private void addChestLootTable(String location, LootTable.Builder lootTable)
     {
-        addLootTable(location, lootTable, LootParameterSets.CHEST);
+        addLootTable(location, lootTable, LootContextParamSets.CHEST);
     }
     
 	private void addEntityLootTable(String location, LootTable.Builder lootTable)
     {
-    	addLootTable(location, lootTable, LootParameterSets.ENTITY);
+    	addLootTable(location, lootTable, LootContextParamSets.ENTITY);
     }
     
     @Override
-    protected void validate(Map<ResourceLocation, LootTable> map, ValidationTracker validationtracker) {
-        map.forEach((loc, table) -> LootTableManager.validateLootTable(validationtracker, loc, table));
+    protected void validate(Map<ResourceLocation, LootTable> map, ValidationContext validationtracker) {
+        map.forEach((loc, table) -> LootTables.validate(validationtracker, loc, table));
     }
 }

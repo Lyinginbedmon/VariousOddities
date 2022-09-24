@@ -41,7 +41,7 @@ public class PacketSit
 			Level world = context.getSender().getLevel();
 			Player player = world.getPlayerByUUID(msg.playerID);
 			if(player != null)
-				if(player.getVehicle() != null && player.getVehicle().getType() == VOEntities.WARG)
+				if(player.getVehicle() != null && player.getVehicle().getType() == VOEntities.WARG.get())
 				{
 					EntityWarg warg = (EntityWarg)player.getVehicle();
 					warg.setOrderedToSit(msg.sitting);

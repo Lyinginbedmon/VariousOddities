@@ -27,7 +27,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 
-public class ModelScorpion extends AgeableListModel<AbstractScorpion>
+public class ModelScorpion<T extends AbstractScorpion> extends AgeableListModel<T>
 {
 	ModelPart body;
 	ClawHandler rightClaw, leftClaw;
@@ -106,7 +106,7 @@ public class ModelScorpion extends AgeableListModel<AbstractScorpion>
 				rightLegs.get(0).getLeg(), leftLegs.get(0).getLeg(), rightLegs.get(1).getLeg(), leftLegs.get(1).getLeg(), rightLegs.get(2).getLeg(), leftLegs.get(2).getLeg(), rightLegs.get(3).getLeg(), leftLegs.get(3).getLeg());
 	}
     
-    public class ClawHandler
+    public static class ClawHandler
     {
     	public float swingProgress;
     	
@@ -196,7 +196,7 @@ public class ModelScorpion extends AgeableListModel<AbstractScorpion>
         public ModelPart getClaw(){ return this.theArm; }
     }
     
-    public class TailHandler
+    public static class TailHandler
     {
     	public float swingProgress;
     	
@@ -277,7 +277,7 @@ public class ModelScorpion extends AgeableListModel<AbstractScorpion>
     	}
     }
     
-    public class LegHandler
+    public static class LegHandler
     {
     	private final int index;
     	private final EnumLimbPosition side;

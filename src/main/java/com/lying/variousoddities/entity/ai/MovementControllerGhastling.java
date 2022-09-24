@@ -1,12 +1,12 @@
 package com.lying.variousoddities.entity.ai;
 
-import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-public class MovementControllerGhastling extends MovementController
+public class MovementControllerGhastling extends MoveControl
 {
 	private final Mob parentEntity;
 	private int courseChangeCooldown;
@@ -19,22 +19,22 @@ public class MovementControllerGhastling extends MovementController
 	
 	public void clearMotion()
 	{
-		this.action = Action.WAIT;
+		this.operation = Operation.WAIT;
 	}
 	
 	public void tick()
 	{
-		if(this.action == MovementController.Action.MOVE_TO)
+		if(this.operation == MoveControl.Operation.MOVE_TO)
 			if(this.courseChangeCooldown-- <= 0)
 			{
 				this.courseChangeCooldown += this.parentEntity.getRandom().nextInt(5) + 2;
-				Vec3 course = new Vec3(this.posX - this.parentEntity.getX(), this.posY - this.parentEntity.getY(), this.posZ - this.parentEntity.getZ());
+				Vec3 course = new Vec3(this.wantedX - this.parentEntity.getX(), this.wantedY - this.parentEntity.getY(), this.wantedZ - this.parentEntity.getZ());
 				double dist = course.length();
 				course = course.normalize();
 				if(collides(course, Mth.ceil(dist)))
-					this.parentEntity.setMotion(this.parentEntity.getMotion().add(course.scale(0.1D)));
+					this.parentEntity.setDeltaMovement(this.parentEntity.getDeltaMovement().add(course.scale(0.1D)));
 				else
-					this.action = MovementController.Action.WAIT;
+					this.operation = MoveControl.Operation.WAIT;
 			}
 	}
 	
@@ -44,7 +44,7 @@ public class MovementControllerGhastling extends MovementController
 		for(int i=1; i<distance; ++i)
 		{
 			entityBB = entityBB.move(course);
-			if(!this.parentEntity.getLevel().hasNoCollisions(this.parentEntity, entityBB))
+			if(!this.parentEntity.getLevel().noCollision(this.parentEntity, entityBB))
 				return false;
 		}
 		

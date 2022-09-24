@@ -35,7 +35,7 @@ public class EntityScorpion extends AbstractScorpion
 	
 	public AbstractScorpion createBaby(Level worldIn)
 	{
-		EntityScorpion baby = VOEntities.SCORPION.create(worldIn);
+		EntityScorpion baby = VOEntities.SCORPION.get().create(worldIn);
 		baby.setBabies(false);
 		baby.setBreed(this.getScorpionType());
 		return baby;

@@ -31,10 +31,10 @@ public class VOEntityTags extends TagsProvider<EntityType<?>>
 	protected void addTags()
 	{
 		tag(CRABS)
-			.add(VOEntities.CRAB, VOEntities.CRAB_GIANT);
+			.add(VOEntities.CRAB.get(), VOEntities.CRAB_GIANT.get());
 		tag(RATS)
-			.add(VOEntities.RAT, VOEntities.RAT_GIANT);
+			.add(VOEntities.RAT.get(), VOEntities.RAT_GIANT.get());
 		tag(SCORPIONS)
-			.add(VOEntities.SCORPION, VOEntities.SCORPION_GIANT);
+			.add(VOEntities.SCORPION.get(), VOEntities.SCORPION_GIANT.get());
 	}
 }

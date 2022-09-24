@@ -1,7 +1,7 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
@@ -29,7 +29,7 @@ public class LayerPetrified<T extends LivingEntity, M extends EntityModel<T>> ex
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		LivingData data = LivingData.forEntity(entitylivingbaseIn);
-		if(data == null || !data.getVisualPotion(VOPotions.PETRIFIED))
+		if(data == null || !data.getVisualPotion(VOMobEffects.PETRIFIED))
 			return;
 		
 		matrixStackIn.pushPose();

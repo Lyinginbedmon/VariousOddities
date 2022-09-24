@@ -1,7 +1,7 @@
 package com.lying.variousoddities.block;
 
 import com.lying.variousoddities.init.VOBlocks;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
 
@@ -33,7 +33,7 @@ public class BlockPhylacteryLich extends BlockPhylacteryBase implements EntityBl
     
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level worldIn, BlockState state, BlockEntityType<T> typeIn)
 	{
-		return VOBlock.createTickerHelper(typeIn, VOTileEntities.PHYLACTERY, worldIn.isClientSide() ? null : TileEntityPhylactery::serverTick);
+		return VOBlock.createTickerHelper(typeIn, VOBlockEntities.PHYLACTERY, worldIn.isClientSide() ? null : TileEntityPhylactery::serverTick);
 	}
 	
 	public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)

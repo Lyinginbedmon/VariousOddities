@@ -4,7 +4,6 @@ import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.init.VOItems;
 import com.mojang.datafixers.util.Pair;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -29,7 +28,7 @@ public class ContainerPlayerBody extends AbstractContainerMenu
 			InventoryMenu.EMPTY_ARMOR_SLOT_HELMET};
 	private static final EquipmentSlot[] VALID_EQUIPMENT_SLOTS = new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 	
-	public static ContainerPlayerBody fromNetwork(int windowId, Inventory inv, FriendlyByteBuf buf)
+	public static ContainerPlayerBody fromNetwork(int windowId, Inventory inv)
 	{
 		Player player = inv.player;
 		double range = player.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
@@ -96,7 +95,7 @@ public class ContainerPlayerBody extends AbstractContainerMenu
 				 * Returns the maximum stack size for a given slot (usually the same as getInventoryStackLimit(), but 1 in
 				 * the case of armor slots)
 				 */
-				public int getSlotStackLimit(){ return 1; }
+				public int getMaxStackSize(){ return 1; }
 				
 				/**
 				 * Check if the stack is allowed to be placed in this slot, used for armor slots as well as furnace fuel.

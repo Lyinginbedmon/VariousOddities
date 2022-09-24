@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 import com.lying.variousoddities.world.settlement.BoxRoom;
 
 import net.minecraft.core.BlockPos;
@@ -38,7 +38,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 	
 	public TileEntityDraftingTable(BlockPos pos, BlockState state)
 	{
-		super(VOTileEntities.TABLE_DRAFTING, pos, state);
+		super(VOBlockEntities.TABLE_DRAFTING, pos, state);
 	}
 	
 	public void load(CompoundTag nbt)

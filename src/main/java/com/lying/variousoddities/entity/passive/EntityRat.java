@@ -53,7 +53,7 @@ public class EntityRat extends AbstractRat
 	    this.goalSelector.addGoal(3, new EntityAIRatAvoid<>(this, Cat.class, 6.0F, 1.0D, 1.2D));
 	    this.goalSelector.addGoal(4, new EntityAIRatFollowGiant(this, 1.25D));
 	    
-	    if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT))
+	    if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT.get()))
 		    this.targetSelector.addGoal(1, new HurtByTargetGoal(this, AbstractRat.class, Ocelot.class, Cat.class));
     }
     

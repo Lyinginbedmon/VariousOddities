@@ -407,7 +407,7 @@ public abstract class AbstractGoblinWolf extends TamableAnimal
     {
     	if(!isTame() && target != null)
     	{
-        	if(target.getType() == VOEntities.GOBLIN)
+        	if(target.getType() == VOEntities.GOBLIN.get())
         		return;
         	
         	if(target.isAlive() && isOrderedToSit())

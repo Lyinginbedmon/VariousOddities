@@ -133,7 +133,7 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	public boolean isCarrying(){ return !getEntityData().get(CARRYING).isEmpty(); }
 	public EntityGoblin getOtherParent()
 	{
-		EntityGoblin child = VOEntities.GOBLIN.create(getLevel());
+		EntityGoblin child = VOEntities.GOBLIN.get().create(getLevel());
 		child.readAdditionalSaveData(getEntityData().get(CARRYING));
 		return child;
 	}
@@ -225,9 +225,9 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
 	public AgeableMob getBreedOffspring(ServerLevel worldIn, AgeableMob parent)
 	{
-		EntityGoblin child = VOEntities.GOBLIN.create(worldIn);
+		EntityGoblin child = VOEntities.GOBLIN.get().create(worldIn);
 		
-		if(parent.getType() == VOEntities.GOBLIN)
+		if(parent.getType() == VOEntities.GOBLIN.get())
 		{
 			EntityGoblin partner = (EntityGoblin)parent;
 			child.setColor(random.nextBoolean() ? partner.getColor() : getColor());

@@ -1,6 +1,6 @@
 package com.lying.variousoddities.potion;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,6 +25,6 @@ public class PotionSleep extends PotionVO
 	
 	public static boolean hasSleepEffect(LivingEntity theMob)
 	{
-		return theMob.getEffect(VOPotions.SLEEP) != null && theMob.getEffect(VOPotions.SLEEP).getDuration() > 0;
+		return theMob.getEffect(VOMobEffects.SLEEP) != null && theMob.getEffect(VOMobEffects.SLEEP).getDuration() > 0;
 	}
 }

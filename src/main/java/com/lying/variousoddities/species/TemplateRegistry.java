@@ -13,7 +13,7 @@ import com.google.gson.JsonParseException;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.init.VOBlocks;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.magic.IMagicEffect.MagicSubType;
 import com.lying.variousoddities.reference.Reference;
@@ -56,10 +56,13 @@ import com.lying.variousoddities.species.types.TypeHandler.DamageResist;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
 
-public class TemplateRegistry extends JsonReloadListener
+public class TemplateRegistry extends SimpleJsonResourceReloadListener
 {
 	private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
 	
@@ -101,7 +104,7 @@ public class TemplateRegistry extends JsonReloadListener
 	
 	public static List<Template> getDefaultTemplates(){ return Lists.newArrayList(DEFAULT_TEMPLATES); }
 	
-	protected void apply(Map<ResourceLocation, JsonElement> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn)
+	protected void apply(Map<ResourceLocation, JsonElement> objectIn, ResourceManager manager, ProfilerFiller filler)
 	{
 		VariousOddities.log.info("Attempting to load templates from data, entries: "+objectIn.size());
 		Map<ResourceLocation, Template> loaded = new HashMap<>();
@@ -130,14 +133,15 @@ public class TemplateRegistry extends JsonReloadListener
             }
         });
 		
-		loaded.forEach((name,template) -> { VORegistries.TEMPLATES.put(name, template); });
-		
 		// If no templates were found in the datapack, load the defaults
 		if(loaded.isEmpty())
 		{
 			VariousOddities.log.warn("No templates found, loading defaults");
-			DEFAULT_TEMPLATES.forEach((template) -> { VORegistries.TEMPLATES.put(template.getRegistryName(), template); });
+			DEFAULT_TEMPLATES.forEach((template) -> { loaded.put(template.getRegistryName(), template); });
 		}
+		
+		VORegistries.TEMPLATES.clear();
+		loaded.forEach((name,template) -> { VORegistries.TEMPLATES.put(name, template); });
 	}
 	
 	private static void addTemplate(Template templateIn)
@@ -243,7 +247,7 @@ public class TemplateRegistry extends JsonReloadListener
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.COLD, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.LIGHTNING, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityResistanceSpell(MagicSubType.MIND_AFFECTING)))
-				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new MobEffectInstance(VOPotions.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(Component.translatable("ability.varodd:lich_touch"))))
+				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new MobEffectInstance(VOMobEffects.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(Component.translatable("ability.varodd:lich_touch"))))
 				.addOperation(AbilityOperation.add(new AbilityStartingItem(new ItemStack(VOBlocks.PHYLACTERY)))));
 		addTemplate(new Template(TEMPLATE_WINGED, UUID_WINGED)
 				.setPower(2)

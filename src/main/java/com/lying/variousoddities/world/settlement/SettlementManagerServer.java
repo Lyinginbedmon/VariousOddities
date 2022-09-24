@@ -24,6 +24,8 @@ import net.minecraftforge.fml.LogicalSide;
 
 public class SettlementManagerServer extends SettlementManager
 {
+	public SettlementManagerServer(CompoundTag nbt) { super(nbt); }
+	
 	/**
 	 * Updates the settlement manager, including all settlement updates
 	 * @param event

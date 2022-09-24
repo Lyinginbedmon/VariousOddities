@@ -1,6 +1,12 @@
 package com.lying.variousoddities.init;
 
-import com.lying.variousoddities.block.*;
+import com.lying.variousoddities.block.BlockDraftingTable;
+import com.lying.variousoddities.block.BlockEggBase;
+import com.lying.variousoddities.block.BlockEggKobold;
+import com.lying.variousoddities.block.BlockLayerScale;
+import com.lying.variousoddities.block.BlockMoss;
+import com.lying.variousoddities.block.BlockPhylacteryBase;
+import com.lying.variousoddities.block.BlockPhylacteryLich;
 import com.lying.variousoddities.block.VOBlock;
 import com.lying.variousoddities.reference.Reference;
 
@@ -17,7 +23,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class VOBlocks
 {
 	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, Reference.ModInfo.MOD_ID);
-	
+    
     public static final TagKey<Block> UNPHASEABLE = createTag("unphaseable");
     public static final TagKey<Block> GNAWABLE = createTag("gnawable");
     public static final TagKey<Block> GNAWABLE_HEALING = createTag("gnawable_healing");
@@ -36,6 +42,8 @@ public class VOBlocks
 		return blockIn;
 	}
     
+	public static void init() { }
+	
     private static TagKey<Block> createTag(String name)
     {
     	return BlockTags.create(new ResourceLocation(Reference.ModInfo.MOD_ID, name));

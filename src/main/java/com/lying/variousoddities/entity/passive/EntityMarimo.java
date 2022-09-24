@@ -148,12 +148,12 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     		
     		if(this.random.nextInt(Reference.Values.TICKS_PER_MINUTE) == 0)
     		{
-                this.targetYaw = limitAngle(this.rotationYawHead, this.random.nextFloat() * 360F, 180F);
-                this.targetPitch = limitAngle(this.rotationPitch, this.random.nextFloat() * 360F, 180F);
+                this.targetYaw = limitAngle(this.getYHeadRot(), this.random.nextFloat() * 360F, 180F);
+                this.targetPitch = limitAngle(this.getXRot(), this.random.nextFloat() * 360F, 180F);
     		}
     		
-    		if(this.rotationYawHead != this.targetYaw) this.rotationYawHead = limitAngle(this.rotationYawHead, this.targetYaw, 0.5F);
-    		if(this.rotationPitch != this.targetPitch) this.rotationPitch = limitAngle(this.rotationPitch, this.targetPitch, 0.5F);
+    		if(getYHeadRot() != this.targetYaw) this.setYHeadRot(limitAngle(getYHeadRot(), this.targetYaw, 0.5F));
+    		if(getXRot() != this.targetPitch) this.setXRot(limitAngle(getXRot(), this.targetPitch, 0.5F));
     	}
     	
         if(isMagical())

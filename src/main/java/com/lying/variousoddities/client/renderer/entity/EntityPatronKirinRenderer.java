@@ -8,11 +8,9 @@ import com.lying.variousoddities.entity.wip.EntityPatronKirin;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 public class EntityPatronKirinRenderer extends MobRenderer<EntityPatronKirin, ModelPatronKirin>
 {
@@ -35,12 +33,4 @@ public class EntityPatronKirinRenderer extends MobRenderer<EntityPatronKirin, Mo
     {
     	matrixStackIn.scale(SCALE, SCALE, SCALE);
     }
-	
-	public static class RenderFactory implements IRenderFactory<EntityPatronKirin>
-	{
-		public EntityRenderer<? super EntityPatronKirin> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityPatronKirinRenderer(manager);
-		}
-	}
 }

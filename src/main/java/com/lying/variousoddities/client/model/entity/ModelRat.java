@@ -21,7 +21,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
-public class ModelRat extends EntityModel<AbstractRat>
+public class ModelRat<T extends AbstractRat> extends EntityModel<T>
 {
 	ModelPart head;
 	ModelPart body;
@@ -94,7 +94,7 @@ public class ModelRat extends EntityModel<AbstractRat>
      * and legs, where par1 represents the time(so that arms and legs swing back and forth) and par2 represents how
      * "far" arms and legs can swing at most.
      */
-    public void setupAnim(AbstractRat entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+    public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
     {
         this.head.xRot = headPitch * 0.017453292F;
         this.head.yRot = netHeadYaw * 0.017453292F;
@@ -122,7 +122,7 @@ public class ModelRat extends EntityModel<AbstractRat>
 		legRightFront.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     }
     
-    public class ModelLeg
+    public static class ModelLeg
     {
     	ModelPart theLeg;
     	

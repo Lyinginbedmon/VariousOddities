@@ -17,7 +17,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class ModelScorpionBabies extends EntityModel<AbstractScorpion>
+public class ModelScorpionBabies<T extends AbstractScorpion> extends EntityModel<T>
 {
 	List<ModelPart> babies = new ArrayList<ModelPart>();
 	

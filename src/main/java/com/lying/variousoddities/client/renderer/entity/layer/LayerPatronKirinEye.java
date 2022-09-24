@@ -5,15 +5,17 @@ import com.lying.variousoddities.client.renderer.entity.EntityPatronKirinRendere
 import com.lying.variousoddities.entity.wip.EntityPatronKirin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Vector3f;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
@@ -28,17 +30,16 @@ public class LayerPatronKirinEye extends RenderLayer<EntityPatronKirin, ModelPat
 		mc = Minecraft.getInstance();
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, EntityPatronKirin kirinIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(kirinIn.isInvisible()) return;
 		
         RenderSystem.depthMask(true);
         matrixStackIn.pushPose();
-        	RenderSystem.disableLighting();
-	        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        	RenderSystem.disableLighting();
+	        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 	        setupEye(matrixStackIn, kirinIn, ageInTicks, partialTicks);
-	        RenderSystem.enableLighting();
+//	        RenderSystem.enableLighting();
         matrixStackIn.popPose();
 //        GlStateManager.depthMask(false);
 	}
@@ -48,7 +49,6 @@ public class LayerPatronKirinEye extends RenderLayer<EntityPatronKirin, ModelPat
 		return false;
 	}
 	
-	@SuppressWarnings("deprecation")
 	private void setupEye(PoseStack matrixStack, EntityPatronKirin kirinIn, float ageInTicks, float partialTicks)
 	{
 		double eyePos = 0.75D + Math.sin(ageInTicks / 23) * 0.05D;
@@ -65,16 +65,17 @@ public class LayerPatronKirinEye extends RenderLayer<EntityPatronKirin, ModelPat
     		frame = (int)((sin - 0.95D) / 0.05D * 6);
 		
 		matrixStack.pushPose();
-			matrixStack.mulPose(Vector3f.YP.rotation(interpolateRotation(kirinIn.prevRenderYawOffset, kirinIn.renderYawOffset, partialTicks)));
+			matrixStack.mulPose(Vector3f.YP.rotation(interpolateRotation(kirinIn.yBodyRotO, kirinIn.yBodyRot, partialTicks)));
 			matrixStack.translate(0.0D, -eyePos, 0D);
 			matrixStack.pushPose();
 				matrixStack.pushPose();
 		    	matrixStack.mulPose(Vector3f.YP.rotation(viewYaw));
 		    	matrixStack.mulPose(Vector3f.XP.rotation(viewPit));
 					matrixStack.mulPose(Vector3f.YP.rotationDegrees(180F));
-					float brightness = 1.0F;
-					RenderSystem.color3f(brightness, brightness, brightness);
-		    		mc.getTextureManager().bindTexture(EYE_TEXTURE);
+//					float brightness = 1.0F;
+//					RenderSystem.color3f(brightness, brightness, brightness);
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		    		RenderSystem.setShaderTexture(0, EYE_TEXTURE);
 		    		drawThirdEye(matrixStack, 0.25D, 0.25D, 0.001D, frame);
 	    		matrixStack.popPose();
 	        matrixStack.popPose();
@@ -90,13 +91,13 @@ public class LayerPatronKirinEye extends RenderLayer<EntityPatronKirin, ModelPat
 	        float f = 1F / 16F;
 	        float f2 = 1F / 96F;
 	        Tesselator tessellator = Tesselator.getInstance();
-	        BufferBuilder bufferbuilder = tessellator.getBuffer();
-	        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-		        bufferbuilder.pos(-width,	+height,	(double)zLevel).tex(((float)(0) * f),	((float)(step + 16) * f2)).endVertex();
-		        bufferbuilder.pos(+width,	+height,	(double)zLevel).tex(((float)(16) * f),	((float)(step + 16) * f2)).endVertex();
-		        bufferbuilder.pos(+width,	-height,	(double)zLevel).tex(((float)(16) * f),	((float)(step) * f2)).endVertex();
-		        bufferbuilder.pos(-width,	-height,	(double)zLevel).tex(((float)(0) * f),	((float)(step) * f2)).endVertex();
-	        tessellator.draw();
+	        BufferBuilder bufferbuilder = tessellator.getBuilder();
+	        bufferbuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		        bufferbuilder.vertex(-width,	+height,	(double)zLevel).uv(((float)(0) * f),	((float)(step + 16) * f2)).endVertex();
+		        bufferbuilder.vertex(+width,	+height,	(double)zLevel).uv(((float)(16) * f),	((float)(step + 16) * f2)).endVertex();
+		        bufferbuilder.vertex(+width,	-height,	(double)zLevel).uv(((float)(16) * f),	((float)(step) * f2)).endVertex();
+		        bufferbuilder.vertex(-width,	-height,	(double)zLevel).uv(((float)(0) * f),	((float)(step) * f2)).endVertex();
+	        BufferUploader.drawWithShader(bufferbuilder.end());
         matrixStack.popPose();
 	}
 	

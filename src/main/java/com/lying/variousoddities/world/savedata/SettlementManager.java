@@ -41,7 +41,7 @@ public abstract class SettlementManager extends SavedData
 	public Map<Integer, Settlement> settlements = new HashMap<>();
 	protected Level world;
 	
-	public SettlementManager(){ }
+	public SettlementManager(CompoundTag nbt){ }
 	
 	public void setWorld(Level worldIn)
 	{
@@ -161,15 +161,13 @@ public abstract class SettlementManager extends SavedData
 		}
 	}
 	
-	public abstract SettlementManager fromNBT(CompoundTag compound);
-	
 	public static SettlementManager get(Level worldIn)
 	{
 		if(worldIn.isClientSide)
 			return VariousOddities.proxy.getSettlementManager(worldIn);
 		else
 		{
-			SettlementManagerServer instance = ((ServerLevel)worldIn).getDataStorage().get(SettlementManager::fromNBT, SettlementManager.DATA_NAME);
+			SettlementManagerServer instance = ((ServerLevel)worldIn).getDataStorage().computeIfAbsent(SettlementManagerServer::new, () -> new SettlementManagerServer(new CompoundTag()), DATA_NAME);
 			instance.setWorld(worldIn);
 			return instance;
 		}
@@ -371,7 +369,7 @@ public abstract class SettlementManager extends SavedData
 		
 		settlements.put(index, settlementIn);
 		notifyObservers(index, settlementIn);
-		markDirty();
+		setDirty();
 		return true;
 	}
 	
@@ -379,7 +377,7 @@ public abstract class SettlementManager extends SavedData
 	{
 		settlements.remove(index);
 		notifyObservers(index, null);
-		markDirty();
+		setDirty();
 		return true;
 	}
 	
@@ -401,7 +399,7 @@ public abstract class SettlementManager extends SavedData
 			
 			settlements.remove(index);
 			notifyObservers(index, null);
-			markDirty();
+			setDirty();
 			return true;
 		}
 		return false;
@@ -410,7 +408,7 @@ public abstract class SettlementManager extends SavedData
 	public void clear()
 	{
 		this.settlements.clear();
-		markDirty();
+		setDirty();
 	}
 	
 	static

@@ -62,7 +62,7 @@ public class ItemMossBottle extends VOItem
 			{
 				if(worldIn.mayInteract(playerIn, blockpos) && playerIn.mayUseItemAt(blockpos, blockraytraceresult.getDirection(), itemstack))
 				{
-					EntityMarimo marimo = (EntityMarimo)VOEntities.MARIMO.spawn((ServerLevel)worldIn, itemstack, playerIn, blockpos, MobSpawnType.SPAWN_EGG, false, false); 
+					EntityMarimo marimo = (EntityMarimo)VOEntities.MARIMO.get().spawn((ServerLevel)worldIn, itemstack, playerIn, blockpos, MobSpawnType.SPAWN_EGG, false, false); 
 					if(marimo == null)
 						return InteractionResultHolder.pass(itemstack);
 					else

@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.world.savedata.SettlementManager;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -12,6 +13,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class SettlementManagerClient extends SettlementManager
 {
+	public SettlementManagerClient(CompoundTag nbt) { super(nbt); }
+	
 	/** Notifies all players of all settlements */
 	public void notifyObservers(){ }
 	

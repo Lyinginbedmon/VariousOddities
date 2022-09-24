@@ -1,6 +1,6 @@
 package com.lying.variousoddities.client.gui;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
 
@@ -19,7 +19,7 @@ public class ScreenParalysed extends AbstractParalysisScreen
 	
 	public int ticksToDisplay()
 	{
-		MobEffectInstance paralysis = thePlayer.getEffect(VOPotions.PARALYSIS);
+		MobEffectInstance paralysis = thePlayer.getEffect(VOMobEffects.PARALYSIS);
 		if(paralysis == null)
 			return 0;
 		else if(paralysis.isNoCounter())
@@ -30,7 +30,7 @@ public class ScreenParalysed extends AbstractParalysisScreen
 	
 	public boolean shouldClose()
 	{
-		return thePlayer.getEffect(VOPotions.PARALYSIS) == null || thePlayer.getEffect(VOPotions.PARALYSIS).getDuration() == 0;
+		return thePlayer.getEffect(VOMobEffects.PARALYSIS) == null || thePlayer.getEffect(VOMobEffects.PARALYSIS).getDuration() == 0;
 	}
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
@@ -39,7 +39,7 @@ public class ScreenParalysed extends AbstractParalysisScreen
 		
 		Component duration;
 		if(ticksToDisplay() >= 0)
-			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.temporary", StringUtil.ticksToElapsedTime(Mth.floor((float)ticksToDisplay())));
+			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.temporary", StringUtil.formatTickDuration(Mth.floor((float)ticksToDisplay())));
 		else
 			duration = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.permanent");
 		

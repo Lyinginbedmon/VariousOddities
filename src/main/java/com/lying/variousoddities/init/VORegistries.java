@@ -14,6 +14,7 @@ import com.lying.variousoddities.species.templates.TemplatePrecondition;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 
 public class VORegistries
@@ -37,5 +38,8 @@ public class VORegistries
 	public static final Map<ResourceLocation, Species> SPECIES = new HashMap<>();
 	public static final Map<ResourceLocation, Template> TEMPLATES = new HashMap<>();
 	
-	public static void init(){ }
+	public static void init(IEventBus bus)
+	{
+		
+	}
 }

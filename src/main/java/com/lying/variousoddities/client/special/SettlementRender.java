@@ -10,13 +10,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.play.server.STitlePacket;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 @OnlyIn(Dist.CLIENT)
@@ -42,13 +43,13 @@ public class SettlementRender
 	}
 	
 	@SubscribeEvent
-	public static void onWorldUnload(WorldEvent.Unload event)
+	public static void onWorldUnload(LevelEvent.Unload event)
 	{
 		((CommonProxy)VariousOddities.proxy).clearSettlements();
 	}
 	
 	@SubscribeEvent
-	public static void onRenderRoomsEvent(RenderWorldLastEvent event)
+	public static void onRenderRoomsEvent(RenderLevelStageEvent event)
 	{
 		getPlayer();
 		if(!canRender()) return;
@@ -56,7 +57,7 @@ public class SettlementRender
 		SettlementManager localManager = VariousOddities.proxy.getSettlementManager(mc.level);
 		if(!localManager.isEmpty())
 		{
-			Settlement currentSettlement = localManager.getTitleSettlementAt(getPlayer().getPosition());
+			Settlement currentSettlement = localManager.getTitleSettlementAt(getPlayer().blockPosition());
 			int settlementHere = localManager.getIndexBySettlement(currentSettlement);
 			
 			// If there's no settlement here, reset to nulls
@@ -69,7 +70,7 @@ public class SettlementRender
 			else if(settlementHere != latestSettlement)
 			{
 				if(currentSettlement != null && currentSettlement.hasTitle())
-					mc.getConnection().handleTitle(new STitlePacket(STitlePacket.Type.TITLE, currentSettlement.getTitle()));
+					mc.getConnection().setTitleText(new ClientboundSetTitleTextPacket(currentSettlement.getTitle()));
 				
 				latestSettlement = settlementHere;
 			}
@@ -91,7 +92,7 @@ public class SettlementRender
 							subtitle = Component.translatable(roomHere.getFunction().name());
 						
 						if(subtitle != null)
-							mc.getConnection().handleTitle(new STitlePacket(STitlePacket.Type.ACTIONBAR, subtitle));
+							mc.getConnection().setSubtitleText(new ClientboundSetSubtitleTextPacket(subtitle));
 					}
 					
 					latestRoom = roomHere;
@@ -99,9 +100,9 @@ public class SettlementRender
 			}
 			
 			// If player is creative, display room boundaries
-			if(getPlayer().canUseCommandBlock())
+			if(getPlayer().canUseGameMasterBlocks())
 				for(Settlement settlement : localManager.getSettlements())
-					renderSettlementRooms(settlement, mc.getRenderManager().info.getProjectedView(), event.getMatrixStack());
+					renderSettlementRooms(settlement, mc.getBlockEntityRenderDispatcher().camera.getPosition(), event.getPoseStack());
 		}
 	}
 	

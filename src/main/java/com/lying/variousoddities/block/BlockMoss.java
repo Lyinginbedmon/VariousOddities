@@ -67,7 +67,7 @@ public class BlockMoss extends BlockVOEmptyDrops
 	        	Vector3d posCentre = new Vector3d(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 	        	for(int i=0; i<(worldIn.getRandom().nextInt(3) + 1); i++)
 	        	{
-	        		EntityMarimo marimo = (EntityMarimo)VOEntities.MARIMO.spawn((ServerLevel)worldIn, null, null, pos, MobSpawnType.NATURAL, false, false);
+	        		EntityMarimo marimo = (EntityMarimo)VOEntities.MARIMO.get().spawn((ServerLevel)worldIn, null, null, pos, MobSpawnType.NATURAL, false, false);
 	        		double xOff = (worldIn.getRandom().nextDouble() - 0.5D) * 0.25D;
 	        		double yOff = (worldIn.getRandom().nextDouble() - 0.5D) * 0.25D;
 	        		double zOff = (worldIn.getRandom().nextDouble() - 0.5D) * 0.25D;

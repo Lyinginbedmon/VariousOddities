@@ -14,15 +14,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class SpellManagerClient extends SpellManager
 {
-	public SpellManagerClient()
-	{
-		this(DATA_NAME);
-	}
-	
-	public SpellManagerClient(String name)
-	{
-		super(name);
-	}
+	public SpellManagerClient() { }
 	
 	public CompoundTag write(CompoundTag compound)
 	{

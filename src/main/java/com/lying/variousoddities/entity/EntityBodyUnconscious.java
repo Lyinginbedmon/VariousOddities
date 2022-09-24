@@ -13,9 +13,12 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
@@ -24,6 +27,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -48,7 +52,7 @@ public class EntityBodyUnconscious extends AbstractBody
 	public static EntityBodyUnconscious createBodyFrom(@Nonnull LivingEntity living)
 	{
 		if(living == null) return null;
-		EntityBodyUnconscious body = new EntityBodyUnconscious(VOEntities.BODY, living.getLevel());
+		EntityBodyUnconscious body = new EntityBodyUnconscious(VOEntities.BODY.get(), living.getLevel());
 		body.copyFrom(living, false);
 		body.setSoulUUID(living.getUUID());
 		
@@ -83,27 +87,27 @@ public class EntityBodyUnconscious extends AbstractBody
 		{
 			setSoulUUID(living.getUUID());
 			
-			living.writeWithoutTypeId(data);
+			living.saveWithoutId(data);
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
 				getEntityData().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
-				data.putString("id", living.getEntityString());
+				data.putString("id", living.getEncodeId());
 			
 			if(data.contains("Passengers"))
 				data.remove("Passengers");
 		}
 		else
 		{
-			this.bodyInventory.clear();
+			this.bodyInventory.clearContent();
 			setSoulUUID(null);
 		}
 		
 		getEntityData().set(ENTITY, data);
 		updateSize();
-		onInventoryChanged(null);
+		containerChanged(this.bodyInventory);
 	}
 	
 	public LivingEntity getBody()
@@ -134,7 +138,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					for(int slot=0; slot<4; slot++)
 					{
 						ItemStack equipped = soul.getItemBySlot(EquipmentSlot.byTypeAndIndex(EquipmentSlot.Type.ARMOR, slot));
-						if(!(ItemStack.areItemsEqual(equipped, lastKnownArmour.get(slot)) && ItemStack.areItemStackTagsEqual(equipped, lastKnownArmour.get(slot))))
+						if(!(ItemStack.isSame(equipped, lastKnownArmour.get(slot)) && ItemStack.tagMatches(equipped, lastKnownArmour.get(slot))))
 						{
 							needsUpdate = true;
 							lastKnownArmour.set(slot, equipped.copy());
@@ -144,7 +148,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					for(int slot=0; slot<2; slot++)
 					{
 						ItemStack equipped = soul.getItemBySlot(EquipmentSlot.byTypeAndIndex(EquipmentSlot.Type.HAND, slot));
-						if(!(ItemStack.areItemsEqual(equipped, lastKnownEquip.get(slot)) && ItemStack.areItemStackTagsEqual(equipped, lastKnownEquip.get(slot))))
+						if(!(ItemStack.isSame(equipped, lastKnownEquip.get(slot)) && ItemStack.tagMatches(equipped, lastKnownEquip.get(slot))))
 						{
 							needsUpdate = true;
 							lastKnownEquip.set(slot, equipped.copy());
@@ -152,7 +156,7 @@ public class EntityBodyUnconscious extends AbstractBody
 					}
 					
 					if(needsUpdate)
-						getEntityData().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundTag(), new Inventory(lastKnownArmour.toArray(new ItemStack[4])), new Inventory(lastKnownEquip.toArray(new ItemStack[2])), null));
+						getEntityData().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundTag(), new SimpleContainer(lastKnownArmour.toArray(new ItemStack[4])), new SimpleContainer(lastKnownEquip.toArray(new ItemStack[2])), null));
 					
 					// If the player is online and not unconscious, remove body
 					PlayerData data = PlayerData.forPlayer(soul);
@@ -277,12 +281,17 @@ public class EntityBodyUnconscious extends AbstractBody
 		}
 	}
 	
-	public void openContainer(Player playerIn)
+	public void openCustomInventoryScreen(Player playerIn)
 	{
+		EntityBodyUnconscious body = this;
 		LivingEntity soul = getSoul();
 		if(!isPlayer())
-			super.openContainer(playerIn);
+			super.openCustomInventoryScreen(playerIn);
 		else if(soul != null)
-			playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerPlayerBody(window, player, ((Player)soul).inventory, this), soul.getDisplayName()));
+			playerIn.openMenu(new MenuProvider()
+					{
+						public AbstractContainerMenu createMenu(int window, Inventory player, Player p1){ return new ContainerPlayerBody(window, player, ((Player)soul).getInventory(), body); }
+						public Component getDisplayName(){ return soul.getDisplayName(); }
+					});
 	}
 }

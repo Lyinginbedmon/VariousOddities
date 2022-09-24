@@ -302,7 +302,7 @@ public class CommandFaction extends CommandBase
     			else
     			{
     				factionA.addRelation(factionB, rep);
-    				manager.markDirty();
+    				manager.setDirty();
     				source.sendSuccess(Component.translatable(translationSlug+"manage.relation", factionA.name, factionB.name, rep, EnumAttitude.fromRep(rep).getTranslatedName()), true);
     				return 15;
     			}

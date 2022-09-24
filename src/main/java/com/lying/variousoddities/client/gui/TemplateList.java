@@ -11,14 +11,14 @@ import com.mojang.blaze3d.vertex.Tesselator;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.LanguageMap;
+import net.minecraft.util.FormattedCharSequence;
 
 public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListEntry>
 {
@@ -38,7 +38,7 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 	protected void renderHeader(PoseStack p_230448_1_, int p_230448_2_, int p_230448_3_, Tesselator p_230448_4_)
 	{
 		Component itextcomponent = (Component.literal("")).append(this.title).withStyle(ChatFormatting.UNDERLINE, ChatFormatting.BOLD);
-		this.minecraft.font.func_243248_b(p_230448_1_, itextcomponent, (float)(p_230448_2_ + this.width / 2 - this.minecraft.font.width(itextcomponent) / 2), (float)Math.min(this.y0 + 3, p_230448_3_), 16777215);
+		this.minecraft.font.draw(p_230448_1_, itextcomponent, (float)(p_230448_2_ + this.width / 2 - this.minecraft.font.width(itextcomponent) / 2), (float)Math.min(this.y0 + 3, p_230448_3_), 16777215);
 	}
 	
 	public int getRowWidth(){ return this.width; }
@@ -61,8 +61,7 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 	public List<Template> getTemplates()
 	{
 		List<Template> templates = Lists.newArrayList();
-		for(int index=0; index<this.getEventListeners().size(); index++)
-			templates.add(this.getEntry(index).template);
+		children().forEach((entry) -> templates.add(entry.template));
 		return templates;
 	}
 	
@@ -70,7 +69,7 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 	{
 		private final ResourceLocation TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/templates_select.png");
 		private final Minecraft mc;
-		private final FormattedText field_243407_e;
+		private final FormattedCharSequence field_243407_e;
 		private final TemplateList parentList;
 		private final Screen parentScreen;
 		public final Template template;
@@ -87,16 +86,16 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 			this.remove = removeIn;
 		}
 		
-		private FormattedText func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
+		private FormattedCharSequence func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
 		{
 			int i = p_244424_0_.font.width(p_244424_1_);
 			if (i > 157)
 			{
-				ITextProperties itextproperties = ITextProperties.func_240655_a_(p_244424_0_.font.func_238417_a_(p_244424_1_, 157 - p_244424_0_.font.width("...")), ITextProperties.func_240652_a_("..."));
-				return LanguageMap.getInstance().func_241870_a(itextproperties);
+				FormattedText itextproperties = FormattedText.composite(p_244424_0_.font.substrByWidth(p_244424_1_, 157 - p_244424_0_.font.width("...")), FormattedText.of("..."));
+				return Language.getInstance().getVisualOrder(itextproperties);
 			}
 			else
-				return p_244424_1_.func_241878_f();
+				return p_244424_1_.getVisualOrderText();
 		}
 		
 	 	public boolean mouseClicked(double mouseX, double mouseY, int button)
@@ -117,11 +116,10 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 			return false;
 		}
 		
-		@SuppressWarnings("deprecation")
 		public void render(PoseStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
 		{
-			this.mc.getTextureManager().bindTexture(Widget.WIDGETS_LOCATION);
-			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.setShaderTexture(0, AbstractWidget.WIDGETS_LOCATION);
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
 			RenderSystem.enableDepthTest();
@@ -142,9 +140,9 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 			blit(matrixStack, right, bottom, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
 			
 			ScreenSelectSpecies.drawStars(matrixStack, template.getPower(), rowLeft + rowWidth - 25 - (9 * Math.max(1, Math.abs(template.getPower()))), rowTop + (rowHeight - 9) / 2);
-			this.mc.font.func_238407_a_(matrixStack, this.field_243407_e, (float)(rowLeft + 17), (float)(rowTop + (rowHeight - this.mc.font.FONT_HEIGHT) / 2), 16777215);
+			this.mc.font.draw(matrixStack, this.field_243407_e, (float)(rowLeft + 17), (float)(rowTop + (rowHeight - this.mc.font.lineHeight) / 2), 16777215);
 			
-			this.mc.getTextureManager().bindTexture(TEXTURES);
+			RenderSystem.setShaderTexture(0, TEXTURES);
 			Segment hovered = getMouseOverSegment(mouseX, mouseY, rowLeft, rowTop, rowWidth, rowHeight, this.parentList.removeList);
 			int leftSeg = rowLeft + 1;
 			int rightSeg = rowLeft + rowWidth - 20 - 4;
@@ -180,6 +178,8 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 			
 			return null;
 		}
+		
+		public Component getNarration() { return null; }
 	}
 	
 	private static enum Segment

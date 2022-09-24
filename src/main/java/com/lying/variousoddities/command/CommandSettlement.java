@@ -2,7 +2,6 @@ package com.lying.variousoddities.command;
 
 import java.util.Collection;
 
-import com.lying.variousoddities.api.EnumArgumentChecked;
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.api.world.settlement.Settlement;
 import com.lying.variousoddities.init.VOItems;
@@ -43,6 +42,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.server.command.EnumArgument;
 
 public class CommandSettlement extends CommandBase
 {
@@ -555,7 +555,7 @@ public class CommandSettlement extends CommandBase
     					.executes(VariantRoomAdd::addFromHand)
     					.then(Commands.argument(POS_A, BlockPosArgument.blockPos())
     						.then(Commands.argument(POS_B, BlockPosArgument.blockPos())
-								.then(Commands.argument(FUNCTION, EnumArgumentChecked.enumArgument(EnumRoomFunction.class))
+								.then(Commands.argument(FUNCTION, EnumArgument.enumArgument(EnumRoomFunction.class))
 									.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), null, null, source.getSource()); })
 									.then(Commands.argument(NAME, StringArgumentType.string())
 										.executes((source) -> { return VariantRoomAdd.add(getSettlement(source), BlockPosArgument.getLoadedBlockPos(source, POS_A), BlockPosArgument.getLoadedBlockPos(source, POS_B), source.getArgument(FUNCTION, EnumRoomFunction.class), StringArgumentType.getString(source, NAME), null, source.getSource()); }))

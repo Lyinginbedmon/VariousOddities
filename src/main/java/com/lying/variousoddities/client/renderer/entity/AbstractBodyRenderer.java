@@ -18,25 +18,25 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.world.entity.LivingEntity;
 
-public abstract class AbstractBodyRenderer extends LivingEntityRenderer<AbstractBody, HumanoidModel<AbstractBody>>
+public abstract class AbstractBodyRenderer<T extends AbstractBody> extends LivingEntityRenderer<T, HumanoidModel<T>>
 {
 	private final EntityDummyBipedRenderer playerRendererThin;
 	private final EntityDummyBipedRenderer playerRendererThick;
 	
-	public AbstractBodyRenderer(EntityRendererProvider.Context rendererManager, HumanoidModel<AbstractBody> modelIn, float shadowSize)
+	public AbstractBodyRenderer(EntityRendererProvider.Context rendererManager, HumanoidModel<T> modelIn, float shadowSize)
 	{
 		super(rendererManager, modelIn, shadowSize);
 		this.playerRendererThin = new EntityDummyBipedRenderer(rendererManager, true);
 		this.playerRendererThick = new EntityDummyBipedRenderer(rendererManager, false);
 	}
 	
-	protected boolean shouldShowName(AbstractBody entityIn)
+	protected boolean shouldShowName(T entityIn)
     {
 		return super.shouldShowName(entityIn) && (entityIn.shouldShowName() || entityIn.hasCustomName() && entityIn == this.entityRenderDispatcher.crosshairPickEntity);
     }
 	
 	@SuppressWarnings({ "unchecked" })
-	public void render(AbstractBody entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn)
+	public void render(T entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn)
 	{
 		if(!entityIn.hasBody())
 		{

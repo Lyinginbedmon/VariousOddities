@@ -29,6 +29,7 @@ import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.Types;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -247,14 +248,15 @@ public class ScreenSelectTemplates extends Screen
 	
     public void init()
     {
+    	this.clearWidgets();
 		this.listAvailable = new TemplateList(minecraft, this, 200, this.height, false, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.allowed"));
 		this.listAvailable.setLeftPos(this.width / 2 - this.listAvailable.getRowWidth() - LIST_SEP);
 		this.listAvailable.setEntries(getViableTemplates());
-		this.children.add(this.listAvailable);
+		addWidget(this.listAvailable);
 		
 		this.listApplied = new TemplateList(minecraft, this, 200, this.height, true, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.applied"));
 		this.listApplied.setLeftPos(this.width/2 + LIST_SEP);
-		this.children.add(this.listApplied);
+		addWidget(this.listApplied);
 		
 		if(this.listAvailable.getTemplates().isEmpty() && this.listApplied.getTemplates().isEmpty())
 		{
@@ -263,7 +265,6 @@ public class ScreenSelectTemplates extends Screen
 			return;
 		}
 		
-        this.buttons.clear();
         int midX = width / 2;
     	this.addRenderableWidget(new Button(midX - 50, this.height - 22, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
     	this.addRenderableWidget(new Button(midX - 62, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
@@ -324,8 +325,7 @@ public class ScreenSelectTemplates extends Screen
 		drawString(matrixStack, this.font, String.valueOf(armour), armourX + 10, yPos, 16777215);
     }
     
-    @SuppressWarnings("deprecation")
-	private void displayBaseStats(PoseStack matrixStack, int mouseX, int mouseY, int xPos)
+    private void displayBaseStats(PoseStack matrixStack, int mouseX, int mouseY, int xPos)
     {
 		// Describe base creature
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -379,8 +379,7 @@ public class ScreenSelectTemplates extends Screen
     }
     
 	/** Describe base creature after selected templates are applied */
-    @SuppressWarnings("deprecation")
-	private void displayTemplatedStats(PoseStack matrixStack, int mouseX, int mouseY, int xPos)
+    private void displayTemplatedStats(PoseStack matrixStack, int mouseX, int mouseY, int xPos)
     {
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		RenderSystem.setShaderTexture(0, TEXTURES);
@@ -444,8 +443,7 @@ public class ScreenSelectTemplates extends Screen
 			renderCharacterSummary(matrixStack, mouseX, mouseY, selection.getFirst(), selection.getSecond());
     }
     
-    @SuppressWarnings("deprecation")
-	private void hideListEdge()
+    private void hideListEdge()
     {
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder bufferbuilder = tessellator.getBuilder();
@@ -457,7 +455,7 @@ public class ScreenSelectTemplates extends Screen
 	        bufferbuilder.vertex((double)this.width, (double)listStart, 0.0D).uv((float)this.width / 32.0F, (float)listStart / 32.0F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex((double)this.width, (double)0, 0.0D).uv((float)this.width / 32.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex(0.0D, (double)0, 0.0D).uv(0.0F, (float)0 / 32F).color(64, 64, 64, 255).endVertex();
-	    tessellator.draw();
+	    BufferUploader.drawWithShader(bufferbuilder.end());
 		
 		int listEnd = this.height - 51;
         bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -465,10 +463,10 @@ public class ScreenSelectTemplates extends Screen
 	        bufferbuilder.vertex((double)this.width, (double)this.height, 0.0D).uv((float)this.width / 32.0F, (float)this.height / 32.0F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex((double)this.width, (double)listEnd, 0.0D).uv((float)this.width / 32.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
 	        bufferbuilder.vertex(0.0D, (double)listEnd, 0.0D).uv(0.0F, (float)listEnd / 32F).color(64, 64, 64, 255).endVertex();
-        tessellator.draw();
+	    BufferUploader.drawWithShader(bufferbuilder.end());
 		RenderSystem.enableTexture();
-		RenderSystem.shadeModel(7424);
-		RenderSystem.enableAlphaTest();
+//		RenderSystem.shadeModel(7424);
+		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
     }
     
@@ -502,7 +500,7 @@ public class ScreenSelectTemplates extends Screen
 			}
 		}
 		
-		renderWrappedToolTip(matrixStack, tooltip, mouseX, mouseY, font);
+		renderComponentTooltip(matrixStack, tooltip, mouseX, mouseY, font);
     }
     
     private void renderHighlightedEntry(PoseStack matrixStack, int mouseX, int mouseY)
@@ -540,6 +538,6 @@ public class ScreenSelectTemplates extends Screen
 			}
 		}
 		
-		renderWrappedToolTip(matrixStack, tooltip, mouseX, mouseY, font);
+		renderComponentTooltip(matrixStack, tooltip, mouseX, mouseY, font);
     }
 }

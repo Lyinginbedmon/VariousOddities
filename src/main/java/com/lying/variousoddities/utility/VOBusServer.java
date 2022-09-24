@@ -25,7 +25,7 @@ import com.lying.variousoddities.entity.passive.EntityRat;
 import com.lying.variousoddities.entity.passive.EntityWorg;
 import com.lying.variousoddities.init.VODamageSource;
 import com.lying.variousoddities.init.VOEntities;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
@@ -110,7 +110,7 @@ public class VOBusServer
 			}
 		}
 		
-		if(entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(VOPotions.ANCHORED))
+		if(entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(VOMobEffects.ANCHORED))
 			event.setCanceled(true);
 	}
 	
@@ -203,10 +203,10 @@ public class VOBusServer
 		{
 			Monster feline = (Monster)theEntity;
 			
-			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT))
+			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT.get()))
 				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRat>(feline, EntityRat.class, true));
 			
-			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT_GIANT))
+			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.RAT_GIANT.get()))
 				feline.targetSelector.addGoal(1, new NearestAttackableTargetGoal<EntityRatGiant>(feline, EntityRatGiant.class, true));
 		}
 		
@@ -235,7 +235,7 @@ public class VOBusServer
 		Level world = victim.getLevel();
 		
 		// Reduce refractory period of nearby goblins when a. goblin is slain or b. goblin slays any mob (esp. players)
-		if(victim.getType() == VOEntities.GOBLIN)
+		if(victim.getType() == VOEntities.GOBLIN.get())
 			reduceRefractory(victim, 1000);
 		else if(cause instanceof EntityDamageSource && ((EntityDamageSource)cause).getEntity() instanceof EntityGoblin)
 			reduceRefractory(victim, victim instanceof Player ? 4000 : 500);
@@ -248,7 +248,7 @@ public class VOBusServer
 				if(rand.nextInt(15) == 0)
 					for(int i=0; i<rand.nextInt(3); i++)
 					{
-						EntityGhastling ghastling = VOEntities.GHASTLING.create(world);
+						EntityGhastling ghastling = VOEntities.GHASTLING.get().create(world);
 						ghastling.setPos(victim.getX(), victim.getY(), victim.getZ());
 						ghastling.setYRot(rand.nextFloat() * 360F);
 						ghastling.setXRot(0F);
@@ -290,10 +290,10 @@ public class VOBusServer
 				spawnCorpse = victim.getType() == EntityType.PLAYER;
 				break;
 			case NEEDLED_ONLY:
-				spawnCorpse = victim.hasEffect(VOPotions.NEEDLED);
+				spawnCorpse = victim.hasEffect(VOMobEffects.NEEDLED);
 				break;
 			case PLAYERS_AND_NEEDLED:
-				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.hasEffect(VOPotions.NEEDLED);
+				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.hasEffect(VOMobEffects.NEEDLED);
 				break;
 			case ALWAYS:
 				spawnCorpse = true;
@@ -306,7 +306,7 @@ public class VOBusServer
 		if(spawnCorpse)
 		{
 			AbstractBody.clearNearbyAttackTargetsOf(victim);
-			victim.removeEffect(VOPotions.NEEDLED);
+			victim.removeEffect(VOMobEffects.NEEDLED);
 			EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(victim);
 			
 			if(victim.getType() == EntityType.PLAYER)
@@ -358,7 +358,7 @@ public class VOBusServer
 			switch(event.getNewBody())
 			{
 				case DEAD:
-					player.removeEffect(VOPotions.NEEDLED);
+					player.removeEffect(VOMobEffects.NEEDLED);
 					EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(player);
 					data.setBodyUUID(corpse.getUUID());
 					player.setHealth(player.getMaxHealth());
@@ -428,17 +428,17 @@ public class VOBusServer
 		if(event.getAmount() > 0F && !event.isCanceled())
 		{
 			LivingEntity hurtEntity = event.getEntity();
-			if(VOPotions.isSilenced(hurtEntity))
+			if(VOMobEffects.isSilenced(hurtEntity))
 				return;
 			
 			wakeupEntitiesAround(hurtEntity);
 			
-			MobEffectInstance sleepEffect = hurtEntity.getEffect(VOPotions.SLEEP);
+			MobEffectInstance sleepEffect = hurtEntity.getEffect(VOMobEffects.SLEEP);
 			int tier = (sleepEffect == null || sleepEffect.getDuration() <= 0) ? -1 : sleepEffect.getAmplifier();
 			
 			if(PotionSleep.isSleeping(hurtEntity) && tier < 1)
 				if(!MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(hurtEntity, true)))
-					hurtEntity.removeEffect(VOPotions.SLEEP);
+					hurtEntity.removeEffect(VOMobEffects.SLEEP);
 		}
 	}
 	
@@ -485,7 +485,7 @@ public class VOBusServer
 	public static void onAnchoredTeleport(EntityTeleportEvent.EnderEntity event)
 	{
 		LivingEntity entity = event.getEntityLiving();
-		if(entity.hasEffect(VOPotions.ANCHORED))
+		if(entity.hasEffect(VOMobEffects.ANCHORED))
 			event.setCanceled(true);
 	}
 	
@@ -512,7 +512,7 @@ public class VOBusServer
 			{
 				double wakeupChance = (RandomSource.create(entity.getUUID().getLeastSignificantBits())).nextDouble();
 				if(entity.getRandom().nextDouble() < wakeupChance && !MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(entity, true)))
-					entity.removeEffect(VOPotions.SLEEP);
+					entity.removeEffect(VOMobEffects.SLEEP);
 			}
 			else if(entity instanceof Player)
 			{

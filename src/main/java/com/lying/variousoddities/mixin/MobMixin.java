@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketMobLoseTrack;
 import com.lying.variousoddities.reference.Reference;
@@ -31,7 +31,7 @@ public class MobMixin extends LivingEntityMixin
 	public void playAmbientSound(final CallbackInfo ci)
 	{
 		Mob entity = (Mob)(Object)this;
-		if(entity.hasEffect(VOPotions.SILENCED))
+		if(entity.hasEffect(VOMobEffects.SILENCED))
 			ci.cancel();
 	}
 	
@@ -39,7 +39,7 @@ public class MobMixin extends LivingEntityMixin
 	public void playHurtSound(final CallbackInfo ci)
 	{
 		Mob entity = (Mob)(Object)this;
-		if(entity.hasEffect(VOPotions.SILENCED))
+		if(entity.hasEffect(VOMobEffects.SILENCED))
 			ci.cancel();
 	}
 	
@@ -50,7 +50,7 @@ public class MobMixin extends LivingEntityMixin
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		// Mobs paralysed or dazed do not update their AI tasks
-		if(VOPotions.isParalysed(entity) || entity.hasEffect(VOPotions.DAZED))
+		if(VOMobEffects.isParalysed(entity) || entity.hasEffect(VOMobEffects.DAZED))
 			ci.cancel();
 		
 		// Mobs unable to detect their attack target beyond arm's length will lose interest

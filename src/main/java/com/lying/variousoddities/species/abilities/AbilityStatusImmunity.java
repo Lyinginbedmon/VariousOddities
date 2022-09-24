@@ -1,6 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
@@ -50,7 +50,7 @@ public abstract class AbilityStatusImmunity extends Ability
 			super(REGISTRY_NAME);
 		}
 		
-		public boolean appliesToStatus(MobEffectInstance effectIn){ return VOPotions.isParalysisEffect(effectIn); }
+		public boolean appliesToStatus(MobEffectInstance effectIn){ return VOMobEffects.isParalysisEffect(effectIn); }
 		
 		public static class Builder extends Ability.Builder
 		{

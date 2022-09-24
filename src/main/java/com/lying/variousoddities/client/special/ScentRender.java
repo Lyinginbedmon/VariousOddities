@@ -20,7 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 @OnlyIn(Dist.CLIENT)
@@ -30,7 +30,7 @@ public class ScentRender
 	private static Player player = mc.player;
 	
 	@SubscribeEvent
-	public static void onRenderScents(RenderWorldLastEvent event)
+	public static void onRenderScents(RenderLevelStageEvent event)
 	{
 		if(player == null || player.getLevel() == null) return;
 		Level world = player.getLevel();
@@ -39,13 +39,13 @@ public class ScentRender
 		if(scent == null || !scent.isActive()) return;
 		
 		// Render marker network
-		float partialTicks = event.getPartialTicks();
+		float partialTicks = event.getPartialTick();
 		ScentsManager manager = ScentsManager.get(world);
 		List<ScentMarker> scents = Lists.newArrayList();
 		manager.getAllScents().forEach((marker) -> { if(scent.isInRange(marker.getPosition(partialTicks), player)) scents.add(marker); });
 		
-		Vec3 camPos = mc.getRenderManager().info.getProjectedView();
-        PoseStack matrixStack = event.getMatrixStack();
+		Vec3 camPos = mc.getEntityRenderDispatcher().camera.getPosition();
+        PoseStack matrixStack = event.getPoseStack();
 		scents.forEach((marker) -> 
 		{
 			if(marker.isDead()) return;
@@ -92,7 +92,7 @@ public class ScentRender
 			double y = ((double)i / (double)points) + (rand.nextDouble() * 0.01D);
 			double x = -Math.sqrt((y*y*y) * (1 - y));
 			
-			Vec3 position = pos.add(new Vec3(x, y, 0D).rotateYaw((float)(Math.toRadians(rand.nextInt(360)))).mul(height, height, height));
+			Vec3 position = pos.add(new Vec3(x, y, 0D).yRot((float)(Math.toRadians(rand.nextInt(360)))).multiply(height, height, height));
 			matrixStack.pushPose();
 				RenderUtils.drawCube(matrixStack, position, eyePos, red, green, blue, 1F, 0.1D);
 			matrixStack.popPose();
@@ -111,7 +111,7 @@ public class ScentRender
         double wiggleVol = 0.3D;
         
         Vec3 posA = start;
-        Vec3 posB = posA.add(offset.mul(stepDist, stepDist, stepDist)).add(makeWiggleVec(offset, rand, wiggleVol));
+        Vec3 posB = posA.add(offset.multiply(stepDist, stepDist, stepDist)).add(makeWiggleVec(offset, rand, wiggleVol));
         double time = (rand.nextDouble() * 1000D) + System.currentTimeMillis() * 0.005D;
         while(posB.distanceTo(end) > 0)
         {

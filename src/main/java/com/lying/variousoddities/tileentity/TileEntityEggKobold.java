@@ -2,7 +2,7 @@ package com.lying.variousoddities.tileentity;
 
 import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.init.VOEntities;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
@@ -14,7 +14,7 @@ public class TileEntityEggKobold extends TileEntityEgg
 {
 	public TileEntityEggKobold(BlockPos pos, BlockState state)
 	{
-		super(VOTileEntities.EGG_KOBOLD, pos, state);
+		super(VOBlockEntities.EGG_KOBOLD, pos, state);
 	}
 	
 	public int getInitialHatchTime(){ return Reference.Values.TICKS_PER_MINUTE * 20; }
@@ -22,7 +22,7 @@ public class TileEntityEggKobold extends TileEntityEgg
 	
 	public LivingEntity getHatchling(Level worldIn)
 	{
-		EntityKobold baby = VOEntities.KOBOLD.create(worldIn);
+		EntityKobold baby = VOEntities.KOBOLD.get().create(worldIn);
 		baby.setAge(-6000);
 		return baby;
 	}

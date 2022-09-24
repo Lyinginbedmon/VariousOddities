@@ -1,6 +1,5 @@
 package com.lying.variousoddities.utility;
 
-import java.lang.annotation.ElementType;
 import java.util.List;
 import java.util.Map;
 
@@ -13,8 +12,7 @@ import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.condition.Condition;
 import com.lying.variousoddities.condition.ConditionInstance;
 import com.lying.variousoddities.entity.IMountInventory;
-import com.lying.variousoddities.init.VOPotions;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.network.PacketBonusJump;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketMountGui;
@@ -28,11 +26,14 @@ import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.AbilitySwim;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
+import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix4f;
 
 import net.minecraft.ChatFormatting;
@@ -40,8 +41,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -55,6 +59,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -63,9 +68,16 @@ import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.InputEvent.MouseScrollingEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ScreenEvent.MouseScrolled;
+import net.minecraftforge.client.event.ViewportEvent.ComputeFogColor;
+import net.minecraftforge.client.event.ViewportEvent.RenderFog;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
@@ -80,21 +92,20 @@ public class VOBusClient
 	
 	private static int phylacteryNotification = -1;
 	
-	@SuppressWarnings("deprecation")
 	@SubscribeEvent(priority=EventPriority.LOWEST, receiveCanceled=true)
-	public static void noclipFog(FogDensity event)
+	public static void noclipFog(RenderFog event)
 	{
 		if(playerInWall())
 		{
-	        RenderSystem.fogStart(0.0F);
-	        RenderSystem.fogEnd(10F);
-	        event.setDensity(0.25F);
+	        event.setNearPlaneDistance(0F);
+	        event.setFarPlaneDistance(10F);
+	        event.setFogShape(FogShape.SPHERE);
 	        event.setCanceled(true);
 		}
 	}
 	
 	@SubscribeEvent(priority=EventPriority.LOWEST, receiveCanceled=true)
-	public static void noclipFogColor(FogColors event)
+	public static void noclipFogColor(ComputeFogColor event)
 	{
 		if(playerInWall())
 		{
@@ -161,7 +172,7 @@ public class VOBusClient
 	}
 	
 	@SubscribeEvent
-	public static void onWorldRender(RenderWorldLastEvent event)
+	public static void onWorldRender(RenderLevelStageEvent event)
 	{
 		Player localPlayer = mc.player;
 		if(localPlayer == null || localPlayer.getLevel() == null)
@@ -169,13 +180,13 @@ public class VOBusClient
 		
 		// Find all loaded phylacteries
 		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
-		localPlayer.getLevel().loadedTileEntityList.forEach((tile) -> { if(tile.getType() == VOTileEntities.PHYLACTERY) phylacteries.add((TileEntityPhylactery)tile); });
+//		localPlayer.getLevel().loadedTileEntityList.forEach((tile) -> { if(tile.getType() == VOTileEntities.PHYLACTERY) phylacteries.add((TileEntityPhylactery)tile); });	// FIXME Needs accessor
 		
 		handleMistNotification(localPlayer, phylacteries);
 		spawnMistParticles(localPlayer, phylacteries);
 		
 		if(Minecraft.renderNames())
-			displayConditions(event.getMatrixStack(), localPlayer);
+			displayConditions(event.getPoseStack(), localPlayer);
 	}
 	
 	private static void displayConditions(PoseStack stack, Player localPlayer)
@@ -248,13 +259,12 @@ public class VOBusClient
 		stack.pushPose();
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderTexture(0, condition.getIconTexture(affecting));
-			buffer.begin(7, DefaultVertexFormat.POSITION_TEX);
-				buffer.pos(matrix, (float)(pos.getX() - xOff), (float)(pos.getY() + yOff), (float)(pos.getZ() - zOff)).tex(1, 0).endVertex();
-				buffer.pos(matrix, (float)(pos.getX() + xOff), (float)(pos.getY() + yOff), (float)(pos.getZ() + zOff)).tex(0, 0).endVertex();
-				buffer.pos(matrix, (float)(pos.getX() + xOff), (float)(pos.getY() - yOff), (float)(pos.getZ() + zOff)).tex(0, 1).endVertex();
-				buffer.pos(matrix, (float)(pos.getX() - xOff), (float)(pos.getY() - yOff), (float)(pos.getZ() - zOff)).tex(1, 1).endVertex();
-			buffer.finishDrawing();
-    		WorldVertexBufferUploader.draw(buffer);
+			buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+				buffer.vertex(matrix, (float)(pos.x - xOff), (float)(pos.y + yOff), (float)(pos.z - zOff)).uv(1, 0).endVertex();
+				buffer.vertex(matrix, (float)(pos.x + xOff), (float)(pos.y + yOff), (float)(pos.z + zOff)).uv(0, 0).endVertex();
+				buffer.vertex(matrix, (float)(pos.x + xOff), (float)(pos.y - yOff), (float)(pos.z + zOff)).uv(0, 1).endVertex();
+				buffer.vertex(matrix, (float)(pos.x - xOff), (float)(pos.y - yOff), (float)(pos.z - zOff)).uv(1, 1).endVertex();
+			BufferUploader.drawWithShader(buffer.end());
     		RenderSystem.disableBlend();
 		stack.popPose();
 	}
@@ -330,7 +340,7 @@ public class VOBusClient
 			MutableComponent obfuscated = Component.literal(VOHelper.obfuscateStringRandomly(warning.getString(), ChatFormatting.WHITE + "", rand.nextLong(), 0.2F, true));
 			localPlayer.displayClientMessage(obfuscated, true);
 			
-			localPlayer.getLevel().playSound(localPlayer, localPlayer.position(), SoundEvents.AMBIENT_CAVE, SoundSource.AMBIENT, 1F, rand.nextFloat());
+			localPlayer.getLevel().playSound(localPlayer, localPlayer.blockPosition(), SoundEvents.AMBIENT_CAVE, SoundSource.AMBIENT, 1F, rand.nextFloat());
 		}
 	}
 	
@@ -380,10 +390,10 @@ public class VOBusClient
 			if(!AbilityRegistry.getAbilitiesOfType(renderTarget, AbilityPhasing.class).isEmpty() || (data != null && data.getBodyCondition() != BodyCondition.ALIVE))
 			{
 	            event.setCanceled(true);
-	            IRenderTypeBuffer.Impl iRenderTypeBuffer = mc.getRenderTypeBuffers().getBufferSource();
+	            MultiBufferSource iRenderTypeBuffer = mc.renderBuffers().bufferSource();
 	            event.getPoseStack().pushPose();
 	            	skipRenderEvent = true;
-	            	event.getRenderer().render(renderTarget, renderTarget.yBodyRot(), event.getPartialTick(), event.getPoseStack(), iRenderTypeBuffer, 0xffffff);
+	            	event.getRenderer().render(renderTarget, renderTarget.getYRot(), event.getPartialTick(), event.getPoseStack(), iRenderTypeBuffer, 0xffffff);
 	            event.getPoseStack().popPose();
 	        }
 		}
@@ -403,28 +413,27 @@ public class VOBusClient
 	}
 	
 	@SubscribeEvent
-	public static void onDazedClickEvent(InputEvent.ClickInputEvent event)
+	public static void onDazedClickEvent(InputEvent.MouseButton event)
 	{
 		Player player = mc.player;
-		if(player != null && VOPotions.isPotionVisible(player, VOPotions.DAZED))
+		if(player != null && VOMobEffects.isPotionVisible(player, VOMobEffects.DAZED))
 			event.setCanceled(true);
 	}
 	
 	private static int dazzledTime = 0;
 	
-	@SuppressWarnings("deprecation")
 	@SubscribeEvent
-	public static void onRenderDazzled(RenderGameOverlayEvent.Pre event)
+	public static void onRenderDazzled(RenderGuiOverlayEvent.Pre event)
 	{
-		if(event.getType() != ElementType.VIGNETTE || mc.player == null)
+		if(event.getOverlay().id() != VanillaGuiOverlay.VIGNETTE.id() || mc.player == null)
 			return;
 		
 		Player player = mc.player;
-		MobEffectInstance dazzle = player.getEffect(VOPotions.DAZZLED);
+		MobEffectInstance dazzle = player.getEffect(VOMobEffects.DAZZLED);
 		if(dazzle != null && dazzle.getDuration() > 0)
 		{
-			int scaledWidth = mc.getMainWindow().getScaledWidth();
-			int scaledHeight = mc.getMainWindow().getScaledHeight();
+			int scaledWidth = mc.getWindow().getGuiScaledWidth();
+			int scaledHeight = mc.getWindow().getGuiScaledHeight();
 			
 			int fadeTime = Reference.Values.TICKS_PER_SECOND * 5;
 			int time = 0;
@@ -440,15 +449,15 @@ public class VOBusClient
 			RenderSystem.setShaderTexture(0, new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/misc/vignette_dazzled.png"));
 		    Tesselator tessellator = Tesselator.getInstance();
 		    BufferBuilder bufferbuilder = tessellator.getBuilder();
-		    bufferbuilder.begin(7, DefaultVertexFormat.POSITION_TEX);
-			    bufferbuilder.pos(0.0D, (double)scaledHeight, -90.0D).tex(0.0F, 1.0F).endVertex();
-			    bufferbuilder.pos((double)scaledWidth, (double)scaledHeight, -90.0D).tex(1.0F, 1.0F).endVertex();
-			    bufferbuilder.pos((double)scaledWidth, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
-			    bufferbuilder.pos(0.0D, 0.0D, -90.0D).tex(0.0F, 0.0F).endVertex();
-		    tessellator.draw();
+		    bufferbuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+			    bufferbuilder.vertex(0.0D, (double)scaledHeight, -90.0D).uv(0.0F, 1.0F).endVertex();
+			    bufferbuilder.vertex((double)scaledWidth, (double)scaledHeight, -90.0D).uv(1.0F, 1.0F).endVertex();
+			    bufferbuilder.vertex((double)scaledWidth, 0.0D, -90.0D).uv(1.0F, 0.0F).endVertex();
+			    bufferbuilder.vertex(0.0D, 0.0D, -90.0D).uv(0.0F, 0.0F).endVertex();
+		    BufferUploader.drawWithShader(bufferbuilder.end());
 		    RenderSystem.depthMask(true);
 		    RenderSystem.enableDepthTest();
-		    RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			
 			event.setCanceled(true);
 		}
@@ -457,12 +466,12 @@ public class VOBusClient
 	}
 	
 	@SubscribeEvent
-	public static void onMountUIOpen(GuiOpenEvent event)
+	public static void onMountUIOpen(ScreenEvent.Opening event)
 	{
 		Player player = mc.player;
-		if(player != null && player.getVehicle() != null && player.getVehicle() instanceof IMountInventory && event.getGui() instanceof InventoryScreen)
+		if(player != null && player.getVehicle() != null && player.getVehicle() instanceof IMountInventory && event.getScreen() instanceof InventoryScreen)
 		{
-			event.setGui(null);
+			event.setNewScreen(null);
 			PacketHandler.sendToServer(new PacketMountGui());
 		}
 	}
@@ -477,15 +486,15 @@ public class VOBusClient
 	
 	private static BlockState getInWallBlockState(Player playerEntity)
 	{
-        BlockPos.Mutable mutable = new BlockPos.Mutable();
+        MutableBlockPos mutable = new MutableBlockPos();
         for(int i = 0; i < 8; ++i)
         {
             double d = playerEntity.getX() + (double)(((float)((i >> 0) % 2) - 0.5F) * playerEntity.getBbWidth() * 0.8F);
             double e = playerEntity.getEyeY() + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F);
             double f = playerEntity.getZ() + (double)(((float)((i >> 2) % 2) - 0.5F) * playerEntity.getBbWidth() * 0.8F);
-            mutable.setPos(d, e, f);
+            mutable.set(d, e, f);
             BlockState blockState = playerEntity.level.getBlockState(mutable);
-            if(blockState.getRenderType() != BlockRenderType.INVISIBLE)
+            if(blockState.getRenderShape() != RenderShape.INVISIBLE)
                 return blockState;
         }
         return null;
@@ -495,7 +504,7 @@ public class VOBusClient
 	public static void onSilencedChatEvent(ClientChatEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.hasEffect(VOPotions.SILENCED) && !event.getOriginalMessage().startsWith("/"))
+		if(player != null && player.hasEffect(VOMobEffects.SILENCED) && !event.getOriginalMessage().startsWith("/"))
 			event.setCanceled(true);
 	}
 	
@@ -503,15 +512,15 @@ public class VOBusClient
 	public static void onDeafenedChatEvent(ClientChatReceivedEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.hasEffect(VOPotions.DEAFENED) && event.getType() == ChatType.CHAT)
+		if(player != null && player.hasEffect(VOMobEffects.DEAFENED) && BuiltinRegistries.CHAT_TYPE.get(ChatType.CHAT) == event.getType())
 			event.setCanceled(true);
 	}
 	
 	@SubscribeEvent
-	public static void onDeafenedPlaySound(PlaySoundAtEntityEvent event)
+	public static void onDeafenedPlaySound(PlaySoundEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.hasEffect(VOPotions.DEAFENED))
+		if(player != null && player.hasEffect(VOMobEffects.DEAFENED))
 			event.setCanceled(true);
 	}
 }

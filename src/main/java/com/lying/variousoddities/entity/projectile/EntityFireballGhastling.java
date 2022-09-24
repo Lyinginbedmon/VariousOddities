@@ -10,7 +10,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 
 public class EntityFireballGhastling extends SmallFireball
 {
@@ -32,9 +31,9 @@ public class EntityFireballGhastling extends SmallFireball
 			if(!hitEntity.fireImmune())
 			{
 				Entity shooter = getResponsibleEntity();
-				int i = hitEntity.getFireTimer();
+				int i = hitEntity.getRemainingFireTicks();
 				hitEntity.setSecondsOnFire(3);
-				if(!hitEntity.hurt(DamageSource.func_233547_a_(this, shooter), 2.0F))
+				if(!hitEntity.hurt(DamageSource.fireball(this, shooter), 2.0F))
 					hitEntity.setRemainingFireTicks(i);
 				else if(shooter instanceof LivingEntity)
 					doEnchantDamageEffects((LivingEntity)shooter, hitEntity);
@@ -42,13 +41,13 @@ public class EntityFireballGhastling extends SmallFireball
 		}
 	}
 	
-	protected void onImpact(HitResult result)
+	protected void onHitBlock(BlockHitResult result)
 	{
-		super.onImpact(result);
+		super.onHitBlock(result);
 		if(!getLevel().isClientSide)
 		{
-			getLevel().createExplosion((Entity)null, this.getX(), this.getY(), this.getZ(), 0.5F, false, Explosion.Mode.NONE);
-			remove();
+			getLevel().explode((Entity)null, this.getX(), this.getY(), this.getZ(), 0.5F, false, Explosion.BlockInteraction.NONE);
+			remove(RemovalReason.KILLED);
 		}
 	}
 	

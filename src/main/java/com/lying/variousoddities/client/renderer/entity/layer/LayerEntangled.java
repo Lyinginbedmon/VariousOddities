@@ -1,7 +1,7 @@
 package com.lying.variousoddities.client.renderer.entity.layer;
 
 import com.lying.variousoddities.capabilities.LivingData;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -31,7 +31,7 @@ public class LayerEntangled<T extends LivingEntity, M extends EntityModel<T>> ex
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		LivingData data = LivingData.forEntity(entitylivingbaseIn);
-		if(data == null || !data.getVisualPotion(VOPotions.ENTANGLED))
+		if(data == null || !data.getVisualPotion(VOMobEffects.ENTANGLED))
 			return;
 		
 		matrixStackIn.pushPose();

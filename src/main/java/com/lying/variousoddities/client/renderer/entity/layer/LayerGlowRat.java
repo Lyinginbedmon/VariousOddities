@@ -12,22 +12,22 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class LayerGlowRat extends LayerOddityGlow<AbstractRat, ModelRat>
+public class LayerGlowRat<T extends AbstractRat> extends LayerOddityGlow<T, ModelRat<T>>
 {
 	String resourceBase = Reference.ModInfo.MOD_PREFIX+"textures/entity/rat/rat_";
 	
-	public LayerGlowRat(RenderLayerParent<AbstractRat, ModelRat> entityRendererIn)
+	public LayerGlowRat(RenderLayerParent<T, ModelRat<T>> entityRendererIn)
 	{
 		super(entityRendererIn, null);
 	}
 	
-	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, AbstractRat entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
+	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(entitylivingbaseIn.getEyesGlow())
 			super.render(matrixStackIn, bufferIn, packedLightIn, entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
 	}
 	
-	protected ResourceLocation getTexture(AbstractRat ratIn)
+	protected ResourceLocation getTexture(T ratIn)
     {
 		return new ResourceLocation(resourceBase+ratIn.getRatBreed().getName()+"_glow.png");
     }

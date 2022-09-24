@@ -19,18 +19,18 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class LayerCrabBarnacles extends RenderLayer<AbstractCrab, ModelCrab> 
+public class LayerCrabBarnacles<T extends AbstractCrab> extends RenderLayer<T, ModelCrab<T>> 
 {
 	private static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_PREFIX+"textures/entity/crab/barnacles.png");
-	private final ModelCrabBarnacles model;
+	private final ModelCrabBarnacles<T> model;
 	
-	public LayerCrabBarnacles(RenderLayerParent<AbstractCrab, ModelCrab> entityRendererIn, EntityModelSet modelsIn)
+	public LayerCrabBarnacles(RenderLayerParent<T, ModelCrab<T>> entityRendererIn, EntityModelSet modelsIn)
 	{
 		super(entityRendererIn);
-		this.model = new ModelCrabBarnacles(modelsIn.bakeLayer(VOModelLayers.CRAB_BARNACLES));
+		this.model = new ModelCrabBarnacles<T>(modelsIn.bakeLayer(VOModelLayers.CRAB_BARNACLES));
 	}
 	
-	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, AbstractCrab crabIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
+	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T crabIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(crabIn.hasBarnacles())
 		{
@@ -42,7 +42,7 @@ public class LayerCrabBarnacles extends RenderLayer<AbstractCrab, ModelCrab>
 		}
 	}
 	
-	public ResourceLocation getEntityTexture(AbstractCrab entitylivingbaseIn)
+	public ResourceLocation getEntityTexture(T entitylivingbaseIn)
 	{
 		return TEXTURE;
 	}

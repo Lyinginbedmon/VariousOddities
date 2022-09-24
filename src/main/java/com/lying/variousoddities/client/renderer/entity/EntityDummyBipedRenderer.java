@@ -19,7 +19,6 @@ import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
@@ -28,11 +27,10 @@ import net.minecraft.world.phys.Vec3;
 
 public class EntityDummyBipedRenderer extends LivingEntityRenderer<EntityDummyBiped, PlayerModel<EntityDummyBiped>>
 {
-	@SuppressWarnings("rawtypes")
 	public EntityDummyBipedRenderer(EntityRendererProvider.Context context, boolean useSmallArms)
 	{
 		super(context, new PlayerModel<EntityDummyBiped>(context.bakeLayer(useSmallArms ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), useSmallArms), 0.5F);
-		this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel(0.5F), new HumanoidModel(1.0F)));
+		this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel<EntityDummyBiped>(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel<EntityDummyBiped>(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR))));
 		this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
 	    this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
 	    this.addLayer(new ElytraLayer<>(this, context.getModelSet()));

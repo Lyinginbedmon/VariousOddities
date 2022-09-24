@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.google.common.collect.Maps;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.potion.IStackingPotion;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityClimb;
@@ -78,9 +78,9 @@ public class LivingEntityMixin extends EntityMixin
 			if(livingData == null)
 				return;
 			
-			for(MobEffect visual : VOPotions.VISUALS.keySet())
+			for(MobEffect visual : VOMobEffects.VISUALS.keySet())
 			{
-				int index = VOPotions.getVisualPotionIndex(visual);
+				int index = VOMobEffects.getVisualPotionIndex(visual);
 				boolean active = living.hasEffect(visual);
 				
 				if(livingData.getVisualPotion(index) != active)
@@ -187,7 +187,7 @@ public class LivingEntityMixin extends EntityMixin
 			ci.setReturnValue(false);
 			ci.cancel();
 		}
-		else if(entity.hasEffect(VOPotions.PETRIFIED))
+		else if(entity.hasEffect(VOMobEffects.PETRIFIED))
 		{
 			if(
 					source == DamageSource.FALL || source == DamageSource.FALLING_BLOCK || 

@@ -56,7 +56,7 @@ public class PacketDeadDeath
 		if(!player.getLevel().isClientSide)
 		{
 			Entity body = PlayerData.forPlayer(player).getBody(player.getLevel());
-			if(body != null && body.getType() == VOEntities.BODY)
+			if(body != null && body.getType() == VOEntities.BODY.get())
 				body.kill();
 			else if(body == null)
 				VariousOddities.log.warn("Could not find corpse of player "+player.getDisplayName().getString()+" to despawn");

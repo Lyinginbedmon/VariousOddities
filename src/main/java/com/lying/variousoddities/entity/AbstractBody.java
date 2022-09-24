@@ -24,8 +24,12 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerListener;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -40,13 +44,12 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 
-public abstract class AbstractBody extends LivingEntity implements ContainerListener
+public abstract class AbstractBody extends Mob implements ContainerListener
 {
     protected static final EntityDataAccessor<CompoundTag> ENTITY	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.COMPOUND_TAG);
     protected static final EntityDataAccessor<CompoundTag> PROFILE	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.COMPOUND_TAG);
@@ -54,7 +57,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
     protected static final EntityDataAccessor<Optional<UUID>> SOUL_ID	= SynchedEntityData.defineId(AbstractBody.class, EntityDataSerializers.OPTIONAL_UUID);
     protected static final EntityDimensions BODY_SIZE = EntityDimensions.fixed(0.75F, 0.5F);
     
-    protected final Inventory bodyInventory;
+    protected final SimpleContainer bodyInventory;
 	
 	/** True if this corpse should not despawn, even if its bound entity is not dead. */
 	protected boolean persistent = false;
@@ -62,7 +65,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	public AbstractBody(EntityType<? extends AbstractBody> type, Level worldIn)
 	{
 		super(type, worldIn);
-		this.bodyInventory = new Inventory(12);
+		this.bodyInventory = new SimpleContainer(12);
 		this.bodyInventory.addListener(this);
 	}
 	
@@ -117,7 +120,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		for(int i=0; i<4; i++)
 		{
 			CompoundTag stackData = new CompoundTag();
-			ItemStack stack = this.bodyInventory.getStackInSlot(i);
+			ItemStack stack = this.bodyInventory.getItem(i);
 			if(!stack.isEmpty())
 				stack.save(stackData);
 			armourList.add(stackData);
@@ -128,7 +131,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		for(int i=0; i<2; i++)
 		{
 			CompoundTag stackData = new CompoundTag();
-			ItemStack stack = this.bodyInventory.getStackInSlot(4+i);
+			ItemStack stack = this.bodyInventory.getItem(4+i);
 			if(!stack.isEmpty())
 				stack.save(stackData);
 			handList.add(stackData);
@@ -139,7 +142,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		for(int i=0; i<6; i++)
 		{
 			CompoundTag stackData = new CompoundTag();
-			ItemStack stack = this.bodyInventory.getStackInSlot(6+i);
+			ItemStack stack = this.bodyInventory.getItem(6+i);
 			if(!stack.isEmpty())
 				stack.save(stackData);
 			inventoryList.add(stackData);
@@ -149,7 +152,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		return compound;
 	}
 	
-	protected static CompoundTag writeInventoryToNBT(CompoundTag compound, Inventory armour, Inventory hands, Inventory bag)
+	protected static CompoundTag writeInventoryToNBT(CompoundTag compound, Container armour, Container hands, Inventory bag)
 	{
 		if(armour != null)
 			compound.put("ArmorItems", writeInventoryToList(new ListTag(), armour));
@@ -160,12 +163,12 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		return compound;
 	}
 	
-	protected static ListTag writeInventoryToList(ListTag list, Inventory inv)
+	protected static ListTag writeInventoryToList(ListTag list, Container inv)
 	{
-		for(int i=0; i<inv.getSizeInventory(); i++)
+		for(int i=0; i<inv.getContainerSize(); i++)
 		{
 			CompoundTag stackData = new CompoundTag();
-			ItemStack stack = inv.getStackInSlot(i);
+			ItemStack stack = inv.getItem(i);
 			if(!stack.isEmpty())
 				stack.save(stackData);
 			list.add(stackData);
@@ -178,11 +181,11 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		ListTag armourList = compound.getList("ArmorItems", 10);
 		armourList.addAll(compound.getList("HandItems", 10));
 		armourList.addAll(compound.getList("Inventory", 10));
-		for(int i=0; i<this.bodyInventory.getSizeInventory(); i++)
-			this.bodyInventory.setInventorySlotContents(i, ItemStack.of(armourList.getCompound(i)));
+		for(int i=0; i<this.bodyInventory.getContainerSize(); i++)
+			this.bodyInventory.setItem(i, ItemStack.of(armourList.getCompound(i)));
 	}
 	
-	public void slotChanged(AbstractContainerMenu invBasic, int slot, ItemStack stack)
+	public void containerChanged(Container inventory)
 	{
 		if(!getLevel().isClientSide)
 			getEntityData().set(EQUIPMENT, writeInventoryToNBT(new CompoundTag()));
@@ -227,11 +230,11 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 			if(stealsGear() || living instanceof Monster)
 			{
 				int slot = 0;
-				for(ItemStack stack : living.getArmorInventoryList())
+				for(ItemStack stack : living.getArmorSlots())
 				{
 					if(!checkDrop || checkDrop && rand.nextFloat() <= armorChances[slot])
 					{
-						this.bodyInventory.setInventorySlotContents(slot, stack.copy());
+						this.bodyInventory.setItem(slot, stack.copy());
 						living.setItemSlot(EquipmentSlot.byTypeAndIndex(EquipmentSlot.Type.ARMOR, slot), ItemStack.EMPTY);
 					}
 					slot++;
@@ -242,7 +245,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 				{
 					if(!checkDrop || checkDrop && rand.nextFloat() <= handChances[handSlot++])
 					{
-						this.bodyInventory.setInventorySlotContents(slot, stack.copy());
+						this.bodyInventory.setItem(slot, stack.copy());
 						living.setItemSlot(EquipmentSlot.byTypeAndIndex(EquipmentSlot.Type.HAND, handSlot), ItemStack.EMPTY);
 					}
 					slot++;
@@ -270,28 +273,27 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 				}
 			}
 			
-			
-			living.writeWithoutTypeId(data);
+			living.saveWithoutId(data);
 			if(living.getType() == EntityType.PLAYER)
 			{
 				data.putString("id", "player");
 				getEntityData().set(PROFILE, NbtUtils.writeGameProfile(new CompoundTag(), ((Player)living).getGameProfile()));
 			}
 			else
-				data.putString("id", living.getEntityString());
+				data.putString("id", living.getEncodeId());
 			
 			if(data.contains("Passengers"))
 				data.remove("Passengers");
 		}
 		else
 		{
-			this.bodyInventory.clear();
+			this.bodyInventory.clearContent();
 			setSoulUUID(null);
 		}
 		
 		getEntityData().set(ENTITY, data);
 		updateSize();
-		onInventoryChanged(null);
+		containerChanged(this.bodyInventory);
 	}
 	
 	/** Returns true if this body should remove items from its associated entity */
@@ -338,20 +340,20 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		String id = data.getString("id");
 		Entity entity = null;
 		if(id.equalsIgnoreCase("player"))
-			entity = VOEntities.DUMMY_BIPED.create(getLevel());
+			entity = VOEntities.DUMMY_BIPED.get().create(getLevel());
 		else
 		{
-			if(!EntityType.byKey(id).isPresent())
+			if(!EntityType.byString(id).isPresent())
 				return null;
 			else
-				entity = EntityType.byKey(id).get().create(getLevel());
+				entity = EntityType.byString(id).get().create(getLevel());
 		}
 		
 		if(entity != null)
 		{
 			entity.load(data);
 			
-			if(entity.getType() == VOEntities.DUMMY_BIPED)
+			if(entity.getType() == VOEntities.DUMMY_BIPED.get())
 				((EntityDummyBiped)entity).setGameProfile(getGameProfile());
 			
 			for(EquipmentSlot slot : EquipmentSlot.values())
@@ -369,7 +371,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	{
 		if(isPlayer())
 		{
-			EntityDummyBiped dummy = VOEntities.DUMMY_BIPED.create(getLevel());
+			EntityDummyBiped dummy = VOEntities.DUMMY_BIPED.get().create(getLevel());
 			dummy.setGameProfile(getGameProfile());
 			return dummy;
 		}
@@ -419,7 +421,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	{
 		NonNullList<ItemStack> stacks = NonNullList.withSize(4, ItemStack.EMPTY);
 		for(int i=0; i<4; i++)
-			stacks.set(i, getInventory().getStackInSlot(i));
+			stacks.set(i, getInventory().getItem(i));
 		return stacks;
 	}
 	
@@ -427,7 +429,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	{
 		NonNullList<ItemStack> stacks = NonNullList.withSize(2, ItemStack.EMPTY);
 		for(int i=0; i<2; i++)
-			stacks.set(i, getInventory().getStackInSlot(4+i));
+			stacks.set(i, getInventory().getItem(4+i));
 		return stacks;
 	}
 	
@@ -435,7 +437,7 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	{
 		NonNullList<ItemStack> stacks = NonNullList.withSize(6, ItemStack.EMPTY);
 		for(int i=0; i<6; i++)
-			stacks.set(i, getInventory().getStackInSlot(6+i));
+			stacks.set(i, getInventory().getItem(6+i));
 		return stacks;
 	}
 	
@@ -443,10 +445,10 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	{
 		getInventory();
 		for(int i=0; i<6; i++)
-			this.bodyInventory.setInventorySlotContents(i+6, inventory.get(i));
+			this.bodyInventory.setItem(i+6, inventory.get(i));
 	}
 	
-	public Inventory getInventory()
+	public Container getInventory()
 	{
 		if(getLevel().isClientSide)
 			readInventoryFromNBT(getEntityData().get(EQUIPMENT));
@@ -455,8 +457,8 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	
 	protected void dropInventory()
 	{
-		for(int i=0; i<getInventory().getSizeInventory(); i++)
-			entityDropItem(getInventory().getStackInSlot(i));
+		for(int i=0; i<getInventory().getContainerSize(); i++)
+			spawnAtLocation(getInventory().getItem(i));
 	}
 	
 	public ItemStack getItemBySlot(EquipmentSlot slotIn)
@@ -466,12 +468,12 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 		
 		switch(slotIn)
 		{
-			case FEET:	return getInventory().getStackInSlot(0);
-			case LEGS:	return getInventory().getStackInSlot(1);
-			case CHEST:	return getInventory().getStackInSlot(2);
-			case HEAD:	return getInventory().getStackInSlot(3);
-			case MAINHAND:	return getInventory().getStackInSlot(4);
-			case OFFHAND:	return getInventory().getStackInSlot(5);
+			case FEET:	return getInventory().getItem(0);
+			case LEGS:	return getInventory().getItem(1);
+			case CHEST:	return getInventory().getItem(2);
+			case HEAD:	return getInventory().getItem(3);
+			case MAINHAND:	return getInventory().getItem(4);
+			case OFFHAND:	return getInventory().getItem(5);
 		}
 		return ItemStack.EMPTY;
 	}
@@ -484,8 +486,8 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 	
 	protected void setEquipmentInSlot(EquipmentSlot slotIn, ItemStack stack)
 	{
-		this.bodyInventory.setInventorySlotContents(slotIn.getIndex() + (slotIn.getType() == EquipmentSlot.Type.HAND ? 4 : 0), stack);
-		onInventoryChanged(null);
+		this.bodyInventory.setItem(slotIn.getIndex() + (slotIn.getType() == EquipmentSlot.Type.HAND ? 4 : 0), stack);
+		containerChanged(this.bodyInventory);
 	}
 	
 	public HumanoidArm getMainArm()
@@ -543,12 +545,19 @@ public abstract class AbstractBody extends LivingEntity implements ContainerList
 			}
 		}
 		else
-			openContainer(player);
+			openCustomInventoryScreen(player);
 		return InteractionResult.PASS;
 	}
 	
-	public void openContainer(Player playerIn)
+	public void openCustomInventoryScreen(Player playerIn)
 	{
-		playerIn.openContainer(new SimpleNamedContainerProvider((window, player, p1) -> new ContainerBody(window, player, getInventory(), this), this.getDisplayName()));
+		AbstractBody body = this;
+		Container container = this.getInventory();
+		Component displayName = this.getDisplayName();
+		playerIn.openMenu(new MenuProvider()
+				{
+					public AbstractContainerMenu createMenu(int window, Inventory player, Player p1){ return new ContainerBody(window, player, container, body); }
+					public Component getDisplayName(){ return displayName; }
+				});
 	}
 }

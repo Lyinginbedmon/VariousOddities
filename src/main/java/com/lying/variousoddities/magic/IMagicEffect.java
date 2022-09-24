@@ -10,7 +10,7 @@ import java.util.Map;
 import org.spongepowered.asm.mixin.MixinEnvironment.Side;
 
 import com.lying.variousoddities.api.entity.IMobSpellcaster;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.SpellManager.SpellData;
@@ -347,9 +347,9 @@ public interface IMagicEffect
 					}
 					return true;
 				case SOMATIC:
-					return !VOPotions.isParalysed(casterIn);
+					return !VOMobEffects.isParalysed(casterIn);
 				case VERBAL:
-					return !VOPotions.isSilenced(casterIn);
+					return !VOMobEffects.isSilenced(casterIn);
 				default: return true;
 			}
 		}

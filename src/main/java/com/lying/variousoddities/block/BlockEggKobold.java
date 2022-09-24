@@ -1,7 +1,7 @@
 package com.lying.variousoddities.block;
 
 import com.lying.variousoddities.init.VOBlocks;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 import com.lying.variousoddities.tileentity.TileEntityEgg;
 import com.lying.variousoddities.tileentity.TileEntityEggKobold;
 
@@ -29,6 +29,6 @@ public class BlockEggKobold extends BlockEgg<TileEntityEggKobold>
 	@Override
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level worldIn, BlockState state, BlockEntityType<T> typeIn)
 	{
-		return VOBlock.createTickerHelper(typeIn, VOTileEntities.EGG_KOBOLD, worldIn.isClientSide() ? TileEntityEgg::clientTick : TileEntityEgg::serverTick);
+		return VOBlock.createTickerHelper(typeIn, VOBlockEntities.EGG_KOBOLD, worldIn.isClientSide() ? TileEntityEgg::clientTick : TileEntityEgg::serverTick);
 	}
 }

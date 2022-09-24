@@ -252,6 +252,7 @@ public class EntityAIKoboldMate extends Goal
 		return targetEgg == null || !isPositionValidForEgg(targetEgg);
 	}
 	
+	@SuppressWarnings("deprecation")
 	public boolean isPositionValidForEgg(BlockPos pos)
 	{
 		if(pos != null)

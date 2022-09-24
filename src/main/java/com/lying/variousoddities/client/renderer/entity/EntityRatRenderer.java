@@ -7,16 +7,14 @@ import com.lying.variousoddities.entity.AbstractRat;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 @OnlyIn(Dist.CLIENT)
-public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
+public class EntityRatRenderer<T extends AbstractRat> extends MobRenderer<T, ModelRat<T>>
 {
 	private final float scale;
 	
@@ -24,9 +22,9 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
 	
 	public EntityRatRenderer(EntityRendererProvider.Context manager, float renderScale) 
 	{
-		super(manager, new ModelRat(manager.bakeLayer(VOModelLayers.RAT)), 0.5F * (renderScale / 1.5F));
+		super(manager, new ModelRat<T>(manager.bakeLayer(VOModelLayers.RAT)), 0.5F * (renderScale / 1.5F));
 		scale = renderScale;
-		addLayer(new LayerGlowRat(this));
+		addLayer(new LayerGlowRat<T>(this));
 	}
 	
 	public EntityRatRenderer(EntityRendererProvider.Context manager)
@@ -47,20 +45,4 @@ public class EntityRatRenderer extends MobRenderer<AbstractRat, ModelRat>
     	float fullScale = this.scale * ratIn.getRatBreed().getScale();
     	matrixStackIn.scale(fullScale, fullScale, fullScale);
     }
-	
-	public static class RenderFactorySmall implements IRenderFactory<AbstractRat>
-	{
-		public EntityRenderer<? super AbstractRat> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityRatRenderer(manager);
-		}
-	}
-	
-	public static class RenderFactoryLarge implements IRenderFactory<AbstractRat>
-	{
-		public EntityRenderer<? super AbstractRat> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityRatRenderer(manager, 1.6F);
-		}
-	}
 }

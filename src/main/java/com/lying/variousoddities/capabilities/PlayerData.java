@@ -12,6 +12,7 @@ import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.PlayerChangeConditionEvent;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractBody;
+import com.lying.variousoddities.init.VOCapabilities;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSyncPlayerData;
 import com.lying.variousoddities.reference.Reference;
@@ -31,14 +32,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class PlayerData implements ICapabilitySerializable<CompoundTag>
 {
-	@CapabilityInject(PlayerData.class)
-	public static final Capability<PlayerData> CAPABILITY = null;
 	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "player_data");
 	public static final int DEAD_TIME = Reference.Values.TICKS_PER_SECOND * 15;
 	
@@ -61,13 +59,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 		this.handler = LazyOptional.of(() -> this);
 	}
 	
-	public static void register()
-	{
-		CapabilityManager.INSTANCE.register(PlayerData.class, new PlayerData.Storage(), () -> null);
-		if(ConfigVO.GENERAL.verboseLogs())
-			VariousOddities.log.info("Registered player data capability");
-	}
-	
 	public LazyOptional<PlayerData> handler(){ return this.handler; }
 	
 	public static PlayerData forPlayer(Player player)
@@ -75,12 +66,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 		if(player == null)
 			return null;
 		
-		PlayerData data = null;
-		try
-		{
-			data = player.getCapability(CAPABILITY).orElse(null);
-		}
-		catch(Exception e){ }
+		PlayerData data = player.getCapability(VOCapabilities.PLAYER_DATA).orElse(null);
 		if(data != null)
 			data.player = player;
 		return data;
@@ -88,7 +74,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
 	{
-		return CAPABILITY.orEmpty(cap, this.handler);
+		return VOCapabilities.PLAYER_DATA.orEmpty(cap, this.handler);
 	}
 	
 	public CompoundTag serializeNBT()
@@ -375,19 +361,5 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 		
 		/** Returns how far a soul in this condition can be from its associated body */
 		public double getWanderRange(){ return this.wanderRange; }
-	}
-	
-	public static class Storage implements Capability.IStorage<PlayerData>
-	{
-		public INBT writeNBT(Capability<PlayerData> capability, PlayerData instance, Direction side)
-		{
-			return instance.serializeNBT();
-		}
-		
-		public void readNBT(Capability<PlayerData> capability, PlayerData instance, Direction side, INBT nbt)
-		{
-			if(nbt.getId() == 10)
-				instance.deserializeNBT((CompoundTag)nbt);
-		}
 	}
 }

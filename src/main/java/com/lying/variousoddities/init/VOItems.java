@@ -1,48 +1,35 @@
 package com.lying.variousoddities.init;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.lying.variousoddities.client.gui.GuiBody;
-import com.lying.variousoddities.client.gui.GuiPlayerBody;
-import com.lying.variousoddities.client.gui.GuiWarg;
 import com.lying.variousoddities.inventory.ContainerBody;
 import com.lying.variousoddities.inventory.ContainerPlayerBody;
 import com.lying.variousoddities.inventory.ContainerWarg;
-import com.lying.variousoddities.item.ItemHeldFlag;
 import com.lying.variousoddities.item.ItemMossBottle;
 import com.lying.variousoddities.item.ItemPhylactery;
 import com.lying.variousoddities.item.ItemSap;
 import com.lying.variousoddities.item.ItemScrollRemaking;
-import com.lying.variousoddities.item.ItemSpellContainer;
+import com.lying.variousoddities.item.ItemSpellList;
+import com.lying.variousoddities.item.ItemSpellScroll;
 import com.lying.variousoddities.item.VOItemGroup;
 import com.lying.variousoddities.reference.Reference;
-import com.mojang.blaze3d.platform.ScreenManager;
 
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.world.Container;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.extensions.IForgeContainerType;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.network.IContainerFactory;
+import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
 
 @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class VOItems
 {
-	private static final List<Item> ITEMS = Lists.newArrayList();
-	private static final List<BlockItem> BLOCK_ITEMS = Lists.newArrayList();
-	private static final List<ContainerType<?>> CONTAINERS = Lists.newArrayList();
-	
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Reference.ModInfo.MOD_ID);
+    public static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, Reference.ModInfo.MOD_ID);
+    
 	// Debug
 	public static final Item SAP	= register("sap", new ItemSap(new Item.Properties().tab(VOItemGroup.LOOT)));
 	
@@ -63,15 +50,18 @@ public class VOItems
 	public static final BlockItem PHYLACTERY		= registerBlock("phylactery", new ItemPhylactery(new Item.Properties().tab(VOItemGroup.BLOCKS).stacksTo(1)));
 	public static final BlockItem PHYLACTERY_EMPTY	= registerBlock("empty_phylactery", new BlockItem(VOBlocks.PHYLACTERY_EMPTY, new Item.Properties().tab(VOItemGroup.BLOCKS).stacksTo(1)));
 	
+	// Magic items
+	public static final Item SPELL_LIST		= register("spell_list", new ItemSpellList(new Properties().tab(VOItemGroup.LOOT)));
+	public static final Item SPELL_SCROLL	= register("spell_scroll", new ItemSpellScroll(new Properties().tab(VOItemGroup.LOOT)));
+	
 	// Containers
-	public static final ContainerType<ContainerWarg> CONTAINER_WARG	= registerContainer("warg_inventory", ContainerWarg::fromNetwork);
-	public static final ContainerType<ContainerBody> CONTAINER_BODY	= registerContainer("body_inventory", ContainerBody::fromNetwork);
-	public static final ContainerType<ContainerPlayerBody> CONTAINER_PLAYER_BODY	= registerContainer("player_body_inventory", ContainerPlayerBody::fromNetwork);
+	public static final MenuType<ContainerWarg> CONTAINER_WARG	= registerContainer("warg_inventory", ContainerWarg::fromNetwork);
+	public static final MenuType<ContainerBody> CONTAINER_BODY	= registerContainer("body_inventory", ContainerBody::fromNetwork);
+	public static final MenuType<ContainerPlayerBody> CONTAINER_PLAYER_BODY	= registerContainer("player_body_inventory", ContainerPlayerBody::fromNetwork);
 	
 	public static Item register(String nameIn, Item itemIn)
 	{
-		ForgeRegistries.ITEMS.register(Reference.ModInfo.MOD_PREFIX+nameIn, itemIn);
-		ITEMS.add(itemIn);
+		ITEMS.register(nameIn, () -> itemIn);
 		return itemIn;
 	}
 	
@@ -87,39 +77,30 @@ public class VOItems
 	
 	public static BlockItem registerBlock(String nameIn, BlockItem itemIn)
 	{
-		ForgeRegistries.ITEMS.register(Reference.ModInfo.MOD_PREFIX+nameIn, itemIn);
-		BLOCK_ITEMS.add(itemIn);
-		return itemIn;
+		return (BlockItem)register(nameIn, itemIn);
 	}
 	
-	public static <T extends Container> ContainerType<T> registerContainer(String nameIn, IContainerFactory<T> factoryIn)
+	public static <T extends AbstractContainerMenu> MenuType<T> registerContainer(String nameIn, MenuType.MenuSupplier<T> factoryIn)
 	{
-		ContainerType<T> type = IForgeContainerType.create(factoryIn);
-		type.setRegistryName(Reference.ModInfo.MOD_ID, nameIn);
-		CONTAINERS.add(type);
-		return type;
+		return (MenuType<T>)CONTAINERS.register(nameIn, () -> new MenuType<>(factoryIn)).get();
 	}
-	
-    public static void init()
-    {
-    	ItemHeldFlag.registerSubItems();
-    	ItemSpellContainer.registerSubItems(registry);
-    }
     
-    @SubscribeEvent
-    public static void onContainerRegistry(final RegistryEvent.Register<ContainerType<?>> containerRegistryEvent)
-    {
-    	IForgeRegistry<ContainerType<?>> registry = containerRegistryEvent.getRegistry();
-    	registry.registerAll(CONTAINERS.toArray(new ContainerType<?>[0]));
-    	
-    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-			ScreenManager.registerFactory(CONTAINER_WARG, GuiWarg::new);
-		});
-    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-			ScreenManager.registerFactory(CONTAINER_BODY, GuiBody::new);
-		});
-    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-			ScreenManager.registerFactory(CONTAINER_PLAYER_BODY, GuiPlayerBody::new);
-		});
-    }
+	public static void init() { }
+    
+//    @SubscribeEvent
+//    public static void onContainerRegistry(final RegistryEvent.Register<MenuType<?>> containerRegistryEvent)
+//    {
+//    	IForgeRegistry<MenuType<?>> registry = containerRegistryEvent.getRegistry();
+//    	registry.registerAll(CONTAINERS.toArray(new MenuType<?>[0]));
+//    	
+//    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+//			ScreenManager.registerFactory(CONTAINER_WARG, GuiWarg::new);
+//		});
+//    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+//			ScreenManager.registerFactory(CONTAINER_BODY, GuiBody::new);
+//		});
+//    	DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+//			ScreenManager.registerFactory(CONTAINER_PLAYER_BODY, GuiPlayerBody::new);
+//		});
+//    }
 }

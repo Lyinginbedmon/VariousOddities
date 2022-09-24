@@ -9,16 +9,17 @@ import com.lying.variousoddities.tileentity.TileEntityDraftingTable;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.util.FormattedCharSequence;
 
 public class GuiDraftingTable extends Screen
 {
@@ -56,7 +57,7 @@ public class GuiDraftingTable extends Screen
      */
     public void init()
     {
-        this.buttons.clear();
+        this.renderables.clear();
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
         int midX = width / 2;
         int midY = height / 2;
@@ -91,11 +92,11 @@ public class GuiDraftingTable extends Screen
     	
         this.nameField = new EditBox(this.font, midX - 50, midY - 80, 100, 12, Component.literal(""));
         this.nameField.setTextColor(-1);
-        this.nameField.setEnableBackgroundDrawing(false);
-        this.nameField.setDisabledTextColour(-1);
+        this.nameField.setBordered(false);
+        this.nameField.setTextColorUneditable(-1);
         this.nameField.setMaxLength(16);
         this.nameField.insertText(theTable.getTitle());
-    	this.children.add(this.nameField);
+    	addWidget(this.nameField);
     	if(theTable.canAlter(8))
     		this.setFocused(this.nameField);
         
@@ -103,7 +104,7 @@ public class GuiDraftingTable extends Screen
         	{
         		theTable.setMask(15);
         		sendToServer();
-                this.minecraft.player.closeScreen();
+                this.minecraft.player.closeContainer();
         	}));
         
         updateButtons();
@@ -129,12 +130,11 @@ public class GuiDraftingTable extends Screen
     	
     	functionSelect.active = theTable.canAlter(4);
     	
-    	nameField.setEnabled(theTable.canAlter(8));
+    	nameField.setEditable(theTable.canAlter(8));
     	
     	signButton.active = theTable.bitMask() != 15;
     }
 	
-	@SuppressWarnings("deprecation")
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		this.renderBackground(matrixStack);
@@ -160,13 +160,13 @@ public class GuiDraftingTable extends Screen
 	
 	private void drawCentred(PoseStack matrix, Component text, int x, int y, int colour)
 	{
-		IReorderingProcessor ireorderingprocessor = text.func_241878_f();
-		this.font.func_238422_b_(matrix, ireorderingprocessor, (float)(x - this.font.func_243245_a(ireorderingprocessor) / 2), (float)y, colour);
+		FormattedCharSequence formattedcharsequence = FormattedCharSequence.composite(FormattedCharSequence.forward(text.getString(), Style.EMPTY), FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK)));
+		this.font.draw(matrix, formattedcharsequence, (float)(x - this.font.width(formattedcharsequence) / 2), (float)y, colour);
 	}
     
     private void updateTitle()
     {
-    	String s = this.nameField.getText();
+    	String s = this.nameField.getValue();
     	
     	if(s == null || s.length() == 0)
     		s = "";
@@ -179,9 +179,9 @@ public class GuiDraftingTable extends Screen
     	if(keyCode == 256)
     	{
     		sendToServer();
-    		this.minecraft.player.closeScreen();
+    		this.minecraft.player.closeContainer();
     	}
-    	return !this.nameField.keyPressed(keyCode, scanCode, modifiers) && !this.nameField.canWrite() ? super.keyPressed(keyCode, scanCode, modifiers) : true;
+    	return !this.nameField.keyPressed(keyCode, scanCode, modifiers) && !this.nameField.canConsumeInput() ? super.keyPressed(keyCode, scanCode, modifiers) : true;
     }
     
     private static class BoundsButton extends Button
@@ -199,9 +199,9 @@ public class GuiDraftingTable extends Screen
 			        	int moveZ = 0;
 		        		switch(axis)
 		        		{
-							case X:	moveX = direction.getOffset(); break;
-							case Y:	moveY = direction.getOffset(); break;
-							case Z:	moveZ = direction.getOffset(); break;
+							case X:	moveX = direction.getStep(); break;
+							case Y:	moveY = direction.getStep(); break;
+							case Z:	moveZ = direction.getStep(); break;
 		        		}
 		        		
 		        		if(minPos)

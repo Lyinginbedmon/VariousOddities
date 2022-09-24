@@ -8,15 +8,15 @@ import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.magic.IMagicEffect;
 import com.lying.variousoddities.magic.MagicEffects;
 
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.IForgeRegistry;
 
 public abstract class ItemSpellContainer extends VOItem
 {
@@ -25,14 +25,13 @@ public abstract class ItemSpellContainer extends VOItem
 		super(properties);
 	}
 	
-	public static void registerSubItems(IForgeRegistry<Item> registry)
+	public void fillItemCategory(CreativeModeTab tab, NonNullList<ItemStack> items)
 	{
 		if(MagicEffects.getTotalSpells() > 0)
 		{
-			VOItems.register("spell_list", new ItemSpellList(new Properties().tab(VOItemGroup.LOOT)));
 			for(IMagicEffect spell : MagicEffects.getAllSpells())
 			{
-				VOItems.register("scroll_"+spell.getName(), new ItemSpellScroll(new Properties().tab(VOItemGroup.LOOT)));
+				items.add(setSpell(new ItemStack(VOItems.SPELL_SCROLL), spell));
 				
 				// If spell is level 4 or less, also create wand
 			}

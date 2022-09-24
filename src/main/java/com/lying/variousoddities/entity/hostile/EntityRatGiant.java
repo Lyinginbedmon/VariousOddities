@@ -105,7 +105,7 @@ public class EntityRatGiant extends AbstractRat
     	if(reason == MobSpawnType.SPAWNER)
 	    	for(int i=0; i<getRandom().nextInt(4); i++)
 	    	{
-	    		EntityRat rat = VOEntities.RAT.create(getLevel());
+	    		EntityRat rat = VOEntities.RAT.get().create(getLevel());
 	    		rat.setMinion(true);
 	    		rat.setBreed(getBreed());
 	    		rat.absMoveTo(getX(), getY(), getZ(), getRandom().nextFloat() * 360F, 0F);

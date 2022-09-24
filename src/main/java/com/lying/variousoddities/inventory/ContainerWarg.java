@@ -3,14 +3,12 @@ package com.lying.variousoddities.inventory;
 import com.lying.variousoddities.entity.mount.EntityWarg;
 import com.lying.variousoddities.init.VOItems;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.HorseArmorItem;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +19,7 @@ import net.minecraftforge.common.ForgeMod;
 
 public class ContainerWarg extends AbstractContainerMenu
 {
-	public static ContainerWarg fromNetwork(int windowId, Inventory inv, FriendlyByteBuf buf)
+	public static ContainerWarg fromNetwork(int windowId, Inventory inv)
 	{
 		Entity mount = inv.player.getVehicle();
 		if(mount instanceof EntityWarg)
@@ -58,7 +56,7 @@ public class ContainerWarg extends AbstractContainerMenu
 			@OnlyIn(Dist.CLIENT)
 			public boolean isEnabled(){ return theWarg.isTamed(); }
 			
-			public int getSlotStackLimit(){ return 1; }
+			public int getMaxStackSize(){ return 1; }
 		});
 		
 		// Warg armour
@@ -100,7 +98,7 @@ public class ContainerWarg extends AbstractContainerMenu
 			ItemStack stackInSlot = slot.getItem();
 			itemStack = stackInSlot.copy();
 			
-			int slots = this.theWarg.getSizeInventory();
+			int slots = this.theWarg.getContainerSize();
 			// Transfer from warg slots to main inventory
 			if(index < slots)
 			{

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.condition.Conditions;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.client.Minecraft;
@@ -41,7 +41,7 @@ public class MovementInputMixin
 		if(player != null)
 		{
 			if(!VOHelper.isCreativeOrSpectator(player))
-				if(VOPotions.isPotionVisible(player, VOPotions.DAZED) /*|| (playerData != null && playerData.getBodyCondition() == BodyCondition.UNCONSCIOUS)*/)
+				if(VOMobEffects.isPotionVisible(player, VOMobEffects.DAZED) /*|| (playerData != null && playerData.getBodyCondition() == BodyCondition.UNCONSCIOUS)*/)
 				{
 					clearInputs();
 					ci.cancel();

@@ -6,12 +6,10 @@ import com.lying.variousoddities.entity.hostile.EntityMindFlayer;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 public class EntityMindFlayerRenderer extends MobRenderer<EntityMindFlayer, ModelMindFlayer>
 {
@@ -24,13 +22,5 @@ public class EntityMindFlayerRenderer extends MobRenderer<EntityMindFlayer, Mode
 	public ResourceLocation getTextureLocation(EntityMindFlayer entity)
 	{
 		return new ResourceLocation(Reference.ModInfo.MOD_ID,"textures/entity/mind_flayer/mind_flayer.png");
-	}
-	
-	public static class RenderFactory implements IRenderFactory<EntityMindFlayer>
-	{
-		public EntityRenderer<? super EntityMindFlayer> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityMindFlayerRenderer(manager);
-		}
 	}
 }

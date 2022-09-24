@@ -8,12 +8,10 @@ import com.lying.variousoddities.entity.wip.EntityChangeling;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 public class EntityChangelingRenderer extends MobRenderer<EntityChangeling, ModelChangeling<EntityChangeling>>
 {
@@ -42,12 +40,4 @@ public class EntityChangelingRenderer extends MobRenderer<EntityChangeling, Mode
 	}
 	
 	public ResourceLocation getTextureLocation(EntityChangeling entity){ return changelingTexture; }
-	
-	public static class RenderFactory implements IRenderFactory<EntityChangeling>
-	{
-		public EntityRenderer<? super EntityChangeling> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityChangelingRenderer(manager);
-		}
-	}
 }

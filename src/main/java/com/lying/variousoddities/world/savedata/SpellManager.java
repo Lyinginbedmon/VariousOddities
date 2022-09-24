@@ -647,7 +647,7 @@ public class SpellManager extends SavedData
 		 */
 		public EntitySpell createSourceEntity(Level worldIn)
 		{
-			EntitySpell spellEntity = VOEntities.SPELL.create(worldIn);
+			EntitySpell spellEntity = VOEntities.SPELL.get().create(worldIn);
 			spellEntity.setPos(posX, posY, posZ);
 			spellEntity.setSpell(this);
 			return spellEntity;

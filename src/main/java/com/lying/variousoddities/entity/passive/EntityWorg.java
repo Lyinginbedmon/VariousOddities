@@ -94,7 +94,7 @@ public class EntityWorg extends AbstractGoblinWolf
 			{
 				if(isFoodItem(heldItem) && getHealth() < getMaxHealth())
 	    		{
-	    			heal(heldItem.getItem().getFood().getHealing());
+	    			heal(heldItem.getItem().getFoodProperties(heldItem, this).getNutrition());
 		    		if(!player.isCreative())
 		    			heldItem.shrink(1);
 		    		
@@ -151,7 +151,7 @@ public class EntityWorg extends AbstractGoblinWolf
     
 	public AgeableMob getBreedOffspring(ServerLevel arg0, AgeableMob arg1)
 	{
-		if(arg1.getType() == VOEntities.WORG)
+		if(arg1.getType() == VOEntities.WORG.get())
 		{
 			EntityWorg worg2 = (EntityWorg)arg1;
 			Genetics genesA = getGenetics();
@@ -162,13 +162,13 @@ public class EntityWorg extends AbstractGoblinWolf
 			AbstractGoblinWolf offspring;
 			if(genesC.gene(6) == false && genesC.gene(7) == false)
 			{
-				EntityWarg warg = VOEntities.WARG.create(arg0);
+				EntityWarg warg = VOEntities.WARG.get().create(arg0);
 				warg.setGenetics(genesC);
 				offspring = warg;
 			}
 			else
 			{
-				EntityWorg worg = VOEntities.WORG.create(arg0);
+				EntityWorg worg = VOEntities.WORG.get().create(arg0);
 				worg.setGenetics(genesC);
 				offspring = worg;
 			}

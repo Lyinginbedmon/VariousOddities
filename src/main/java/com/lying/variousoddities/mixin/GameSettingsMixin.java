@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.utility.VOBusClient;
 
 import net.minecraft.client.CameraType;
@@ -24,7 +24,7 @@ public class GameSettingsMixin
 	{
 		if(VOBusClient.playerInWall())
 			ci.setReturnValue(CameraType.FIRST_PERSON);
-		else if(VOPotions.isParalysed(Minecraft.getInstance().player))
+		else if(VOMobEffects.isParalysed(Minecraft.getInstance().player))
 			ci.setReturnValue(CameraType.THIRD_PERSON_BACK);
 	}
 	

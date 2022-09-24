@@ -2,7 +2,7 @@ package com.lying.variousoddities.species.abilities;
 
 import javax.annotation.Nullable;
 
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
@@ -33,9 +33,9 @@ public class AbilityDrainHealth extends AbilityGaze
 	
 	public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 	{
-		if(entity.hurt(DamageSource.GENERIC, 2F) && entity.addEffect(new MobEffectInstance(VOPotions.HEALTH_DRAIN, Integer.MAX_VALUE, 1, true, false)))
+		if(entity.hurt(DamageSource.GENERIC, 2F) && entity.addEffect(new MobEffectInstance(VOMobEffects.HEALTH_DRAIN, Integer.MAX_VALUE, 1, true, false)))
 		{
-			owner.addEffect(new MobEffectInstance(VOPotions.TEMP_HP, Integer.MAX_VALUE, 4, true, false));
+			owner.addEffect(new MobEffectInstance(VOMobEffects.TEMP_HP, Integer.MAX_VALUE, 4, true, false));
 			return true;
 		}
 		return false;

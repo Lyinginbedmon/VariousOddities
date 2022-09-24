@@ -6,8 +6,6 @@ import com.lying.variousoddities.entity.hostile.EntityGoblin;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
@@ -15,7 +13,6 @@ import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 @OnlyIn(Dist.CLIENT)
 public class EntityGoblinRenderer extends MobRenderer<EntityGoblin, ModelGoblin>
@@ -62,13 +59,4 @@ public class EntityGoblinRenderer extends MobRenderer<EntityGoblin, ModelGoblin>
     	
     	matrixStackIn.scale(totalScale, totalScale, totalScale);
     }
-	
-	public static class RenderFactory implements IRenderFactory<EntityGoblin>
-	{
-		public EntityRenderer<? super EntityGoblin> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityGoblinRenderer(manager);
-		}
-		
-	}
 }

@@ -65,7 +65,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 	public EntityGhastling(EntityType<? extends EntityGhastling> type, Level worldIn)
 	{
 		super(type, worldIn);
-		this.moveController = new MovementControllerGhastling(this);
+		this.moveControl = new MovementControllerGhastling(this);
 	    setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 0.0F);
 	    setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, 0.0F);
 	}
@@ -85,7 +85,7 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 		this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 8.0F));
 		this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
 		
-		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.GHASTLING))
+		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.GHASTLING.get()))
 		{
 			this.targetSelector.addGoal(1, new OwnerHurtByTargetGoal(this));
 			this.targetSelector.addGoal(2, new OwnerHurtTargetGoal(this));
@@ -263,19 +263,19 @@ public class EntityGhastling extends ShoulderRidingEntity implements FlyingAnima
 			BlockPos ground = new BlockPos(this.getX(), this.getY() - 1.0D, this.getZ());
 			float f = 0.91F;
 			if (this.onGround)
-			f = this.level.getBlockState(ground).getSlipperiness(this.level, ground, this) * 0.91F;
+			f = this.level.getBlockState(ground).getFriction(this.level, ground, this) * 0.91F;
 			
 			float f1 = 0.16277137F / (f * f * f);
 			f = 0.91F;
 			if (this.onGround)
-				f = this.level.getBlockState(ground).getSlipperiness(this.level, ground, this) * 0.91F;
+				f = this.level.getBlockState(ground).getFriction(this.level, ground, this) * 0.91F;
 			
 			this.moveRelative(this.onGround ? 0.1F * f1 : 0.02F, travelVector);
 			this.move(MoverType.SELF, this.getDeltaMovement());
 			this.setDeltaMovement(this.getDeltaMovement().scale((double)f));
 		}
 		
-		this.func_233629_a_(this, false);
+		this.calculateEntityAnimation(this, false);
 	}
 	
 	public Emotion getEmotion(){ return Emotion.fromInt(getEntityData().get(EMOTION).intValue()); }

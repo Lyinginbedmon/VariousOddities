@@ -5,7 +5,6 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOItems;
 import com.mojang.datafixers.util.Pair;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -23,7 +22,7 @@ import net.minecraftforge.common.ForgeMod;
 
 public class ContainerBody extends AbstractContainerMenu
 {
-	public static ContainerBody fromNetwork(int windowId, Inventory inv, FriendlyByteBuf buf)
+	public static ContainerBody fromNetwork(int windowId, Inventory inv)
 	{
 		Player player = inv.player;
 		double range = player.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
@@ -56,7 +55,7 @@ public class ContainerBody extends AbstractContainerMenu
 	{
 		super(VOItems.CONTAINER_BODY, windowId);
 		this.theBody = bodyIn;
-		this.isCorpse = bodyIn.getType() == VOEntities.CORPSE;
+		this.isCorpse = bodyIn.getType() == VOEntities.CORPSE.get();
 		this.bodyInventory = bodyInventory;
 		
 		Player player = playerInventory.player;
@@ -65,7 +64,7 @@ public class ContainerBody extends AbstractContainerMenu
 		// Body inventory
 		this.addSlot(new Slot(bodyInventory, 3, 62, 0)
 				{
-					public int getSlotStackLimit(){ return 1; }
+					public int getMaxStackSize(){ return 1; }
 					public boolean mayPlace(ItemStack stack){ return stack.canEquip(EquipmentSlot.HEAD, player); }
 					public boolean mayPickup(Player playerIn)
 					{
@@ -81,7 +80,7 @@ public class ContainerBody extends AbstractContainerMenu
 				});
 		this.addSlot(new Slot(bodyInventory, 2, 62, 18)
 				{
-					public int getSlotStackLimit(){ return 1; }
+					public int getMaxStackSize(){ return 1; }
 					public boolean mayPlace(ItemStack stack){ return stack.canEquip(EquipmentSlot.CHEST, player); }
 					public boolean mayPickup(Player playerIn)
 					{
@@ -97,7 +96,7 @@ public class ContainerBody extends AbstractContainerMenu
 				});
 		this.addSlot(new Slot(bodyInventory, 1, 62, 36)
 				{
-					public int getSlotStackLimit(){ return 1; }
+					public int getMaxStackSize(){ return 1; }
 					public boolean mayPlace(ItemStack stack){ return stack.canEquip(EquipmentSlot.LEGS, player); }
 					public boolean mayPickup(Player playerIn)
 					{
@@ -113,7 +112,7 @@ public class ContainerBody extends AbstractContainerMenu
 				});
 		this.addSlot(new Slot(bodyInventory, 0, 62, 54)
 				{
-					public int getSlotStackLimit(){ return 1; }
+					public int getMaxStackSize(){ return 1; }
 					public boolean mayPlace(ItemStack stack){ return stack.canEquip(EquipmentSlot.FEET, player); }
 					public boolean mayPickup(Player playerIn)
 					{

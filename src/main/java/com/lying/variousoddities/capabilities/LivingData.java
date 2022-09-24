@@ -24,7 +24,8 @@ import com.lying.variousoddities.condition.ConditionInstance;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.entity.EntityBodyUnconscious;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOCapabilities;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketBludgeoned;
 import com.lying.variousoddities.network.PacketHandler;
@@ -76,7 +77,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -89,8 +89,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 {
 	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
 	
-	@CapabilityInject(LivingData.class)
-	public static final Capability<LivingData> CAPABILITY = null;
 	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "living_data");
 	
 	private final LazyOptional<LivingData> handler;
@@ -134,13 +132,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		this.handler = LazyOptional.of(() -> this);
 	}
 	
-	public static void register()
-	{
-		CapabilityManager.INSTANCE.register(LivingData.class, new LivingData.Storage(), () -> null);
-		if(ConfigVO.GENERAL.verboseLogs())
-			VariousOddities.log.info("Registered living data capability");
-	}
-	
 	public LazyOptional<LivingData> handler(){ return this.handler; }
 	
 	@Nullable
@@ -149,13 +140,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(entity == null || entity instanceof AbstractBody)
 			return null;
 		
-		LivingData data = null;
-		try
-		{
-			data = entity.getCapability(CAPABILITY).orElse(null);
-		}
-		catch(Exception e){ }
-		
+		LivingData data = entity.getCapability(VOCapabilities.LIVING_DATA).orElse(null);
 		if(data != null)
 			data.setEntity(entity);
 		return data;
@@ -163,7 +148,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
 	{
-		return CAPABILITY.orEmpty(cap, this.handler);
+		return VOCapabilities.LIVING_DATA.orEmpty(cap, this.handler);
 	}
 	
 	private void setEntity(LivingEntity entityIn)
@@ -334,7 +319,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public Abilities getAbilities(){ return this.abilities; }
 	
 	public byte getVisualPotions(){ return this.visualPotions; }
-	public boolean getVisualPotion(@Nullable MobEffect potion){ return potion == null ? false : getVisualPotion(VOPotions.getVisualPotionIndex(potion)); }
+	public boolean getVisualPotion(@Nullable MobEffect potion){ return potion == null ? false : getVisualPotion(VOMobEffects.getVisualPotionIndex(potion)); }
 	public boolean getVisualPotion(int index)
 	{
 		if(index < 0) return false;
@@ -510,7 +495,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(bludgeoning <= 0F)
 			return false;
 		
-		if(health <= bludgeoning || entity.getEffect(VOPotions.SLEEP) != null && entity.getEffect(VOPotions.SLEEP).getDuration() > 0)
+		if(health <= bludgeoning || entity.getEffect(VOMobEffects.SLEEP) != null && entity.getEffect(VOMobEffects.SLEEP).getDuration() > 0)
 			return true;
 		return false;
 	}
@@ -981,19 +966,5 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public void markDirty()
 	{
 		this.dirty = true;
-	}
-	
-	public static class Storage implements Capability.IStorage<LivingData>
-	{
-		public INBT writeNBT(Capability<LivingData> capability, LivingData instance, Direction side)
-		{
-			return instance.serializeNBT();
-		}
-		
-		public void readNBT(Capability<LivingData> capability, LivingData instance, Direction side, INBT nbt)
-		{
-			if(nbt.getId() == 10)
-				instance.deserializeNBT((CompoundTag)nbt);
-		}
 	}
 }

@@ -6,8 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.client.KeyBindings;
@@ -28,6 +26,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 
@@ -35,7 +34,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -95,7 +93,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	
 	public void init()
 	{
-		this.buttons.clear();
+		clearWidgets();
 		
 		abilitySet.clear();
 		if(!abilities.isEmpty())
@@ -110,8 +108,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
     			Minecraft.getInstance().setScreen(new ScreenCharacterSheet());
     		})
     			{
-    				@SuppressWarnings("deprecation")
-					public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
+    				public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
     				{
     					RenderSystem.setShaderTexture(0, ScreenCharacterSheet.SHEET_GUI_TEXTURES);
     					RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
@@ -130,7 +127,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		ActivatedAbility selected = getAbilitySlice(mouseX, mouseY);
 		if(selected == null && !super.mouseClicked(mouseX, mouseY, button))
 		{
-			closeScreen();
+			onClose();
 			return true;
 		}
 		else
@@ -341,7 +338,6 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		matrixStack.popPose();
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void drawFavouriteButtonAt(PoseStack matrix, double posX, double posY, boolean bright)
 	{
 		posX -= 8;
@@ -359,25 +355,24 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		double endY = posY + 16;
 		
 		RenderSystem.enableTexture();
-		RenderSystem.shadeModel(GL11.GL_FLAT);
+//		RenderSystem.shadeModel(GL11.GL_FLAT);
 		matrix.pushPose();
 			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
 			blit(matrix.last().pose(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, bright);
 		matrix.popPose();
 	}
 	
-	@SuppressWarnings("deprecation")
 	private void drawArc(PoseStack stackIn, float originX, float originY, float initialAngle, float angleInc, float radius, int red, int green, int blue, int alpha, float partialTicks)
 	{
 		RenderSystem.disableCull();
 		RenderSystem.disableTexture();
 		RenderSystem.enableBlend();
-		RenderSystem.shadeModel(GL11.GL_FLAT);
+//		RenderSystem.shadeModel(GL11.GL_FLAT);
 		
 		stackIn.pushPose();
 			Matrix4f matrix4f = stackIn.last().pose();
 			BufferBuilder buffer = Tesselator.getInstance().getBuilder();
-			buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+			buffer.begin(Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
 				// Centre vertex
 				buffer.vertex(matrix4f, originX, originY, 0F).color(255, 255, 255, 255).endVertex();
 				
@@ -389,8 +384,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 					buffer.vertex(matrix4f, originX + vec.x, originY + vec.y, 0F).color(red, green, blue, alpha).endVertex();
 					vec = rotateVector(vec, angleInc / rotationsPerArc);
 				}
-			buffer.finishDrawing();
-			WorldVertexBufferUploader.draw(buffer);
+			BufferUploader.drawWithShader(buffer.end());
 		stackIn.popPose();
 		RenderSystem.disableBlend();
 	}
@@ -412,7 +406,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 			{
 				ability.trigger(thePlayer, Dist.CLIENT);
 				PacketHandler.sendToServer(new PacketAbilityActivate(ability.getMapName()));
-				closeScreen();
+				onClose();
 			}
 		}
 		else
@@ -426,7 +420,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	{
 		if(KeyBindings.ABILITY_MENU.matches(keyCode, scanCode) && !ConfigVO.CLIENT.holdKeyForMenu.get())
 		{
-			this.closeScreen();
+			this.onClose();
 			return true;
 		}
 		
@@ -437,7 +431,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	{
 		if(KeyBindings.ABILITY_MENU.matches(key, scanCode) && ConfigVO.CLIENT.holdKeyForMenu.get())
 		{
-			this.closeScreen();
+			this.onClose();
 			return true;
 		}
 		return super.keyReleased(key, scanCode, modifiers);
@@ -450,7 +444,6 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		return new Vec2((float)x, (float)y);
 	}
 	
-	@SuppressWarnings("deprecation")
 	private static void blit(Matrix4f matrix, int startX, int endX, int startY, int endY, int blitOffset, float texXMin, float texXMax, float texYMin, float texYMax, boolean bright)
 	{
 		int red = bright ? 255 : 100;

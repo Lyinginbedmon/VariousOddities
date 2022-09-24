@@ -7,14 +7,12 @@ import com.lying.variousoddities.entity.passive.EntityKobold;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 @OnlyIn(Dist.CLIENT)
 public class EntityKoboldRenderer extends MobRenderer<EntityKobold, ModelKobold>
@@ -65,12 +63,4 @@ public class EntityKoboldRenderer extends MobRenderer<EntityKobold, ModelKobold>
     	
     	matrixStackIn.scale(totalScale, totalScale, totalScale);
     }
-	
-	public static class RenderFactory implements IRenderFactory<EntityKobold>
-	{
-		public EntityRenderer<? super EntityKobold> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityKoboldRenderer(manager);
-		}
-	}
 }

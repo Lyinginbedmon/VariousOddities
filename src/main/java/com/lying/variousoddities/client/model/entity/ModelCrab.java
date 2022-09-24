@@ -24,7 +24,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 
-public class ModelCrab extends EntityModel<AbstractCrab>
+public class ModelCrab<T extends AbstractCrab> extends EntityModel<T>
 {
 	ModelPart body;
 	ClawHandler rightClaw, leftClaw;
@@ -107,7 +107,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
 		matrixStackIn.popPose();
 	}
 	
-	public void setupAnim(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		this.bigLeft = entityIn.hasBigLeftClaw();
 		this.bigRight = entityIn.hasBigRightClaw();
@@ -152,7 +152,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
     	leftClaw.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 	}
     
-    public class ClawHandler
+    public static class ClawHandler
     {
     	public float swingProgress;
     	
@@ -253,7 +253,7 @@ public class ModelCrab extends EntityModel<AbstractCrab>
         public ModelPart getClaw(){ return this.theArm; }
     }
     
-    public class LegHandler
+    public static class LegHandler
     {
     	private final int index;
     	private final EnumLimbPosition side;

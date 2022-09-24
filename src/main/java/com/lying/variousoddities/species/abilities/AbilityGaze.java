@@ -8,7 +8,7 @@ import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.condition.Condition;
 import com.lying.variousoddities.condition.ConditionInstance;
 import com.lying.variousoddities.condition.Conditions;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
 
@@ -193,7 +193,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 		{
-			return entity.addEffect(new MobEffectInstance(VOPotions.PETRIFYING, Reference.Values.TICKS_PER_SECOND * 10, 4));
+			return entity.addEffect(new MobEffectInstance(VOMobEffects.PETRIFYING, Reference.Values.TICKS_PER_SECOND * 10, 4));
 		}
 		
 		public static class Builder extends Ability.Builder

@@ -20,14 +20,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.HoverEvent.Action;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.material.Fluid;
@@ -91,7 +89,7 @@ public class ScreenCharacterSheet extends Screen
 	
     public void init()
     {
-        this.buttons.clear();
+        this.clearWidgets();
 		
 		Player player = Minecraft.getInstance().player;
 		
@@ -124,7 +122,7 @@ public class ScreenCharacterSheet extends Screen
 		{
 			passives.sort(ScreenSelectSpecies.ABILITY_SORT);
 			this.listPassives.addAbilities(passives);
-			this.children.add(this.listPassives);
+			addWidget(this.listPassives);
 		}
 		
 		this.listActives = new AbilityList(minecraft, (this.width / 2) - listWidth - listSep, listWidth, this.height, 20);
@@ -132,7 +130,7 @@ public class ScreenCharacterSheet extends Screen
 		{
 			actives.sort(ScreenSelectSpecies.ABILITY_SORT);
 			this.listActives.addAbilities(actives);
-			this.children.add(this.listActives);
+			addWidget(this.listActives);
 		}
     }
 	
@@ -202,7 +200,6 @@ public class ScreenCharacterSheet extends Screen
 		renderFill(matrixStack, area.xMin + 6, area.yMin + 6, area.width() - 12, area.height() - 12);
 	}
 	
-	@SuppressWarnings("deprecation")
 	private void renderOuterEdges(PoseStack matrixStack, boolean isDouble)
 	{
 		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
@@ -319,7 +316,7 @@ public class ScreenCharacterSheet extends Screen
 			else
 				tooltip.add(Component.translatable("enum.varodd.type_action.doesnt", translated));
 			
-			renderTooltip(matrixStack, tooltip, mouseX, mouseY, this.font);
+			renderComponentTooltip(matrixStack, tooltip, mouseX, mouseY, this.font);
 		}
 	}
 	

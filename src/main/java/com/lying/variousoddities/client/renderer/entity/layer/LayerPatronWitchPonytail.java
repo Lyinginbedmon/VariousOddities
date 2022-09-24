@@ -29,17 +29,16 @@ public class LayerPatronWitchPonytail extends RenderLayer<EntityPatronWitch, Hum
 		texture = textureIn;
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, EntityPatronWitch par1Witch, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
         if(par1Witch.isInvisible() || !conditional.apply(par1Witch) || !(this.getParentModel() instanceof IPonytailModel)) return;
         
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         matrixStackIn.pushPose();
-        double d0 = par1Witch.prevChasingPosX + (par1Witch.chasingPosX - par1Witch.prevChasingPosX) * (double)partialTicks - (par1Witch.prevPosX + (par1Witch.getX() - par1Witch.prevPosX) * (double)partialTicks);
-        double d1 = par1Witch.prevChasingPosY + (par1Witch.chasingPosY - par1Witch.prevChasingPosY) * (double)partialTicks - (par1Witch.prevPosY + (par1Witch.getY() - par1Witch.prevPosY) * (double)partialTicks);
-        double d2 = par1Witch.prevChasingPosZ + (par1Witch.chasingPosZ - par1Witch.prevChasingPosZ) * (double)partialTicks - (par1Witch.prevPosZ + (par1Witch.getZ() - par1Witch.prevPosZ) * (double)partialTicks);
-            float f7 = par1Witch.prevRenderYawOffset + (par1Witch.renderYawOffset - par1Witch.prevRenderYawOffset) * partialTicks;
+        double d0 = par1Witch.prevChasingPosX + (par1Witch.chasingPosX - par1Witch.prevChasingPosX) * (double)partialTicks - (par1Witch.xo + (par1Witch.getX() - par1Witch.xo) * (double)partialTicks);
+        double d1 = par1Witch.prevChasingPosY + (par1Witch.chasingPosY - par1Witch.prevChasingPosY) * (double)partialTicks - (par1Witch.yo + (par1Witch.getY() - par1Witch.yo) * (double)partialTicks);
+        double d2 = par1Witch.prevChasingPosZ + (par1Witch.chasingPosZ - par1Witch.prevChasingPosZ) * (double)partialTicks - (par1Witch.zo + (par1Witch.getZ() - par1Witch.zo) * (double)partialTicks);
+            float f7 = par1Witch.yBodyRotO + (par1Witch.yBodyRot - par1Witch.yBodyRotO) * partialTicks;
             double d3 = (double)Math.sin(f7 * (float)Math.PI / 180.0F);
             double d4 = (double)(-Math.cos(f7 * (float)Math.PI / 180.0F));
             float f8 = (float)d1 * 10.0F;
@@ -50,7 +49,7 @@ public class LayerPatronWitchPonytail extends RenderLayer<EntityPatronWitch, Hum
             if (f9 < 0.0F){ f9 = 0.0F; }
             
             float f11 = par1Witch.prevCameraYaw + (par1Witch.cameraYaw - par1Witch.prevCameraYaw) * partialTicks;
-            f8 += Math.sin((par1Witch.prevDistanceWalkedModified + (par1Witch.distanceWalkedModified - par1Witch.prevDistanceWalkedModified) * partialTicks) * 6.0F) * 32.0F * f11;
+            f8 += Math.sin((par1Witch.walkDistO + (par1Witch.walkDist - par1Witch.walkDistO) * partialTicks) * 6.0F) * 32.0F * f11;
             
             matrixStackIn.mulPose(Vector3f.XP.rotation(6.0F + f9 / 2.0F + f8));
             matrixStackIn.mulPose(Vector3f.ZP.rotation(f10 / 2.0F));

@@ -133,13 +133,13 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(EntityType.HOGLIN,				EnumCreatureType.ANIMAL, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.PHANTOM,			EnumCreatureType.UNDEAD, EnumCreatureType.EVIL);
 			// Oddities
-		addMobToTypeDefaults(VOEntities.GHASTLING,			EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
-		addMobToTypeDefaults(VOEntities.GOBLIN,				EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN);
-		addMobToTypeDefaults(VOEntities.KOBOLD,				EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE);
-		addMobToTypeDefaults(VOEntities.RAT,				EnumCreatureType.VERMIN);
-		addMobToTypeDefaults(VOEntities.RAT_GIANT,			EnumCreatureType.VERMIN);
-		addMobToTypeDefaults(VOEntities.SCORPION,			EnumCreatureType.VERMIN);
-		addMobToTypeDefaults(VOEntities.SCORPION_GIANT,		EnumCreatureType.VERMIN);
+		addMobToTypeDefaults(VOEntities.GHASTLING.get(),		EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
+		addMobToTypeDefaults(VOEntities.GOBLIN.get(),			EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN);
+		addMobToTypeDefaults(VOEntities.KOBOLD.get(),			EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE);
+		addMobToTypeDefaults(VOEntities.RAT.get(),				EnumCreatureType.VERMIN);
+		addMobToTypeDefaults(VOEntities.RAT_GIANT.get(),		EnumCreatureType.VERMIN);
+		addMobToTypeDefaults(VOEntities.SCORPION.get(),			EnumCreatureType.VERMIN);
+		addMobToTypeDefaults(VOEntities.SCORPION_GIANT.get(),	EnumCreatureType.VERMIN);
 		
 		// Individual player settings (added on first login)
 		addPatron("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);

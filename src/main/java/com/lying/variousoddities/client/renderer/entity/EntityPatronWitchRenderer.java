@@ -19,7 +19,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +26,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Fox;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 public class EntityPatronWitchRenderer extends MobRenderer<EntityPatronWitch, HumanoidModel<EntityPatronWitch>>
 {
@@ -129,8 +127,8 @@ public class EntityPatronWitchRenderer extends MobRenderer<EntityPatronWitch, Hu
     	{
     		case FOX:
     			Fox fox = EntityType.FOX.create(entityIn.getLevel());
-    			fox.read(entityIn.writeWithoutTypeId(new CompoundTag()));
-    			Minecraft.getInstance().getRenderManager().renderEntityStatic(fox, 0, 0, 0, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+    			fox.load(entityIn.saveWithoutId(new CompoundTag()));
+    			Minecraft.getInstance().getEntityRenderDispatcher().render(fox, 0, 0, 0, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
     			break;
     		default:
     	    	super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
@@ -180,14 +178,6 @@ public class EntityPatronWitchRenderer extends MobRenderer<EntityPatronWitch, Hu
 				for(int i=0; i<appearance.weight; i++) weightedList.add(appearance);
 			
 			return weightedList.get(rand.nextInt(weightedList.size()));
-		}
-	}
-	
-	public static class RenderFactory implements IRenderFactory<EntityPatronWitch>
-	{
-		public EntityRenderer<? super EntityPatronWitch> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntityPatronWitchRenderer(manager);
 		}
 	}
 }

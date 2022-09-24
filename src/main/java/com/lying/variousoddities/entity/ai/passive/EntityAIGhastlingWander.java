@@ -7,15 +7,14 @@ import com.lying.variousoddities.entity.passive.EntityGhastling;
 import com.lying.variousoddities.entity.passive.EntityGhastling.Emotion;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.entity.ai.controller.MovementController;
-import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -46,15 +45,15 @@ public class EntityAIGhastlingWander extends Goal
 		if(this.creature.getRandom().nextFloat() <= probability)
 			return false;
 		
-		MovementController moveHelper = this.creature.getMoveHelper();
+		MoveControl moveHelper = this.creature.getMoveControl();
 		if(moveHelper instanceof MovementControllerGhastling)
 		{
 			this.controller = (MovementControllerGhastling)moveHelper;
-			if(!controller.isUpdating())
+			if(!controller.hasWanted())
 				return true;
 			else
 			{
-				double dist = new BlockPos(controller.getX(), controller.getY(), controller.getZ()).distanceSq(creature.getPosition());
+				double dist = new BlockPos(controller.getWantedX(), controller.getWantedY(), controller.getWantedZ()).distSqr(creature.blockPosition());
 				return dist < 1D || dist > RANGE_MAX;
 			}
 		}
@@ -104,7 +103,7 @@ public class EntityAIGhastlingWander extends Goal
 	
 	private void setMoveTo(double x, double y, double z)
 	{
-		this.controller.setMoveTo(x, y, z, this.creature.getAttributeValue(Attributes.FLYING_SPEED) * 0.25D);
+		this.controller.setWantedPosition(x, y, z, this.creature.getAttributeValue(Attributes.FLYING_SPEED) * 0.25D);
 	}
 	
 	private void tryTeleportToOwner()
@@ -134,8 +133,8 @@ public class EntityAIGhastlingWander extends Goal
 	
 	private boolean canTeleportTo(BlockPos pos)
 	{
-		PathNodeType pathnodetype = WalkNodeProcessor.func_237231_a_(this.world, pos.toMutable());
-		if(pathnodetype != PathNodeType.WALKABLE)
+		BlockPathTypes pathnodetype = this.creature.getNavigation().getNodeEvaluator().getBlockPathType(this.world, pos.getX(), pos.getY(), pos.getZ());
+		if(pathnodetype != BlockPathTypes.WALKABLE)
 			return false;
 		else
 		{

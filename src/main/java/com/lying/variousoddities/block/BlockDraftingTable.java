@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import com.lying.variousoddities.api.world.settlement.EnumRoomFunction;
 import com.lying.variousoddities.client.gui.GuiDraftingTable;
 import com.lying.variousoddities.init.VOItems;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.tileentity.TileEntityDraftingTable;
 
@@ -73,7 +73,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit)
 	{
 		BlockEntity tileentity = worldIn.getBlockEntity(pos);
-		if(tileentity.getType() == VOTileEntities.TABLE_DRAFTING)
+		if(tileentity.getType() == VOBlockEntities.TABLE_DRAFTING)
 		{
 			TileEntityDraftingTable table = (TileEntityDraftingTable)tileentity;
 			if(worldIn.isClientSide)
@@ -110,7 +110,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player)
 	{
 		BlockEntity tile = worldIn.getBlockEntity(pos);
-		if(tile.getType() == VOTileEntities.TABLE_DRAFTING)
+		if(tile.getType() == VOBlockEntities.TABLE_DRAFTING)
 		{
 			if(player != null && player.isCreative())
 				return;

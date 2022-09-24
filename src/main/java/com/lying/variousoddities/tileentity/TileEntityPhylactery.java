@@ -5,7 +5,7 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
@@ -43,7 +43,7 @@ public class TileEntityPhylactery extends BlockEntity
 	
 	public TileEntityPhylactery(BlockPos pos, BlockState state)
 	{
-		super(VOTileEntities.PHYLACTERY, pos, state);
+		super(VOBlockEntities.PHYLACTERY, pos, state);
 	}
 	
 	public void saveAdditional(CompoundTag compound)

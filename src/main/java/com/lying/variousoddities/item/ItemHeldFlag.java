@@ -11,10 +11,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.lying.variousoddities.init.VOItems;
 
+import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemHeldFlag extends VOItem
@@ -35,7 +37,7 @@ public class ItemHeldFlag extends VOItem
 	    PRIDE_TYPE_ITEM_MAP.put(typeIn, this);
 	}
 	
-	public static void registerSubItems()
+	public void fillItemCategory(CreativeModeTab tab, NonNullList<ItemStack> items)
 	{
 		for(EnumPrideType type : EnumPrideType.values())
 			VOItems.register("held_flag_"+type.name().toLowerCase(), new ItemHeldFlag(type, new Properties().tab(VOItemGroup.LOOT)));

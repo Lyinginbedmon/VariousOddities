@@ -19,18 +19,18 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class LayerScorpionBabies extends RenderLayer<AbstractScorpion, ModelScorpion>
+public class LayerScorpionBabies<T extends AbstractScorpion> extends RenderLayer<T, ModelScorpion<T>>
 {
-	private final ModelScorpionBabies model;
+	private final ModelScorpionBabies<T> model;
 	private static final ResourceLocation TEXTURE = new ResourceLocation(EntityScorpionRenderer.resourceBase+"babies.png");
 	
-	public LayerScorpionBabies(RenderLayerParent<AbstractScorpion, ModelScorpion> entityRendererIn, EntityModelSet modelsIn)
+	public LayerScorpionBabies(RenderLayerParent<T, ModelScorpion<T>> entityRendererIn, EntityModelSet modelsIn)
 	{
 		super(entityRendererIn);
-		model = new ModelScorpionBabies(modelsIn.bakeLayer(VOModelLayers.SCORPION_BABIES));
+		model = new ModelScorpionBabies<T>(modelsIn.bakeLayer(VOModelLayers.SCORPION_BABIES));
 	}
 	
-	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, AbstractScorpion entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
+	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(entitylivingbaseIn.getAge() >= 0 && entitylivingbaseIn.getBabies())
 		{

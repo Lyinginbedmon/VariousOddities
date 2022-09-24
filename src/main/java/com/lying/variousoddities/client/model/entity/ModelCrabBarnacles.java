@@ -14,7 +14,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
-public class ModelCrabBarnacles extends EntityModel<AbstractCrab>
+public class ModelCrabBarnacles<T extends AbstractCrab> extends EntityModel<T>
 {
 	ModelPart body;
 	
@@ -50,7 +50,7 @@ public class ModelCrabBarnacles extends EntityModel<AbstractCrab>
 		this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 	
-	public void setupAnim(AbstractCrab entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		if(entityIn.isPartying())
 			this.body.x = (float)Math.sin(ageInTicks);

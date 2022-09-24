@@ -30,7 +30,7 @@ public class ControllerKobold extends EntityController<EntityKobold>
 		addBehaviour(3, par1Entity.getOperateRoomTask());
 		addBehaviour(6, new WaterAvoidingRandomStrollGoal(par1Entity, 1.0D));
 		
-		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
+		if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD.get()))
 			addBehaviour(2, new HurtByTargetGoal(par1Entity));
 	}
 	
@@ -56,7 +56,7 @@ public class ControllerKobold extends EntityController<EntityKobold>
 			addBehaviour(6, new EntityAIKoboldMate(par1Entity));
 			addBehaviour(2, new EntityAIKoboldParade(par1Entity, 0.20999999046325684D));
 			
-			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
+			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD.get()))
 				addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
 		}
 		
@@ -83,7 +83,7 @@ public class ControllerKobold extends EntityController<EntityKobold>
 			addBehaviour(3, new EntityAIKoboldGuardEgg(par1Entity));
 			addBehaviour(5, new EntityAIKoboldPlaceTorch(par1Entity));
 			
-			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD))
+			if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.KOBOLD.get()))
 				addBehaviour(2, new EntityAITargetHostileFaction(par1Entity, true));
 		}
 		

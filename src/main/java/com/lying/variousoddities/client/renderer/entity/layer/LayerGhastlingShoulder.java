@@ -40,7 +40,7 @@ public class LayerGhastlingShoulder<T extends Player> extends RenderLayer<T, Pla
 	{
 		CompoundTag shoulderNBT = leftShoulderIn ? entitylivingbaseIn.getShoulderEntityLeft() : entitylivingbaseIn.getShoulderEntityRight();
 		EntityType.byString(shoulderNBT.getString("id")).filter((entityType) -> {
-				return entityType == VOEntities.GHASTLING;
+				return entityType == VOEntities.GHASTLING.get();
 			}).ifPresent((entityType) -> {
 				matrixStackIn.pushPose();
 					matrixStackIn.translate(leftShoulderIn ? (double)0.4F : (double)-0.4F, entitylivingbaseIn.isCrouching() ? (double)-1.3F : -1.5D, 0.0D);

@@ -3,7 +3,7 @@ package com.lying.variousoddities.network;
 import java.util.function.Supplier;
 
 import com.lying.variousoddities.init.VODamageSource;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +29,7 @@ public class PacketParalysisResignation
 		if(context.getDirection().getReceptionSide().isServer())
 		{
 			Player sender = context.getSender();
-			if(sender != null && VOPotions.isParalysed(sender))
+			if(sender != null && VOMobEffects.isParalysed(sender))
 				sender.hurt(VODamageSource.PARALYSIS, Float.MAX_VALUE);
 		}
 		context.setPacketHandled(true);

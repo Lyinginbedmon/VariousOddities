@@ -3,19 +3,19 @@ package com.lying.variousoddities.client;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.client.renderer.tileentity.TileEntityDraftingTableRenderer;
 import com.lying.variousoddities.config.ConfigVO;
-import com.lying.variousoddities.init.VOTileEntities;
+import com.lying.variousoddities.init.VOBlockEntities;
 
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.client.event.ModelEvent;
 
 @OnlyIn(Dist.CLIENT)
 public class RendererHandler
 {
 	private static boolean registered = false;
 	
-	public static void registerTileRenderers(ModelRegistryEvent event)
+	public static void registerTileRenderers(ModelEvent.RegisterAdditional event)
 	{
 		if(ConfigVO.GENERAL.verboseLogs())
 			VariousOddities.log.info("Registering tile entity renderers");
@@ -23,6 +23,6 @@ public class RendererHandler
 		if(!registered)
 			registered = true;
 		
-		ClientRegistry.bindTileEntityRenderer(VOTileEntities.TABLE_DRAFTING, TileEntityDraftingTableRenderer::new);
+		BlockEntityRenderers.register(VOBlockEntities.TABLE_DRAFTING, TileEntityDraftingTableRenderer::new);
 	}
 }

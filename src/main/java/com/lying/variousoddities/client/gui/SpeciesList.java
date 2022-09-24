@@ -7,12 +7,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.text.ITextProperties;
-import net.minecraft.util.text.LanguageMap;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.util.FormattedCharSequence;
 
 public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntry>
 {
@@ -33,7 +33,7 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 	public class SpeciesListEntry extends ObjectSelectionList.Entry<SpeciesList.SpeciesListEntry>
 	{
 		private final Minecraft mc;
-		private final IReorderingProcessor field_243407_e;
+		private final FormattedCharSequence field_243407_e;
 		private final Species species;
 		private final SpeciesList parentList;
 		
@@ -45,23 +45,22 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 			this.field_243407_e = func_244424_a(mcIn, speciesIn.getDisplayName());
 		}
 		
-		private IReorderingProcessor func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
+		private FormattedCharSequence func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
 		{
-			int i = p_244424_0_.font.getStringPropertyWidth(p_244424_1_);
+			int i = p_244424_0_.font.width(p_244424_1_);
 			if (i > 157)
 			{
-				ITextProperties itextproperties = ITextProperties.func_240655_a_(p_244424_0_.font.func_238417_a_(p_244424_1_, 157 - p_244424_0_.font.getStringWidth("...")), ITextProperties.func_240652_a_("..."));
-				return LanguageMap.getInstance().func_241870_a(itextproperties);
+				FormattedText itextproperties = FormattedText.composite(p_244424_0_.font.substrByWidth(p_244424_1_, 157 - p_244424_0_.font.width("...")), FormattedText.of("..."));
+				return Language.getInstance().getVisualOrder(itextproperties);
 			}
 			else
-				return p_244424_1_.func_241878_f();
+				return p_244424_1_.getVisualOrderText();
 		}
 		
-		@SuppressWarnings("deprecation")
 		public void render(PoseStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
 		{
-			this.mc.getTextureManager().bindTexture(Widget.WIDGETS_LOCATION);
-			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.setShaderTexture(0, AbstractWidget.WIDGETS_LOCATION);
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
 			RenderSystem.enableDepthTest();
@@ -80,8 +79,7 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 			// Bottom Right
 			blit(matrixStack, rowLeft - 2 + texWidth, rowTop + texHeight, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
 			
-			IReorderingProcessor processor = this.field_243407_e;
-			this.mc.font.func_238407_a_(matrixStack, processor, (float)(rowLeft + 2), (float)(rowTop + (rowHeight + 3 - mc.font.lineHeight) / 2), 16777215);
+			this.mc.font.draw(matrixStack, this.field_243407_e, (float)(rowLeft + 2), (float)(rowTop + (rowHeight + 3 - mc.font.lineHeight) / 2), 16777215);
 		}
 		
 	 	public boolean mouseClicked(double mouseX, double mouseY, int button)
@@ -98,5 +96,7 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 			
 			return false;
 		}
+	 	
+	 	public Component getNarration() { return null; }
 	}
 }

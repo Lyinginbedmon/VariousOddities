@@ -36,7 +36,7 @@ public class EntityBodyCorpse extends AbstractBody
 	public static EntityBodyCorpse createCorpseFrom(@Nonnull LivingEntity living)
 	{
 		if(living == null) return null;
-		EntityBodyCorpse corpse = new EntityBodyCorpse(VOEntities.CORPSE, living.getLevel());
+		EntityBodyCorpse corpse = new EntityBodyCorpse(VOEntities.CORPSE.get(), living.getLevel());
 		corpse.copyFrom(living, true);
 		return corpse;
 	}

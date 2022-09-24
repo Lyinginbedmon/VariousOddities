@@ -16,6 +16,7 @@ import com.lying.variousoddities.world.savedata.SpellManager;
 import com.lying.variousoddities.world.savedata.TypesManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -33,7 +34,7 @@ import net.minecraftforge.network.NetworkEvent;
 public class ClientProxy extends CommonProxy
 {
 	private static final Minecraft mc = Minecraft.getInstance();
-	private SettlementManager settlements = new SettlementManagerClient();
+	private SettlementManager settlements = new SettlementManagerClient(new CompoundTag());
 	private SpellManager spells = new SpellManagerClient();
 	private Map<ResourceKey<DimensionType>, ScentsManager> scentManagers = new HashMap<>();
 	
@@ -67,7 +68,7 @@ public class ClientProxy extends CommonProxy
 	{
 		if(settlements == null || mc.level.dimensionType() != settlements.getDim())
 		{
-			settlements = new SettlementManagerClient();
+			settlements = new SettlementManagerClient(new CompoundTag());
 			settlements.setWorld(mc.level);
 		}
 		return settlements;

@@ -52,8 +52,11 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 
-public class SpeciesRegistry extends JsonReloadListener
+public class SpeciesRegistry extends SimpleJsonResourceReloadListener
 {
 	private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
 	
@@ -105,7 +108,7 @@ public class SpeciesRegistry extends JsonReloadListener
 	
 	public static List<Species> getDefaultSpecies(){ return Lists.newArrayList(DEFAULT_SPECIES); }
 	
-	protected void apply(Map<ResourceLocation, JsonElement> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn)
+	public void apply(Map<ResourceLocation, JsonElement> objectIn, ResourceManager manager, ProfilerFiller filler)
 	{
 		VariousOddities.log.info("Attempting to load species from data, entries: "+objectIn.size());
 		Map<ResourceLocation, Species> loaded = new HashMap<>();
@@ -141,6 +144,7 @@ public class SpeciesRegistry extends JsonReloadListener
 		if(!loaded.containsKey(Species.HUMAN.getRegistryName()))
 			loaded.put(Species.HUMAN.getRegistryName(), Species.HUMAN);
 		
+		VORegistries.SPECIES.clear();
 		loaded.forEach((name,species) -> { VORegistries.SPECIES.put(name, species); });
 	}
 	

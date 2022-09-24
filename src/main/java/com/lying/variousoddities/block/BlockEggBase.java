@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public abstract class BlockEggBase extends VOFallingBlock
+public class BlockEggBase extends VOFallingBlock
 {
 	public static final VoxelShape SHAPE_SMALL = Block.box(3.04D, 0.0D, 3.04D, 12.96D, 12.8D, 12.96D);
 	

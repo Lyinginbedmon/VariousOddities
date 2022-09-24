@@ -2,13 +2,12 @@ package com.lying.variousoddities.client.renderer.entity;
 
 import com.lying.variousoddities.entity.EntitySpell;
 
-import net.minecraft.client.renderer.culling.ClippingHelper;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 @OnlyIn(Dist.CLIENT)
 public class EntitySpellRenderer extends EntityRenderer<EntitySpell>
@@ -27,7 +26,7 @@ public class EntitySpellRenderer extends EntityRenderer<EntitySpell>
 		return null;
 	}
 	
-	public boolean shouldRender(EntitySpell livingEntityIn, ClippingHelper camera, double camX, double camY, double camZ)
+	public boolean shouldRender(EntitySpell livingEntityIn, Frustum camera, double camX, double camY, double camZ)
     {
     	return true;
     }
@@ -87,12 +86,4 @@ public class EntitySpellRenderer extends EntityRenderer<EntitySpell>
 //            this.renderLivingLabel(entity, s, x, y, z, 64);
 //        }
 //    }
-	
-	public static class RenderFactory implements IRenderFactory<EntitySpell>
-	{
-		public EntityRenderer<? super EntitySpell> createRenderFor(EntityRendererProvider.Context manager) 
-		{
-			return new EntitySpellRenderer(manager);
-		}
-	}
 }

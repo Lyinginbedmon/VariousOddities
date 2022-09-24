@@ -10,19 +10,12 @@ public class VODataGenerators
 	{
 		DataGenerator generator = event.getGenerator();
 		ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
-		if(event.includeServer())
-		{
-			generator.addProvider(new VOItemTags(generator, existingFileHelper));
-    		generator.addProvider(new VOBlockTags(generator, existingFileHelper));
-    		generator.addProvider(new VOEntityTags(generator, existingFileHelper));
-			generator.addProvider(new VOSpeciesProvider(generator));
-			generator.addProvider(new VOTemplatesProvider(generator));
-			generator.addProvider(new VOLootProvider(generator, existingFileHelper));
-			generator.addProvider(new VORecipeProvider(generator));
-		}
-		if(event.includeClient())
-		{
-			;
-		}
+		generator.addProvider(event.includeServer(), new VOItemTags(generator, existingFileHelper));
+		generator.addProvider(event.includeServer(), new VOBlockTags(generator, existingFileHelper));
+		generator.addProvider(event.includeServer(), new VOEntityTags(generator, existingFileHelper));
+		generator.addProvider(event.includeServer(), new VOSpeciesProvider(generator, existingFileHelper));
+		generator.addProvider(event.includeServer(), new VOTemplatesProvider(generator, existingFileHelper));
+		generator.addProvider(event.includeServer(), new VOLootProvider(generator, existingFileHelper));
+		generator.addProvider(event.includeServer(), new VORecipeProvider(generator));
 	}
 }

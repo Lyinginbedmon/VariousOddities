@@ -35,7 +35,7 @@ public class EntityCrabGiant extends AbstractCrab
     {
     	super.registerGoals();
     	
-    	if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.CRAB_GIANT))
+    	if(ConfigVO.MOBS.aiSettings.isOddityAIEnabled(VOEntities.CRAB_GIANT.get()))
     		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<Player>(this, Player.class, true));
     }
     

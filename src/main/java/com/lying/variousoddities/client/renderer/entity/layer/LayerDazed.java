@@ -2,7 +2,7 @@ package com.lying.variousoddities.client.renderer.entity.layer;
 
 import com.lying.variousoddities.client.VOModelLayers;
 import com.lying.variousoddities.client.model.entity.ModelDazed;
-import com.lying.variousoddities.init.VOPotions;
+import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.reference.Reference;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -29,17 +29,16 @@ public class LayerDazed<T extends LivingEntity, M extends HumanoidModel<T>> exte
 		this.dazedModel = new ModelDazed<T>(modelsIn.bakeLayer(VOModelLayers.DAZED));
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entityIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		if(VOPotions.isPotionVisible(entityIn, VOPotions.DAZED))
+		if(VOMobEffects.isPotionVisible(entityIn, VOMobEffects.DAZED))
 		{
 			matrixStackIn.pushPose();
 				float scale = 1.2F;
 				matrixStackIn.scale(scale, scale, scale);
 				matrixStackIn.translate(0D, -0.8D, 0D);
 				
-				RenderSystem.color4f(1F, 1F, 1F, 1F);
+				RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 				RenderSystem.disableBlend();
 				VertexConsumer ivertexbuilder = bufferIn.getBuffer(RenderType.entityCutout(dazedTextured));
 				dazedModel.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);

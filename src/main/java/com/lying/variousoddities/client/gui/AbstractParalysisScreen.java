@@ -39,6 +39,7 @@ public abstract class AbstractParalysisScreen extends Screen
 	
 	public void init()
 	{
+		clearWidgets();
 		this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 		
 		this.addRenderableWidget(new Button(this.width / 2 - 102, this.height / 4 + 24 + -16, 204, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".paralysed.resignation"), (button2) ->
