@@ -248,7 +248,7 @@ public class TemplateRegistry extends SimpleJsonResourceReloadListener
 				.addOperation(AbilityOperation.add(new AbilityDamageResistance(DamageType.LIGHTNING, DamageResist.IMMUNE)))
 				.addOperation(AbilityOperation.add(new AbilityResistanceSpell(MagicSubType.MIND_AFFECTING)))
 				.addOperation(AbilityOperation.add(new AbilityPoison(0.65F, new MobEffectInstance(VOMobEffects.PARALYSIS, Reference.Values.TICKS_PER_SECOND * 15)).setDisplayName(Component.translatable("ability.varodd:lich_touch"))))
-				.addOperation(AbilityOperation.add(new AbilityStartingItem(new ItemStack(VOBlocks.PHYLACTERY)))));
+				.addOperation(AbilityOperation.add(new AbilityStartingItem(new ItemStack(VOBlocks.PHYLACTERY.get())))));
 		addTemplate(new Template(TEMPLATE_WINGED, UUID_WINGED)
 				.setPower(2)
 				.setDisplayName(Component.translatable("template."+Reference.ModInfo.MOD_ID+".winged"))

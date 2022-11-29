@@ -20,9 +20,9 @@ public class VOBlockEntities
 {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, Reference.ModInfo.MOD_ID);
     
-	public static final BlockEntityType<TileEntityDraftingTable> TABLE_DRAFTING = register("drafting_table", BlockEntityType.Builder.of(TileEntityDraftingTable::new, VOBlocks.TABLE_DRAFTING));
-	public static final BlockEntityType<TileEntityEggKobold> EGG_KOBOLD = register("kobold_egg", BlockEntityType.Builder.of(TileEntityEggKobold::new, VOBlocks.EGG_KOBOLD));
-	public static final BlockEntityType<TileEntityPhylactery> PHYLACTERY = register("phylactery", BlockEntityType.Builder.of(TileEntityPhylactery::new, VOBlocks.PHYLACTERY));
+	public static final BlockEntityType<TileEntityDraftingTable> TABLE_DRAFTING = register("drafting_table", BlockEntityType.Builder.of(TileEntityDraftingTable::new, VOBlocks.TABLE_DRAFTING.get()));
+	public static final BlockEntityType<TileEntityEggKobold> EGG_KOBOLD = register("kobold_egg", BlockEntityType.Builder.of(TileEntityEggKobold::new, VOBlocks.EGG_KOBOLD.get()));
+	public static final BlockEntityType<TileEntityPhylactery> PHYLACTERY = register("phylactery", BlockEntityType.Builder.of(TileEntityPhylactery::new, VOBlocks.PHYLACTERY.get()));
     
     private static <T extends BlockEntity> BlockEntityType<T> register(String name, BlockEntityType.Builder<T> builder)
     {

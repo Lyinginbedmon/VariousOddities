@@ -23,7 +23,7 @@ public class BlockEggKobold extends BlockEgg<TileEntityEggKobold>
 	
     public void onHatch(BlockPos pos, Level worldIn)
     {
-    	worldIn.setBlockAndUpdate(pos, VOBlocks.LAYER_SCALE.defaultBlockState());
+    	worldIn.setBlockAndUpdate(pos, VOBlocks.LAYER_SCALE.get().defaultBlockState());
     }
     
 	@Override

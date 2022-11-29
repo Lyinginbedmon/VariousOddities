@@ -112,7 +112,7 @@ public class SettlementRoomBehaviours
 	public static class KoboldRoomBehaviourNest implements SettlementRoomBehaviour
 	{
 		private static final int EGGS_PER_GUARD = 3;
-		private final Block EGG = VOBlocks.EGG_KOBOLD;
+		private final Block EGG = VOBlocks.EGG_KOBOLD.get();
 		
 		private static final Predicate<EntityKobold> hasEgg = new Predicate<EntityKobold>()
 				{

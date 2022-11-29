@@ -1,6 +1,5 @@
 package com.lying.variousoddities.item;
 
-import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.reference.Reference;
 
@@ -11,7 +10,7 @@ public abstract class VOItemGroup extends CreativeModeTab
 {
 	public static final CreativeModeTab EGGS = new VOItemGroup("eggs")
 	{
-		public ItemStack makeIcon(){ return VOEntities.SPAWN_EGGS.get(VOEntities.KOBOLD).getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOItems.SPAWN_EGG_KOBOLD.getDefaultInstance(); }
 	};
 	public static final CreativeModeTab BLOCKS = new VOItemGroup("blocks")
 	{

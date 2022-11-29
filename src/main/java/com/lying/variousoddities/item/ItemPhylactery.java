@@ -16,7 +16,7 @@ public class ItemPhylactery extends BlockItem
 {
 	public ItemPhylactery(Properties builder)
 	{
-		super(VOBlocks.PHYLACTERY, builder.fireResistant());
+		super(VOBlocks.PHYLACTERY.get(), builder.fireResistant());
 	}
 	
 	public Component getName(ItemStack stack)

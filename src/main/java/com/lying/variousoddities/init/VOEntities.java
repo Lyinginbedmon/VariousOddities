@@ -27,7 +27,6 @@ import com.lying.variousoddities.entity.projectile.EntityFireballGhastling;
 import com.lying.variousoddities.entity.wip.EntityChangeling;
 import com.lying.variousoddities.entity.wip.EntityPatronKirin;
 import com.lying.variousoddities.entity.wip.EntityPatronWitch;
-import com.lying.variousoddities.item.ItemOddEgg;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.resources.ResourceLocation;
@@ -85,16 +84,12 @@ public class VOEntities
     
 	private static <T extends Mob> RegistryObject<EntityType<T>> register(String name, EntityType.Builder<T> builder, int primaryColor, int secondaryColor)
 	{
-		RegistryObject<EntityType<T>> type = register(name, builder);
-		VOItems.register(name, new ItemOddEgg(type.get(), primaryColor, secondaryColor, new Item.Properties()));
-		return type;
+		return register(name, builder);
 	}
 	
 	private static <T extends Entity> RegistryObject<EntityType<T>> register(String name, EntityType.Builder<T> builder)
 	{
-		name = Reference.ModInfo.MOD_PREFIX + name;
-		EntityType<T> type = builder.build(name);
-		return ENTITIES.register(name, () -> type);
+		return ENTITIES.register(name, () -> builder.build(Reference.ModInfo.MOD_PREFIX + name));
 	}
 	
 	public static void init() {}

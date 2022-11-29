@@ -58,7 +58,7 @@ public class EntityAIKoboldGuardEgg extends Goal
 		else
 		{
 			nearestEgg = null;
-			List<BlockPos> eggs = SettlementRoomBehaviour.findAllBlock(closestRoom, theWorld, VOBlocks.EGG_KOBOLD);
+			List<BlockPos> eggs = SettlementRoomBehaviour.findAllBlock(closestRoom, theWorld, VOBlocks.EGG_KOBOLD.get());
 			if(eggs.isEmpty())
 				return false;
 			

@@ -65,7 +65,7 @@ public class BlockPhylacteryLich extends BlockPhylacteryBase implements EntityBl
 			TileEntityPhylactery phylacteryTile = (TileEntityPhylactery)tile;
 			if(!worldIn.isClientSide && player.isCreative())
 			{
-				ItemStack itemstack = new ItemStack(VOBlocks.PHYLACTERY);
+				ItemStack itemstack = new ItemStack(VOBlocks.PHYLACTERY.get());
 				phylacteryTile.saveToItem(itemstack);
 				
 				// TODO Most probably broken
