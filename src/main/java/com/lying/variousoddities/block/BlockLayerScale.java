@@ -29,7 +29,7 @@ public class BlockLayerScale extends VOBlock
 	
     public Item getItemDropped(BlockState state, Random rand, int fortune)
 	{
-		return VOItems.SCALE_KOBOLD;
+		return VOItems.SCALE_KOBOLD.get();
 	}
     
     public int quantityDropped(Random random)

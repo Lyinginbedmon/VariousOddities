@@ -112,7 +112,7 @@ public class EntityMarimo extends EntityOddity implements IMysticSource
     
     public ItemStack getItemStack()
     {
-    	ItemStack bottle = VOItems.MOSS_BOTTLE.getDefaultInstance();
+    	ItemStack bottle = VOItems.MOSS_BOTTLE.get().getDefaultInstance();
     	if(this.hasCustomName()) bottle.setHoverName(getCustomName());
     	CompoundTag stackData = bottle.hasTag() ? bottle.getTag() : new CompoundTag();
     	stackData.putInt("Color", getColor().getId());

@@ -24,10 +24,6 @@ import net.minecraftforge.registries.RegistryObject;
 public class VOBlocks
 {
 	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, Reference.ModInfo.MOD_ID);
-    
-    public static final TagKey<Block> UNPHASEABLE = createTag("unphaseable");
-    public static final TagKey<Block> GNAWABLE = createTag("gnawable");
-    public static final TagKey<Block> GNAWABLE_HEALING = createTag("gnawable_healing");
 	
 	public static final RegistryObject<Block> TABLE_DRAFTING	= register("drafting_table", new BlockDraftingTable(BlockBehaviour.Properties.of(Material.WOOD, MaterialColor.TERRACOTTA_BLUE).instabreak()));
 	public static final RegistryObject<Block> MOSS_BLOCK		= register("moss_block", new BlockMoss(BlockBehaviour.Properties.of(Material.PLANT, MaterialColor.COLOR_GREEN).noCollission().isViewBlocking(VOBlock::isntSolid)));
@@ -36,6 +32,10 @@ public class VOBlocks
 	public static final RegistryObject<Block> LAYER_SCALE		= register("scale_layer", new BlockLayerScale(BlockBehaviour.Properties.of(Material.GRASS, MaterialColor.TERRACOTTA_YELLOW).strength(0.3F)));
 	public static final RegistryObject<Block> PHYLACTERY		= register("phylactery", new BlockPhylacteryLich(BlockBehaviour.Properties.of(Material.STONE)));
 	public static final RegistryObject<Block> PHYLACTERY_EMPTY	= register("empty_phylactery", new BlockPhylacteryBase(BlockBehaviour.Properties.of(Material.STONE)));
+    
+    public static final TagKey<Block> UNPHASEABLE = createTag("unphaseable");
+    public static final TagKey<Block> GNAWABLE = createTag("gnawable");
+    public static final TagKey<Block> GNAWABLE_HEALING = createTag("gnawable_healing");
 	
 	public static RegistryObject<Block> register(String nameIn, Block blockIn)
 	{

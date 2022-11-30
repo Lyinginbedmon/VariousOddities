@@ -584,7 +584,7 @@ public class CommandSettlement extends CommandBase
     				if(ent instanceof LivingEntity)
     				{
     					LivingEntity living = (LivingEntity)ent;
-    					if(!living.getMainHandItem().isEmpty() && living.getMainHandItem().getItem() == VOItems.DRAFTING_TABLE)
+    					if(!living.getMainHandItem().isEmpty() && living.getMainHandItem().getItem() == VOItems.DRAFTING_TABLE.get())
     					{
     						ItemStack table = living.getMainHandItem();
     						if(table.hasTag() && table.getTag().contains("BlockEntityTag", 10))

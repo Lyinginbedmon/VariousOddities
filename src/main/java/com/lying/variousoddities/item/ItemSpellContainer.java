@@ -31,7 +31,7 @@ public abstract class ItemSpellContainer extends VOItem
 		{
 			for(IMagicEffect spell : MagicEffects.getAllSpells())
 			{
-				items.add(setSpell(new ItemStack(VOItems.SPELL_SCROLL), spell));
+				items.add(setSpell(new ItemStack(VOItems.SPELL_SCROLL.get()), spell));
 				
 				// If spell is level 4 or less, also create wand
 			}

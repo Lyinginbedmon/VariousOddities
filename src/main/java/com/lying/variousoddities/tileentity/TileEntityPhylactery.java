@@ -43,7 +43,7 @@ public class TileEntityPhylactery extends BlockEntity
 	
 	public TileEntityPhylactery(BlockPos pos, BlockState state)
 	{
-		super(VOBlockEntities.PHYLACTERY, pos, state);
+		super(VOBlockEntities.PHYLACTERY.get(), pos, state);
 	}
 	
 	public void saveAdditional(CompoundTag compound)

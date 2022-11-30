@@ -29,6 +29,6 @@ public class BlockEggKobold extends BlockEgg<TileEntityEggKobold>
 	@Override
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level worldIn, BlockState state, BlockEntityType<T> typeIn)
 	{
-		return VOBlock.createTickerHelper(typeIn, VOBlockEntities.EGG_KOBOLD, worldIn.isClientSide() ? TileEntityEgg::clientTick : TileEntityEgg::serverTick);
+		return VOBlock.createTickerHelper(typeIn, VOBlockEntities.EGG_KOBOLD.get(), worldIn.isClientSide() ? TileEntityEgg::clientTick : TileEntityEgg::serverTick);
 	}
 }

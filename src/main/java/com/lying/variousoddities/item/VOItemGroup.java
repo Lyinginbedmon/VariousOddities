@@ -10,15 +10,15 @@ public abstract class VOItemGroup extends CreativeModeTab
 {
 	public static final CreativeModeTab EGGS = new VOItemGroup("eggs")
 	{
-		public ItemStack makeIcon(){ return VOItems.SPAWN_EGG_KOBOLD.getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOItems.SPAWN_EGG_KOBOLD.get().getDefaultInstance(); }
 	};
 	public static final CreativeModeTab BLOCKS = new VOItemGroup("blocks")
 	{
-		public ItemStack makeIcon(){ return VOItems.EGG_KOBOLD.getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOItems.EGG_KOBOLD.get().getDefaultInstance(); }
 	};
 	public static final CreativeModeTab LOOT = new VOItemGroup("loot")
 	{
-		public ItemStack makeIcon(){ return VOItems.SCALE_KOBOLD.getDefaultInstance(); }
+		public ItemStack makeIcon(){ return VOItems.SCALE_KOBOLD.get().getDefaultInstance(); }
 	};
 	
 	public VOItemGroup(String labelIn)

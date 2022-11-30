@@ -38,7 +38,7 @@ public class TileEntityDraftingTable extends VOTileEntity
 	
 	public TileEntityDraftingTable(BlockPos pos, BlockState state)
 	{
-		super(VOBlockEntities.TABLE_DRAFTING, pos, state);
+		super(VOBlockEntities.TABLE_DRAFTING.get(), pos, state);
 	}
 	
 	public void load(CompoundTag nbt)

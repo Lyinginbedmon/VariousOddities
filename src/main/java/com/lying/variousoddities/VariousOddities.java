@@ -61,13 +61,13 @@ public class VariousOddities
 	public VariousOddities()
 	{
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        
-        VOEntities.ENTITIES.register(modEventBus);
-        VOBlocks.BLOCKS.register(modEventBus);
+		
         VOBlockEntities.BLOCK_ENTITIES.register(modEventBus);
+        VOBlocks.BLOCKS.register(modEventBus);
+        VOEnchantments.ENCHANTMENTS.register(modEventBus);
+        VOEntities.ENTITIES.register(modEventBus);
         VOItems.ITEMS.register(modEventBus);
         VOItems.CONTAINERS.register(modEventBus);
-        VOEnchantments.ENCHANTMENTS.register(modEventBus);
         VOMobEffects.EFFECTS.register(modEventBus);
         
         modEventBus.addListener(this::doCommonSetup);

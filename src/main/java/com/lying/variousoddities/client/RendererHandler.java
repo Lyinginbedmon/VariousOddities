@@ -23,6 +23,6 @@ public class RendererHandler
 		if(!registered)
 			registered = true;
 		
-		BlockEntityRenderers.register(VOBlockEntities.TABLE_DRAFTING, TileEntityDraftingTableRenderer::new);
+		BlockEntityRenderers.register(VOBlockEntities.TABLE_DRAFTING.get(), TileEntityDraftingTableRenderer::new);
 	}
 }

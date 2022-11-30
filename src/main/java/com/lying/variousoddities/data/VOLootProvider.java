@@ -66,7 +66,7 @@ public class VOLootProvider extends LootTableProvider
     			LootPool.lootPool()
     					.name("main")
     					.setRolls(ConstantValue.exactly(1))
-    					.add(itemEntry(VOItems.SCALE_KOBOLD, 1).apply(SetItemCountFunction.setCount(UniformGenerator.between(1.0F, 2.0F))))));
+    					.add(itemEntry(VOItems.SCALE_KOBOLD.get(), 1).apply(SetItemCountFunction.setCount(UniformGenerator.between(1.0F, 2.0F))))));
     }
     
     private void addEntityLootTables()
@@ -75,7 +75,7 @@ public class VOLootProvider extends LootTableProvider
     			LootPool.lootPool()
     					.name("main")
     					.setRolls(ConstantValue.exactly(1))
-    					.add(itemEntry(VOItems.SCALE_KOBOLD, 1).apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 3.0F))))));
+    					.add(itemEntry(VOItems.SCALE_KOBOLD.get(), 1).apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 3.0F))))));
     	addEntityLootTable(VOLootTables.GOBLIN.getPath(), LootTable.lootTable().withPool(
     			LootPool.lootPool()));
     	addEntityLootTable(VOLootTables.RAT.getPath(), LootTable.lootTable().withPool(

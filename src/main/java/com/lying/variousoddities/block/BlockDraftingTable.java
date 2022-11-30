@@ -73,7 +73,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit)
 	{
 		BlockEntity tileentity = worldIn.getBlockEntity(pos);
-		if(tileentity.getType() == VOBlockEntities.TABLE_DRAFTING)
+		if(tileentity.getType() == VOBlockEntities.TABLE_DRAFTING.get())
 		{
 			TileEntityDraftingTable table = (TileEntityDraftingTable)tileentity;
 			if(worldIn.isClientSide)
@@ -110,7 +110,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player)
 	{
 		BlockEntity tile = worldIn.getBlockEntity(pos);
-		if(tile.getType() == VOBlockEntities.TABLE_DRAFTING)
+		if(tile.getType() == VOBlockEntities.TABLE_DRAFTING.get())
 		{
 			if(player != null && player.isCreative())
 				return;
@@ -122,7 +122,7 @@ public class BlockDraftingTable extends VOBlockRotated implements BlockEntitySup
 	
 	public ItemStack getItem(Level worldIn, BlockPos pos, BlockState state)
 	{
-		ItemStack stack = VOItems.DRAFTING_TABLE.getDefaultInstance();
+		ItemStack stack = VOItems.DRAFTING_TABLE.get().getDefaultInstance();
 		TileEntityDraftingTable tile = (TileEntityDraftingTable)worldIn.getBlockEntity(pos);
 		if(tile.bitMask() > 0)
 			tile.saveToItem(stack);

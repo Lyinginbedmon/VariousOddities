@@ -14,7 +14,7 @@ public class TileEntityEggKobold extends TileEntityEgg
 {
 	public TileEntityEggKobold(BlockPos pos, BlockState state)
 	{
-		super(VOBlockEntities.EGG_KOBOLD, pos, state);
+		super(VOBlockEntities.EGG_KOBOLD.get(), pos, state);
 	}
 	
 	public int getInitialHatchTime(){ return Reference.Values.TICKS_PER_MINUTE * 20; }

@@ -4,7 +4,6 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.tileentity.TileEntityDraftingTable;
 import com.lying.variousoddities.tileentity.TileEntityEggKobold;
 import com.lying.variousoddities.tileentity.TileEntityPhylactery;
-import com.mojang.datafixers.types.Type;
 
 import net.minecraft.Util;
 import net.minecraft.util.datafix.fixes.References;
@@ -14,19 +13,19 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class VOBlockEntities
 {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, Reference.ModInfo.MOD_ID);
     
-	public static final BlockEntityType<TileEntityDraftingTable> TABLE_DRAFTING = register("drafting_table", BlockEntityType.Builder.of(TileEntityDraftingTable::new, VOBlocks.TABLE_DRAFTING.get()));
-	public static final BlockEntityType<TileEntityEggKobold> EGG_KOBOLD = register("kobold_egg", BlockEntityType.Builder.of(TileEntityEggKobold::new, VOBlocks.EGG_KOBOLD.get()));
-	public static final BlockEntityType<TileEntityPhylactery> PHYLACTERY = register("phylactery", BlockEntityType.Builder.of(TileEntityPhylactery::new, VOBlocks.PHYLACTERY.get()));
+	public static final RegistryObject<BlockEntityType<TileEntityDraftingTable>> TABLE_DRAFTING = register("drafting_table", BlockEntityType.Builder.of(TileEntityDraftingTable::new, VOBlocks.TABLE_DRAFTING.get()));
+	public static final RegistryObject<BlockEntityType<TileEntityEggKobold>> EGG_KOBOLD = register("kobold_egg", BlockEntityType.Builder.of(TileEntityEggKobold::new, VOBlocks.EGG_KOBOLD.get()));
+	public static final RegistryObject<BlockEntityType<TileEntityPhylactery>> PHYLACTERY = register("phylactery", BlockEntityType.Builder.of(TileEntityPhylactery::new, VOBlocks.PHYLACTERY.get()));
     
-    private static <T extends BlockEntity> BlockEntityType<T> register(String name, BlockEntityType.Builder<T> builder)
+    private static <T extends BlockEntity> RegistryObject<BlockEntityType<T>> register(String name, BlockEntityType.Builder<T> builder)
     {
-        Type<?> type = Util.fetchChoiceType(References.BLOCK_ENTITY, name);
-        return BLOCK_ENTITIES.register(name, () -> { return builder.build(type); }).get();
+        return BLOCK_ENTITIES.register(name, () -> builder.build(Util.fetchChoiceType(References.BLOCK_ENTITY, name)));
     }
 }
