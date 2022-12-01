@@ -21,8 +21,8 @@ public abstract class ModelMountChest<T extends Entity> extends EntityModel<T>
 	public ModelMountChest(ModelPart partsIn)
 	{
 		this.body = partsIn.getChild("body");
-		this.chestR = partsIn.getChild("right_chest");
-		this.chestL = partsIn.getChild("left_chest");
+		this.chestR = this.body.getChild("right_chest");
+		this.chestL = this.body.getChild("left_chest");
 	}
 	
 	public static LayerDefinition createBodyLayer(CubeDeformation deformation, float sizeIn)

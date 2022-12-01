@@ -49,7 +49,7 @@ public class PotionPetrifying extends PotionVO
 			living.addEffect(getPetrifying(amplifier));
 		else
 		{
-			MobEffectInstance petrified = new MobEffectInstance(VOMobEffects.PETRIFIED, Reference.Values.TICKS_PER_DAY * 100, 0, false, false);
+			MobEffectInstance petrified = new MobEffectInstance(VOMobEffects.PETRIFIED.get(), Reference.Values.TICKS_PER_DAY * 100, 0, false, false);
 			petrified.setCurativeItems(Lists.newArrayList());
 			living.addEffect(petrified);
 		}
@@ -57,7 +57,7 @@ public class PotionPetrifying extends PotionVO
 	
 	private MobEffectInstance getPetrifying(int amplifier)
 	{
-		MobEffectInstance petrifying = new MobEffectInstance(VOMobEffects.PETRIFYING, Reference.Values.TICKS_PER_SECOND * 10, amplifier - 1, false, true);
+		MobEffectInstance petrifying = new MobEffectInstance(VOMobEffects.PETRIFYING.get(), Reference.Values.TICKS_PER_SECOND * 10, amplifier - 1, false, true);
 		petrifying.setCurativeItems(Lists.newArrayList());
 		return petrifying;
 	}

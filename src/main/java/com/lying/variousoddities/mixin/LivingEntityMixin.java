@@ -187,7 +187,7 @@ public class LivingEntityMixin extends EntityMixin
 			ci.setReturnValue(false);
 			ci.cancel();
 		}
-		else if(entity.hasEffect(VOMobEffects.PETRIFIED))
+		else if(entity.hasEffect(VOMobEffects.PETRIFIED.get()))
 		{
 			if(
 					source == DamageSource.FALL || source == DamageSource.FALLING_BLOCK || 

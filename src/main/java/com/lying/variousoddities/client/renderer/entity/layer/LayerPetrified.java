@@ -29,7 +29,7 @@ public class LayerPetrified<T extends LivingEntity, M extends EntityModel<T>> ex
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		LivingData data = LivingData.forEntity(entitylivingbaseIn);
-		if(data == null || !data.getVisualPotion(VOMobEffects.PETRIFIED))
+		if(data == null || !data.getVisualPotion(VOMobEffects.PETRIFIED.get()))
 			return;
 		
 		matrixStackIn.pushPose();

@@ -63,7 +63,7 @@ public class AbilityLightSensitivity extends Ability
 			
 			int light = Math.max(block, sky);
 			if(light > ((AbilityLightSensitivity)AbilityRegistry.getAbilityByName(entity, REGISTRY_NAME)).lightLimit)
-				entity.addEffect(new MobEffectInstance(VOMobEffects.DAZZLED, Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
+				entity.addEffect(new MobEffectInstance(VOMobEffects.DAZZLED.get(), Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
 		}
 	}
 	

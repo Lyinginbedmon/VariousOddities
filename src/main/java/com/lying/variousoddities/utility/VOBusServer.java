@@ -110,7 +110,7 @@ public class VOBusServer
 			}
 		}
 		
-		if(entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(VOMobEffects.ANCHORED))
+		if(entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(VOMobEffects.ANCHORED.get()))
 			event.setCanceled(true);
 	}
 	
@@ -290,10 +290,10 @@ public class VOBusServer
 				spawnCorpse = victim.getType() == EntityType.PLAYER;
 				break;
 			case NEEDLED_ONLY:
-				spawnCorpse = victim.hasEffect(VOMobEffects.NEEDLED);
+				spawnCorpse = victim.hasEffect(VOMobEffects.NEEDLED.get());
 				break;
 			case PLAYERS_AND_NEEDLED:
-				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.hasEffect(VOMobEffects.NEEDLED);
+				spawnCorpse = victim.getType() == EntityType.PLAYER || victim.hasEffect(VOMobEffects.NEEDLED.get());
 				break;
 			case ALWAYS:
 				spawnCorpse = true;
@@ -306,7 +306,7 @@ public class VOBusServer
 		if(spawnCorpse)
 		{
 			AbstractBody.clearNearbyAttackTargetsOf(victim);
-			victim.removeEffect(VOMobEffects.NEEDLED);
+			victim.removeEffect(VOMobEffects.NEEDLED.get());
 			EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(victim);
 			
 			if(victim.getType() == EntityType.PLAYER)
@@ -358,7 +358,7 @@ public class VOBusServer
 			switch(event.getNewBody())
 			{
 				case DEAD:
-					player.removeEffect(VOMobEffects.NEEDLED);
+					player.removeEffect(VOMobEffects.NEEDLED.get());
 					EntityBodyCorpse corpse = EntityBodyCorpse.createCorpseFrom(player);
 					data.setBodyUUID(corpse.getUUID());
 					player.setHealth(player.getMaxHealth());
@@ -433,12 +433,12 @@ public class VOBusServer
 			
 			wakeupEntitiesAround(hurtEntity);
 			
-			MobEffectInstance sleepEffect = hurtEntity.getEffect(VOMobEffects.SLEEP);
+			MobEffectInstance sleepEffect = hurtEntity.getEffect(VOMobEffects.SLEEP.get());
 			int tier = (sleepEffect == null || sleepEffect.getDuration() <= 0) ? -1 : sleepEffect.getAmplifier();
 			
 			if(PotionSleep.isSleeping(hurtEntity) && tier < 1)
 				if(!MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(hurtEntity, true)))
-					hurtEntity.removeEffect(VOMobEffects.SLEEP);
+					hurtEntity.removeEffect(VOMobEffects.SLEEP.get());
 		}
 	}
 	
@@ -485,7 +485,7 @@ public class VOBusServer
 	public static void onAnchoredTeleport(EntityTeleportEvent.EnderEntity event)
 	{
 		LivingEntity entity = event.getEntityLiving();
-		if(entity.hasEffect(VOMobEffects.ANCHORED))
+		if(entity.hasEffect(VOMobEffects.ANCHORED.get()))
 			event.setCanceled(true);
 	}
 	
@@ -512,7 +512,7 @@ public class VOBusServer
 			{
 				double wakeupChance = (RandomSource.create(entity.getUUID().getLeastSignificantBits())).nextDouble();
 				if(entity.getRandom().nextDouble() < wakeupChance && !MinecraftForge.EVENT_BUS.post(new LivingWakeUpEvent(entity, true)))
-					entity.removeEffect(VOMobEffects.SLEEP);
+					entity.removeEffect(VOMobEffects.SLEEP.get());
 			}
 			else if(entity instanceof Player)
 			{

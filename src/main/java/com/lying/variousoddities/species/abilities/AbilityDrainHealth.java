@@ -33,9 +33,9 @@ public class AbilityDrainHealth extends AbilityGaze
 	
 	public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 	{
-		if(entity.hurt(DamageSource.GENERIC, 2F) && entity.addEffect(new MobEffectInstance(VOMobEffects.HEALTH_DRAIN, Integer.MAX_VALUE, 1, true, false)))
+		if(entity.hurt(DamageSource.GENERIC, 2F) && entity.addEffect(new MobEffectInstance(VOMobEffects.HEALTH_DRAIN.get(), Integer.MAX_VALUE, 1, true, false)))
 		{
-			owner.addEffect(new MobEffectInstance(VOMobEffects.TEMP_HP, Integer.MAX_VALUE, 4, true, false));
+			owner.addEffect(new MobEffectInstance(VOMobEffects.TEMP_HP.get(), Integer.MAX_VALUE, 4, true, false));
 			return true;
 		}
 		return false;

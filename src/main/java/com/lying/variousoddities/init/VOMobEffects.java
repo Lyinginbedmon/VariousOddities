@@ -1,10 +1,12 @@
 package com.lying.variousoddities.init;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.compress.utils.Lists;
+
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.potion.IVisualPotion;
 import com.lying.variousoddities.potion.PotionDazed;
@@ -28,37 +30,45 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class VOMobEffects
 {
     public static final DeferredRegister<MobEffect> EFFECTS = DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, Reference.ModInfo.MOD_ID);
 	public static final Map<MobEffect, Integer> VISUALS = new HashMap<>();
 	
-	public static final MobEffect SLEEP				= register("sleep", new PotionSleep(3973574));
-	public static final MobEffect PARALYSIS			= register("paralysis", new PotionParalysis(-1));
-	public static final MobEffect DAZZLED			= register("dazzled", new PotionDazzled(-1));
-	public static final MobEffect DAZED				= register("dazed", new PotionDazed(-1));
-	public static final MobEffect ARCANE_SIGHT		= register("arcane_sight", new PotionVO(MobEffectCategory.BENEFICIAL, 10289404));
-	public static final MobEffect DEAFENED			= register("deafened", new PotionVO(MobEffectCategory.HARMFUL, 7815));
-	public static final MobEffect SILENCED			= register("silenced", new PotionVO(MobEffectCategory.HARMFUL, 7815));
-	public static final MobEffect PETRIFIED			= register("petrified", new PotionPetrified(9408399));
-	public static final MobEffect PETRIFYING		= register("petrifying", new PotionPetrifying(9408399));
-	public static final MobEffect ENTANGLED			= register("entangled", new PotionEntangled(9953313));
-	public static final MobEffect ANCHORED			= register("anchored", new PotionVO(MobEffectCategory.HARMFUL, 1400709));
-	public static final MobEffect NEEDLED			= register("needled", new PotionVO(MobEffectCategory.NEUTRAL, -1));
-	public static final MobEffect TEMP_HP			= register("temp_health", new PotionTempHP());
-	public static final MobEffect HEALTH_DAMAGE		= register("health_damage", new PotionHealthDamage());
-	public static final MobEffect HEALTH_DRAIN		= register("health_drain", new PotionHealthDrain());
+	public static final RegistryObject<MobEffect> SLEEP				= EFFECTS.register("sleep", () -> new PotionSleep(3973574));
+	public static final RegistryObject<MobEffect> PARALYSIS			= EFFECTS.register("paralysis", () -> new PotionParalysis(-1));
+	public static final RegistryObject<MobEffect> DAZZLED			= EFFECTS.register("dazzled", () -> new PotionDazzled(-1));
+	public static final RegistryObject<MobEffect> DAZED				= EFFECTS.register("dazed", () -> new PotionDazed(-1));
+	public static final RegistryObject<MobEffect> ARCANE_SIGHT		= EFFECTS.register("arcane_sight", () -> new PotionVO(MobEffectCategory.BENEFICIAL, 10289404));
+	public static final RegistryObject<MobEffect> DEAFENED			= EFFECTS.register("deafened", () -> new PotionVO(MobEffectCategory.HARMFUL, 7815));
+	public static final RegistryObject<MobEffect> SILENCED			= EFFECTS.register("silenced", () -> new PotionVO(MobEffectCategory.HARMFUL, 7815));
+	public static final RegistryObject<MobEffect> PETRIFIED			= EFFECTS.register("petrified", () -> new PotionPetrified(9408399));
+	public static final RegistryObject<MobEffect> PETRIFYING		= EFFECTS.register("petrifying", () -> new PotionPetrifying(9408399));
+	public static final RegistryObject<MobEffect> ENTANGLED			= EFFECTS.register("entangled", () -> new PotionEntangled(9953313));
+	public static final RegistryObject<MobEffect> ANCHORED			= EFFECTS.register("anchored", () -> new PotionVO(MobEffectCategory.HARMFUL, 1400709));
+	public static final RegistryObject<MobEffect> NEEDLED			= EFFECTS.register("needled", () -> new PotionVO(MobEffectCategory.NEUTRAL, -1));
+	public static final RegistryObject<MobEffect> TEMP_HP			= EFFECTS.register("temp_health", () -> new PotionTempHP());
+	public static final RegistryObject<MobEffect> HEALTH_DAMAGE		= EFFECTS.register("health_damage", () -> new PotionHealthDamage());
+	public static final RegistryObject<MobEffect> HEALTH_DRAIN		= EFFECTS.register("health_drain", () -> new PotionHealthDrain());
 	
-	public static final Map<MobEffect, Predicate<MobEffectInstance>> PARALYSIS_EFFECTS = new HashMap<>();
-	public static final Map<MobEffect, Predicate<MobEffectInstance>> SILENCE_EFFECTS = new HashMap<>();
+	public static final List<Predicate<MobEffectInstance>> PARALYSIS_EFFECTS = Lists.newArrayList();
+	public static final List<Predicate<MobEffectInstance>> SILENCE_EFFECTS = Lists.newArrayList();
     
-    private static <T extends MobEffect> MobEffect register(String name, MobEffect potionIn)
-    {
+	public static void registerVisualPotion(MobEffect potionIn)
+	{
 		if(potionIn instanceof IVisualPotion)
 			VISUALS.put(potionIn, VISUALS.size());
-        return EFFECTS.register(name, () -> { return potionIn; }).get();
-    }
+	}
+	
+	// TODO Reimplement registration of visual potions
+//    private static <T extends MobEffect> MobEffect register(String name, MobEffect potionIn)
+//    {
+//		if(potionIn instanceof IVisualPotion)
+//			VISUALS.put(potionIn, VISUALS.size());
+//        return EFFECTS.register(name, () -> potionIn).get();
+//    }
     
 	public static void init() { }
 	
@@ -93,42 +103,44 @@ public class VOMobEffects
 	/** Returns true if the creature is paralysed by known potion effects */
 	public static boolean paralysedByPotions(LivingEntity entity)
 	{
-		for(MobEffect effect : PARALYSIS_EFFECTS.keySet())
-			if(entity.hasEffect(effect) && PARALYSIS_EFFECTS.get(effect).apply(entity.getEffect(effect)))
+		for(MobEffectInstance instance : entity.getActiveEffects())
+			if(isParalysisEffect(instance))
 				return true;
 		return false;
 	}
 	
 	public static boolean isParalysisEffect(MobEffectInstance instance)
 	{
-		for(MobEffect effect : PARALYSIS_EFFECTS.keySet())
-			if(effect == instance.getEffect() && PARALYSIS_EFFECTS.get(effect).apply(instance))
+		for(Predicate<MobEffectInstance> predicate : PARALYSIS_EFFECTS)
+			if(predicate.apply(instance))
+				return true;
+		return false;
+	}
+	
+	public static boolean isSilenceEffect(MobEffectInstance instance)
+	{
+		for(Predicate<MobEffectInstance> predicate : SILENCE_EFFECTS)
+			if(predicate.apply(instance))
 				return true;
 		return false;
 	}
 	
 	public static boolean isSilenced(LivingEntity entity)
 	{
-		for(MobEffect effect : SILENCE_EFFECTS.keySet())
-			if(entity.hasEffect(effect) && SILENCE_EFFECTS.get(effect).apply(entity.getEffect(effect)))
+		for(MobEffectInstance instance : entity.getActiveEffects())
+			if(isSilenceEffect(instance))
 				return true;
 		return false;
 	}
 	
 	static
 	{
-		PARALYSIS_EFFECTS.put(MobEffects.MOVEMENT_SLOWDOWN, new Predicate<MobEffectInstance>()
-		{
-			public boolean apply(MobEffectInstance input)
-			{
-				return input.getAmplifier() >= 4;
-			}
-		});
-//		PARALYSIS_EFFECTS.put(VOPotions.PETRIFIED, Predicates.alwaysTrue());
-//		PARALYSIS_EFFECTS.put(VOPotions.ENTANGLED, Predicates.alwaysTrue());
-		PARALYSIS_EFFECTS.put(VOMobEffects.PARALYSIS, Predicates.alwaysTrue());
+		PARALYSIS_EFFECTS.add((input) -> input.getEffect() == MobEffects.MOVEMENT_SLOWDOWN && input.getAmplifier() >= 4);
+		PARALYSIS_EFFECTS.add((input) -> input.getEffect() == VOMobEffects.PETRIFIED.get());
+		PARALYSIS_EFFECTS.add((input) -> input.getEffect() == VOMobEffects.ENTANGLED.get());
+		PARALYSIS_EFFECTS.add((input) -> input.getEffect() == VOMobEffects.PARALYSIS.get());
 		
-		SILENCE_EFFECTS.put(VOMobEffects.SILENCED, Predicates.alwaysTrue());
-		SILENCE_EFFECTS.put(VOMobEffects.PETRIFIED, Predicates.alwaysTrue());
+		SILENCE_EFFECTS.add((input) -> input.getEffect() == VOMobEffects.SILENCED.get());
+		SILENCE_EFFECTS.add((input) -> input.getEffect() == VOMobEffects.PETRIFIED.get());
 	}
 }

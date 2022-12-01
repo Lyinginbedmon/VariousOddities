@@ -61,7 +61,7 @@ public class ModelWarg extends ColorableAgeableListModel<EntityWarg>
         this.legFrontLeft = partsIn.getChild("left_front_leg");
         
         this.legRearRight = new RearLegHandler(partsIn.getChild("right_hind_leg"));
-        this.legRearLeft = new RearLegHandler(partsIn.getChild("left_rear_leg"));
+        this.legRearLeft = new RearLegHandler(partsIn.getChild("left_hind_leg"));
         
         this.tail = partsIn.getChild("tail");
     }

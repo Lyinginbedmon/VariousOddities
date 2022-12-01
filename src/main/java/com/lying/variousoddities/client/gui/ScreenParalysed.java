@@ -19,7 +19,7 @@ public class ScreenParalysed extends AbstractParalysisScreen
 	
 	public int ticksToDisplay()
 	{
-		MobEffectInstance paralysis = thePlayer.getEffect(VOMobEffects.PARALYSIS);
+		MobEffectInstance paralysis = thePlayer.getEffect(VOMobEffects.PARALYSIS.get());
 		if(paralysis == null)
 			return 0;
 		else if(paralysis.isNoCounter())
@@ -30,7 +30,7 @@ public class ScreenParalysed extends AbstractParalysisScreen
 	
 	public boolean shouldClose()
 	{
-		return thePlayer.getEffect(VOMobEffects.PARALYSIS) == null || thePlayer.getEffect(VOMobEffects.PARALYSIS).getDuration() == 0;
+		return thePlayer.getEffect(VOMobEffects.PARALYSIS.get()) == null || thePlayer.getEffect(VOMobEffects.PARALYSIS.get()).getDuration() == 0;
 	}
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)

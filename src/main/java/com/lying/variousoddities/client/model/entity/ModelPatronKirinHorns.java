@@ -22,7 +22,7 @@ public class ModelPatronKirinHorns extends HumanoidModel<EntityPatronKirin>
 	
 	public static LayerDefinition createBodyLayer(CubeDeformation deformation)
 	{
-		MeshDefinition mesh = new MeshDefinition();
+		MeshDefinition mesh = HumanoidModel.createMesh(deformation, 0F);
 		PartDefinition part = mesh.getRoot();
 		
 		PartDefinition head = part.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.ZERO);

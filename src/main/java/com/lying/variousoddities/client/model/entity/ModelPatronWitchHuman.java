@@ -67,13 +67,14 @@ public class ModelPatronWitchHuman extends HumanoidModel<EntityPatronWitch> impl
 	        .texOffs(16, 48).addBox(-4.0F, -8.0F, -4.0F, 8, 8, 8)
 	        .texOffs(32, 0).addBox(-4.0F, -8.0F, -4.0F, 8, 8, 8, deformation.extend(0.5F)), PartPose.ZERO));
 		
-		addEars(part.addOrReplaceChild("head_jaw", CubeListBuilder.create()
-	        .texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8, 6, 8)
-	        .texOffs(32, 0).addBox(-4.0F, -8.0F, -4.0F, 8, 8, 8, deformation.extend(0.5F))
-	        .texOffs(36, 32).addBox(-4F, -2F, 2F, 8, 2, 2), PartPose.ZERO)
-				.addOrReplaceChild("jaw_base", CubeListBuilder.create(), PartPose.offset(0F, -2F, 4F))
-					.addOrReplaceChild("right_jaw", CubeListBuilder.create().texOffs(16, 32).addBox(-4F, 0F, -8F, 4, 2, 6), PartPose.ZERO)
-					.addOrReplaceChild("left_jaw", CubeListBuilder.create().mirror().texOffs(16, 32).addBox(0F, 0F, -8F, 4, 2, 6), PartPose.ZERO));
+		PartDefinition headJaw = part.addOrReplaceChild("head_jaw", CubeListBuilder.create()
+		        .texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8, 6, 8)
+		        .texOffs(32, 0).addBox(-4.0F, -8.0F, -4.0F, 8, 8, 8, deformation.extend(0.5F))
+		        .texOffs(36, 32).addBox(-4F, -2F, 2F, 8, 2, 2), PartPose.ZERO);
+		addEars(headJaw);
+		PartDefinition jawBase = headJaw.addOrReplaceChild("jaw_base", CubeListBuilder.create(), PartPose.offset(0F, -2F, 4F));
+		jawBase.addOrReplaceChild("right_jaw", CubeListBuilder.create().texOffs(16, 32).addBox(-4F, 0F, -8F, 4, 2, 6), PartPose.ZERO);
+		jawBase.addOrReplaceChild("left_jaw", CubeListBuilder.create().mirror().texOffs(16, 32).addBox(0F, 0F, -8F, 4, 2, 6), PartPose.ZERO);
 		
 		part.addOrReplaceChild("body", CubeListBuilder.create()
 			.texOffs(16, 16).addBox(-4.0F, 0.0F, -2.0F, 8, 12, 4)

@@ -193,7 +193,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 		{
-			return entity.addEffect(new MobEffectInstance(VOMobEffects.PETRIFYING, Reference.Values.TICKS_PER_SECOND * 10, 4));
+			return entity.addEffect(new MobEffectInstance(VOMobEffects.PETRIFYING.get(), Reference.Values.TICKS_PER_SECOND * 10, 4));
 		}
 		
 		public static class Builder extends Ability.Builder

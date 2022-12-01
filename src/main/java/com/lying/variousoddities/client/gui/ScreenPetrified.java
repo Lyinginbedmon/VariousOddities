@@ -16,7 +16,7 @@ public class ScreenPetrified extends AbstractParalysisScreen
 	
 	public boolean shouldClose()
 	{
-		return thePlayer.getEffect(VOMobEffects.PETRIFIED) == null || thePlayer.getEffect(VOMobEffects.PETRIFIED).getDuration() == 0;
+		return thePlayer.getEffect(VOMobEffects.PETRIFIED.get()) == null || thePlayer.getEffect(VOMobEffects.PETRIFIED.get()).getDuration() == 0;
 	}
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)

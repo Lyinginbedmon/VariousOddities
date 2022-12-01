@@ -31,7 +31,7 @@ public class LayerDazed<T extends LivingEntity, M extends HumanoidModel<T>> exte
 	
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entityIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		if(VOMobEffects.isPotionVisible(entityIn, VOMobEffects.DAZED))
+		if(VOMobEffects.isPotionVisible(entityIn, VOMobEffects.DAZED.get()))
 		{
 			matrixStackIn.pushPose();
 				float scale = 1.2F;

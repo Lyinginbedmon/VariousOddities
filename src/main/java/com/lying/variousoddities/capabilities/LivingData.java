@@ -495,7 +495,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(bludgeoning <= 0F)
 			return false;
 		
-		if(health <= bludgeoning || entity.getEffect(VOMobEffects.SLEEP) != null && entity.getEffect(VOMobEffects.SLEEP).getDuration() > 0)
+		if(health <= bludgeoning || entity.getEffect(VOMobEffects.SLEEP.get()) != null && entity.getEffect(VOMobEffects.SLEEP.get()).getDuration() > 0)
 			return true;
 		return false;
 	}

@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.lying.variousoddities.client.KeyBindings;
-import com.lying.variousoddities.client.renderer.EntityRenderRegistry;
 import com.lying.variousoddities.client.special.BlindRender;
 import com.lying.variousoddities.client.special.ScentRender;
 import com.lying.variousoddities.client.special.SettlementRender;
@@ -98,11 +97,12 @@ public class VariousOddities
     @SuppressWarnings("removal")
 	private void doClientSetup(final FMLClientSetupEvent event)
     {
-    	FMLJavaModLoadingContext.get().getModEventBus().addListener(KeyBindings::registerKeybinds);
-        EntityRenderRegistry.registerEntityRenderers();
+		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+    	modEventBus.addListener(KeyBindings::registerKeybinds);
         ItemBlockRenderTypes.setRenderLayer(VOBlocks.LAYER_SCALE.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(VOBlocks.MOSS_BLOCK.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(VOBlocks.TABLE_DRAFTING.get(), RenderType.cutout());
+        
         MinecraftForge.EVENT_BUS.register(VOBusClient.class);
         MinecraftForge.EVENT_BUS.register(SettlementRender.class);
         MinecraftForge.EVENT_BUS.register(BlindRender.class);

@@ -31,7 +31,7 @@ public class LayerEntangled<T extends LivingEntity, M extends EntityModel<T>> ex
 	public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, T entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch)
 	{
 		LivingData data = LivingData.forEntity(entitylivingbaseIn);
-		if(data == null || !data.getVisualPotion(VOMobEffects.ENTANGLED))
+		if(data == null || !data.getVisualPotion(VOMobEffects.ENTANGLED.get()))
 			return;
 		
 		matrixStackIn.pushPose();

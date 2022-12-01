@@ -128,7 +128,7 @@ public class ModelScorpion<T extends AbstractScorpion> extends AgeableListModel<
     	{
     		boolean isLeft = sideIn == EnumLimbPosition.LEFT;
     		
-    		PartDefinition theArm = part.addOrReplaceChild(sideIn.name().toLowerCase()+"_arm", CubeListBuilder.create(), PartPose.offset(8F * (isLeft ? -1F : 1F), 16.5F, -7.5F));
+    		PartDefinition theArm = part.addOrReplaceChild(sideIn.name().toLowerCase()+"_claw", CubeListBuilder.create(), PartPose.offset(8F * (isLeft ? -1F : 1F), 16.5F, -7.5F));
     			CubeListBuilder armCubes = CubeListBuilder.create();
     			if(isLeft)
     				armCubes.mirror();
@@ -226,7 +226,7 @@ public class ModelScorpion<T extends AbstractScorpion> extends AgeableListModel<
     		
     		for(int i=0; i<3; i++)
     			this.tailSegments.add(this.tailSegments.get(this.tailSegments.size()-1).getChild("child"));
-    		this.tailStinger = this.tailSegments.get(this.tailSegments.size()-1).getChild("stinger");
+    		this.tailStinger = this.tailSegments.get(2).getChild("stinger");
     	}
     	
     	public ModelPart getRoot() { return this.tailRoot; }

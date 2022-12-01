@@ -416,7 +416,7 @@ public class VOBusClient
 	public static void onDazedClickEvent(InputEvent.MouseButton event)
 	{
 		Player player = mc.player;
-		if(player != null && VOMobEffects.isPotionVisible(player, VOMobEffects.DAZED))
+		if(player != null && VOMobEffects.isPotionVisible(player, VOMobEffects.DAZED.get()))
 			event.setCanceled(true);
 	}
 	
@@ -429,7 +429,7 @@ public class VOBusClient
 			return;
 		
 		Player player = mc.player;
-		MobEffectInstance dazzle = player.getEffect(VOMobEffects.DAZZLED);
+		MobEffectInstance dazzle = player.getEffect(VOMobEffects.DAZZLED.get());
 		if(dazzle != null && dazzle.getDuration() > 0)
 		{
 			int scaledWidth = mc.getWindow().getGuiScaledWidth();
@@ -504,7 +504,7 @@ public class VOBusClient
 	public static void onSilencedChatEvent(ClientChatEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.hasEffect(VOMobEffects.SILENCED) && !event.getOriginalMessage().startsWith("/"))
+		if(player != null && player.hasEffect(VOMobEffects.SILENCED.get()) && !event.getOriginalMessage().startsWith("/"))
 			event.setCanceled(true);
 	}
 	
@@ -512,7 +512,7 @@ public class VOBusClient
 	public static void onDeafenedChatEvent(ClientChatReceivedEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.hasEffect(VOMobEffects.DEAFENED) && BuiltinRegistries.CHAT_TYPE.get(ChatType.CHAT) == event.getType())
+		if(player != null && player.hasEffect(VOMobEffects.DEAFENED.get()) && BuiltinRegistries.CHAT_TYPE.get(ChatType.CHAT) == event.getType())
 			event.setCanceled(true);
 	}
 	
@@ -520,7 +520,7 @@ public class VOBusClient
 	public static void onDeafenedPlaySound(PlaySoundEvent event)
 	{
 		Player player = mc.player;
-		if(player != null && player.hasEffect(VOMobEffects.DEAFENED))
+		if(player != null && player.hasEffect(VOMobEffects.DEAFENED.get()))
 			event.setCanceled(true);
 	}
 }

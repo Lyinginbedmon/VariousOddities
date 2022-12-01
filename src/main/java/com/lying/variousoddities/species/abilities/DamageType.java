@@ -26,7 +26,7 @@ public enum DamageType implements StringRepresentable
 		{
 			Item held = itemstack.getItem();
 			Tier itemTier = held instanceof TieredItem ? ((TieredItem)held).getTier() : null;
-			return (itemTier != null && itemTier.toString().toLowerCase().contains("silver")) || EnchantmentHelper.getItemEnchantmentLevel(VOEnchantments.SILVERSHEEN, itemstack) > 0;
+			return (itemTier != null && itemTier.toString().toLowerCase().contains("silver")) || EnchantmentHelper.getItemEnchantmentLevel(VOEnchantments.SILVERSHEEN.get(), itemstack) > 0;
 		} ); }),
 	WOOD(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.WOOD); } ); }),
 	STONE(false, (source) -> { return VODamageSource.applyHeldItemPredicate(source, (itemstack) -> { return VODamageSource.isItemTier(itemstack, Tiers.STONE); } ); }),

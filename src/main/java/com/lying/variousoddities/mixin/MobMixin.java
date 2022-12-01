@@ -31,7 +31,7 @@ public class MobMixin extends LivingEntityMixin
 	public void playAmbientSound(final CallbackInfo ci)
 	{
 		Mob entity = (Mob)(Object)this;
-		if(entity.hasEffect(VOMobEffects.SILENCED))
+		if(entity.hasEffect(VOMobEffects.SILENCED.get()))
 			ci.cancel();
 	}
 	
@@ -39,7 +39,7 @@ public class MobMixin extends LivingEntityMixin
 	public void playHurtSound(final CallbackInfo ci)
 	{
 		Mob entity = (Mob)(Object)this;
-		if(entity.hasEffect(VOMobEffects.SILENCED))
+		if(entity.hasEffect(VOMobEffects.SILENCED.get()))
 			ci.cancel();
 	}
 	
@@ -50,7 +50,7 @@ public class MobMixin extends LivingEntityMixin
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		// Mobs paralysed or dazed do not update their AI tasks
-		if(VOMobEffects.isParalysed(entity) || entity.hasEffect(VOMobEffects.DAZED))
+		if(VOMobEffects.isParalysed(entity) || entity.hasEffect(VOMobEffects.DAZED.get()))
 			ci.cancel();
 		
 		// Mobs unable to detect their attack target beyond arm's length will lose interest

@@ -58,7 +58,7 @@ public class ContainerPlayerBody extends AbstractContainerMenu
 	
 	public ContainerPlayerBody(int windowId, Inventory playerInventory, Inventory bodyInventory, final AbstractBody bodyIn)
 	{
-		super(VOItems.CONTAINER_PLAYER_BODY, windowId);
+		super(VOItems.CONTAINER_PLAYER_BODY.get(), windowId);
 		this.theBody = bodyIn;
 		this.bodyInventory = bodyInventory;
 		

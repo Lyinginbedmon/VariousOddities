@@ -98,7 +98,8 @@ public class VOEntities
     {
     	List<ResourceLocation> names = new ArrayList<>();
     	for(RegistryObject<EntityType<?>> type : ENTITIES.getEntries())
-    		names.add(EntityType.getKey(type.get()));
+    		if(type.isPresent())
+    			names.add(EntityType.getKey(type.get()));
     	return names;
     }
     

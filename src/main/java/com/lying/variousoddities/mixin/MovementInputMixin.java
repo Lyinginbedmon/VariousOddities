@@ -41,7 +41,7 @@ public class MovementInputMixin
 		if(player != null)
 		{
 			if(!VOHelper.isCreativeOrSpectator(player))
-				if(VOMobEffects.isPotionVisible(player, VOMobEffects.DAZED) /*|| (playerData != null && playerData.getBodyCondition() == BodyCondition.UNCONSCIOUS)*/)
+				if(VOMobEffects.isPotionVisible(player, VOMobEffects.DAZED.get()) /*|| (playerData != null && playerData.getBodyCondition() == BodyCondition.UNCONSCIOUS)*/)
 				{
 					clearInputs();
 					ci.cancel();

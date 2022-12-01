@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.init.VOEntities;
 
 import net.minecraft.world.entity.EntityType;
 
@@ -43,11 +42,15 @@ public class CreatureTypeDefaults
 	
 	public static void addMobToTypeDefaults(EntityType<?> classIn, EnumCreatureType... groups)
 	{
-		String className = EntityType.getKey(classIn).toString();
+		addNameToTypeDefaults(EntityType.getKey(classIn).toString(), groups);
+	}
+	
+	public static void addNameToTypeDefaults(String nameIn, EnumCreatureType... groups)
+	{
 		for(EnumCreatureType type : groups)
 		{
 			String entry = typeToMobDefaults.containsKey(type) ? typeToMobDefaults.get(type) : "";
-			entry += (entry.length() > 0 ? "," : "") + className;
+			entry += (entry.length() > 0 ? "," : "") + nameIn;
 			typeToMobDefaults.put(type, entry);
 		}
 	}
@@ -133,13 +136,13 @@ public class CreatureTypeDefaults
 		addMobToTypeDefaults(EntityType.HOGLIN,				EnumCreatureType.ANIMAL, EnumCreatureType.EXTRAPLANAR);
 		addMobToTypeDefaults(EntityType.PHANTOM,			EnumCreatureType.UNDEAD, EnumCreatureType.EVIL);
 			// Oddities
-		addMobToTypeDefaults(VOEntities.GHASTLING.get(),		EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
-		addMobToTypeDefaults(VOEntities.GOBLIN.get(),			EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN);
-		addMobToTypeDefaults(VOEntities.KOBOLD.get(),			EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE);
-		addMobToTypeDefaults(VOEntities.RAT.get(),				EnumCreatureType.VERMIN);
-		addMobToTypeDefaults(VOEntities.RAT_GIANT.get(),		EnumCreatureType.VERMIN);
-		addMobToTypeDefaults(VOEntities.SCORPION.get(),			EnumCreatureType.VERMIN);
-		addMobToTypeDefaults(VOEntities.SCORPION_GIANT.get(),	EnumCreatureType.VERMIN);
+		addNameToTypeDefaults("varodd:ghastling",		EnumCreatureType.OUTSIDER, EnumCreatureType.EXTRAPLANAR);
+		addNameToTypeDefaults("varodd:goblin",			EnumCreatureType.HUMANOID, EnumCreatureType.GOBLIN);
+		addNameToTypeDefaults("varodd:kobold",			EnumCreatureType.HUMANOID, EnumCreatureType.REPTILE);
+		addNameToTypeDefaults("varodd:rat",				EnumCreatureType.VERMIN);
+		addNameToTypeDefaults("varodd:giant_rat",		EnumCreatureType.VERMIN);
+		addNameToTypeDefaults("varodd:scorpion",		EnumCreatureType.VERMIN);
+		addNameToTypeDefaults("varodd:giant_scorpion",	EnumCreatureType.VERMIN);
 		
 		// Individual player settings (added on first login)
 		addPatron("_Lying", 					EnumCreatureType.FEY, EnumCreatureType.HOLY);

@@ -76,7 +76,7 @@ public class IngameGuiMixin
 						displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.awaken", inv.getTranslatedKeyMessage().getString().toUpperCase());
 					else
 					{
-						if(player.getEffect(VOMobEffects.SLEEP) != null && player.getEffect(VOMobEffects.SLEEP).getDuration() > 0)
+						if(player.getEffect(VOMobEffects.SLEEP.get()) != null && player.getEffect(VOMobEffects.SLEEP.get()).getDuration() > 0)
 							displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.sleep");
 						else
 						{

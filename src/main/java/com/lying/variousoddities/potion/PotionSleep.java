@@ -25,6 +25,6 @@ public class PotionSleep extends PotionVO
 	
 	public static boolean hasSleepEffect(LivingEntity theMob)
 	{
-		return theMob.getEffect(VOMobEffects.SLEEP) != null && theMob.getEffect(VOMobEffects.SLEEP).getDuration() > 0;
+		return theMob.getEffect(VOMobEffects.SLEEP.get()) != null && theMob.getEffect(VOMobEffects.SLEEP.get()).getDuration() > 0;
 	}
 }

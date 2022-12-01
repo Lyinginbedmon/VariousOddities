@@ -101,14 +101,14 @@ public class EntityAIGoblinWorgTame extends Goal
 				else currentState = State.TAMING;
 				break;
 			case TAMING:
-				targetWolf.addEffect(new MobEffectInstance(VOMobEffects.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
+				targetWolf.addEffect(new MobEffectInstance(VOMobEffects.ENTANGLED.get(), Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
 				if(--tamingTimer <= 0)
 				{
 					// TODO Ensure goblin arm swing during worg taming
 					theGoblin.swing(InteractionHand.MAIN_HAND, true);
 					EntityWorg theWorg = VOEntities.WORG.get().create(theWorld);
 					theWorg.setHealth(targetWolf.getHealth());
-					theWorg.addEffect(new MobEffectInstance(VOMobEffects.ENTANGLED, Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
+					theWorg.addEffect(new MobEffectInstance(VOMobEffects.ENTANGLED.get(), Reference.Values.TICKS_PER_SECOND * 5, 1, false, false));
 					
 					if(targetWolf.hasCustomName())
 						theWorg.setCustomName(targetWolf.getCustomName());

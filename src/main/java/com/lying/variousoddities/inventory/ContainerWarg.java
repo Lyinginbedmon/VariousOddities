@@ -32,7 +32,7 @@ public class ContainerWarg extends AbstractContainerMenu
 	
 	public ContainerWarg(int windowId, Inventory playerInventory, Container wargInventory, final EntityWarg wargIn)
 	{
-		super(VOItems.CONTAINER_WARG, windowId);
+		super(VOItems.CONTAINER_WARG.get(), windowId);
 		this.theWarg = wargIn;
 		this.wargInventory = wargInventory;
 		wargInventory.startOpen(playerInventory.player);

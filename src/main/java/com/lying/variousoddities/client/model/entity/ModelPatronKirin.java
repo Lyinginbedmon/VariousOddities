@@ -42,7 +42,8 @@ public class ModelPatronKirin extends HumanoidModel<EntityPatronKirin>
 		
 		part.getChild("head").addOrReplaceChild("child", CubeListBuilder.create().texOffs(32, 0).addBox(-4F, -8F, -4F, 8, 8, 8, deformation.extend(0.25F)), PartPose.ZERO);
 		part.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 86).addBox(-4F, -8F, -4F, 8, 8, 8, deformation.extend(0.5F)), PartPose.ZERO);
-		PartDefinition body = part.getChild("body").addOrReplaceChild("child", CubeListBuilder.create().texOffs(16, 45).addBox(-4F, 0F, -2F, 8, 4, 4, deformation.extend(0.5F)), PartPose.ZERO);
+		PartDefinition body = part.getChild("body");
+			body.addOrReplaceChild("child", CubeListBuilder.create().texOffs(16, 45).addBox(-4F, 0F, -2F, 8, 4, 4, deformation.extend(0.5F)), PartPose.ZERO);
 			body.addOrReplaceChild("coat_tail", CubeListBuilder.create().texOffs(16, 32).addBox(-4F, 0F, -2F, 8, 9, 4, deformation.extend(0.5F)), PartPose.offsetAndRotation(0F, 9.5F, 0.5F, ModelUtils.toRadians(25.5D), 0F, 0F));
 		part.getChild("right_arm").addOrReplaceChild("child", CubeListBuilder.create().texOffs(40, 32).addBox(-3F, -2F, -2F, 4, 4, 4, deformation.extend(0.5F)), PartPose.ZERO);
 		part.getChild("left_arm").addOrReplaceChild("child", CubeListBuilder.create().texOffs(0, 32).addBox(-1F, -2F, -2F, 4, 4, 4, deformation.extend(0.5F)), PartPose.ZERO);
