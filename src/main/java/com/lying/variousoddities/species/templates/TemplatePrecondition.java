@@ -1,7 +1,6 @@
 package com.lying.variousoddities.species.templates;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,11 +20,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.registries.RegistryObject;
 
 public abstract class TemplatePrecondition
 {
-	private static final Map<ResourceLocation, TemplatePrecondition.Builder> PRECONDITIONS_MAP = new HashMap<>();
-	
 	protected UUID templateID;
 	
 	public abstract ResourceLocation getRegistryName();
@@ -61,14 +59,14 @@ public abstract class TemplatePrecondition
 		if(json.has("Name"))
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
-			if(PRECONDITIONS_MAP.containsKey(registryName))
-			{
-				TemplatePrecondition operation = PRECONDITIONS_MAP.get(registryName).create();
-				operation.readFromJson(json);
-				return operation;
-			}
-			else
-				VariousOddities.log.error("Unrecognised template precondition: "+registryName.toString());
+			for(RegistryObject<TemplatePrecondition.Builder> entry : VORegistries.PRECONDITIONS.getEntries())
+				if(entry.isPresent() && entry.getId().equals(registryName))
+				{
+					TemplatePrecondition operation = entry.get().create();
+					operation.readFromJson(json);
+					return operation;
+				}
+			VariousOddities.log.error("Unrecognised template precondition: "+registryName.toString());
 		}
 		return null;
 	}
@@ -90,18 +88,6 @@ public abstract class TemplatePrecondition
 		catch (CommandSyntaxException e){ }
 		if(!tag.isEmpty())
 			readFromNBT(tag);
-	}
-	
-	public static void init()
-	{
-		register(new AbilityPrecondition.Builder());
-		register(new TypePrecondition.Builder());
-	}
-	
-	private static void register(TemplatePrecondition.Builder builderIn)
-	{
-		VORegistries.PRECONDITIONS.register(builderIn.getRegistryName().toString(), () -> builderIn);
-		PRECONDITIONS_MAP.put(builderIn.getRegistryName(), builderIn);
 	}
 	
 	public static abstract class Builder

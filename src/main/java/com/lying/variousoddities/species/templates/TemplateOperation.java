@@ -1,7 +1,6 @@
 package com.lying.variousoddities.species.templates;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,11 +23,10 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.registries.RegistryObject;
 
 public abstract class TemplateOperation
 {
-	private static final Map<ResourceLocation, TemplateOperation.Builder> OPERATIONS_MAP = new HashMap<>();
-	
 	protected UUID templateID;
 	protected Operation action;
 	
@@ -99,33 +97,20 @@ public abstract class TemplateOperation
 		public ResourceLocation getRegistryName() { return registryName; }
 	}
 	
-	public static void init()
-	{
-		register(new TypeOperation.Builder());
-		register(new AbilityOperation.Builder());
-		register(new CompoundOperation.Builder());
-		register(new OperationReplaceSupertypes.Builder());
-	}
-	
-	private static void register(TemplateOperation.Builder builderIn)
-	{
-		VORegistries.OPERATIONS.register(builderIn.getRegistryName().toString(), () -> builderIn);
-		OPERATIONS_MAP.put(builderIn.getRegistryName(), builderIn);
-	}
-	
 	public static TemplateOperation getFromJson(JsonObject json)
 	{
 		if(json.has("Name"))
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
-			if(OPERATIONS_MAP.containsKey(registryName))
-			{
-				TemplateOperation operation = OPERATIONS_MAP.get(registryName).create();
-				operation.readFromJson(json);
-				return operation;
-			}
-			else
-				VariousOddities.log.error("Unrecognised template operation: "+registryName.toString());
+			for(RegistryObject<TemplateOperation.Builder> entry : VORegistries.OPERATIONS.getEntries())
+				if(entry.isPresent() && entry.getId().equals(registryName))
+				{
+					TemplateOperation operation = entry.get().create();
+					operation.readFromJson(json);
+					return operation;
+				}
+			
+			VariousOddities.log.error("Unrecognised template operation: "+registryName.toString());
 		}
 		return null;
 	}

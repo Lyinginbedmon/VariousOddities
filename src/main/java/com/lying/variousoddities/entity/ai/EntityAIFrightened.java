@@ -47,7 +47,7 @@ public class EntityAIFrightened extends Goal
 		if(data == null)
 			return false;
 		
-		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID, this.avoidDistance);
+		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID.get(), this.avoidDistance);
 		terrorisers.removeIf((terroriser) -> { return terroriser.distanceTo(entity) > avoidDistance || !entity.hasLineOfSight(terroriser); });
 		if(terrorisers.isEmpty())
 			return false;

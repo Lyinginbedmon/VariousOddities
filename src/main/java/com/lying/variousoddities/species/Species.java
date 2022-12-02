@@ -95,9 +95,10 @@ public class Species
 		return this;
 	}
 	
-	public Species addAbility(@Nonnull Ability abilityIn)
+	public Species addAbility(@Nullable Ability abilityIn)
 	{
-		this.abilities.add(abilityIn.setSourceId(UUID_SPECIES));
+		if(abilityIn != null)
+			this.abilities.add(abilityIn.setSourceId(UUID_SPECIES));
 		return this;
 	}
 	

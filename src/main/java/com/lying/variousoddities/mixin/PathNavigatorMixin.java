@@ -39,7 +39,7 @@ public class PathNavigatorMixin
 		if(data == null || !hasPath())
 			return;
 		
-		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID, 8D);
+		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID.get(), 8D);
 		terrorisers.removeIf((terroriser) -> { return terroriser.distanceTo(entity) > 8D || !entity.hasLineOfSight(terroriser); });
 		if(terrorisers.isEmpty())
 			return;

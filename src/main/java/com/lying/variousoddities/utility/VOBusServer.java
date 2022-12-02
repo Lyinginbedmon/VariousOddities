@@ -455,10 +455,10 @@ public class VOBusServer
 			
 			Entity immediate = source.getDirectEntity();
 			Entity distant = source.getEntity();
-			if(immediate != null && immediate instanceof LivingEntity && data.hasCondition(Conditions.CHARMED, (LivingEntity)immediate))
-				data.clearCondition((LivingEntity)immediate, Conditions.CHARMED);
-			if(distant != null && distant instanceof LivingEntity && data.hasCondition(Conditions.CHARMED, (LivingEntity)distant))
-				data.clearCondition((LivingEntity)distant, Conditions.CHARMED);
+			if(immediate != null && immediate instanceof LivingEntity && data.hasCondition(Conditions.CHARMED.get(), (LivingEntity)immediate))
+				data.clearCondition((LivingEntity)immediate, Conditions.CHARMED.get());
+			if(distant != null && distant instanceof LivingEntity && data.hasCondition(Conditions.CHARMED.get(), (LivingEntity)distant))
+				data.clearCondition((LivingEntity)distant, Conditions.CHARMED.get());
 		}
 	}
 	

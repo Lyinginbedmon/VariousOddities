@@ -21,6 +21,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.registries.RegistryObject;
 
 public abstract class AbilityGaze extends ActivatedAbility
 {
@@ -114,11 +115,11 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public static abstract class AbilityGazeControl extends AbilityGaze
 	{
-		private final Condition condition;
+		private final RegistryObject<Condition> condition;
 		private int durationMin = Reference.Values.TICKS_PER_MINUTE * 2;
 		private int durationMax = durationMin;
 		
-		public AbilityGazeControl(ResourceLocation registryName, Condition conditionIn, double rangeIn, int cooldownIn)
+		public AbilityGazeControl(ResourceLocation registryName, RegistryObject<Condition> conditionIn, double rangeIn, int cooldownIn)
 		{
 			super(registryName, rangeIn, cooldownIn);
 			this.condition = conditionIn;
@@ -151,18 +152,18 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public boolean canAffect(LivingEntity entity)
 		{
-			return condition.canAffect(entity);
+			return condition.isPresent() && condition.get().canAffect(entity);
 		}
 		
 		public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 		{
 			LivingData data = LivingData.forEntity(entity);
-			if(data.hasCondition(condition, owner))
+			if(data.hasCondition(condition.get(), owner))
 				return false;
 			else
 			{
 				int duration = isDurationVariable() ? owner.getRandom().nextInt(this.durationMin, this.durationMax) : this.durationMax;
-				data.addCondition(new ConditionInstance(condition, duration, owner.getUUID()));
+				data.addCondition(new ConditionInstance(condition.get(), duration, owner.getUUID()));
 				if(entity instanceof Mob)
 				{
 					Mob mob = (Mob)entity;

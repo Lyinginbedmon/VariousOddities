@@ -60,9 +60,9 @@ public class FactionReputation
 		{
 			LivingData data = LivingData.forEntity(sourceMob);
 			if(data != null)
-				if(data.hasCondition(Conditions.DOMINATED, player))
+				if(data.hasCondition(Conditions.DOMINATED.get(), player))
 					rep = 100;
-				else if(data.hasCondition(Conditions.CHARMED, player))
+				else if(data.hasCondition(Conditions.CHARMED.get(), player))
 					rep = 50;
 		}
 		

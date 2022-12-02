@@ -20,11 +20,15 @@ import com.lying.variousoddities.init.VOEnchantments;
 import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.init.VOMobEffects;
+import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.ClientProxy;
 import com.lying.variousoddities.proxy.IProxy;
 import com.lying.variousoddities.proxy.ServerProxy;
 import com.lying.variousoddities.reference.Reference;
+import com.lying.variousoddities.species.SpeciesRegistry;
+import com.lying.variousoddities.species.TemplateRegistry;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.TypeBus;
 import com.lying.variousoddities.utility.VOBusClient;
 import com.lying.variousoddities.utility.VOBusServer;
@@ -61,6 +65,7 @@ public class VariousOddities
 	{
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		
+		VORegistries.registerCustom(modEventBus);
         VOBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         VOBlocks.BLOCKS.register(modEventBus);
         VOEnchantments.ENCHANTMENTS.register(modEventBus);
@@ -97,8 +102,7 @@ public class VariousOddities
     @SuppressWarnings("removal")
 	private void doClientSetup(final FMLClientSetupEvent event)
     {
-		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-    	modEventBus.addListener(KeyBindings::registerKeybinds);
+		FMLJavaModLoadingContext.get().getModEventBus().addListener(KeyBindings::registerKeybinds);
         ItemBlockRenderTypes.setRenderLayer(VOBlocks.LAYER_SCALE.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(VOBlocks.MOSS_BLOCK.get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(VOBlocks.TABLE_DRAFTING.get(), RenderType.cutout());
@@ -112,6 +116,7 @@ public class VariousOddities
     private void doLoadComplete(final FMLLoadCompleteEvent event)
     {
     	proxy.onLoadComplete(event);
+    	AbilityRegistry.registerAbilityListeners();
     }
     
     private void onConfigEvent(final ModConfigEvent event)
@@ -140,7 +145,7 @@ public class VariousOddities
     @SubscribeEvent
 	public void onReloadListenersEvent(AddReloadListenerEvent event)
 	{
-//		event.addListener(SpeciesRegistry.getInstance());
-//		event.addListener(TemplateRegistry.getInstance());
+		event.addListener(SpeciesRegistry.getInstance());
+		event.addListener(TemplateRegistry.getInstance());
 	}
 }

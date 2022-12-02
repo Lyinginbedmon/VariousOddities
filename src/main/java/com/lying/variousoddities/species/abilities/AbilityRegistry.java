@@ -19,81 +19,74 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.registries.RegistryObject;
 
 public class AbilityRegistry
 {
-	private static final Map<ResourceLocation, Ability.Builder> ABILITY_MAP = new HashMap<>();
-	
-	public void init()
+	public static void init()
 	{
-		register(new AbilityAmphibious.Builder());
-		register(new AbilityBlind.Builder());
-		register(new AbilityBlindsight.Builder());
-		register(new AbilityBreatheFluid.Builder());
-		register(new AbilityBreathWeapon.Builder());
-		register(new AbilityBurrow.Builder());
-		register(new AbilityClimb.Builder());
-		register(new AbilityDamageCap.Builder());
-		register(new AbilityDamageReduction.Builder());
-		register(new AbilityDamageResistance.Builder());
-		register(new AbilityDarkvision.Builder());
-		register(new AbilityDrainHealth.Builder());
-		register(new AbilityEtherealness.Builder());
-		register(new AbilityExplode.Builder());
-		register(new AbilityFastHealing.Builder());
-		register(new AbilityForm.Ghost.Builder());
-		register(new AbilityForm.Mist.Builder());
-		register(new AbilityFlight.Builder());
-		register(new AbilityGaseous.Builder());
-		register(new AbilityGaze.Charm.Builder());
-		register(new AbilityGaze.Dominate.Builder());
-		register(new AbilityFearAura.Builder());
-		register(new AbilityGaze.Petrify.Builder());
-		register(new AbilityHeat.Builder());
-		register(new AbilityHoldBreath.Builder());
-		register(new AbilityHurtByEnv.Builder());
-		register(new AbilityImmunityCrits.Builder());
-		register(new AbilityIncorporeality.Builder());
-		register(new AbilityInvisibility.Builder());
-		register(new AbilityLightSensitivity.Builder());
-		register(new AbilityModifierCon.Builder());
-		register(new AbilityModifierStr.Builder());
-		register(new AbilityNaturalArmour.Builder());
-		register(new AbilityNaturalRegen.Builder());
-		register(new AbilityPoison.Builder());
-		register(new AbilityStatusImmunity.Configurable.Builder());
-		register(new AbilityStatusImmunity.Paralysis.Builder());
-		register(new AbilityStatusImmunity.Poison.Builder());
-		register(new AbilityRend.Builder());
-		register(new AbilityResistance.Builder());
-		register(new AbilityResistanceSpell.Builder());
-		register(new AbilityScent.Builder());
-		register(new AbilitySize.Builder());
-		register(new AbilitySmite.Builder());
-		register(new AbilityStability.Builder());
-		register(new AbilityStartingItem.Builder());
-		register(new AbilityStatusEffect.Builder());
-		register(new AbilitySunBurn.Builder());
-		register(new AbilitySwim.Builder());
-		register(new AbilityTeleportToHome.Builder());
-		register(new AbilityTeleportToPos.Builder());
-		register(new AbilityTremorsense.Builder());
-		register(new AbilityUnarmedStrike.Builder());
-		register(new AbilityWaterWalking.Builder());
-		
-		registerAbilityListeners();
+		VORegistries.ABILITIES.register("amphibious", () -> new AbilityAmphibious.Builder());
+		VORegistries.ABILITIES.register("blind", () -> new AbilityBlind.Builder());
+		VORegistries.ABILITIES.register("blindsight", () -> new AbilityBlindsight.Builder());
+		VORegistries.ABILITIES.register("fluid_breathing", () -> new AbilityBreatheFluid.Builder());
+		VORegistries.ABILITIES.register("breath_weapon", () -> new AbilityBreathWeapon.Builder());
+		VORegistries.ABILITIES.register("burrow", () -> new AbilityBurrow.Builder());
+		VORegistries.ABILITIES.register("climb", () -> new AbilityClimb.Builder());
+		VORegistries.ABILITIES.register("epic_resilience", () -> new AbilityDamageCap.Builder());
+		VORegistries.ABILITIES.register("damage_reduction", () -> new AbilityDamageReduction.Builder());
+		VORegistries.ABILITIES.register("damage_resistance", () -> new AbilityDamageResistance.Builder());
+		VORegistries.ABILITIES.register("darkvision", () -> new AbilityDarkvision.Builder());
+		VORegistries.ABILITIES.register("drain_health", () -> new AbilityDrainHealth.Builder());
+		VORegistries.ABILITIES.register("etherealness", () -> new AbilityEtherealness.Builder());
+		VORegistries.ABILITIES.register("explode", () -> new AbilityExplode.Builder());
+		VORegistries.ABILITIES.register("fast_healing", () -> new AbilityFastHealing.Builder());
+		VORegistries.ABILITIES.register("ghost_form", () -> new AbilityForm.Ghost.Builder());
+		VORegistries.ABILITIES.register("mist_form", () -> new AbilityForm.Mist.Builder());
+		VORegistries.ABILITIES.register("flight", () -> new AbilityFlight.Builder());
+		VORegistries.ABILITIES.register("gaseous_form", () -> new AbilityGaseous.Builder());
+		VORegistries.ABILITIES.register("charming_gaze", () -> new AbilityGaze.Charm.Builder());
+		VORegistries.ABILITIES.register("dominating_gaze", () -> new AbilityGaze.Dominate.Builder());
+		VORegistries.ABILITIES.register("fear_aura", () -> new AbilityFearAura.Builder());
+		VORegistries.ABILITIES.register("petrifying_gaze", () -> new AbilityGaze.Petrify.Builder());
+		VORegistries.ABILITIES.register("heat", () -> new AbilityHeat.Builder());
+		VORegistries.ABILITIES.register("hold_breath", () -> new AbilityHoldBreath.Builder());
+		VORegistries.ABILITIES.register("hurt_by_env", () -> new AbilityHurtByEnv.Builder());
+		VORegistries.ABILITIES.register("critical_hit_immunity", () -> new AbilityImmunityCrits.Builder());
+		VORegistries.ABILITIES.register("incorporeality", () -> new AbilityIncorporeality.Builder());
+		VORegistries.ABILITIES.register("invisibility", () -> new AbilityInvisibility.Builder());
+		VORegistries.ABILITIES.register("light_sensitivity", () -> new AbilityLightSensitivity.Builder());
+		VORegistries.ABILITIES.register("constitution_modifier", () -> new AbilityModifierCon.Builder());
+		VORegistries.ABILITIES.register("strength_modifier", () -> new AbilityModifierStr.Builder());
+		VORegistries.ABILITIES.register("natural_armour", () -> new AbilityNaturalArmour.Builder());
+		VORegistries.ABILITIES.register("natural_regen", () -> new AbilityNaturalRegen.Builder());
+		VORegistries.ABILITIES.register("poison", () -> new AbilityPoison.Builder());
+		VORegistries.ABILITIES.register("status_immunity", () -> new AbilityStatusImmunity.Configurable.Builder());
+		VORegistries.ABILITIES.register("paralysis_immunity", () -> new AbilityStatusImmunity.Paralysis.Builder());
+		VORegistries.ABILITIES.register("poison_immunity", () -> new AbilityStatusImmunity.Poison.Builder());
+		VORegistries.ABILITIES.register("rend", () -> new AbilityRend.Builder());
+		VORegistries.ABILITIES.register("resistance", () -> new AbilityResistance.Builder());
+		VORegistries.ABILITIES.register("resistance_spell", () -> new AbilityResistanceSpell.Builder());
+		VORegistries.ABILITIES.register("scent", () -> new AbilityScent.Builder());
+		VORegistries.ABILITIES.register("size", () -> new AbilitySize.Builder());
+		VORegistries.ABILITIES.register("smite", () -> new AbilitySmite.Builder());
+		VORegistries.ABILITIES.register("stability", () -> new AbilityStability.Builder());
+		VORegistries.ABILITIES.register("starting_item", () -> new AbilityStartingItem.Builder());
+		VORegistries.ABILITIES.register("status_effect", () -> new AbilityStatusEffect.Builder());
+		VORegistries.ABILITIES.register("sunburn", () -> new AbilitySunBurn.Builder());
+		VORegistries.ABILITIES.register("swim", () -> new AbilitySwim.Builder());
+		VORegistries.ABILITIES.register("teleport_to_home", () -> new AbilityTeleportToHome.Builder());
+		VORegistries.ABILITIES.register("teleport_to_position", () -> new AbilityTeleportToPos.Builder());
+		VORegistries.ABILITIES.register("tremorsense", () -> new AbilityTremorsense.Builder());
+		VORegistries.ABILITIES.register("unarmed_strike", () -> new AbilityUnarmedStrike.Builder());
+		VORegistries.ABILITIES.register("water_walking", () -> new AbilityWaterWalking.Builder());
 	}
 	
-	private static void register(Ability.Builder builderIn)
-	{
-		VORegistries.ABILITIES.register(builderIn.getRegistryName().toString(), () -> builderIn);
-		ABILITY_MAP.put(builderIn.getRegistryName(), builderIn);
-	}
-	
+	@Nullable
 	public static Ability getAbility(ResourceLocation registryName, CompoundTag nbt)
 	{
-		if(ABILITY_MAP.containsKey(registryName))
-			return ABILITY_MAP.get(registryName).create(nbt);
+		for(RegistryObject<Ability.Builder> entry : VORegistries.ABILITIES.getEntries())
+			if(entry.isPresent() && entry.getId().equals(registryName))
+				return entry.get().create(nbt);
 		return null;
 	}
 	

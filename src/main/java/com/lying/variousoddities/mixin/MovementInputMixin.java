@@ -108,7 +108,7 @@ public class MovementInputMixin
 		if(data == null)
 			return;
 		
-		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID, 16D);
+		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID.get(), 16D);
 		if(terrorisers.isEmpty())
 			return;
 		
