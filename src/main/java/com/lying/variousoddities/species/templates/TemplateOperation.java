@@ -3,6 +3,7 @@ package com.lying.variousoddities.species.templates;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -16,14 +17,15 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.RegistryObject;
 
 public abstract class TemplateOperation
 {
@@ -88,6 +90,7 @@ public abstract class TemplateOperation
 	
 	public static abstract class Builder
 	{
+		public static final ResourceKey<Registry<Builder>> REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Reference.ModInfo.MOD_ID, "template_operations"));
 		private final ResourceLocation registryName;
 		
 		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }
@@ -102,10 +105,10 @@ public abstract class TemplateOperation
 		if(json.has("Name"))
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
-			for(RegistryObject<TemplateOperation.Builder> entry : VORegistries.OPERATIONS.getEntries())
-				if(entry.isPresent() && entry.getId().equals(registryName))
+			for(Entry<ResourceKey<Builder>, Builder> entry : VORegistries.OPERATIONS_REGISTRY.get().getEntries())
+				if(entry.getKey().equals(registryName))
 				{
-					TemplateOperation operation = entry.get().create();
+					TemplateOperation operation = entry.getValue().create();
 					operation.readFromJson(json);
 					return operation;
 				}

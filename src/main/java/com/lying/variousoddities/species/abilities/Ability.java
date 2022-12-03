@@ -13,9 +13,11 @@ import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Entity;
@@ -186,6 +188,7 @@ public abstract class Ability
 	
 	public static abstract class Builder
 	{
+		public static final ResourceKey<Registry<Builder>> REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities"));
 		private final ResourceLocation registryName;
 		
 		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }

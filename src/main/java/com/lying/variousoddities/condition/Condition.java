@@ -1,20 +1,24 @@
 package com.lying.variousoddities.condition;
 
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
 import com.lying.variousoddities.init.VORegistries;
+import com.lying.variousoddities.reference.Reference;
 
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.RegistryObject;
 
 /** Conditions are essentially status effects with data storage, allowing for more complex operations */
 public abstract class Condition
 {
+	public static final ResourceKey<Registry<Condition>> REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Reference.ModInfo.MOD_ID, "conditions"));
+	
 	/** Returns true if this condition prevents mobs from targeting the originator */
 	public boolean affectsMobTargeting() { return false; }
 	
@@ -34,8 +38,8 @@ public abstract class Condition
 	
 	public @Nullable ResourceKey<Condition> getKey()
 	{
-		for(RegistryObject<Condition> entry : VORegistries.CONDITIONS.getEntries())
-			if(entry.get() == this)
+		for(Entry<ResourceKey<Condition>, Condition> entry : VORegistries.CONDITIONS_REGISTRY.get().getEntries())
+			if(entry.getValue() == this)
 				return entry.getKey();
 		return null;
 	}

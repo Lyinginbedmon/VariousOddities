@@ -16,8 +16,8 @@ public class VOCapabilities
 	
 	public static void onRegisterCapabilities(RegisterCapabilitiesEvent event)
 	{
+		VariousOddities.log.info("Registered data capabilities");
 		event.register(LivingData.class);
 		event.register(PlayerData.class);
-		VariousOddities.log.info("Registered data capabilities");
 	}
 }

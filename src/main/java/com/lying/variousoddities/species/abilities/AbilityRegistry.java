@@ -19,7 +19,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.registries.RegistryObject;
 
 public class AbilityRegistry
 {
@@ -84,10 +83,13 @@ public class AbilityRegistry
 	@Nullable
 	public static Ability getAbility(ResourceLocation registryName, CompoundTag nbt)
 	{
-		for(RegistryObject<Ability.Builder> entry : VORegistries.ABILITIES.getEntries())
-			if(entry.isPresent() && entry.getId().equals(registryName))
-				return entry.get().create(nbt);
-		return null;
+		Ability ability = null;
+		try
+		{
+			ability = VORegistries.ABILITIES_REGISTRY.get().getValue(registryName).create(nbt);
+		}
+		catch(Exception e) { }
+		return ability;
 	}
 	
 	public static Ability getAbility(CompoundTag compound)
@@ -117,13 +119,13 @@ public class AbilityRegistry
 	
 	public static void registerAbilityListeners()
 	{
-		VORegistries.ABILITIES.getEntries().forEach((entry) -> entry.get().create(new CompoundTag()).addListeners(MinecraftForge.EVENT_BUS));
+		VORegistries.ABILITIES_REGISTRY.get().getEntries().forEach((entry) -> entry.getValue().create(new CompoundTag()).addListeners(MinecraftForge.EVENT_BUS));
 	}
 	
 	public static Collection<ResourceLocation> getAbilityNames()
 	{
 		List<ResourceLocation> keys = Lists.newArrayList();
-		VORegistries.ABILITIES.getEntries().forEach((entry) -> keys.add(entry.getId()));
+		VORegistries.ABILITIES_REGISTRY.get().getEntries().forEach((entry) -> keys.add(entry.getKey().location()));
 		return keys;
 	}
 	

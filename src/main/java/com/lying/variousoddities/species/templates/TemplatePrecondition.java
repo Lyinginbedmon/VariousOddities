@@ -2,6 +2,7 @@ package com.lying.variousoddities.species.templates;
 
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -14,13 +15,14 @@ import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.RegistryObject;
 
 public abstract class TemplatePrecondition
 {
@@ -59,10 +61,10 @@ public abstract class TemplatePrecondition
 		if(json.has("Name"))
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
-			for(RegistryObject<TemplatePrecondition.Builder> entry : VORegistries.PRECONDITIONS.getEntries())
-				if(entry.isPresent() && entry.getId().equals(registryName))
+			for(Entry<ResourceKey<Builder>, Builder> entry : VORegistries.PRECONDITIONS_REGISTRY.get().getEntries())
+				if(entry.getKey().equals(registryName))
 				{
-					TemplatePrecondition operation = entry.get().create();
+					TemplatePrecondition operation = entry.getValue().create();
 					operation.readFromJson(json);
 					return operation;
 				}
@@ -92,6 +94,7 @@ public abstract class TemplatePrecondition
 	
 	public static abstract class Builder
 	{
+		public static final ResourceKey<Registry<Builder>> REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Reference.ModInfo.MOD_ID, "template_preconditions"));
 		private final ResourceLocation registryName;
 		
 		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }
