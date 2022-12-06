@@ -33,13 +33,11 @@ public class PacketSpeciesOpenScreen
 	public static void handle(PacketSpeciesOpenScreen msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
-		if(context.getDirection().getReceptionSide().isServer())
-			context.setPacketHandled(true);
-		else
+		context.setPacketHandled(true);
+		if(context.getDirection().getReceptionSide().isClient())
 		{
 			CommonProxy proxy = (CommonProxy)VariousOddities.proxy;
 			proxy.openSpeciesSelectScreen(proxy.getPlayerEntity(context), msg.targetPower, msg.randomise);
-			context.setPacketHandled(true);
 		}
 	}
 }

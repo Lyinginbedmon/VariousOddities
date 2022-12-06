@@ -119,24 +119,26 @@ public class VOBusServer
 	{
 		Player player = event.getEntity();
 		PacketHandler.sendTo((ServerPlayer)player, new PacketSyncSpecies(VORegistries.SPECIES));
-		
+		System.out.println("Snyderised species");
 		LivingData livingData = LivingData.forEntity(player);
 		if(livingData != null)
 		{
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncLivingData(player.getUUID(), livingData));
 			livingData.getAbilities().markDirty();
-			
+			System.out.println("Snyderies living data");
 			if(!livingData.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
 			{
 				if(!player.getLevel().isClientSide)
 					PacketHandler.sendTo((ServerPlayer)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
 				player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
+				System.out.println("Opened character creation");
 			}
 		}
 		
 		PlayerData playerData = PlayerData.forPlayer(player);
 		if(playerData != null)
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncPlayerData(player.getUUID(), playerData));
+		System.out.println("Snyderised player data");
 	}
 	
 	@SubscribeEvent

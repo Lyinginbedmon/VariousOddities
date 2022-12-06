@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -16,6 +17,7 @@ import com.lying.variousoddities.species.abilities.Ability.Nature;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
@@ -83,13 +85,10 @@ public class AbilityRegistry
 	@Nullable
 	public static Ability getAbility(ResourceLocation registryName, CompoundTag nbt)
 	{
-		Ability ability = null;
-		try
-		{
-			ability = VORegistries.ABILITIES_REGISTRY.get().getValue(registryName).create(nbt);
-		}
-		catch(Exception e) { }
-		return ability;
+		for(Entry<ResourceKey<Ability.Builder>, Ability.Builder> entry : VORegistries.ABILITIES_REGISTRY.get().getEntries())
+			if(entry.getKey().location().equals(registryName))
+				return entry.getValue().create(nbt);
+		return null;
 	}
 	
 	public static Ability getAbility(CompoundTag compound)

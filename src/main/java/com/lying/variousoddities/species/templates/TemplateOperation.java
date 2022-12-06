@@ -106,7 +106,7 @@ public abstract class TemplateOperation
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
 			for(Entry<ResourceKey<Builder>, Builder> entry : VORegistries.OPERATIONS_REGISTRY.get().getEntries())
-				if(entry.getKey().equals(registryName))
+				if(entry.getKey().location().equals(registryName))
 				{
 					TemplateOperation operation = entry.getValue().create();
 					operation.readFromJson(json);

@@ -48,6 +48,7 @@ public class PacketSyncPlayerData
 	
 	public static void handle(PacketSyncPlayerData msg, Supplier<NetworkEvent.Context> cxt)
 	{
+		System.out.println("Sync playerdata packet received");
 		NetworkEvent.Context context = cxt.get();
 		if(context.getDirection().getReceptionSide().isServer())
 		{
@@ -63,12 +64,14 @@ public class PacketSyncPlayerData
 		}
 		else
 		{
-			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			Player localPlayer = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			// FIXME localPlayer should never be null
 			Player target = null;
-			if(player.getUUID().equals(msg.playerID))
-				target = player;
-			else
-				target = player.getLevel().getPlayerByUUID(msg.playerID);
+			if(localPlayer != null)
+				if(localPlayer.getUUID().equals(msg.playerID))
+					target = localPlayer;
+				else
+					target = localPlayer.getLevel().getPlayerByUUID(msg.playerID);
 			
 			if(target != null)
 			{
@@ -78,5 +81,6 @@ public class PacketSyncPlayerData
 			}
 		}
 		context.setPacketHandled(true);
+		System.out.println("Sync complete");
 	}
 }

@@ -1,6 +1,5 @@
 package com.lying.variousoddities.condition;
 
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
@@ -38,10 +37,7 @@ public abstract class Condition
 	
 	public @Nullable ResourceKey<Condition> getKey()
 	{
-		for(Entry<ResourceKey<Condition>, Condition> entry : VORegistries.CONDITIONS_REGISTRY.get().getEntries())
-			if(entry.getValue() == this)
-				return entry.getKey();
-		return null;
+		return VORegistries.CONDITIONS_REGISTRY.get().getResourceKey(this).orElse(null);
 	}
 	
 	public ResourceLocation getIconTexture(boolean affecting)

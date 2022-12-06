@@ -51,6 +51,8 @@ public class PacketSyncLivingData
 	public static void handle(PacketSyncLivingData msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
+		context.setPacketHandled(true);
+		
 		if(context.getDirection().getReceptionSide().isServer())
 		{
 			ServerPlayer player = context.getSender();
@@ -73,20 +75,23 @@ public class PacketSyncLivingData
 		}
 		else
 		{
-			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			// FIXME localPlayer should never be null
+			Player localPlayer = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			
 			LivingEntity target = null;
-			if(player.getUUID().equals(msg.entityID))
-				target = player;
-			else
-			{
-				Level world = player.getLevel();
-				for(LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(64D)))
-					if(ent.getUUID().equals(msg.entityID))
-					{
-						target = ent;
-						break;
-					}
-			}
+			if(localPlayer != null)
+				if(localPlayer.getUUID().equals(msg.entityID))
+					target = localPlayer;
+				else
+				{
+					Level world = localPlayer.getLevel();
+					for(LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, localPlayer.getBoundingBox().inflate(64D)))
+						if(ent.getUUID().equals(msg.entityID))
+						{
+							target = ent;
+							break;
+						}
+				}
 			
 			if(target != null)
 			{
@@ -95,6 +100,5 @@ public class PacketSyncLivingData
 					data.deserializeNBT(msg.dataNBT);
 			}
 		}
-		context.setPacketHandled(true);
 	}
 }

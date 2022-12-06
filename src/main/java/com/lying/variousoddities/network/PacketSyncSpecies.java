@@ -43,6 +43,12 @@ public class PacketSyncSpecies
 	
 	public static void handle(PacketSyncSpecies msg, Supplier<NetworkEvent.Context> cxt)
 	{
+		NetworkEvent.Context context = cxt.get();
+		context.setPacketHandled(true);
+		
+		if(context.getDirection().getReceptionSide().isServer())
+			return;
+		
 		VORegistries.SPECIES.clear();
 		ListTag data = msg.speciesData.getList("Species", 10);
 		for(int i=0; i<data.size(); i++)
@@ -57,6 +63,5 @@ public class PacketSyncSpecies
 			if(species != null && species.getRegistryName() != null)
 				VORegistries.SPECIES.put(species.getRegistryName(), species);
 		}
-		cxt.get().setPacketHandled(true);
 	}
 }

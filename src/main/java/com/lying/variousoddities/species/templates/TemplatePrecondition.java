@@ -62,7 +62,7 @@ public abstract class TemplatePrecondition
 		{
 			ResourceLocation registryName = new ResourceLocation(json.get("Name").getAsString());
 			for(Entry<ResourceKey<Builder>, Builder> entry : VORegistries.PRECONDITIONS_REGISTRY.get().getEntries())
-				if(entry.getKey().equals(registryName))
+				if(entry.getKey().location().equals(registryName))
 				{
 					TemplatePrecondition operation = entry.getValue().create();
 					operation.readFromJson(json);

@@ -16,14 +16,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 public class PacketHandler
 {
-	private static final String PROTOCOL = "1";
-	public static final SimpleChannel HANDLER = 
-			NetworkRegistry.ChannelBuilder
-			.named(new ResourceLocation(Reference.ModInfo.MOD_ID, "chan"))
-			.clientAcceptedVersions(PROTOCOL::equals)
-			.serverAcceptedVersions(PROTOCOL::equals)
-			.networkProtocolVersion(() -> PROTOCOL)
-			.simpleChannel();
+	public static final SimpleChannel HANDLER = NetworkRegistry.newSimpleChannel(new ResourceLocation(Reference.ModInfo.MOD_ID, "chan"), () -> "1.0", s -> true, s-> true);
 	
 	private PacketHandler(){ }
 	

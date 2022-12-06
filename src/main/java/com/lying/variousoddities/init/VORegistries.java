@@ -30,25 +30,30 @@ public class VORegistries
 	public static final DeferredRegister<TemplatePrecondition.Builder> PRECONDITIONS	= DeferredRegister.create(TemplatePrecondition.Builder.REGISTRY_KEY, Reference.ModInfo.MOD_ID);
 	public static final DeferredRegister<Condition> CONDITIONS							= DeferredRegister.create(Condition.REGISTRY_KEY, Reference.ModInfo.MOD_ID);
 	
-	public static final Supplier<IForgeRegistry<Ability.Builder>> ABILITIES_REGISTRY = ABILITIES.makeRegistry(RegistryBuilder::new);
-	public static final Supplier<IForgeRegistry<TemplateOperation.Builder>> OPERATIONS_REGISTRY = OPERATIONS.makeRegistry(RegistryBuilder::new);
-	public static final Supplier<IForgeRegistry<TemplatePrecondition.Builder>> PRECONDITIONS_REGISTRY = VORegistries.PRECONDITIONS.makeRegistry(RegistryBuilder::new);
-	public static final Supplier<IForgeRegistry<Condition>> CONDITIONS_REGISTRY = VORegistries.CONDITIONS.makeRegistry(RegistryBuilder::new);
+	public static final Supplier<IForgeRegistry<Ability.Builder>> ABILITIES_REGISTRY					= ABILITIES.makeRegistry(RegistryBuilder::new);
+	public static final Supplier<IForgeRegistry<TemplateOperation.Builder>> OPERATIONS_REGISTRY			= OPERATIONS.makeRegistry(RegistryBuilder::new);
+	public static final Supplier<IForgeRegistry<TemplatePrecondition.Builder>> PRECONDITIONS_REGISTRY	= VORegistries.PRECONDITIONS.makeRegistry(RegistryBuilder::new);
+	public static final Supplier<IForgeRegistry<Condition>> CONDITIONS_REGISTRY							= VORegistries.CONDITIONS.makeRegistry(RegistryBuilder::new);
 	
 	public static final Map<ResourceLocation, Species> SPECIES = new HashMap<>();
 	public static final Map<ResourceLocation, Template> TEMPLATES = new HashMap<>();
 	
 	public static void registerCustom(IEventBus modEventBus)
 	{
+		VORegistries.ABILITIES.register(modEventBus);
+		VORegistries.PRECONDITIONS.register(modEventBus);
+		VORegistries.OPERATIONS.register(modEventBus);
+		VORegistries.CONDITIONS.register(modEventBus);
+		
+		AbilityRegistry.init();
+		TemplatePreconditions.init();
+		TemplateOperations.init();
+		Conditions.init();
+		
 		VariousOddities.log.info("Registered custom registries");
-        AbilityRegistry.init();
-        TemplatePreconditions.init();
-        TemplateOperations.init();
-        Conditions.init();
-        
-        VORegistries.ABILITIES.register(modEventBus);
-        VORegistries.PRECONDITIONS.register(modEventBus);
-        VORegistries.CONDITIONS.register(modEventBus);
-        VORegistries.PRECONDITIONS.register(modEventBus);
+		VariousOddities.log.info(" = "+ABILITIES.getEntries().size()+" abilities");
+		VariousOddities.log.info(" = "+PRECONDITIONS.getEntries().size()+" template preconditions");
+		VariousOddities.log.info(" = "+OPERATIONS.getEntries().size()+" template operations");
+		VariousOddities.log.info(" = "+CONDITIONS.getEntries().size()+" conditions");
 	}
 }
