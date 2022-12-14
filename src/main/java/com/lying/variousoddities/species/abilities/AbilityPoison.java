@@ -7,7 +7,6 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -17,8 +16,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityPoison extends AbilityMeleeDamage
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "poison");
-	
 	// TODO Allow activated version of Poison ability to apply poison to held item
 	
 	private float triggerChance = 0.65F;
@@ -31,7 +28,7 @@ public class AbilityPoison extends AbilityMeleeDamage
 	
 	public AbilityPoison(float chanceIn, MobEffectInstance... effectsIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.triggerChance = chanceIn;
 		this.effects = effectsIn;
 	}
@@ -77,22 +74,20 @@ public class AbilityPoison extends AbilityMeleeDamage
 		if(isValidDamageSource(source))
 		{
 			LivingEntity attacker = (LivingEntity)source.getDirectEntity();
-			if(attacker != null && victim != attacker && AbilityRegistry.hasAbility(attacker, getMapName()) && canAbilityAffectEntity(victim, attacker))
-			{
-				AbilityPoison poison = (AbilityPoison)AbilityRegistry.getAbilityByName(attacker, getMapName());
+			AbilityPoison poison = (AbilityPoison)AbilityRegistry.getAbilityByMapName(attacker, getMapName());
+			if(attacker != null && victim != attacker && poison != null && canAbilityAffectEntity(victim, attacker))
 				if(attacker.getRandom().nextFloat() < poison.triggerChance)
 					for(MobEffectInstance effect : poison.effects)
 					{
 						MobEffectInstance instance = new MobEffectInstance(effect.getEffect(), effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.isVisible());
 						victim.addEffect(instance);
 					}
-			}
 		}
 	}
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

@@ -34,6 +34,7 @@ public class ServerPlayNetHandlerMixin
 	private boolean canElytraFly()
 	{
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
-		return abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive();
+		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
+		return abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive();
 	}
 }

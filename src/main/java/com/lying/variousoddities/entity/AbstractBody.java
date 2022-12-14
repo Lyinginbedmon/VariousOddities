@@ -87,7 +87,7 @@ public abstract class AbstractBody extends Mob implements ContainerListener
 	
     public static AttributeSupplier.Builder createAttributes()
     {
-        return LivingEntity.createLivingAttributes()
+        return Mob.createMobAttributes()
         		.add(Attributes.MAX_HEALTH, 10.0D);
     }
 	

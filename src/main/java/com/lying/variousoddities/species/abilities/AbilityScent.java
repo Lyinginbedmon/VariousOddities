@@ -4,14 +4,11 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 public class AbilityScent extends ToggledAbility 
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "scent");
-	
 	private double range = 16D;
 	
 	public AbilityScent()
@@ -21,7 +18,7 @@ public class AbilityScent extends ToggledAbility
 	
 	public AbilityScent(double rangeIn)
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_SECOND);
+		super(Reference.Values.TICKS_PER_SECOND);
 		this.range = rangeIn;
 	}
 	
@@ -43,7 +40,7 @@ public class AbilityScent extends ToggledAbility
 	
 	public static class Builder extends ToggledAbility.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public ToggledAbility createAbility(CompoundTag compound)
 		{

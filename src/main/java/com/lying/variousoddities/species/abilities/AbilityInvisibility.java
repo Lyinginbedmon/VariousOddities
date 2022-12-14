@@ -10,11 +10,9 @@ import net.minecraft.world.effect.MobEffects;
 
 public class AbilityInvisibility extends AbilityStatusEffect
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "invisibility");
-	
 	public AbilityInvisibility()
 	{
-		super(REGISTRY_NAME, null);
+		super(null);
 	}
 	
 	public ResourceLocation getMapName(){ return getRegistryName(); }
@@ -25,7 +23,7 @@ public class AbilityInvisibility extends AbilityStatusEffect
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

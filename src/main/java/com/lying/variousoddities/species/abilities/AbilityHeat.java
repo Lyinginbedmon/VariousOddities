@@ -1,7 +1,5 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -12,14 +10,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityHeat extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "heat");
-	
 	private final float minDmg, maxDmg;
 	private final boolean ignite;
 	
 	private AbilityHeat(float dmgMin, float dmgMax, boolean shouldIgnite)
 	{
-		super(REGISTRY_NAME);
+		super();
 		minDmg = dmgMin;
 		maxDmg = dmgMax;
 		ignite = shouldIgnite;
@@ -51,11 +47,14 @@ public class AbilityHeat extends Ability
 			LivingEntity attacker = (LivingEntity)source.getDirectEntity();
 			if(attacker != null)
 			{
-				if(AbilityRegistry.hasAbility(attacker, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME).canAbilityAffectEntity(victim, attacker))
-					applyHeatTo(victim, (AbilityHeat)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME), attacker.getRandom());
+				ResourceLocation heatKey = getRegistryName();
+				AbilityHeat attackerHeat = (AbilityHeat)AbilityRegistry.getAbilityByMapName(attacker, heatKey);
+				if(attackerHeat != null && attackerHeat.canAbilityAffectEntity(victim, attacker))
+					applyHeatTo(victim, (AbilityHeat)AbilityRegistry.getAbilityByMapName(attacker, getRegistryName()), attacker.getRandom());
 				
-				if(AbilityRegistry.hasAbility(victim, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME).canAbilityAffectEntity(attacker, victim))
-					applyHeatTo(attacker, (AbilityHeat)AbilityRegistry.getAbilityByName(victim, REGISTRY_NAME), victim.getRandom());
+				AbilityHeat victimHeat = (AbilityHeat)AbilityRegistry.getAbilityByMapName(attacker, heatKey);
+				if(victimHeat != null && victimHeat.canAbilityAffectEntity(attacker, victim))
+					applyHeatTo(attacker, (AbilityHeat)AbilityRegistry.getAbilityByMapName(victim, getRegistryName()), victim.getRandom());
 			}
 		}
 	}
@@ -69,7 +68,7 @@ public class AbilityHeat extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

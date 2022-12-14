@@ -21,6 +21,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.registries.RegistryObject;
 
 public class AbilityRegistry
 {
@@ -116,6 +117,30 @@ public class AbilityRegistry
 		return ability;
 	}
 	
+	@Nullable
+	public static ResourceKey<Ability.Builder> getAbilityRegistryKey(Ability abilityIn)
+	{
+		return getClassRegistryKey(abilityIn.getClass());
+	}
+	
+	@Nullable
+	public static ResourceKey<Ability.Builder> getClassRegistryKey(Class<? extends Ability> abilityClass)
+	{
+		for(RegistryObject<Ability.Builder> entry : VORegistries.ABILITIES.getEntries())
+			if(entry.isPresent() && entry.get().create(new CompoundTag()).getClass() == abilityClass)
+				return entry.getKey();
+		return null;
+	}
+	
+	@Nullable
+	public static ResourceKey<Ability.Builder> getBuilderRegistryKey(Class<? extends Ability.Builder> builderClass)
+	{
+		for(RegistryObject<Ability.Builder> entry : VORegistries.ABILITIES.getEntries())
+			if(entry.isPresent() && entry.get().getClass() == builderClass)
+				return entry.getKey();
+		return null;
+	}
+	
 	public static void registerAbilityListeners()
 	{
 		VORegistries.ABILITIES_REGISTRY.get().getEntries().forEach((entry) -> entry.getValue().create(new CompoundTag()).addListeners(MinecraftForge.EVENT_BUS));
@@ -141,22 +166,22 @@ public class AbilityRegistry
 		return new HashMap<>();
 	}
 	
-	public static boolean hasAbility(LivingEntity entity, ResourceLocation mapName)
+	public static boolean hasAbilityOfMapName(LivingEntity entity, ResourceLocation mapName)
 	{
 		Map<ResourceLocation, Ability> abilities = getCreatureAbilities(entity);
 		return abilities.containsKey(mapName) && abilities.get(mapName) != null;
 	}
 	
-	public static boolean hasAbility(LivingEntity entity, Class<?> classIn)
+	public static boolean hasAbilityOfClass(LivingEntity entity, Class<?> classIn)
 	{
-		return !getAbilitiesOfType(entity, classIn).isEmpty();
+		return !getAbilitiesOfClass(entity, classIn).isEmpty();
 	}
 	
 	/** Returns the first ability of the given creature with the given map name. */
 	@Nullable
-	public static Ability getAbilityByName(LivingEntity entity, ResourceLocation mapName)
+	public static Ability getAbilityByMapName(LivingEntity entity, ResourceLocation mapName)
 	{
-		return getCreatureAbilities(entity).get(mapName);
+		return getCreatureAbilities(entity).getOrDefault(mapName, null);
 	}
 	
 	/** Returns a list of all abilities of the given entity with the given registry name. */
@@ -173,7 +198,7 @@ public class AbilityRegistry
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> Collection<T> getAbilitiesOfType(LivingEntity entity, Class<T> classIn)
+	public static <T> Collection<T> getAbilitiesOfClass(LivingEntity entity, Class<T> classIn)
 	{
 		List<T> list = Lists.newArrayList();
 		if(entity == null || classIn == null)

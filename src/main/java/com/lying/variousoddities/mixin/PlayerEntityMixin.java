@@ -74,7 +74,8 @@ public class PlayerEntityMixin extends LivingEntityMixin
 		Player player = (Player)(Object)this;
 		Abilities abilities = LivingData.forEntity(player).getAbilities();
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
-		if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
+		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
+		if(abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive())
 		{
 			if(!player.isOnGround() && !player.isFallFlying() && abilities.canBonusJump)
 			{
@@ -97,10 +98,10 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	
 	private void handlePlayerScent(Player player, Level worldIn)
 	{
-		if(world.isClientSide || player.isCreative() || player.isSpectator() || PlayerData.isPlayerSoulDetached(player))
+		if(level.isClientSide || player.isCreative() || player.isSpectator() || PlayerData.isPlayerSoulDetached(player))
 			return;
 		
-		RandomSource rand = world.random;
+		RandomSource rand = level.random;
 		if(scentTimer < 0)
 			resetScentTimer(rand);
 		else if(--scentTimer == 0)
@@ -110,7 +111,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 				prevScentPos = pos;
 			else
 			{
-				ScentsManager manager = ScentsManager.get(world);
+				ScentsManager manager = ScentsManager.get(level);
 				
 				List<EnumCreatureType> types = EnumCreatureType.getCreatureTypes(player);
 				types.removeIf(EnumCreatureType.IS_SUBTYPE);

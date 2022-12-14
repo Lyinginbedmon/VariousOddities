@@ -44,8 +44,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityBreathWeapon extends ActivatedAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "breath_weapon");
-	
 	private BreathType type;
 	private double distance;
 	private ParticleOptions particle = ParticleTypes.FLAME;
@@ -58,7 +56,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	public AbilityBreathWeapon(DamageType damageIn, BreathType typeIn, double dist, Pair<Float, Float> dmgIn)
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_MINUTE);
+		super(Reference.Values.TICKS_PER_MINUTE);
 		this.damage = damageIn;
 		this.type = typeIn;
 		this.distance = dist;
@@ -152,7 +150,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 		if(super.canTrigger(entity) && !isActive())
 		{
 			/* Breath weapons cannot be used whilst another is active */
-			for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, REGISTRY_NAME))
+			for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, getRegistryName()))
 				if(ability.getMapName().equals(this.getMapName()))
 					continue;
 				else if(((AbilityBreathWeapon)ability).isActive())
@@ -184,7 +182,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	public void performBreathWeapon(LivingTickEvent event)
 	{
 		LivingEntity entity = event.getEntity();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(entity, getRegistryName()))
 		{
 			AbilityBreathWeapon breath = (AbilityBreathWeapon)ability;
 			if(breath.isActive())
@@ -370,7 +368,7 @@ public class AbilityBreathWeapon extends ActivatedAbility
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

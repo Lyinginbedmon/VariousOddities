@@ -22,13 +22,11 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityStartingItem extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "starting_item");
-	
 	private ItemStack[] itemStacks = new ItemStack[] {ItemStack.EMPTY};
 	
 	protected AbilityStartingItem()
 	{
-		super(REGISTRY_NAME);
+		super();
 	}
 	
 	public AbilityStartingItem(ListTag stackList)
@@ -126,7 +124,7 @@ public class AbilityStartingItem extends Ability
 		
 		Abilities abilities = LivingData.forEntity(player).getAbilities();
 		for(Ability ability : abilities.getEntityAbilities(player).values())
-			if(ability.getRegistryName().equals(REGISTRY_NAME))
+			if(ability.getRegistryName().equals(getRegistryName()))
 				addItemsFromAbility((AbilityStartingItem)ability, player);
 	}
 	
@@ -144,7 +142,7 @@ public class AbilityStartingItem extends Ability
 				{
 					AbilityOperation addAbility = (AbilityOperation)operation;
 					Ability ability = addAbility.getAbility();
-					if(ability != null && ability.getRegistryName() == AbilityStartingItem.REGISTRY_NAME)
+					if(ability != null && ability.getRegistryName() == getRegistryName())
 						addItemsFromAbility((AbilityStartingItem)ability, player);
 				}
 		}
@@ -158,7 +156,7 @@ public class AbilityStartingItem extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

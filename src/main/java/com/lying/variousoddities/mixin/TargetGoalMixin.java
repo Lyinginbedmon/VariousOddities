@@ -8,33 +8,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.capabilities.LivingData;
 
-import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 
 @Mixin(TargetGoal.class)
 public class TargetGoalMixin
 {
 	@Shadow
-	protected Mob goalOwner;
+	protected Mob mob;
 	
 	@Shadow
-	protected LivingEntity target;
+	protected LivingEntity targetMob;
 	
-	@Inject(method = "isSuitableTarget(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/EntityPredicate;)Z", at = @At("RETURN"), cancellable = true)
-	public void isSuitableTarget(LivingEntity living, EntityPredicate predicate, final CallbackInfoReturnable<Boolean> ci)
+	@Inject(method = "canAttack(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/world/entity/ai/targeting/TargetingConditions;)Z", at = @At("RETURN"), cancellable = true)
+	public void canAttack(LivingEntity living, TargetingConditions predicate, final CallbackInfoReturnable<Boolean> ci)
 	{
-		LivingData mobData = LivingData.forEntity(goalOwner);
+		LivingData mobData = LivingData.forEntity(mob);
 		if(mobData != null && living != null && mobData.isTargetingHindered(living))
 			ci.setReturnValue(false);
 	}
 	
-	@Inject(method = "shouldContinueExecuting()Z", at = @At("RETURN"), cancellable = true)
-	public void shouldContinueExecuting(final CallbackInfoReturnable<Boolean> ci)
+	@Inject(method = "canContinueToUse()Z", at = @At("RETURN"), cancellable = true)
+	public void canContinueToUse(final CallbackInfoReturnable<Boolean> ci)
 	{
-		LivingData mobData = LivingData.forEntity(goalOwner);
-		if(mobData != null && target != null && mobData.isTargetingHindered(target))
+		LivingData mobData = LivingData.forEntity(mob);
+		if(mobData != null && targetMob != null && mobData.isTargetingHindered(targetMob))
 			ci.setReturnValue(false);
 	}
 }

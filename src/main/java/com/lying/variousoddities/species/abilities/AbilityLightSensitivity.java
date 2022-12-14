@@ -6,7 +6,6 @@ import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -16,8 +15,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityLightSensitivity extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "light_sensitivity");
-	
 	private int lightLimit;
 	
 	public AbilityLightSensitivity()
@@ -27,7 +24,7 @@ public class AbilityLightSensitivity extends Ability
 	
 	public AbilityLightSensitivity(int limit)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.lightLimit = limit;
 	}
 	
@@ -54,7 +51,7 @@ public class AbilityLightSensitivity extends Ability
 	public void applySensitivity(LivingTickEvent event)
 	{
 		LivingEntity entity = event.getEntity();
-		if(AbilityRegistry.hasAbility(entity, REGISTRY_NAME))
+		if(AbilityRegistry.hasAbilityOfMapName(entity, getRegistryName()))
 		{
 			Level world = entity.getLevel();
 			BlockPos eyePos = entity.blockPosition().offset(0D, entity.getEyeHeight(), 0D);
@@ -62,14 +59,14 @@ public class AbilityLightSensitivity extends Ability
 			int sky = VOHelper.getSkyLight(eyePos, world);
 			
 			int light = Math.max(block, sky);
-			if(light > ((AbilityLightSensitivity)AbilityRegistry.getAbilityByName(entity, REGISTRY_NAME)).lightLimit)
+			if(light > ((AbilityLightSensitivity)AbilityRegistry.getAbilityByMapName(entity, getRegistryName())).lightLimit)
 				entity.addEffect(new MobEffectInstance(VOMobEffects.DAZZLED.get(), Reference.Values.TICKS_PER_SECOND * 6, 0, false, false));
 		}
 	}
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

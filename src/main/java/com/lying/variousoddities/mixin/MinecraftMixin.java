@@ -41,15 +41,15 @@ public class MinecraftMixin
 	@Shadow
 	public LocalPlayer player;
 	@Shadow
-	public Entity renderViewEntity;
+	public Entity cameraEntity;
 	@Shadow
-	public Screen currentScreen;
+	public Screen screen;
 	@Shadow
 	public Overlay overlay;
 	@Shadow
 	public MultiPlayerGameMode gameMode;
 	@Shadow
-	private TutorialToast tutorialToast;
+	private TutorialToast socialInteractionsToast;
 	
 	@Inject(method = "handleKeybinds()V", at = @At("HEAD"), cancellable = true)
 	public void handleKeybinds(final CallbackInfo ci)
@@ -93,7 +93,7 @@ public class MinecraftMixin
 		if(this.player.isUsingItem())
 			this.gameMode.releaseUsingItem(this.player);
 		
-		this.sendClickBlockToController(false);
+		this.continueAttack(false);
 	}
 	
 	private void processVitalKeys(Minecraft mc)
@@ -111,45 +111,45 @@ public class MinecraftMixin
 		
 		while(mc.options.keySocialInteractions.consumeClick())
 		{
-			if(!this.func_244600_aM())
+			if(!this.isMultiplayerServer())
 			{
 				this.player.displayClientMessage(SOCIAL_NOT_AVAILABLE, true);
 				NarratorChatListener.INSTANCE.sayNow(SOCIAL_NOT_AVAILABLE);
 			}
 			else
 			{
-				if(this.tutorialToast != null)
+				if(this.socialInteractionsToast != null)
 				{
-					this.tutorial.removeTimedToast(this.tutorialToast);
-					this.tutorialToast = null;
+					this.tutorial.removeTimedToast(this.socialInteractionsToast);
+					this.socialInteractionsToast = null;
 				}
 				
-				this.displayGuiScreen(new SocialInteractionsScreen());
+				this.setScreen(new SocialInteractionsScreen());
 			}
 		}
 		
 		while(mc.options.keyAdvancements.consumeClick())
-			this.displayGuiScreen(new AdvancementsScreen(this.player.connection.getAdvancements()));
+			this.setScreen(new AdvancementsScreen(this.player.connection.getAdvancements()));
 		
 		if(mc.options.chatVisibility().get() != ChatVisiblity.HIDDEN)
 		{
 			while(mc.options.keyChat.consumeClick())
 				this.openChatScreen("");
 			
-			if(this.currentScreen == null && this.overlay == null && mc.options.keyCommand.consumeClick())
+			if(this.screen == null && this.overlay == null && mc.options.keyCommand.consumeClick())
 				this.openChatScreen("/");
 		}
 	}
 	
 	@Shadow
-	private boolean func_244600_aM(){ return false; }
+	private boolean isMultiplayerServer(){ return false; }
 	
 	@Shadow
 	private void openChatScreen(String defaultText){ }
 	
 	@Shadow
-	public void displayGuiScreen(@Nullable Screen guiScreenIn){ }
+	public void setScreen(@Nullable Screen guiScreenIn){ }
 	
 	@Shadow
-	private void sendClickBlockToController(boolean leftClick){ }
+	private void continueAttack(boolean leftClick){ }
 }

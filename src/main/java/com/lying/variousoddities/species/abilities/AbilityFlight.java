@@ -21,13 +21,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 {
 	public static UUID GRAVITY_UUID = UUID.fromString("8b21d611-ec03-4e91-a20c-bcb48f2c5dc1");
-	public static ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "flight");
 	private Grade quality = Grade.PERFECT;
 	private double speed = 0.7D;
 	
 	public AbilityFlight(Grade qualityIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.quality = qualityIn;
 	}
 	
@@ -81,9 +80,9 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 		AttributeModifier mod = gravity.getModifier(GRAVITY_UUID);
 		
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilityMap.containsKey(REGISTRY_NAME))
+		if(abilityMap.containsKey(getRegistryName()))
 		{
-			AbilityFlight flight = (AbilityFlight)abilityMap.get(REGISTRY_NAME);
+			AbilityFlight flight = (AbilityFlight)abilityMap.get(getRegistryName());
 			if(!flight.isActive() || !Abilities.canBonusJump(entity))
 			{
 				if(mod != null)
@@ -131,7 +130,7 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 	
 	public static class Builder extends ToggledAbility.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public ToggledAbility createAbility(CompoundTag compound)
 		{

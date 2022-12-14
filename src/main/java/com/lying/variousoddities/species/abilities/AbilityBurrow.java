@@ -1,12 +1,10 @@
 package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.init.VOBlocks;
-import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,14 +18,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "burrow");
-	
 	private boolean canBurrowStone = false;
 	private boolean leavesTunnel = false;
 	
 	public AbilityBurrow()
 	{
-		super(REGISTRY_NAME);
+		super();
 	}
 	
 	public AbilityBurrow(boolean stone, boolean tunnel)
@@ -99,10 +95,10 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 	public void tunnelBlocks(LivingTickEvent event)
 	{
 		LivingEntity living = event.getEntity();
-		if(AbilityRegistry.hasAbility(living, REGISTRY_NAME) && AbilityRegistry.getAbilityByName(living, REGISTRY_NAME).isActive())
+		AbilityBurrow burrow = (AbilityBurrow)AbilityRegistry.getAbilityByMapName(living, getRegistryName());
+		if(burrow != null && burrow.isActive())
 		{
 			living.setPose(Pose.SWIMMING);
-			AbilityBurrow burrow = (AbilityBurrow)AbilityRegistry.getAbilityByName(living, REGISTRY_NAME);
 			if(burrow.leavesTunnel)
 			{
 				for(int i=0; i<Math.ceil(living.getBbHeight()); i++)
@@ -143,7 +139,7 @@ public class AbilityBurrow extends AbilityMoveMode implements IPhasingAbility
 	
 	public static class Builder extends ToggledAbility.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public ToggledAbility createAbility(CompoundTag compound)
 		{

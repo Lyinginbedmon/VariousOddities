@@ -5,22 +5,19 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityFastHealing extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "fast_healing");
-	
 	private int ticksSinceHeal = 0;
 	
 	private float rate = 2F;
 	
 	public AbilityFastHealing(float rate)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.rate = rate;
 	}
 	
@@ -58,9 +55,9 @@ public class AbilityFastHealing extends Ability
 	{
 		// Increase tick time if damage is > 0, then heal and reset tick time
 		LivingEntity entity = event.getEntity();
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		AbilityFastHealing ability = (AbilityFastHealing)AbilityRegistry.getAbilityByMapName(entity, getMapName());
+		if(ability != null)
 		{
-			AbilityFastHealing ability = (AbilityFastHealing)AbilityRegistry.getAbilityByName(entity, getMapName());
 			LivingData data = LivingData.forEntity(entity);
 			if((entity.getHealth() < entity.getMaxHealth() || data.getBludgeoning() > 0F) && entity.isAlive())
 			{
@@ -80,7 +77,7 @@ public class AbilityFastHealing extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

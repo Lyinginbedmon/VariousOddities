@@ -35,7 +35,7 @@ public class ScentRender
 		if(player == null || player.getLevel() == null) return;
 		Level world = player.getLevel();
 		
-		AbilityScent scent = (AbilityScent)AbilityRegistry.getAbilityByName(player, AbilityScent.REGISTRY_NAME);
+		AbilityScent scent = (AbilityScent)AbilityRegistry.getAbilityByMapName(player, AbilityRegistry.getClassRegistryKey(AbilityScent.class).location());
 		if(scent == null || !scent.isActive()) return;
 		
 		// Render marker network

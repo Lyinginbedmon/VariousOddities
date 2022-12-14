@@ -106,7 +106,7 @@ public class BlindRender
 		if(result.getType() == HitResult.Type.BLOCK)
 			registerBlock(result.getBlockPos(), world);
 		
-		blindnessActive = AbilityRegistry.hasAbility(player, AbilityBlind.REGISTRY_NAME);
+		blindnessActive = AbilityRegistry.hasAbilityOfMapName(player, AbilityRegistry.getClassRegistryKey(AbilityBlind.class).location());
 		
 		// Supplementary rendering to aid blind players in basic functioning
 		if(blindnessActive && mc.options.getCameraType() == CameraType.FIRST_PERSON)

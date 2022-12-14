@@ -13,14 +13,12 @@ import net.minecraft.world.entity.monster.Monster;
 
 public class AbilityBlind extends AbilityStatusEffect
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "blind");
-	
 	public AbilityBlind()
 	{
-		super(REGISTRY_NAME, new MobEffectInstance(MobEffects.BLINDNESS, Reference.Values.TICKS_PER_SECOND * 5, 4, false, false));
+		super(new MobEffectInstance(MobEffects.BLINDNESS, Reference.Values.TICKS_PER_SECOND * 5, 4, false, false));
 	}
 	
-	public ResourceLocation getMapName(){ return REGISTRY_NAME; }
+	public ResourceLocation getMapName(){ return getRegistryName(); }
 	public Component translatedName(){ return Component.translatable("ability."+getMapName()); }
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
@@ -29,7 +27,7 @@ public class AbilityBlind extends AbilityStatusEffect
 	
 	public static boolean isMobBlind(LivingEntity mob)
 	{
-		return mob.hasEffect(MobEffects.BLINDNESS) || AbilityRegistry.hasAbility(mob, REGISTRY_NAME);
+		return mob.hasEffect(MobEffects.BLINDNESS) || AbilityRegistry.hasAbilityOfMapName(mob, (new AbilityBlind()).getRegistryName());
 	}
 	
 	public static boolean canMobDetectEntity(LivingEntity mob, LivingEntity entity)
@@ -46,7 +44,7 @@ public class AbilityBlind extends AbilityStatusEffect
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

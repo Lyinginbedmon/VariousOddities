@@ -21,7 +21,7 @@ public class AbilityTremorsense extends AbilityVision
 	
 	public AbilityTremorsense(double rangeIn)
 	{
-		super(REGISTRY_NAME, rangeIn);
+		super(rangeIn);
 	}
 	
 	public AbilityTremorsense(double rangeIn, double rangeMinIn)
@@ -45,7 +45,7 @@ public class AbilityTremorsense extends AbilityVision
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

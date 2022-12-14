@@ -46,13 +46,14 @@ public class PacketVisualPotion
 	public static void handle(PacketVisualPotion msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
+		context.setPacketHandled(true);
 		if(context.getDirection().getReceptionSide().isServer())
-		{
-			context.setPacketHandled(true);
 			return;
-		}
 		
 		Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+		if(player == null)
+			return;
+		
 		LivingEntity target = null;
 		if(player.getUUID().equals(msg.entityID))
 			target = player;
@@ -69,7 +70,5 @@ public class PacketVisualPotion
 		
 		if(target != null)
 			LivingData.forEntity(target).setVisualPotion(msg.index, msg.value);
-		
-		context.setPacketHandled(true);
 	}
 }

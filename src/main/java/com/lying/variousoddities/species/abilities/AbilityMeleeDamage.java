@@ -1,6 +1,5 @@
 package com.lying.variousoddities.species.abilities;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
@@ -8,9 +7,9 @@ import net.minecraft.world.entity.LivingEntity;
 
 public abstract class AbilityMeleeDamage extends Ability
 {
-	protected AbilityMeleeDamage(ResourceLocation registryName)
+	protected AbilityMeleeDamage()
 	{
-		super(registryName);
+		super();
 	}
 	
 	/** Returns true if the damage is caused by an entity using its bare hands */

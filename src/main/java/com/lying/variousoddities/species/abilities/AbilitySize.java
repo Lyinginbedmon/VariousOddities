@@ -7,7 +7,6 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.EntityDimensions;
@@ -23,7 +22,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySize extends AbilityModifier
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "size");
 	private static final UUID SIZE_MODIFIER = UUID.fromString("3e3cf3f2-7d4f-41ce-91de-8557f02b2b91");
 	
 	public static final Ability MEDIUM = new AbilitySize(Size.MEDIUM).setTemporary();
@@ -34,7 +32,7 @@ public class AbilitySize extends AbilityModifier
 	
 	public AbilitySize(Size sizeIn)
 	{
-		super(REGISTRY_NAME, sizeIn.baseScale());
+		super(sizeIn.baseScale());
 		this.sizeClass = sizeIn;
 	}
 	
@@ -118,9 +116,9 @@ public class AbilitySize extends AbilityModifier
 		if(attribute == null)
 			return;
 		
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByMapName(entity, getRegistryName());
+		if(size != null)
 		{
-			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName(entity, getMapName());
 			double amount = size.sizeClass.baseScale() - 1;
 			
 			AttributeModifier modifier = attribute.getModifier(SIZE_MODIFIER);
@@ -147,10 +145,10 @@ public class AbilitySize extends AbilityModifier
 			LivingEntity living = (LivingEntity)event.getEntity();
 			
 			LivingData data = LivingData.forEntity(living);
-			if(data == null || !AbilityRegistry.hasAbility(living, REGISTRY_NAME))
+			if(data == null || !AbilityRegistry.hasAbilityOfMapName(living, getRegistryName()))
 				return;
 			
-			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName(living, REGISTRY_NAME);
+			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByMapName(living, getRegistryName());
 			if(size == null)
 				return;
 			
@@ -227,7 +225,7 @@ public class AbilitySize extends AbilityModifier
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

@@ -1,21 +1,16 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class AbilityClimb extends AbilityMoveMode
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "climb");
-	
 	public AbilityClimb()
 	{
-		super(REGISTRY_NAME);
+		super();
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
@@ -35,7 +30,7 @@ public class AbilityClimb extends AbilityMoveMode
 	{
 		public Builder()
 		{
-			super(REGISTRY_NAME);
+			super();
 		}
 		
 		public ToggledAbility createAbility(CompoundTag compound)

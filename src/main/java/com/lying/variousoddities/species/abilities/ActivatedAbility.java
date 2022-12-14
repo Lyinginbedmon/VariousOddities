@@ -3,7 +3,6 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.capabilities.LivingData;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 
@@ -13,9 +12,9 @@ public abstract class ActivatedAbility extends Ability
 	protected int activeTicks = 0;
 	protected int cooldown;
 	
-	protected ActivatedAbility(ResourceLocation registryName, int cooldownIn)
+	protected ActivatedAbility(int cooldownIn)
 	{
-		super(registryName);
+		super();
 		this.default_cooldown = this.cooldown = cooldownIn;
 	}
 	
@@ -35,7 +34,7 @@ public abstract class ActivatedAbility extends Ability
 	/** Called to check if a given ability has the suitable context in which to function. */
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbility(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName()) && !isActive();
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName()) && !isActive();
 	}
 	
 	public boolean isActive(){ return this.activeTicks > 0; }

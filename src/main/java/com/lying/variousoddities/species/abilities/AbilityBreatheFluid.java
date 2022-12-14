@@ -22,12 +22,10 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityBreatheFluid extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "fluid_breathing");
-	
 	private ResourceLocation fluidTag = null;
 	private boolean isRemove = false;
 	
-	public AbilityBreatheFluid(){ super(REGISTRY_NAME); }
+	public AbilityBreatheFluid(){ super(); }
 	
 	public AbilityBreatheFluid(@Nonnull TagKey<Fluid> fluid)
 	{
@@ -83,14 +81,14 @@ public class AbilityBreatheFluid extends Ability
 	
 	public void addFluidBreathing(AbilityGetBreathableFluidEvent.Add event)
 	{
-		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfType(event.getEntity(), AbilityBreatheFluid.class))
+		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfClass(event.getEntity(), AbilityBreatheFluid.class))
 			if(!breathing.isRemove)
 				event.add(breathing.getFluid());
 	}
 	
 	public void removeFluidBreathing(AbilityGetBreathableFluidEvent.Remove event)
 	{
-		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfType(event.getEntity(), AbilityBreatheFluid.class))
+		for(AbilityBreatheFluid breathing : AbilityRegistry.getAbilitiesOfClass(event.getEntity(), AbilityBreatheFluid.class))
 			if(breathing.isRemove)
 				event.add(breathing.getFluid());
 	}
@@ -99,7 +97,7 @@ public class AbilityBreatheFluid extends Ability
 	{
 		List<AbilityBreatheFluid> removals = Lists.newArrayList();
 		for(Ability ability : event.getAbilityMap().values())
-			if(ability.getRegistryName().equals(REGISTRY_NAME) && ((AbilityBreatheFluid)ability).isRemove)
+			if(ability.getRegistryName().equals(getRegistryName()) && ((AbilityBreatheFluid)ability).isRemove)
 				removals.add((AbilityBreatheFluid)ability);
 		
 		for(AbilityBreatheFluid removal : removals)
@@ -128,12 +126,12 @@ public class AbilityBreatheFluid extends Ability
 	public static AbilityBreatheFluid lava() { return new AbilityBreatheFluid(FluidTags.LAVA); }
 	public static AbilityBreatheFluid water() { return new AbilityBreatheFluid(FluidTags.WATER); }
 	
-	public static boolean breathes(LivingEntity entity) { return AbilityRegistry.hasAbility(entity, AbilityBreatheFluid.class); }
-	public static boolean canBreatheIn(LivingEntity entity, TagKey<Fluid> fluid) { return AbilityRegistry.hasAbility(entity, new ResourceLocation(Reference.ModInfo.MOD_ID, fluid.location().getPath().toLowerCase()+"_breathing")); }
+	public static boolean breathes(LivingEntity entity) { return AbilityRegistry.hasAbilityOfClass(entity, AbilityBreatheFluid.class); }
+	public static boolean canBreatheIn(LivingEntity entity, TagKey<Fluid> fluid) { return AbilityRegistry.hasAbilityOfMapName(entity, new ResourceLocation(Reference.ModInfo.MOD_ID, fluid.location().getPath().toLowerCase()+"_breathing")); }
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

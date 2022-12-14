@@ -13,14 +13,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityDamageCap extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME	= new ResourceLocation(Reference.ModInfo.MOD_ID, "epic_resilience");
-	
 	private float hard = 20F;
 	private float soft = -1F;
 	
 	public AbilityDamageCap(float hardCap)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.hard = hardCap;
 	}
 	
@@ -59,9 +57,9 @@ public class AbilityDamageCap extends Ability
 	{
 		LivingEntity entity = event.getEntity();
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilities.containsKey(REGISTRY_NAME))
+		if(abilities.containsKey(getRegistryName()))
 		{
-			AbilityDamageCap cap = (AbilityDamageCap)abilities.get(REGISTRY_NAME);
+			AbilityDamageCap cap = (AbilityDamageCap)abilities.get(getRegistryName());
 			float amount = event.getAmount();
 			
 			if(cap.soft > 0 && amount > cap.soft)
@@ -99,7 +97,7 @@ public class AbilityDamageCap extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

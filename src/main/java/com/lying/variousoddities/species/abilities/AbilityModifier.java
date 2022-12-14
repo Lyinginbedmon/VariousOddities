@@ -2,7 +2,6 @@ package com.lying.variousoddities.species.abilities;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
@@ -10,9 +9,9 @@ public abstract class AbilityModifier extends Ability
 {
 	protected double amount = 2F;
 	
-	public AbilityModifier(ResourceLocation registryName, double amountIn)
+	public AbilityModifier(double amountIn)
 	{
-		super(registryName);
+		super();
 		this.amount = amountIn;
 	}
 	

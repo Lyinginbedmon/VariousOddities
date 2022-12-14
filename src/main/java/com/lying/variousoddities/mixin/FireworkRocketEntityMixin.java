@@ -17,13 +17,13 @@ import net.minecraftforge.common.MinecraftForge;
 @Mixin(FireworkRocketEntity.class)
 public class FireworkRocketEntityMixin extends EntityMixin
 {
-	@Shadow private static EntityDataAccessor<ItemStack> FIREWORK_ITEM;
+	@Shadow private static EntityDataAccessor<ItemStack> DATA_ID_FIREWORKS_ITEM;
 	
-	@Inject(method = "func_213893_k", at = @At("HEAD"))
+	@Inject(method = "explode", at = @At("HEAD"))
 	public void onFireworkBlast(CallbackInfo callbackInfo)
 	{
-		ItemStack stack = this.getDataManager().get(FIREWORK_ITEM);
+		ItemStack stack = this.getEntityData().get(DATA_ID_FIREWORKS_ITEM);
 		CompoundTag stackData = !stack.isEmpty() ? stack.getTagElement("Fireworks") : null;
-		MinecraftForge.EVENT_BUS.post(new FireworkExplosionEvent(this.world, this.getPosX(), this.getPosY(), this.getPosZ(), stackData));
+		MinecraftForge.EVENT_BUS.post(new FireworkExplosionEvent(this.level, this.getX(), this.getY(), this.getZ(), stackData));
 	}
 }

@@ -5,11 +5,15 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.lying.variousoddities.client.special.BlindRender;
 import com.lying.variousoddities.utility.VOBusClient;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix4f;
 
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -25,8 +29,8 @@ public class WorldRendererMixin
 	@Shadow
 	private void renderEndSky(PoseStack stack){ }
 	
-	@Inject(method = "renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;F;Lnet/minecraft/client/Camera;Z;Ljava/lang/Runnable)V", at = @At("HEAD"), cancellable = true)
-	private void renderSky(PoseStack stack, CallbackInfo ci)
+	@Inject(method = "renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V", at = @At("HEAD"), cancellable = true)
+	private void renderSky(PoseStack stack, Matrix4f matrix, float partialTicks, Camera camera, boolean client, Runnable runnable, CallbackInfo ci)
 	{
 		if(VOBusClient.playerInWall() || BlindRender.playerIsBlind())
 		{
@@ -59,8 +63,8 @@ public class WorldRendererMixin
 			ci.cancel();
 	}
 	
-	@Inject(method = "drawStars", at = @At("HEAD"), cancellable = true)
-	private void drawStars(CallbackInfo ci)
+	@Inject(method = "drawStars(Lcom/mojang/blaze3d/vertex/BufferBuilder;)Lcom/mojang/blaze3d/vertex/BufferBuilder/RenderedBuffer;", at = @At("HEAD"), cancellable = true)
+	private void drawStars(CallbackInfoReturnable<BufferBuilder.RenderedBuffer> ci)
 	{
 		if(BlindRender.playerIsBlind())
 			ci.cancel();

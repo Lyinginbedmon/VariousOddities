@@ -17,64 +17,65 @@ import com.mojang.math.Vector3d;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 
 @Mixin(Entity.class)
 public class EntityMixin
 {
-	@Shadow public Level world;
+	@Shadow public Level level;
 	
 	@Shadow
-	public final double getPosX(){ return 0D; }
+	public final double getX(){ return 0D; }
 	
 	@Shadow
-	public final double getPosY(){ return 0D; }
+	public final double getY(){ return 0D; }
 	
 	@Shadow
-	public final double getPosZ(){ return 0D; }
+	public final double getZ(){ return 0D; }
 	
 	@Shadow
-	public SynchedEntityData getDataManager(){ return null; }
+	public SynchedEntityData getEntityData(){ return null; }
 	
 	@Shadow
-	public int getMaxAir(){ return 0; }
+	public int getMaxAirSupply(){ return 0; }
 	
 	@Shadow
-	public void setAir(int airIn){ }
+	public void setAirSupply(int airIn){ }
 	
 	@Shadow
 	public boolean isSprinting(){ return false; }
 	
 	@Shadow
-	public boolean isSneaking(){ return false; }
+	public boolean isDiscrete(){ return false; }
 	
 	@Shadow
 	public boolean isOnGround(){ return false; }
 	
 	@Shadow
-	public void setFlag(int flag, boolean set){ }
+	public void setSharedFlag(int flag, boolean set){ }
 	
 	@Shadow
-	public void setSneaking(boolean keyDownIn){ }
+	public void setShiftKeyDown(boolean keyDownIn){ }
 	
 	@Shadow
 	public void setPose(Pose pose){ }
 	
 	@Shadow
-	public boolean isPoseClear(Pose poseIn){ return false; }
+	public boolean canEnterPose(Pose poseIn){ return false; }
 	
 	@Shadow
-	public void setRotation(float strafe, float forward){ }
+	public void setRot(float strafe, float forward){ }
 	
 	@Shadow
-	public BlockPos getPositionUnderneath(){ return BlockPos.ZERO; }
+	public BlockPos getBlockPosBelowThatAffectsMyMovement(){ return BlockPos.ZERO; }
 	
 	@Shadow
 	public boolean isAlive(){ return true; }
@@ -96,7 +97,7 @@ public class EntityMixin
 	{
 		Entity ent = (Entity)(Object)this;
 		if(ent instanceof LivingEntity && IPhasingAbility.isPhasing((LivingEntity)ent))
-			for(IPhasingAbility phasing : AbilityRegistry.getAbilitiesOfType((LivingEntity)ent, IPhasingAbility.class))
+			for(IPhasingAbility phasing : AbilityRegistry.getAbilitiesOfClass((LivingEntity)ent, IPhasingAbility.class))
 				if(phasing.preventsFallDamage((Ability)phasing))
 				{
 					Ability ability = (Ability)phasing;
@@ -120,7 +121,7 @@ public class EntityMixin
 	public void getMaxAirReptile(final CallbackInfoReturnable<Integer> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)ent, AbilityHoldBreath.REGISTRY_NAME))
+		if(ent instanceof LivingEntity && AbilityRegistry.hasAbilityOfMapName((LivingEntity)ent, AbilityRegistry.getClassRegistryKey(AbilityHoldBreath.class).location()))
 			ci.setReturnValue(600);
 	}
 	
@@ -136,32 +137,23 @@ public class EntityMixin
 		}
 	}
 	
-	@Inject(method = "getBoundingBox(Lnet/minecraft/entity/Pose;)Lnet/minecraft/util/math/AABB;", at = @At("TAIL"), cancellable = true)
-	public void getSize(Pose poseIn, final CallbackInfoReturnable<AABB> ci)
+	@Inject(method = "getDimensions(Lnet/minecraft/entity/Pose;)Lnet/minecraft/world/entity/EntityDimensions;", at = @At("TAIL"), cancellable = true)
+	public void getDimensions(Pose poseIn, final CallbackInfoReturnable<EntityDimensions> ci)
 	{
 		Entity ent = (Entity)(Object)this;
-		if(ent.getType() == EntityType.PLAYER && AbilityRegistry.hasAbility((Player)ent, AbilitySize.REGISTRY_NAME))
+		ResourceLocation sizeKey = AbilityRegistry.getClassRegistryKey(AbilitySize.class).location();
+		if(ent.getType() == EntityType.PLAYER && AbilityRegistry.hasAbilityOfMapName((Player)ent, sizeKey))
 		{
-			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName((Player)ent, AbilitySize.REGISTRY_NAME);
+			AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByMapName((Player)ent, sizeKey);
 			if(size == null) return;
 			
-			AABB baseSize = ci.getReturnValue();
+			EntityDimensions baseSize = ci.getReturnValue();
 			float scale = size.getScale();
 			
-			double posX = ent.getX();
-			double posY = ent.getY();
-			double posZ = ent.getZ();
+			float lenX = baseSize.width * scale * 0.5F;
+			float lenY = baseSize.height * scale;
 			
-			double lenX = baseSize.getXsize() * scale * 0.5D;
-			double lenY = baseSize.getYsize() * scale;
-			double lenZ = baseSize.getZsize() * scale * 0.5D;
-			
-			AABB trueSize = new AABB(
-					posX - lenX, posY, posZ - lenZ,
-					posX + lenX, posY + lenY, posZ + lenZ
-					);
-			
-			ci.setReturnValue(trueSize);
+			ci.setReturnValue(EntityDimensions.scalable(lenX, lenY));
 		}
 	}
 }

@@ -152,7 +152,7 @@ public class VOBusClient
 			{
 				if(AbilitySwim.isEntitySwimming(player))
 				{
-					if(abilityMap.containsKey(AbilitySwim.REGISTRY_NAME))
+					if(abilityMap.containsKey(AbilityRegistry.getClassRegistryKey(AbilitySwim.class).location()))
 					{
 						abilities.doWaterJump();
 						PacketHandler.sendToServer(new PacketBonusJump(false));
@@ -160,7 +160,8 @@ public class VOBusClient
 				}
 				else if(!player.isOnGround())
 				{
-					if(abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive())
+					ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
+					if(abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive())
 					{
 						abilities.doAirJump();
 						player.connection.send(new ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
@@ -387,7 +388,7 @@ public class VOBusClient
 		else if(renderTarget instanceof Player)
 		{
 			PlayerData data = PlayerData.forPlayer((Player)renderTarget);
-			if(!AbilityRegistry.getAbilitiesOfType(renderTarget, AbilityPhasing.class).isEmpty() || (data != null && data.getBodyCondition() != BodyCondition.ALIVE))
+			if(!AbilityRegistry.getAbilitiesOfClass(renderTarget, AbilityPhasing.class).isEmpty() || (data != null && data.getBodyCondition() != BodyCondition.ALIVE))
 			{
 	            event.setCanceled(true);
 	            MultiBufferSource iRenderTypeBuffer = mc.renderBuffers().bufferSource();
@@ -404,7 +405,7 @@ public class VOBusClient
 	public static <T extends LivingEntity, M extends EntityModel<T>> void resizeEntity(RenderLivingEvent.Pre event)
 	{
 		LivingEntity renderTarget = event.getEntity();
-		AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByName(renderTarget, AbilitySize.REGISTRY_NAME);
+		AbilitySize size = (AbilitySize)AbilityRegistry.getAbilityByMapName(renderTarget, AbilityRegistry.getClassRegistryKey(AbilitySize.class).location());
 		if(size == null)
 			return;
 		

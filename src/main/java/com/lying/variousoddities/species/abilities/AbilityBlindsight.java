@@ -4,7 +4,6 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
@@ -13,8 +12,6 @@ import net.minecraft.world.phys.Vec3;
 
 public class AbilityBlindsight extends AbilityVision
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "blindsight");
-	
 	private AbilityBlindsight()
 	{
 		this(0D);
@@ -22,7 +19,7 @@ public class AbilityBlindsight extends AbilityVision
 	
 	public AbilityBlindsight(double rangeIn)
 	{
-		super(REGISTRY_NAME, Math.max(4D, rangeIn));
+		super(Math.max(4D, rangeIn));
 	}
 	
 	public AbilityBlindsight(double rangeIn, double rangeMinIn)
@@ -57,7 +54,7 @@ public class AbilityBlindsight extends AbilityVision
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

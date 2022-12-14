@@ -4,7 +4,6 @@ import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -19,13 +18,11 @@ import net.minecraftforge.event.entity.EntityTeleportEvent;
 
 public class AbilityTeleportToPos extends ActivatedAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "teleport_to_position");
-	
 	private double maxRange;
 	
 	public AbilityTeleportToPos(double range)
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_SECOND * 6);
+		super(Reference.Values.TICKS_PER_SECOND * 6);
 		this.maxRange = range;
 	}
 	
@@ -112,7 +109,7 @@ public class AbilityTeleportToPos extends ActivatedAbility
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

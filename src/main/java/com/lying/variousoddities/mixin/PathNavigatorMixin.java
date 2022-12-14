@@ -21,35 +21,35 @@ import net.minecraft.world.phys.Vec3;
 public class PathNavigatorMixin
 {
 	@Shadow
-	protected Mob entity;
+	protected Mob mob;
 	
 	@Shadow
-	public boolean hasPath() { return false; }
+	public boolean isInProgress() { return false; }
 	
 	@Shadow
 	public Path getPath() { return null; }
 	
 	@Shadow
-	public void clearPath() { }
+	public void stop() { }
 	
 	@Inject(method = "tick()V", at = @At("HEAD"), cancellable = true)
 	public void tick(final CallbackInfo ci)
 	{
-		LivingData data = LivingData.forEntity(entity);
-		if(data == null || !hasPath())
+		LivingData data = LivingData.forEntity(mob);
+		if(data == null || !isInProgress())
 			return;
 		
 		List<LivingEntity> terrorisers = data.getMindControlled(Conditions.AFRAID.get(), 8D);
-		terrorisers.removeIf((terroriser) -> { return terroriser.distanceTo(entity) > 8D || !entity.hasLineOfSight(terroriser); });
+		terrorisers.removeIf((terroriser) -> { return terroriser.distanceTo(mob) > 8D || !mob.hasLineOfSight(terroriser); });
 		if(terrorisers.isEmpty())
 			return;
 		
-		Vec3 currentPos = entity.position();
-		Vec3 nodePos = getPath().getNextEntityPos(entity);
+		Vec3 currentPos = mob.position();
+		Vec3 nodePos = getPath().getNextEntityPos(mob);
 		Vec3 direction = nodePos.subtract(currentPos).normalize();
 		terrorisers.removeIf((terroriser) -> { return terroriser.distanceToSqr(currentPos) < terroriser.distanceToSqr(currentPos.add(direction)); });
 		
 		if(!terrorisers.isEmpty())
-			clearPath();
+			stop();
 	}
 }

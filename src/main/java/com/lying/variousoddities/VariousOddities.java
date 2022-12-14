@@ -3,7 +3,6 @@ package com.lying.variousoddities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.lying.variousoddities.client.KeyBindings;
 import com.lying.variousoddities.client.special.BlindRender;
 import com.lying.variousoddities.client.special.ScentRender;
 import com.lying.variousoddities.client.special.SettlementRender;
@@ -37,6 +36,7 @@ import com.lying.variousoddities.world.settlement.SettlementManagerServer;
 
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -75,7 +75,6 @@ public class VariousOddities
 		VORegistries.registerCustom(modEventBus);
         
         modEventBus.addListener(this::doCommonSetup);
-        modEventBus.addListener(this::doClientSetup);
         modEventBus.addListener(this::doLoadComplete);
         modEventBus.addListener(VODataGenerators::onGatherData);
         modEventBus.addListener(VOCapabilities::onRegisterCapabilities);
@@ -99,19 +98,6 @@ public class VariousOddities
     	MinecraftForge.EVENT_BUS.register(FactionBus.class);
     }
     
-    @SuppressWarnings("removal")
-	private void doClientSetup(final FMLClientSetupEvent event)
-    {
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(KeyBindings::registerKeybinds);
-        ItemBlockRenderTypes.setRenderLayer(VOBlocks.LAYER_SCALE.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(VOBlocks.MOSS_BLOCK.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(VOBlocks.TABLE_DRAFTING.get(), RenderType.cutout());
-        
-        MinecraftForge.EVENT_BUS.register(VOBusClient.class);
-        MinecraftForge.EVENT_BUS.register(SettlementRender.class);
-        MinecraftForge.EVENT_BUS.register(BlindRender.class);
-        MinecraftForge.EVENT_BUS.register(ScentRender.class);
-    }
 	
     private void doLoadComplete(final FMLLoadCompleteEvent event)
     {
@@ -148,4 +134,28 @@ public class VariousOddities
 		event.addListener(SpeciesRegistry.getInstance());
 		event.addListener(TemplateRegistry.getInstance());
 	}
+    
+    @Mod.EventBusSubscriber(modid = Reference.ModInfo.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ClientModEvents
+    {
+        @SuppressWarnings("removal")
+        @SubscribeEvent
+    	public static void doClientSetup(final FMLClientSetupEvent event)
+        {
+            ItemBlockRenderTypes.setRenderLayer(VOBlocks.LAYER_SCALE.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(VOBlocks.MOSS_BLOCK.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(VOBlocks.TABLE_DRAFTING.get(), RenderType.cutout());
+            
+            MinecraftForge.EVENT_BUS.register(VOBusClient.class);
+            MinecraftForge.EVENT_BUS.register(SettlementRender.class);
+            MinecraftForge.EVENT_BUS.register(BlindRender.class);
+            MinecraftForge.EVENT_BUS.register(ScentRender.class);
+        }
+        
+        @SubscribeEvent
+        public static void registerKeybindings(RegisterKeyMappingsEvent event)
+        {
+        	ClientProxy.registerKeyMappings(event);
+        }
+    }
 }

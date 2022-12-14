@@ -4,16 +4,15 @@ import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public abstract class AbilityForm extends ToggledAbility
 {
-	protected AbilityForm(ResourceLocation registryName)
+	protected AbilityForm()
 	{
-		super(registryName, Reference.Values.TICKS_PER_SECOND * 10);
+		super(Reference.Values.TICKS_PER_SECOND * 10);
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
@@ -59,15 +58,13 @@ public abstract class AbilityForm extends ToggledAbility
 	
 	public static class Mist extends AbilityForm
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "mist_form");
-		
-		public Mist(){ super(REGISTRY_NAME); }
+		public Mist(){ super(); }
 		
 		protected Ability getAbility(){ return new AbilityGaseous(); }
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			
 			public Ability create(CompoundTag compound)
 			{
@@ -80,15 +77,13 @@ public abstract class AbilityForm extends ToggledAbility
 	
 	public static class Ghost extends AbilityForm
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "ghost_form");
-		
-		public Ghost(){ super(REGISTRY_NAME); }
+		public Ghost(){ super(); }
 		
 		protected Ability getAbility(){ return new AbilityIncorporeality(); }
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			
 			public Ability create(CompoundTag compound)
 			{

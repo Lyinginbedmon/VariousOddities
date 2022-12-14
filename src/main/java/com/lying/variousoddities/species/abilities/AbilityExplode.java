@@ -8,7 +8,6 @@ import com.lying.variousoddities.reference.Reference;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -24,8 +23,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityExplode extends ActivatedAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "explode");
-	
 	private boolean ignited = false;
 	private int fuse = 30;
 	private int radius = 3;
@@ -33,7 +30,7 @@ public class AbilityExplode extends ActivatedAbility
 	
 	public AbilityExplode()
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_MINUTE);
+		super(Reference.Values.TICKS_PER_MINUTE);
 	}
 	
 	public Component translatedName(){ return this.charged ? Component.translatable("ability."+getMapName()+"_charged") : super.translatedName(); }
@@ -93,11 +90,11 @@ public class AbilityExplode extends ActivatedAbility
 	public void doCharging(EntityStruckByLightningEvent event)
 	{
 		Entity entity = event.getEntity();
-		if(entity instanceof LivingEntity && AbilityRegistry.hasAbility((LivingEntity)entity, REGISTRY_NAME))
+		if(entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			AbilityExplode ability = (AbilityExplode)AbilityRegistry.getAbilityByName(living, REGISTRY_NAME);
-			if(ability.canTrigger(living))
+			AbilityExplode ability = (AbilityExplode)AbilityRegistry.getAbilityByMapName(living, getRegistryName());
+			if(ability != null && ability.canTrigger(living))
 			{
 				ability.charged = true;
 				ability.markForUpdate(living);
@@ -108,9 +105,8 @@ public class AbilityExplode extends ActivatedAbility
 	public void doExplosion(LivingTickEvent event)
 	{
 		LivingEntity entity = event.getEntity();
-		if(AbilityRegistry.hasAbility(entity, REGISTRY_NAME))
-		{
-			AbilityExplode ability = (AbilityExplode)AbilityRegistry.getAbilityByName(entity, REGISTRY_NAME);
+		AbilityExplode ability = (AbilityExplode)AbilityRegistry.getAbilityByMapName(entity, getRegistryName());
+		if(ability != null)
 			if(ability.ignited)
 			{
 				Level world = entity.getLevel();
@@ -138,7 +134,6 @@ public class AbilityExplode extends ActivatedAbility
 					markForUpdate(entity);
 				}
 			}
-		}
 	}
 	
 	private void spawnLingeringCloud(LivingEntity entity, Level world)
@@ -162,7 +157,7 @@ public class AbilityExplode extends ActivatedAbility
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

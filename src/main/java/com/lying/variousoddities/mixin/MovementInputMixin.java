@@ -34,8 +34,8 @@ public class MovementInputMixin
 	@Final
 	Options options;
 	
-	@Inject(method = "tick(Z)V", at = @At("HEAD"), cancellable = true)
-	public void dazedPreventMovement(boolean forceDown, final CallbackInfo ci)
+	@Inject(method = "tick(ZF)V", at = @At("HEAD"), cancellable = true)
+	public void dazedPreventMovement(boolean forceDown, float impulse, final CallbackInfo ci)
 	{
 		Player player = Minecraft.getInstance().player;
 		if(player != null)
@@ -49,8 +49,8 @@ public class MovementInputMixin
 		}
 	}
 	
-	@Inject(method = "tick(Z)V", at = @At("RETURN"), cancellable = true)
-	public void afraidPreventMovement(boolean forceDown, final CallbackInfo ci)
+	@Inject(method = "tick(ZF)V", at = @At("RETURN"), cancellable = true)
+	public void afraidPreventMovement(boolean forceDown, float impulse, final CallbackInfo ci)
 	{
 		Player player = Minecraft.getInstance().player;
 		if(player != null)

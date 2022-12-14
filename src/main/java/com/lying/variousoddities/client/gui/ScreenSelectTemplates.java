@@ -62,6 +62,8 @@ public class ScreenSelectTemplates extends Screen
 					return (index1 > index2 ? 1 : index1 < index2 ? -1 : 0);
 				}
 			};
+	public ResourceLocation healthKey = AbilityRegistry.getClassRegistryKey(AbilityModifierCon.class).location();
+	public ResourceLocation armourKey = AbilityRegistry.getClassRegistryKey(AbilityNaturalArmour.class).location();
 	
 	private final Player player;
 	private final Types customTypes;
@@ -360,10 +362,10 @@ public class ScreenSelectTemplates extends Screen
 		if(!baseAbilities.isEmpty())
 			for(Ability ability : baseAbilities.values()) 
 			{
-				if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+				if(ability.getRegistryName().equals(armourKey))
 					armour += ((AbilityNaturalArmour)ability).amount(); 
 				
-				if(ability.getRegistryName().equals(AbilityModifierCon.REGISTRY_NAME))
+				if(ability.getRegistryName().equals(healthKey))
 					health += ((AbilityModifier)ability).amount();
 			};
 		
@@ -427,10 +429,10 @@ public class ScreenSelectTemplates extends Screen
 		if(!abilities.isEmpty())
 			for(Ability ability : abilities) 
 			{
-				if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+				if(ability.getRegistryName().equals(armourKey))
 					armour += ((AbilityNaturalArmour)ability).amount(); 
 				
-				if(ability.getRegistryName().equals(AbilityModifierCon.REGISTRY_NAME))
+				if(ability.getRegistryName().equals(healthKey))
 					health += ((AbilityModifier)ability).amount();
 			};
 		drawHealthAndArmour(matrixStack, xPos, yPos, (int)health, (int)armour);

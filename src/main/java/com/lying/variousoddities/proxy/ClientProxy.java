@@ -3,6 +3,7 @@ package com.lying.variousoddities.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lying.variousoddities.client.KeyBindings;
 import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementManagerClient;
 import com.lying.variousoddities.client.SpellManagerClient;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -43,6 +45,11 @@ public class ClientProxy extends CommonProxy
 	public TypesManager getTypesManager(){ return localTypesData; }
 	public Map<String, Integer> getReputation(){ return localReputation; }
 	public void setReputation(Map<String, Integer> repIn){ localReputation = repIn; }
+	
+	public static void registerKeyMappings(RegisterKeyMappingsEvent event)
+	{
+		KeyBindings.registerKeybinds(event::register);
+	}
 	
 	public void registerHandlers()
 	{

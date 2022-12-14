@@ -1,10 +1,7 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
@@ -17,13 +14,11 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySunBurn extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "sunburn");
-	
 	private boolean helmetProtects = true;
 	
 	public AbilitySunBurn()
 	{
-		super(REGISTRY_NAME);
+		super();
 	}
 	
 	public AbilitySunBurn(boolean helmet)
@@ -61,9 +56,9 @@ public class AbilitySunBurn extends Ability
 	public void onLivingUpdate(LivingTickEvent event)
 	{
 		LivingEntity entity = event.getEntity();
-		if(AbilityRegistry.hasAbility(entity, getMapName()) && !(entity.getType() == EntityType.SKELETON || entity.getType() == EntityType.ZOMBIE))
+		AbilitySunBurn sunburn = (AbilitySunBurn)AbilityRegistry.getAbilityByMapName(entity, getMapName());
+		if(sunburn != null && !(entity.getType() == EntityType.SKELETON || entity.getType() == EntityType.ZOMBIE))
 		{
-			AbilitySunBurn sunburn = (AbilitySunBurn)AbilityRegistry.getAbilityByName(entity, getMapName());
 			boolean shouldBurn = isInDaylight(entity) && !(entity.hasEffect(MobEffects.FIRE_RESISTANCE) || entity.isInvulnerableTo(DamageSource.ON_FIRE));
 			if(shouldBurn)
 			{
@@ -107,7 +102,7 @@ public class AbilitySunBurn extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound){ return new AbilitySunBurn(compound.getBoolean("HelmetProtects")); }
 	}

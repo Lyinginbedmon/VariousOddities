@@ -12,9 +12,9 @@ import net.minecraft.world.effect.MobEffects;
 
 public abstract class AbilityStatusImmunity extends Ability
 {
-	protected AbilityStatusImmunity(ResourceLocation registryNameIn)
+	protected AbilityStatusImmunity()
 	{
-		super(registryNameIn);
+		super();
 	}
 	
 	public Type getType(){ return Type.DEFENSE; }
@@ -25,49 +25,43 @@ public abstract class AbilityStatusImmunity extends Ability
 	
 	public static class Poison extends AbilityStatusImmunity
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "poison_immunity");
-		
 		public Poison()
 		{
-			super(REGISTRY_NAME);
+			super();
 		}
 		
 		public boolean appliesToStatus(MobEffectInstance effectIn){ return effectIn.getEffect() == MobEffects.POISON; }
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			public Ability create(CompoundTag compound){ return new Poison(); }
 		}
 	}
 	
 	public static class Paralysis extends AbilityStatusImmunity
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "paralysis_immunity");
-		
 		public Paralysis()
 		{
-			super(REGISTRY_NAME);
+			super();
 		}
 		
 		public boolean appliesToStatus(MobEffectInstance effectIn){ return VOMobEffects.isParalysisEffect(effectIn); }
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			public Ability create(CompoundTag compound){ return new Paralysis(); }
 		}
 	}
 	
 	public static class Configurable extends AbilityStatusImmunity
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_immunity");
-		
 		private int potionID = 0;
 		
 		public Configurable(int effectIn)
 		{
-			super(REGISTRY_NAME);
+			super();
 			this.potionID = effectIn;
 		}
 		
@@ -107,7 +101,7 @@ public abstract class AbilityStatusImmunity extends Ability
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			public Ability create(CompoundTag compound){ return new Configurable(compound.getInt("Id")); }
 		}
 	}

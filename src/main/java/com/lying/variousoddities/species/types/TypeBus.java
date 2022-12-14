@@ -100,7 +100,7 @@ public class TypeBus
 		if(!shouldFire()) return;
 		if(event.getTarget() != null && event.getTarget() instanceof LivingEntity)
 		{
-			if(AbilityRegistry.hasAbility(event.getEntity(), AbilityImmunityCrits.REGISTRY_NAME))
+			if(AbilityRegistry.hasAbilityOfMapName(event.getEntity(), AbilityRegistry.getClassRegistryKey(AbilityImmunityCrits.class).location()))
 			{
 				event.setDamageModifier(1.0F);
 				event.setResult(Result.DENY);

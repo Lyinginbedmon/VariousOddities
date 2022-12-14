@@ -14,13 +14,11 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySmite extends ToggledAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "smite");
-	
 	private EnumCreatureType targetType;
 	
 	public AbilitySmite(EnumCreatureType targetIn)
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_DAY);
+		super(Reference.Values.TICKS_PER_DAY);
 		this.targetType = targetIn;
 	}
 	
@@ -61,7 +59,7 @@ public class AbilitySmite extends ToggledAbility
 		if(source instanceof EntityDamageSource && source.getDirectEntity() instanceof LivingEntity)
 		{
 			LivingEntity attacker = (LivingEntity)source.getDirectEntity();
-			for(AbilitySmite smite : AbilityRegistry.getAbilitiesOfType(attacker, AbilitySmite.class))
+			for(AbilitySmite smite : AbilityRegistry.getAbilitiesOfClass(attacker, AbilitySmite.class))
 			{
 				if(!smite.isActive() || !smite.appliesTo(victim) || !smite.canAbilityAffectEntity(victim, attacker))
 					continue;
@@ -81,7 +79,7 @@ public class AbilitySmite extends ToggledAbility
 	
 	public static class Builder extends ToggledAbility.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public ToggledAbility createAbility(CompoundTag compound)
 		{

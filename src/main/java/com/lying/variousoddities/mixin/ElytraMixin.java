@@ -21,25 +21,26 @@ public class ElytraMixin extends EntityMixin
 	boolean isElytraFlying = false;
 	
 	@Shadow
-	public boolean isElytraFlying(){ return false; }
+	public boolean isFallFlying(){ return false; }
 	
 	@Inject(method = "livingTick()V", at = @At("HEAD"))
 	public void livingTickStart(final CallbackInfo ci)
 	{
-		this.isElytraFlying = isElytraFlying();
+		this.isElytraFlying = isFallFlying();
 	}
 	
 	@Inject(method = "livingTick()V", at = @At("TAIL"))
 	public void livingTickEnd(final CallbackInfo ci)
 	{
-		if(isElytraFlying && canElytraFly() && !isElytraFlying() && !isSneaking() && !isOnGround())
-			setFlag(7, true);
+		if(isElytraFlying && canElytraFly() && !isFallFlying() && !isDiscrete() && !isOnGround())
+			setSharedFlag(7, true);
 	}
 	
 	private boolean canElytraFly()
 	{
 		LivingEntity living = (LivingEntity)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(living);
-		return abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && ((AbilityFlight)abilityMap.get(AbilityFlight.REGISTRY_NAME)).isActive();
+		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
+		return abilityMap.containsKey(flightKey) && ((AbilityFlight)abilityMap.get(flightKey)).isActive();
 	}
 }

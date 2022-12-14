@@ -1,7 +1,5 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -12,11 +10,9 @@ import net.minecraft.world.entity.LivingEntity;
 
 public class AbilityDarkvision extends ToggledAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "darkvision");
-	
 	public AbilityDarkvision()
 	{
-		super(REGISTRY_NAME);
+		super();
 	}
 	
 	public ResourceLocation getMapName(){ return getRegistryName(); }
@@ -31,12 +27,14 @@ public class AbilityDarkvision extends ToggledAbility
 	
 	public static boolean isDarkvisionActive(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbility(entity, AbilityDarkvision.REGISTRY_NAME) && (entity.getType() != EntityType.PLAYER || AbilityRegistry.getAbilityByName(entity, AbilityDarkvision.REGISTRY_NAME).isActive());
+		ResourceLocation registryName = AbilityRegistry.getClassRegistryKey(AbilityDarkvision.class).location();
+		AbilityDarkvision armour = (AbilityDarkvision)AbilityRegistry.getAbilityByMapName(entity, registryName);
+		return armour != null && (entity.getType() != EntityType.PLAYER || armour.isActive());
 	}
 	
 	public static class Builder extends ToggledAbility.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public ToggledAbility createAbility(CompoundTag compound)
 		{

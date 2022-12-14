@@ -1,19 +1,13 @@
 package com.lying.variousoddities.mixin;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.lying.variousoddities.entity.AbstractCrab;
 
 import net.minecraft.core.BlockPos;
@@ -21,8 +15,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
@@ -33,9 +25,6 @@ import net.minecraft.world.level.storage.ServerLevelData;
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin extends Level
 {
-	@Shadow
-	private final Map<UUID, Entity> entitiesByUuid = Maps.newHashMap();
-	
 	protected ServerLevelMixin(MinecraftServer p_214999_, Executor p_215000_, LevelStorageSource.LevelStorageAccess p_215001_, 
 			ServerLevelData p_215002_, ResourceKey<Level> p_215003_, LevelStem p_215004_, ChunkProgressListener p_215005_, boolean p_215006_, 
 			long p_215007_, List<CustomSpawner> p_215008_, boolean p_215009_) 
@@ -48,16 +37,5 @@ public abstract class ServerLevelMixin extends Level
 	{
 		if(type == 1010)
 			AbstractCrab.startParty((ServerLevel)(Object)this, pos, vars != 0);
-	}
-	
-	public List<LivingEntity> getLoadedCreatures(Predicate<LivingEntity> predicate)
-	{
-		List<LivingEntity> creatures = Lists.newArrayList();
-		entitiesByUuid.values().forEach((entity) -> 
-			{
-				if(entity instanceof LivingEntity && entity.isAlive() && predicate.apply((LivingEntity)entity))
-					creatures.add((LivingEntity)entity); 
-			});
-		return creatures;
 	}
 }

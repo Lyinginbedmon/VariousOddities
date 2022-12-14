@@ -31,7 +31,7 @@ public class EntityMixinClient
 				ci.setReturnValue(true);
 			
 			double dist = Math.sqrt(player.distanceToSqr(ent));
-			for(AbilityVision vision : AbilityRegistry.getAbilitiesOfType(player, AbilityVision.class))
+			for(AbilityVision vision : AbilityRegistry.getAbilitiesOfClass(player, AbilityVision.class))
 				if(vision != null && vision.isInRange(dist) && vision.testEntity(ent, player))
 				{
 					ci.setReturnValue(true);

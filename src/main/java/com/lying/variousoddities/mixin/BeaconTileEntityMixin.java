@@ -25,20 +25,20 @@ public class BeaconTileEntityMixin
 	@Shadow
 	private int levels;
 	@Shadow
-	private MobEffect primaryEffect;
+	private MobEffect primaryPower;
 	@Shadow
-	private MobEffect secondaryEffect;
+	private MobEffect secondaryPower;
 	
 	@Inject(method = "addEffectsToPlayers()V", at = @At("HEAD"))
 	private void addEffects(final CallbackInfo ci)
 	{
 		BeaconBlockEntity tile = (BeaconBlockEntity)(Object)this;
 		Level world = tile.getLevel();
-		if(primaryEffect == null || world == null || world.isClientSide)
+		if(primaryPower == null || world == null || world.isClientSide)
 			return;
 		
 		double range = (double)(levels * 10 + 10);
-		int amplifier = levels >= 4 && primaryEffect == secondaryEffect ? 1 : 0;
+		int amplifier = levels >= 4 && primaryPower == secondaryPower ? 1 : 0;
 		int duration = (9 + levels * 2) * 20;
 		AABB area = new AABB(tile.getBlockPos()).inflate(range).inflate(0D, tile.getLevel().getHeight(), 0D);
 		List<TileEntityPhylactery> phylacteries = Lists.newArrayList();
@@ -49,16 +49,16 @@ public class BeaconTileEntityMixin
 //				phylacteries.add((TileEntityPhylactery)tileEntity);
 //		});
 		
-		boolean hasSecondary = levels >= 4 && primaryEffect != secondaryEffect && secondaryEffect != null;
+		boolean hasSecondary = levels >= 4 && primaryPower != secondaryPower && secondaryPower != null;
 		for(TileEntityPhylactery phylactery : phylacteries)
 		{
 			LivingEntity owner = phylactery.getOwner();
 			if(owner == null || owner.getType() == EntityType.PLAYER && area.contains(owner.position()) || owner.getLevel().dimension() != world.dimension())
 				continue;
 			
-			owner.addEffect(new MobEffectInstance(primaryEffect, duration, amplifier, true, true));
+			owner.addEffect(new MobEffectInstance(primaryPower, duration, amplifier, true, true));
 			if(hasSecondary)
-				owner.addEffect(new MobEffectInstance(secondaryEffect, duration, amplifier, true, true));
+				owner.addEffect(new MobEffectInstance(secondaryPower, duration, amplifier, true, true));
 		}
 	}
 }

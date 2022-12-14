@@ -37,15 +37,17 @@ public class PacketAddScent
 	public static void handle(PacketAddScent msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
+		context.setPacketHandled(true);
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
 			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			if(player == null)
+				return;
+			
 			ScentsManager manager = VariousOddities.proxy.getScentsManager(player.getLevel());
 			
 			ScentMarker marker = new ScentMarker(player.getLevel(), msg.scentData);
 			manager.addScentMarker(marker);
 		}
-		
-		context.setPacketHandled(true);
 	}
 }

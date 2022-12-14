@@ -214,7 +214,7 @@ public class CompanionMarking
 	 * Notifies either all nearby companions or those marked for the next mark only.
 	 * @param player
 	 * @param pos
-	 * @param entity
+	 * @param mob
 	 */
 	private static void notifyCompanions(Player player, Mark markType, Object values)
 	{

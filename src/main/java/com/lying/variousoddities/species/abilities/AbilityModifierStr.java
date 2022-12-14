@@ -2,11 +2,8 @@ package com.lying.variousoddities.species.abilities;
 
 import java.util.UUID;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -16,12 +13,11 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 
 public class AbilityModifierStr extends AbilityModifier
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "strength_modifier");
 	private static final UUID STRENGTH_UUID = UUID.fromString("6444940e-a83a-4a76-a2ed-1847d8e1ebd0");
 	
 	public AbilityModifierStr(double amountIn)
 	{
-		super(REGISTRY_NAME, amountIn);
+		super(amountIn);
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
@@ -45,9 +41,9 @@ public class AbilityModifierStr extends AbilityModifier
 		if(attribute == null)
 			return;
 		
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		if(AbilityRegistry.hasAbilityOfMapName(entity, getMapName()))
 		{
-			AbilityModifierStr strength = (AbilityModifierStr)AbilityRegistry.getAbilityByName(entity, getMapName());
+			AbilityModifierStr strength = (AbilityModifierStr)AbilityRegistry.getAbilityByMapName(entity, getMapName());
 			double amount = strength.amount;
 			
 			AttributeModifier modifier = attribute.getModifier(STRENGTH_UUID);
@@ -69,7 +65,7 @@ public class AbilityModifierStr extends AbilityModifier
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

@@ -44,7 +44,7 @@ public class PacketAbilityActivate
 			Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(sender != null)
 			{
-				Ability ability = AbilityRegistry.getAbilityByName(sender, msg.abilityName);
+				Ability ability = AbilityRegistry.getAbilityByMapName(sender, msg.abilityName);
 				if(ability != null && !ability.passive())
 				{
 					ActivatedAbility activatedAbility = (ActivatedAbility)ability;

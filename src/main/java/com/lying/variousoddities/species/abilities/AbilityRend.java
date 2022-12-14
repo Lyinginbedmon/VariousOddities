@@ -3,7 +3,6 @@ package com.lying.variousoddities.species.abilities;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -15,13 +14,11 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityRend extends AbilityMeleeDamage
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "rend");
-	
 	private float dmgAmount = 0.25F;
 	
 	public AbilityRend(float amount)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.dmgAmount = amount;
 	}
 	
@@ -58,10 +55,9 @@ public class AbilityRend extends AbilityMeleeDamage
 		if(isValidDamageSource(event.getSource()))
 		{
 			LivingEntity trueSource = (LivingEntity)event.getSource().getEntity();
-			if(AbilityRegistry.hasAbility(trueSource, REGISTRY_NAME))
+			AbilityRend rend = (AbilityRend)AbilityRegistry.getAbilityByMapName(trueSource, getRegistryName());
+			if(rend != null)
 			{
-				AbilityRend rend = (AbilityRend)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME);
-				
 				LivingEntity victim = event.getEntity();
 				if(!canAbilityAffectEntity(victim, trueSource))
 					return;
@@ -99,7 +95,7 @@ public class AbilityRend extends AbilityMeleeDamage
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

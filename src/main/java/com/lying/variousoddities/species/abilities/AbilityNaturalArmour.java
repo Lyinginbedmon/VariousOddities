@@ -2,11 +2,8 @@ package com.lying.variousoddities.species.abilities;
 
 import java.util.UUID;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -17,14 +14,13 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityNaturalArmour extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "natural_armour");
 	private static final UUID NATURAL_ARMOUR_UUID = UUID.fromString("edf63428-6a6b-43b4-a914-b72d963746c8");
 	
 	private double amount = 2F;
 	
 	public AbilityNaturalArmour(double amountIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.amount = amountIn;
 	}
 	
@@ -70,9 +66,9 @@ public class AbilityNaturalArmour extends Ability
 		if(attribute == null)
 			return;
 		
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		AbilityNaturalArmour armour = (AbilityNaturalArmour)AbilityRegistry.getAbilityByMapName(entity, getMapName());
+		if(armour != null)
 		{
-			AbilityNaturalArmour armour = (AbilityNaturalArmour)AbilityRegistry.getAbilityByName(entity, getMapName());
 			double amount = armour.amount;
 			
 			AttributeModifier modifier = attribute.getModifier(NATURAL_ARMOUR_UUID);
@@ -95,7 +91,7 @@ public class AbilityNaturalArmour extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

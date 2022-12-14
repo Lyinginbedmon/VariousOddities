@@ -6,7 +6,6 @@ import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -22,16 +21,16 @@ public abstract class AbilityVision extends ToggledAbility
 	protected double range;
 	private double rangeMin = 0D;
 	
-	public AbilityVision(ResourceLocation registryName, double rangeIn)
+	public AbilityVision(double rangeIn)
 	{
-		super(registryName);
+		super();
 		this.range = Math.max(4D, rangeIn);
 		this.isActive = true;
 	}
 	
-	public AbilityVision(ResourceLocation registryName, double rangeIn, double rangeMinIn)
+	public AbilityVision(double rangeIn, double rangeMinIn)
 	{
-		this(registryName, rangeIn);
+		this(rangeIn);
 		this.rangeMin = rangeMinIn;
 	}
 	
@@ -104,7 +103,7 @@ public abstract class AbilityVision extends ToggledAbility
 	
 	public static Collection<AbilityVision> getVisionAbilities(LivingEntity entity)
 	{
-		return AbilityRegistry.getAbilitiesOfType(entity, AbilityVision.class);
+		return AbilityRegistry.getAbilitiesOfClass(entity, AbilityVision.class);
 	}
 	
 	public static boolean canMobSeeEntity(LivingEntity mob, LivingEntity entity)

@@ -12,14 +12,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityDamageResistance extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "damage_resistance");
-	
 	private final DamageType damageType;
 	private final DamageResist resistType;
 	
 	public AbilityDamageResistance(DamageType damageIn, DamageResist typeIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.damageType = damageIn;
 		this.resistType = typeIn;
 	}
@@ -63,7 +61,7 @@ public class AbilityDamageResistance extends Ability
 	public void applyDamageResistance(DamageResistanceEvent event)
 	{
 		DamageSource source = event.getSource();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), getRegistryName()))
 		{
 			AbilityDamageResistance resistance = (AbilityDamageResistance)ability;
 			if(resistance.damageType.isDamageType(source) && event.getResistance() != DamageResist.IMMUNE)
@@ -76,7 +74,7 @@ public class AbilityDamageResistance extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

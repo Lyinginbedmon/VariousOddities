@@ -35,6 +35,8 @@ public class ScreenCharacterSheet extends Screen
 	public static final ResourceLocation SHEET_GUI_TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/character_sheet.png");
 	private static final int ACTION_ICON_SIZE = 12;
 	private static final int ACTION_ICON_SEP = 4;
+	public ResourceLocation healthKey = AbilityRegistry.getClassRegistryKey(AbilityModifierCon.class).location();
+	public ResourceLocation armourKey = AbilityRegistry.getClassRegistryKey(AbilityNaturalArmour.class).location();
 	
 	private final MutableComponent speciesHeader;
 	private Component typesHeader;
@@ -102,10 +104,10 @@ public class ScreenCharacterSheet extends Screen
 		List<Ability> actives = Lists.newArrayList();
 		for(Ability ability : AbilityRegistry.getCreatureAbilities(player).values())
 		{
-			if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+			if(ability.getRegistryName().equals(armourKey))
 				armour += ((AbilityNaturalArmour)ability).amount(); 
 			
-			if(ability.getRegistryName().equals(AbilityModifierCon.REGISTRY_NAME))
+			if(ability.getRegistryName().equals(healthKey))
 				health += ((AbilityModifier)ability).amount();
 			
 			if(ability.passive())
@@ -296,7 +298,7 @@ public class ScreenCharacterSheet extends Screen
 			iconY += ACTION_ICON_SIZE + ACTION_ICON_SEP;
 		}
 		
-		if(hovered != null)
+		if(hovered != null && hovered.translated() != null)
 		{
 			List<Component> tooltip = Lists.newArrayList();
 			String translated = hovered.translated().getString().toLowerCase();
@@ -308,7 +310,7 @@ public class ScreenCharacterSheet extends Screen
 					this.fluids.forEach((fluid) -> 
 					{
 						String name = "air";
-						if(fluid != null)
+						if(fluid != null && fluid.location() != null)
 							name = fluid.location().getPath();
 						tooltip.add(Component.literal(" "+name));
 					});

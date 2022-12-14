@@ -48,8 +48,8 @@ public class PacketSyncPlayerData
 	
 	public static void handle(PacketSyncPlayerData msg, Supplier<NetworkEvent.Context> cxt)
 	{
-		System.out.println("Sync playerdata packet received");
 		NetworkEvent.Context context = cxt.get();
+		context.setPacketHandled(true);
 		if(context.getDirection().getReceptionSide().isServer())
 		{
 			ServerPlayer player = context.getSender();
@@ -80,7 +80,5 @@ public class PacketSyncPlayerData
 					data.deserializeNBT(msg.dataNBT);
 			}
 		}
-		context.setPacketHandled(true);
-		System.out.println("Sync complete");
 	}
 }

@@ -3,7 +3,7 @@ package com.lying.variousoddities.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.api.event.PlayerTradeEvent;
@@ -27,7 +27,7 @@ public class MerchantResultSlotMixin
 			};
 	
 	@Inject(method = "onTake", at = @At("RETURN"))
-	public void performTrade(Player thePlayer, ItemStack stack, CallbackInfoReturnable<?> callback)
+	public void performTrade(Player thePlayer, ItemStack stack, CallbackInfo callback)
 	{
 		if(thePlayer.getLevel().isClientSide)
 			return;

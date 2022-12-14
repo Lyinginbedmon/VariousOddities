@@ -1,20 +1,15 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
 
 public class AbilityEtherealness extends AbilityPhasing
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "etherealness");
-	
 	public AbilityEtherealness()
 	{
-		super(REGISTRY_NAME);
+		super();
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.SUPERNATURAL; }
@@ -28,7 +23,7 @@ public class AbilityEtherealness extends AbilityPhasing
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

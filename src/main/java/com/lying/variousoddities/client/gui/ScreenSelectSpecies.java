@@ -20,6 +20,7 @@ import com.lying.variousoddities.species.abilities.Ability.Type;
 import com.lying.variousoddities.species.abilities.AbilityModifier;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
+import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -59,6 +60,9 @@ public class ScreenSelectSpecies extends Screen
     
 	private static final float TEX_SIZE = 128F;
 	private static final float ICON_TEX = 16F / TEX_SIZE;
+	
+	public ResourceLocation healthKey = AbilityRegistry.getClassRegistryKey(AbilityModifierCon.class).location();
+	public ResourceLocation armourKey = AbilityRegistry.getClassRegistryKey(AbilityNaturalArmour.class).location();
 	
 	private final Player player;
 	
@@ -140,6 +144,9 @@ public class ScreenSelectSpecies extends Screen
 	public void tick()
 	{
 		super.tick();
+		if(this.typesButton == null)
+			return;
+		
 		LivingData data = LivingData.forEntity(player);
 		typesButton.visible = typesButton.active = data.hasCustomTypes();
 		
@@ -208,10 +215,10 @@ public class ScreenSelectSpecies extends Screen
 		if(!abilities.isEmpty())
 			for(Ability ability : abilities) 
 			{
-				if(ability.getRegistryName().equals(AbilityNaturalArmour.REGISTRY_NAME))
+				if(ability.getRegistryName().equals(armourKey))
 					armour += ((AbilityNaturalArmour)ability).amount(); 
 				
-				if(ability.getRegistryName().equals(AbilityModifierCon.REGISTRY_NAME))
+				if(ability.getRegistryName().equals(healthKey))
 					health += ((AbilityModifier)ability).amount();
 			};
 		

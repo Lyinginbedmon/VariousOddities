@@ -7,18 +7,15 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 
 public class AbilityDrainHealth extends AbilityGaze
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "drain_health");
-
 	public AbilityDrainHealth()
 	{
-		super(REGISTRY_NAME, 1D, Reference.Values.TICKS_PER_SECOND * 6);
+		super(1D, Reference.Values.TICKS_PER_SECOND * 6);
 		this.needsLooking = false;
 	}
 	
@@ -43,7 +40,7 @@ public class AbilityDrainHealth extends AbilityGaze
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

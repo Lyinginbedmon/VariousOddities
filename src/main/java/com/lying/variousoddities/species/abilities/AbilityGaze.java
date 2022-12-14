@@ -13,7 +13,6 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.utility.VOHelper;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,9 +27,9 @@ public abstract class AbilityGaze extends ActivatedAbility
 	protected double range = 9D;
 	protected boolean needsLooking = true;
 	
-	protected AbilityGaze(ResourceLocation registryName, double rangeIn, int cooldownIn)
+	protected AbilityGaze(double rangeIn, int cooldownIn)
 	{
-		super(registryName, cooldownIn);
+		super(cooldownIn);
 		this.range = rangeIn;
 	}
 	
@@ -119,9 +118,9 @@ public abstract class AbilityGaze extends ActivatedAbility
 		private int durationMin = Reference.Values.TICKS_PER_MINUTE * 2;
 		private int durationMax = durationMin;
 		
-		public AbilityGazeControl(ResourceLocation registryName, RegistryObject<Condition> conditionIn, double rangeIn, int cooldownIn)
+		public AbilityGazeControl(RegistryObject<Condition> conditionIn, double rangeIn, int cooldownIn)
 		{
-			super(registryName, rangeIn, cooldownIn);
+			super(rangeIn, cooldownIn);
 			this.condition = conditionIn;
 		}
 		
@@ -183,11 +182,9 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public static class Petrify extends AbilityGaze
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "petrifying_gaze");
-		
 		public Petrify()
 		{
-			super(REGISTRY_NAME, 9D, Reference.Values.TICKS_PER_SECOND * 30);
+			super(9D, Reference.Values.TICKS_PER_SECOND * 30);
 		}
 		
 		protected Nature getDefaultNature() { return Nature.SUPERNATURAL; }
@@ -199,7 +196,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			
 			public Ability create(CompoundTag compound)
 			{
@@ -214,18 +211,16 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public static class Charm extends AbilityGazeControl
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "charming_gaze");
-		
 		public Charm()
 		{
-			super(REGISTRY_NAME, Conditions.CHARMED, 9D, Reference.Values.TICKS_PER_SECOND * 10);
+			super(Conditions.CHARMED, 9D, Reference.Values.TICKS_PER_SECOND * 10);
 		}
 		
 		protected Nature getDefaultNature() { return Nature.SPELL_LIKE; }
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			
 			public Ability create(CompoundTag compound)
 			{
@@ -240,18 +235,16 @@ public abstract class AbilityGaze extends ActivatedAbility
 	
 	public static class Dominate extends AbilityGazeControl
 	{
-		public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "dominating_gaze");
-		
 		public Dominate()
 		{
-			super(REGISTRY_NAME, Conditions.DOMINATED, 9D, Reference.Values.TICKS_PER_MINUTE);
+			super(Conditions.DOMINATED, 9D, Reference.Values.TICKS_PER_MINUTE);
 		}
 		
 		protected Nature getDefaultNature() { return Nature.SPELL_LIKE; }
 		
 		public static class Builder extends Ability.Builder
 		{
-			public Builder(){ super(REGISTRY_NAME); }
+			public Builder(){ super(); }
 			
 			public Ability create(CompoundTag compound)
 			{

@@ -5,7 +5,6 @@ import com.lying.variousoddities.item.IBludgeoningItem;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
@@ -18,11 +17,9 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityUnarmedStrike extends ToggledAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "unarmed_strike");
-	
 	public AbilityUnarmedStrike()
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_SECOND);
+		super(Reference.Values.TICKS_PER_SECOND);
 	}
 	
 	public Type getType(){ return Type.ATTACK; }
@@ -38,7 +35,12 @@ public class AbilityUnarmedStrike extends ToggledAbility
 		if(isValidDamageSource(event.getSource()))
 		{
 			LivingEntity trueSource = (LivingEntity)event.getSource().getEntity();
-			if(isValidItem(trueSource.getMainHandItem(), AbilityRegistry.hasAbility(trueSource, REGISTRY_NAME) && ((AbilityUnarmedStrike)AbilityRegistry.getAbilityByName(trueSource, REGISTRY_NAME)).isActive()))
+			
+			AbilityUnarmedStrike strike = (AbilityUnarmedStrike)AbilityRegistry.getAbilityByMapName(trueSource, getRegistryName());
+			if(strike == null)
+				return;
+			
+			if(isValidItem(trueSource.getMainHandItem(), strike.isActive()))
 			{
 				// Replace melee damage with bludgeoning damage
 				event.setCanceled(true);
@@ -72,7 +74,7 @@ public class AbilityUnarmedStrike extends ToggledAbility
 	
 	public static class Builder extends ToggledAbility.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public ToggledAbility createAbility(CompoundTag compound)
 		{

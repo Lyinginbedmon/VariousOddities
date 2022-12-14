@@ -21,21 +21,15 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityStatusEffect extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "status_effect");
 	public static int TIME = Reference.Values.TICKS_PER_SECOND * 15;
 	
 	protected MobEffectInstance effect = null;
 	private int timer = Integer.MAX_VALUE;
 	
-	public AbilityStatusEffect(ResourceLocation registryName, @Nullable MobEffectInstance effectIn)
-	{
-		super(registryName);
-		this.effect = effectIn;
-	}
-	
 	public AbilityStatusEffect(@Nullable MobEffectInstance effectIn)
 	{
-		this(REGISTRY_NAME, effectIn);
+		super();
+		this.effect = effectIn;
 	}
 	
 	public int compare(Ability abilityIn)
@@ -105,7 +99,7 @@ public class AbilityStatusEffect extends Ability
 	public void applyModifiers(LivingTickEvent event)
 	{
 		LivingEntity living = event.getEntity();
-		for(AbilityStatusEffect effect : AbilityRegistry.getAbilitiesOfType(living, AbilityStatusEffect.class))
+		for(AbilityStatusEffect effect : AbilityRegistry.getAbilitiesOfClass(living, AbilityStatusEffect.class))
 		{
 			MobEffectInstance statusEffect = effect.getEffect();
 			if(statusEffect != null && !statusEffect.getEffect().getAttributeModifiers().isEmpty())
@@ -152,7 +146,7 @@ public class AbilityStatusEffect extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

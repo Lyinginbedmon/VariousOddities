@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
@@ -47,17 +46,13 @@ public abstract class Ability
 	private Component displayName = null;
 	private Component description = null;
 	private Nature customNature = null;
-	private final ResourceLocation registryName;
 	private UUID sourceId = null;
 	
-	protected Ability(@Nonnull ResourceLocation registryNameIn)
-	{
-		this.registryName = registryNameIn;
-	}
+	protected Ability() { }
 	
 	public Ability clone(){ return AbilityRegistry.getAbility(writeAtomically(new CompoundTag())); }
 	
-	public final ResourceLocation getRegistryName(){ return this.registryName; }
+	public final ResourceLocation getRegistryName(){ return AbilityRegistry.getAbilityRegistryKey(this).location(); }
 	
 	/** 
 	 * Returns the registry name for this ability in a creature's ability map.<br>
@@ -189,13 +184,12 @@ public abstract class Ability
 	public static abstract class Builder
 	{
 		public static final ResourceKey<Registry<Builder>> REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities"));
-		private final ResourceLocation registryName;
 		
-		public Builder(@Nonnull ResourceLocation registryNameIn){ registryName = registryNameIn; }
+		public Builder() { }
 		
 		public abstract Ability create(CompoundTag compound);
 		
-		public ResourceLocation getRegistryName() { return registryName; }
+		public final ResourceLocation getRegistryName() { return AbilityRegistry.getBuilderRegistryKey(getClass()).location(); }
 	}
 	
 	public static enum Type

@@ -19,7 +19,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @Mixin(Options.class)
 public class GameSettingsMixin
 {
-	@Inject(method = "getCameraType()", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getCameraType()Lnet/minecraft/client/CameraType", at = @At("HEAD"), cancellable = true)
 	public void forceFirstPerson(final CallbackInfoReturnable<CameraType> ci)
 	{
 		if(VOBusClient.playerInWall())
@@ -28,7 +28,7 @@ public class GameSettingsMixin
 			ci.setReturnValue(CameraType.THIRD_PERSON_BACK);
 	}
 	
-	@Inject(method = "setPointOfView(Lnet/minecraft/client/settings/CameraType;)V", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "setCameraType(Lnet/minecraft/client/settings/CameraType;)V", at = @At("HEAD"), cancellable = true)
 	public void preventThirdPerson(final CallbackInfo ci)
 	{
 		if(VOBusClient.playerInWall())

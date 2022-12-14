@@ -2,12 +2,10 @@ package com.lying.variousoddities.species.abilities;
 
 import com.google.common.base.Predicate;
 import com.lying.variousoddities.init.VODamageSource;
-import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.damagesource.DamageSource;
@@ -17,13 +15,11 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityHurtByEnv extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "hurt_by_env");
-	
 	private EnvType type;
 	
 	public AbilityHurtByEnv(EnvType typeIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.type = typeIn;
 	}
 	
@@ -47,7 +43,7 @@ public class AbilityHurtByEnv extends Ability
 	{
 		LivingEntity living = event.getEntity();
 		if(!living.level.isClientSide)
-			for(AbilityHurtByEnv env : AbilityRegistry.getAbilitiesOfType(living, this.getClass()))
+			for(AbilityHurtByEnv env : AbilityRegistry.getAbilitiesOfClass(living, this.getClass()))
 				if(env.type != EnvType.WATER)
 					if(type.shouldDamage(living))
 						type.damageEntity(living);
@@ -107,7 +103,7 @@ public class AbilityHurtByEnv extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

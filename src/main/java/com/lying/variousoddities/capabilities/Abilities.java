@@ -343,7 +343,7 @@ public class Abilities
 			 * Note: Non-permanent effects should NOT remove activated abilities, just prevent them from triggering whilst active.
 			 */
 			for(ResourceLocation favourite : this.favourites)
-				if(!AbilityRegistry.hasAbility(entity, favourite))
+				if(!AbilityRegistry.hasAbilityOfMapName(entity, favourite))
 				{
 					unfavourite(favourite);
 					dirty = true;
@@ -585,10 +585,11 @@ public class Abilities
 		if(!canBonusJump(this.entity) || this.entity.isOnGround())
 			return;
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(this.entity);
-		if(!abilities.containsKey(AbilityFlight.REGISTRY_NAME))
+		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
+		if(!abilities.containsKey(flightKey))
 			return;
 		
-		AbilityFlight flight = (AbilityFlight)abilities.get(AbilityFlight.REGISTRY_NAME);
+		AbilityFlight flight = (AbilityFlight)abilities.get(flightKey);
 		if(!flight.isActive())
 			return;
 		
@@ -607,7 +608,7 @@ public class Abilities
 		if(!canBonusJump(this.entity) || !AbilitySwim.isEntitySwimming(this.entity))
 			return;
 		Map<ResourceLocation, Ability> abilities = AbilityRegistry.getCreatureAbilities(this.entity);
-		if(!abilities.containsKey(AbilitySwim.REGISTRY_NAME))
+		if(!abilities.containsKey(AbilityRegistry.getClassRegistryKey(AbilitySwim.class).location()))
 			return;
 		
 		double scale = 0.7D;

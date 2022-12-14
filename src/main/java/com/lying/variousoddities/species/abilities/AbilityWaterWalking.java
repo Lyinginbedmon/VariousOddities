@@ -2,17 +2,12 @@ package com.lying.variousoddities.species.abilities;
 
 import javax.annotation.Nonnull;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 
 public class AbilityWaterWalking extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "water_walking");
-	
 	private boolean affectWater = true;
 	private boolean affectLava = false;
 	
@@ -23,7 +18,7 @@ public class AbilityWaterWalking extends Ability
 	
 	public AbilityWaterWalking(boolean water, boolean lava)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.affectWater = water;
 		this.affectLava = lava;
 	}
@@ -52,7 +47,7 @@ public class AbilityWaterWalking extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

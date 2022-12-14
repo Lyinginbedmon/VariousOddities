@@ -13,6 +13,7 @@ import com.lying.variousoddities.species.abilities.AbilityWaterWalking;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
@@ -27,7 +28,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public abstract class AbstractBlockStateMixin
 {
 	@Inject(
-			method = "getCollisionShape(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/shapes/ISelectionContext;)Lnet/minecraft/util/math/shapes/VoxelShape;",
+			method = "getCollisionShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/shapes/CollisionContext;)Lnet/minecraft/world/phys/shapes/VoxelShape;",
 			at = @At("HEAD"), 
 			cancellable = true)
 	private void getCollisionShape(BlockGetter worldIn, BlockPos pos, CollisionContext context, final CallbackInfoReturnable<VoxelShape> ci)
@@ -40,7 +41,7 @@ public abstract class AbstractBlockStateMixin
 				LivingEntity living = (LivingEntity)entity;
 				if(IPhasingAbility.isPhasing(living))
 				{
-					Collection<IPhasingAbility> phasings = AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class);
+					Collection<IPhasingAbility> phasings = AbilityRegistry.getAbilitiesOfClass(living, IPhasingAbility.class);
 					if(!phasings.isEmpty())
 						phasings.forEach((ability) -> 
 						{
@@ -49,9 +50,10 @@ public abstract class AbstractBlockStateMixin
 						});
 				}
 				
-				if(AbilityRegistry.hasAbility(living, AbilityWaterWalking.REGISTRY_NAME))
+				ResourceLocation waterWalkingKey = AbilityRegistry.getClassRegistryKey(AbilityWaterWalking.class).location();
+				if(AbilityRegistry.hasAbilityOfMapName(living, waterWalkingKey))
 				{
-					AbilityWaterWalking ability = (AbilityWaterWalking)AbilityRegistry.getAbilityByName(living, AbilityWaterWalking.REGISTRY_NAME);
+					AbilityWaterWalking ability = (AbilityWaterWalking)AbilityRegistry.getAbilityByMapName(living, waterWalkingKey);
 					if(worldIn.getBlockState(pos).getFluidState() != null && ability.affectsFluid(worldIn.getBlockState(pos).getFluidState()))
 						if(!(living.isCrouching() || living.isSwimming()) && pos.getY() < living.blockPosition().getY())
 							ci.setReturnValue(Shapes.block());
@@ -72,7 +74,7 @@ public abstract class AbstractBlockStateMixin
 			if(!IPhasingAbility.isPhasing(living))
 				return;
 			
-			AbilityRegistry.getAbilitiesOfType(living, IPhasingAbility.class).forEach((ability) -> 
+			AbilityRegistry.getAbilitiesOfClass(living, IPhasingAbility.class).forEach((ability) -> 
 			{
 				if(ability.canPhase(worldIn, pos, living)) ci.cancel();
 			});

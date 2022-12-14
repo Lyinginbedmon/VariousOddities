@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.Maps;
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.init.VOMobEffects;
@@ -25,7 +26,6 @@ import com.lying.variousoddities.species.abilities.AbilityStatusImmunity;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
-import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
@@ -35,6 +35,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -45,28 +46,10 @@ import net.minecraft.world.phys.AABB;
 public class LivingEntityMixin extends EntityMixin
 {
 	@Shadow
-	public Map<MobEffect, MobEffectInstance> activePotionsMap = Maps.newHashMap();
+	public Map<MobEffect, MobEffectInstance> activeEffects = Maps.newHashMap();
 	
 	@Shadow
-	public int idleTime = 0;
-	
-	@Shadow
-	public float moveStrafing = 0F;
-	
-	@Shadow
-	public float moveForward = 0F;
-	
-	@Shadow
-	public boolean isJumping;
-	
-	@Shadow
-	public float getHealth(){ return 0F; }
-	
-	@Shadow
-	public float getMaxHealth(){ return 0F; }
-	
-	@Shadow
-	public boolean isElytraFlying(){ return false; }
+	public boolean isFallFlying(){ return false; }
 	
 	@Inject(method = "updatePotionEffects()V", at = @At("HEAD"))
 	public void updatePotionEffects(final CallbackInfo ci)
@@ -87,7 +70,7 @@ public class LivingEntityMixin extends EntityMixin
 					livingData.setVisualPotion(index, active);
 			}
 			
-			for(AbilityStatusEffect effectAbility : AbilityRegistry.getAbilitiesOfType(living, AbilityStatusEffect.class))
+			for(AbilityStatusEffect effectAbility : AbilityRegistry.getAbilitiesOfClass(living, AbilityStatusEffect.class))
 				effectAbility.tick(living);
 		}
 	}
@@ -101,14 +84,14 @@ public class LivingEntityMixin extends EntityMixin
 			return;
 		
 		livingData.tick(living);
-		this.setAir(livingData.getAir());
+		this.setAirSupply(livingData.getAir());
 	}
 	
 	@Inject(method = "isPotionApplicable", at = @At("HEAD"), cancellable = true)
 	public void isPotionApplicable(MobEffectInstance effectInstanceIn, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		for(AbilityStatusImmunity statusImmunity : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusImmunity.class))
+		for(AbilityStatusImmunity statusImmunity : AbilityRegistry.getAbilitiesOfClass(entity, AbilityStatusImmunity.class))
 			if(statusImmunity.appliesToStatus(effectInstanceIn))
 			{
 				ci.setReturnValue(false);
@@ -120,47 +103,53 @@ public class LivingEntityMixin extends EntityMixin
 	public void hasEffect(MobEffect potionIn, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		if(!activePotionsMap.containsKey(potionIn))
+		if(!activeEffects.containsKey(potionIn))
 		{
 			if(potionIn == MobEffects.NIGHT_VISION && AbilityDarkvision.isDarkvisionActive(entity))
 					ci.setReturnValue(true);
 			
-			for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
+			for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfClass(entity, AbilityStatusEffect.class))
 				if(statusEffect.getEffect().getEffect() == potionIn)
 					ci.setReturnValue(true);
 		}
 	}
 	
-	@Inject(method = "getActivePotionEffect", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getEffect", at = @At("HEAD"), cancellable = true)
 	public void getActivePotion(MobEffect potionIn, final CallbackInfoReturnable<MobEffectInstance> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		if(potionIn == MobEffects.NIGHT_VISION && AbilityDarkvision.isDarkvisionActive(entity))
 		{
 			MobEffectInstance effect = AbilityDarkvision.getEffect();
-			if(!activePotionsMap.containsKey(potionIn) || effect.getAmplifier() > activePotionsMap.get(potionIn).getAmplifier())
+			if(effect == null)
+				VariousOddities.log.error("Darkvision has no status effect?!");
+			
+			if(!activeEffects.containsKey(potionIn) || effect.getAmplifier() > activeEffects.get(potionIn).getAmplifier())
+			{
 				ci.setReturnValue(effect);
+				return;
+			}
 		}
 		
-		for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfType(entity, AbilityStatusEffect.class))
+		for(AbilityStatusEffect statusEffect : AbilityRegistry.getAbilitiesOfClass(entity, AbilityStatusEffect.class))
 		{
 			MobEffectInstance effect = statusEffect.getEffect();
 			if(effect != null && effect.getEffect() == potionIn)
-				if(!activePotionsMap.containsKey(potionIn) || effect.getAmplifier() > activePotionsMap.get(potionIn).getAmplifier())
+				if(!activeEffects.containsKey(potionIn) || effect.getAmplifier() > activeEffects.get(potionIn).getAmplifier())
 					ci.setReturnValue(new MobEffectInstance(potionIn, Integer.MAX_VALUE, effect.getAmplifier(), effect.isAmbient(), effect.isVisible()));
 		}
 	}
 	
 	private boolean overridingAddPotionEffect = false;
 	
-	@Inject(method = "addPotionEffect(Lnet/minecraft/potion/MobEffectInstance;)Z", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "addEffect(Lnet/minecraft/potion/MobEffectInstance;)Z", at = @At("HEAD"), cancellable = true)
 	public void stackPotion(MobEffectInstance effectIn, final CallbackInfoReturnable<Boolean> ci)
 	{
 		MobEffect effect = effectIn.getEffect();
-		if(!(effect instanceof IStackingPotion) || !activePotionsMap.containsKey(effect))
+		if(!(effect instanceof IStackingPotion) || !activeEffects.containsKey(effect))
 			return;
 		
-		MobEffectInstance existing = activePotionsMap.get(effect);
+		MobEffectInstance existing = activeEffects.get(effect);
 		if(existing != null && existing.getDuration() > 0 && !this.overridingAddPotionEffect)
 		{
 			LivingEntity entity = (LivingEntity)(Object)this;
@@ -251,7 +240,8 @@ public class LivingEntityMixin extends EntityMixin
 			return;
 		
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilityMap.containsKey(AbilityClimb.REGISTRY_NAME) && abilityMap.get(AbilityClimb.REGISTRY_NAME).isActive() && hasAdjacentClimbable(entity))
+		ResourceLocation climbKey = AbilityRegistry.getClassRegistryKey(AbilityClimb.class).location();
+		if(abilityMap.containsKey(climbKey) && abilityMap.get(climbKey).isActive() && hasAdjacentClimbable(entity))
 			ci.setReturnValue(true);
 	}
 	
@@ -296,12 +286,13 @@ public class LivingEntityMixin extends EntityMixin
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(entity);
-		if(abilityMap.containsKey(AbilityHurtByEnv.REGISTRY_NAME) && ((AbilityHurtByEnv)abilityMap.get(AbilityHurtByEnv.REGISTRY_NAME)).getEnvType() == EnvType.WATER)
+		ResourceLocation hurtByEnvKey = AbilityRegistry.getClassRegistryKey(AbilityHurtByEnv.class).location();
+		if(abilityMap.containsKey(hurtByEnvKey) && ((AbilityHurtByEnv)abilityMap.get(hurtByEnvKey)).getEnvType() == EnvType.WATER)
 			ci.setReturnValue(true);
 	}
 	
-	@Inject(method = "canAttack(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/entity/EntityPredicate;)Z", at = @At("HEAD"), cancellable = true)
-	public void canTarget(LivingEntity living, EntityPredicate predicate, final CallbackInfoReturnable<Boolean> ci)
+	@Inject(method = "canAttack(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/ai/targeting/TargetingConditions;)Z", at = @At("HEAD"), cancellable = true)
+	public void canAttack(LivingEntity living, TargetingConditions predicate, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
 		LivingData data = LivingData.forEntity(entity);

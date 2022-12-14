@@ -126,7 +126,7 @@ public class CommandAbilities extends CommandBase
 			if(entity instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entity;
-				Ability ability = AbilityRegistry.getAbilityByName(living, mapName);
+				Ability ability = AbilityRegistry.getAbilityByMapName(living, mapName);
 				if(ability != null)
 				{
 					CompoundTag nbt = ability.writeAtomically(new CompoundTag());
@@ -190,7 +190,7 @@ public class CommandAbilities extends CommandBase
 			{
 				LivingEntity living = (LivingEntity)entity;
 				LivingData data = LivingData.forEntity(living);
-				Ability ability = AbilityRegistry.getAbilityByName(living, mapName);
+				Ability ability = AbilityRegistry.getAbilityByMapName(living, mapName);
 				if(ability != null)
 				{
 					CompoundTag originalNBT = ability.writeAtomically(new CompoundTag());

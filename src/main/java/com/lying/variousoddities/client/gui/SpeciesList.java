@@ -97,6 +97,6 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 			return false;
 		}
 	 	
-	 	public Component getNarration() { return null; }
+	 	public Component getNarration() { return this.species.getDisplayName(); }
 	}
 }

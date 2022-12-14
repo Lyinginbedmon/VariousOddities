@@ -36,13 +36,15 @@ public class PacketSyncScents
 	public static void handle(PacketSyncScents msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
+		context.setPacketHandled(true);
 		if(!context.getDirection().getReceptionSide().isServer())
 		{
 			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			if(player == null)
+				return;
+			
 			ScentsManager manager = VariousOddities.proxy.getScentsManager(player.getLevel());
 			manager.read(msg.scentData);
 		}
-		
-		context.setPacketHandled(true);
 	}
 }

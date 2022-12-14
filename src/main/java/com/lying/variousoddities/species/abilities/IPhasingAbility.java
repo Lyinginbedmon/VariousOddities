@@ -44,7 +44,7 @@ public interface IPhasingAbility
 	/** Returns true if the given entity has any active phasing ability */
 	public static boolean isPhasing(LivingEntity entity)
 	{
-		for(IPhasingAbility phasing : AbilityRegistry.getAbilitiesOfType(entity, IPhasingAbility.class))
+		for(IPhasingAbility phasing : AbilityRegistry.getAbilitiesOfClass(entity, IPhasingAbility.class))
 		{
 			Ability ability = (Ability)phasing;
 			if(ability.passive() || ((ActivatedAbility)ability).isActive())

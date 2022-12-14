@@ -16,14 +16,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityResistanceSpell extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME	= new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance_spell");
-	
 	private MagicSchool school;
 	private MagicSubType descriptor;
 	
 	public AbilityResistanceSpell()
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.school = MagicSchool.TRANSMUTATION;
 		this.descriptor = null;
 	}
@@ -83,7 +81,7 @@ public class AbilityResistanceSpell extends Ability
 		if(living == null)
 			return false;
 		
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(living, REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(living, (new AbilityResistanceSpell()).getRegistryName()))
 		{
 			AbilityResistanceSpell resist = (AbilityResistanceSpell)ability;
 			if(resist.effectiveAgainst(school, subtypes))
@@ -124,7 +122,7 @@ public class AbilityResistanceSpell extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

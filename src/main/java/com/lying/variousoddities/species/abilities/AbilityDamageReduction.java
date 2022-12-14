@@ -5,14 +5,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.api.event.DamageTypesEvent;
-import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -20,14 +18,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityDamageReduction extends AbilityMeleeDamage
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "damage_reduction");
-	
 	private DamageType[] exceptions;
 	private int amount;
 	
 	public AbilityDamageReduction(int amountIn, DamageType... exceptionsIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.amount = amountIn;
 		this.exceptions = exceptionsIn;
 	}
@@ -129,7 +125,7 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 	public void applyDamageReduction(LivingHurtEvent event)
 	{
 		DamageSource source = event.getSource();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), getRegistryName()))
 		{
 			AbilityDamageReduction reduction = (AbilityDamageReduction)ability;
 			if(reduction.applysTo(source))
@@ -147,13 +143,11 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 		if(isValidDamageSource(event.getSource()))
 		{
 			LivingEntity attacker = (LivingEntity)source.getDirectEntity();
-			if(attacker != null && AbilityRegistry.hasAbility(attacker, getMapName()))
-			{
-				AbilityDamageReduction reduction = (AbilityDamageReduction)AbilityRegistry.getAbilityByName(attacker, REGISTRY_NAME);
+			AbilityDamageReduction reduction = (AbilityDamageReduction)AbilityRegistry.getAbilityByMapName(attacker, getRegistryName());
+			if(attacker != null && reduction != null)
 				if(reduction != null && reduction.exceptions.length > 0)
 					for(DamageType type : reduction.exceptions)
 						event.addType(type);
-			}
 		}
 	}
 	
@@ -175,7 +169,7 @@ public class AbilityDamageReduction extends AbilityMeleeDamage
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

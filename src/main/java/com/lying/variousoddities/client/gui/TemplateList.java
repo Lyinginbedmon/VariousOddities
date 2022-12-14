@@ -179,7 +179,7 @@ public class TemplateList extends ObjectSelectionList<TemplateList.TemplateListE
 			return null;
 		}
 		
-		public Component getNarration() { return null; }
+		public Component getNarration() { return this.template.getDisplayName(); }
 	}
 	
 	private static enum Segment

@@ -5,7 +5,6 @@ import java.util.UUID;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -18,7 +17,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilitySwim extends Ability implements IBonusJumpAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "swim");
 	private static final UUID SWIM_SPEED_UUID = UUID.fromString("06f7628e-4794-49b2-8573-764b8246f56c");
 	private static final int jumpRate = Reference.Values.TICKS_PER_SECOND;
 	
@@ -30,7 +28,7 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 	}
 	public AbilitySwim(double speedIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.speed = speedIn;
 	}
 	
@@ -67,9 +65,9 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 		if(attribute == null)
 			return;
 		
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		if(AbilityRegistry.hasAbilityOfMapName(entity, getMapName()))
 		{
-			AbilitySwim swim = (AbilitySwim)AbilityRegistry.getAbilityByName(entity, getMapName());
+			AbilitySwim swim = (AbilitySwim)AbilityRegistry.getAbilityByMapName(entity, getMapName());
 			double amount = swim.speed;
 			
 			AttributeModifier modifier = attribute.getModifier(SWIM_SPEED_UUID);
@@ -105,7 +103,7 @@ public class AbilitySwim extends Ability implements IBonusJumpAbility
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

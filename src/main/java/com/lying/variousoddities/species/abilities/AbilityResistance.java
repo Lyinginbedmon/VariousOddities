@@ -11,14 +11,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 
 public class AbilityResistance extends Ability
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "resistance");
-	
 	private DamageType damage;
 	private int amount;
 	
 	public AbilityResistance(int amountIn, DamageType typeIn)
 	{
-		super(REGISTRY_NAME);
+		super();
 		this.amount = amountIn;
 		this.damage = typeIn;
 	}
@@ -73,7 +71,7 @@ public class AbilityResistance extends Ability
 	public void applyResistance(LivingHurtEvent event)
 	{
 		DamageSource source = event.getSource();
-		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), REGISTRY_NAME))
+		for(Ability ability : AbilityRegistry.getAbilitiesOfType(event.getEntity(), getRegistryName()))
 		{
 			AbilityResistance reduction = (AbilityResistance)ability;
 			if(reduction.applysTo(source))
@@ -91,7 +89,7 @@ public class AbilityResistance extends Ability
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

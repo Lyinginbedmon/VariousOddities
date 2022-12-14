@@ -8,7 +8,6 @@ import com.lying.variousoddities.reference.Reference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
@@ -27,11 +26,9 @@ import net.minecraftforge.event.entity.EntityTeleportEvent;
 
 public class AbilityTeleportToHome extends ActivatedAbility
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "teleport_to_home");
-	
 	public AbilityTeleportToHome()
 	{
-		super(REGISTRY_NAME, Reference.Values.TICKS_PER_MINUTE);
+		super(Reference.Values.TICKS_PER_MINUTE);
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.SPELL_LIKE; }
@@ -137,7 +134,7 @@ public class AbilityTeleportToHome extends ActivatedAbility
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

@@ -181,6 +181,6 @@ public class AbilityList extends ObjectSelectionList<AbilityListEntry>
 			BufferUploader.drawWithShader(bufferbuilder.end());
 		}
 		
-		public Component getNarration() { return null; }
+		public Component getNarration() { return this.ability.getDisplayName(); }
 	}
 }

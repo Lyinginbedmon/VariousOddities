@@ -9,17 +9,14 @@ import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.AbilityGaze.AbilityGazeControl;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 
 public class AbilityFearAura extends AbilityGazeControl
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "fear_aura");
-	
 	public AbilityFearAura()
 	{
-		super(REGISTRY_NAME, Conditions.AFRAID, 9D, Reference.Values.TICKS_PER_MINUTE);
+		super(Conditions.AFRAID, 9D, Reference.Values.TICKS_PER_MINUTE);
 	}
 	
 	protected Nature getDefaultNature() { return Nature.SUPERNATURAL; }
@@ -36,7 +33,7 @@ public class AbilityFearAura extends AbilityGazeControl
 	
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbility(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName()) && !getValidTargets(entity).isEmpty();
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName()) && !getValidTargets(entity).isEmpty();
 	}
 	
 	public void trigger(LivingEntity entity, Dist side)
@@ -62,7 +59,7 @@ public class AbilityFearAura extends AbilityGazeControl
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

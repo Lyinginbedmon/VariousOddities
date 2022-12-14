@@ -1,6 +1,7 @@
 package com.lying.variousoddities.client;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -21,7 +22,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
@@ -53,11 +53,10 @@ public class KeyBindings
 		return binding;
 	}
 	
-	public static void registerKeybinds(RegisterKeyMappingsEvent event)
+	public static void registerKeybinds(Consumer<KeyMapping> consumer)
 	{
 		MinecraftForge.EVENT_BUS.register(new KeyBindings());
-		for(KeyMapping key : KEYS)
-			event.register(key);
+		KEYS.forEach((key) -> { consumer.accept(key); });
 	}
 	
 	@SubscribeEvent
@@ -98,7 +97,7 @@ public class KeyBindings
 		ResourceLocation mapName = data.getAbilities().getFavourite(index);
 		if(mapName != null)
 		{
-			ActivatedAbility ability = (ActivatedAbility)AbilityRegistry.getAbilityByName(mc.player, mapName);
+			ActivatedAbility ability = (ActivatedAbility)AbilityRegistry.getAbilityByMapName(mc.player, mapName);
 			if(ability != null && ability.canTrigger(mc.player))
 			{
 				ability.trigger(mc.player, Dist.CLIENT);

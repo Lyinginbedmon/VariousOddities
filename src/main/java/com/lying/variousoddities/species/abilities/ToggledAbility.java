@@ -4,7 +4,6 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 
@@ -12,14 +11,14 @@ public abstract class ToggledAbility extends ActivatedAbility
 {
 	protected boolean isActive = false;
 	
-	protected ToggledAbility(ResourceLocation registryName, int cooldownIn)
+	protected ToggledAbility(int cooldownIn)
 	{
-		super(registryName, cooldownIn);
+		super(cooldownIn);
 	}
 	
-	protected ToggledAbility(ResourceLocation registryName)
+	protected ToggledAbility()
 	{
-		this(registryName, Reference.Values.TICKS_PER_SECOND / 2);
+		this(Reference.Values.TICKS_PER_SECOND / 2);
 	}
 	
 	public CompoundTag writeToNBT(CompoundTag compound)
@@ -37,7 +36,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 	
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbility(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName());
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName());
 	}
 	
 	public void trigger(LivingEntity entity, Dist side)
@@ -58,7 +57,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 	
 	public static abstract class Builder extends Ability.Builder
 	{
-		public Builder(ResourceLocation registryName){ super(registryName); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

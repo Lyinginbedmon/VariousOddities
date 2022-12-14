@@ -2,10 +2,7 @@ package com.lying.variousoddities.species.abilities;
 
 import java.util.UUID;
 
-import com.lying.variousoddities.reference.Reference;
-
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -15,12 +12,11 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 
 public class AbilityStability extends AbilityModifier
 {
-	public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(Reference.ModInfo.MOD_ID, "stability");
 	private static final UUID STABILITY_UUID = UUID.fromString("040fcbf0-c7f7-4849-b104-18c472680f63");
 	
 	public AbilityStability()
 	{
-		super(REGISTRY_NAME, 0.2F);
+		super(0.2F);
 	}
 	
 	protected Nature getDefaultNature(){ return Nature.EXTRAORDINARY; }
@@ -34,9 +30,9 @@ public class AbilityStability extends AbilityModifier
 		if(attribute == null)
 			return;
 		
-		if(AbilityRegistry.hasAbility(entity, getMapName()))
+		if(AbilityRegistry.hasAbilityOfMapName(entity, getMapName()))
 		{
-			AbilityStability armour = (AbilityStability)AbilityRegistry.getAbilityByName(entity, getMapName());
+			AbilityStability armour = (AbilityStability)AbilityRegistry.getAbilityByMapName(entity, getMapName());
 			double amount = armour.amount;
 			
 			AttributeModifier modifier = attribute.getModifier(STABILITY_UUID);
@@ -58,7 +54,7 @@ public class AbilityStability extends AbilityModifier
 	
 	public static class Builder extends Ability.Builder
 	{
-		public Builder(){ super(REGISTRY_NAME); }
+		public Builder(){ super(); }
 		
 		public Ability create(CompoundTag compound)
 		{

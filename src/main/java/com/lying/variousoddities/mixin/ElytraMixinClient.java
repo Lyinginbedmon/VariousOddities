@@ -27,14 +27,14 @@ public class ElytraMixinClient extends PlayerEntityMixin
 	@Inject(method = "livingTick()V", at = @At("HEAD"))
 	public void livingTickStart(final CallbackInfo ci)
 	{
-		this.isElytraFlying = isElytraFlying();
+		this.isElytraFlying = isFallFlying();
 	}
 	
 	@Inject(method = "livingTick()V", at = @At("TAIL"))
 	public void livingTickEnd(final CallbackInfo ci)
 	{
 		LocalPlayer living = (LocalPlayer)(Object)this;
-		if(isElytraFlying && canElytraFly() && !isElytraFlying() && !isSneaking() && !isOnGround())
+		if(isElytraFlying && canElytraFly() && !isFallFlying() && !isDiscrete() && !isOnGround())
 			living.connection.send(new ServerboundPlayerCommandPacket(living, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 	}
 	
@@ -42,6 +42,7 @@ public class ElytraMixinClient extends PlayerEntityMixin
 	{
 		LocalPlayer living = (LocalPlayer)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(living);
-		return abilityMap.containsKey(AbilityFlight.REGISTRY_NAME) && abilityMap.get(AbilityFlight.REGISTRY_NAME).isActive() && Abilities.canBonusJump(living);
+		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
+		return abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive() && Abilities.canBonusJump(living);
 	}
 }
