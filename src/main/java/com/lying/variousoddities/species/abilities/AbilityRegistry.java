@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.species.abilities.Ability.Nature;
 
@@ -95,10 +95,9 @@ public class AbilityRegistry
 	public static Ability getAbility(CompoundTag compound)
 	{
 		ResourceLocation registryName = new ResourceLocation(compound.getString("Name"));
-		
 		CompoundTag abilityData = compound.contains("Tag", 10) ? compound.getCompound("Tag") : new CompoundTag();
-		Ability ability = AbilityRegistry.getAbility(registryName, abilityData);
 		
+		Ability ability = AbilityRegistry.getAbility(registryName, abilityData);
 		if(ability != null)
 		{
 			if(compound.contains("UUID", 8))
@@ -112,9 +111,11 @@ public class AbilityRegistry
 			
 			if(compound.contains("CustomNature", 8))
 				ability.setCustomNature(Nature.fromString(compound.getString("CustomNature")));
+			
+			return ability;
 		}
 		
-		return ability;
+		return null;
 	}
 	
 	@Nullable
@@ -158,9 +159,9 @@ public class AbilityRegistry
 	{
 		if(entity != null)
 		{
-			LivingData data = LivingData.forEntity(entity);
+			AbilityData data = AbilityData.forEntity(entity);
 			if(data != null)
-				return data.getAbilities().getCachedAbilities();
+				return data.getCachedAbilities();
 		}
 		
 		return new HashMap<>();

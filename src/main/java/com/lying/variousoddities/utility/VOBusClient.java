@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.Abilities;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
@@ -145,8 +145,7 @@ public class VOBusClient
 		if(event.getEntity() == mc.player)
 		{
 			LocalPlayer player = (LocalPlayer)event.getEntity();
-			LivingData data = LivingData.forEntity(event.getEntity());
-			Abilities abilities = data.getAbilities();
+			AbilityData abilities = AbilityData.forEntity(player);
 			Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 			if(player.input.jumping && abilities.canBonusJump)
 			{

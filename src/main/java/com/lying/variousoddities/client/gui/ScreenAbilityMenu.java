@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.client.KeyBindings;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketAbilityActivate;
@@ -34,6 +34,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -52,7 +53,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	public static final Minecraft mc = Minecraft.getInstance();
 	
 	private final Player thePlayer;
-	private final LivingData theData;
+	private final AbilityData theData;
 	private final List<ActivatedAbility> abilities = Lists.newArrayList();
 	private final List<Ability> passives = Lists.newArrayList();
 	private final List<ActivatedAbility> abilitySet = Lists.newArrayList();
@@ -67,7 +68,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	{
 		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".ability_menu"));
 		thePlayer = Minecraft.getInstance().player;
-		theData = LivingData.forEntity(thePlayer);
+		theData = AbilityData.forEntity(thePlayer);
 		
 		PacketHandler.sendToServer(new PacketSyncAbilities(thePlayer.getUUID()));
 		
@@ -220,7 +221,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		
 		if(!abilitySet.isEmpty())
 		{
-			boolean canFavourite = theData.getAbilities().hasEmptyFavourites();
+			boolean canFavourite = theData.hasEmptyFavourites();
 			ActivatedAbility currentlySelected = getAbilitySlice(mouseX, mouseY);
 			int index = 0;
 			for(ActivatedAbility ability : abilitySet)
@@ -250,7 +251,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 				int alpha = isSelected ? 150 : (index%2 == 0 ? 120 : 90);
 				drawRadialSlice(matrixStack, midX, midY, angle, (float)angleInc, isSelected ? currentRadius * 1.05F : currentRadius, red, green, blue, alpha, partialTicks);
 				
-				boolean isFavourite = theData.getAbilities().isFavourite(ability.getMapName());
+				boolean isFavourite = theData.isFavourite(ability.getMapName());
 				if(isLoaded() && (canFavourite || isFavourite))
 					drawFavouriteButtonAt(matrixStack, midX + vec2.x, midY + vec2.y, isFavourite);
 				
@@ -355,7 +356,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		double endY = posY + 16;
 		
 		RenderSystem.enableTexture();
-//		RenderSystem.shadeModel(GL11.GL_FLAT);
+		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 		matrix.pushPose();
 			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
 			blit(matrix.last().pose(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, bright);
@@ -367,7 +368,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		RenderSystem.disableCull();
 		RenderSystem.disableTexture();
 		RenderSystem.enableBlend();
-//		RenderSystem.shadeModel(GL11.GL_FLAT);
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
 		
 		stackIn.pushPose();
 			Matrix4f matrix4f = stackIn.last().pose();
@@ -395,7 +396,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		drawArc(stackIn, originX, originY, angle, angleInc, radius * 0.85F, red, green, blue, alpha, partialTicks);
 	}
 	
-	public void activateAbility(@Nonnull ActivatedAbility ability, boolean favourite, LivingData data)
+	public void activateAbility(@Nonnull ActivatedAbility ability, boolean favourite, AbilityData data)
 	{
 		if(ability == null)
 			return;
@@ -411,7 +412,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 		}
 		else
 		{
-			boolean isFavourite = data.getAbilities().isFavourite(ability.getMapName());
+			boolean isFavourite = data.isFavourite(ability.getMapName());
 			PacketHandler.sendToServer(new PacketAbilityFavourite(ability.getMapName(), !isFavourite));
 		}
 	}

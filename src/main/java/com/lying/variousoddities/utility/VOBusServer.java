@@ -7,6 +7,7 @@ import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
 import com.lying.variousoddities.api.event.LivingWakeUpEvent;
 import com.lying.variousoddities.api.event.PlayerChangeConditionEvent;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.capabilities.PlayerData.BodyCondition;
@@ -82,9 +83,12 @@ public class VOBusServer
 		if(event.getObject() instanceof LivingEntity && !(event.getObject() instanceof AbstractBody))
 		{
 			LivingData dataLiving = new LivingData();
-			dataLiving.getAbilities().markForRecache();
+			AbilityData dataAbilities = new AbilityData();
+			dataAbilities.markForRecache();
 			event.addCapability(LivingData.IDENTIFIER, dataLiving);
+			event.addCapability(AbilityData.IDENTIFIER, dataAbilities);
 			event.addListener(dataLiving.handler()::invalidate);
+			event.addListener(dataAbilities.handler()::invalidate);
 			
 			if(event.getObject().getType() == EntityType.PLAYER)
 			{
@@ -104,10 +108,11 @@ public class VOBusServer
 			Player player = (Player)entity;
 			LivingData data = LivingData.forEntity(player);
 			if(data != null)
-			{
 				PacketHandler.sendTo((ServerPlayer)player, new PacketSyncAir(data.getAir()));
-				data.getAbilities().markDirty();
-			}
+			
+			AbilityData abilities = AbilityData.forEntity(player);
+			if(abilities != null)
+				abilities.markDirty();
 		}
 		
 		if(entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(VOMobEffects.ANCHORED.get()))
@@ -123,7 +128,6 @@ public class VOBusServer
 		if(livingData != null)
 		{
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncLivingData(player.getUUID(), livingData));
-			livingData.getAbilities().markDirty();
 			if(!livingData.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
 			{
 				if(!player.getLevel().isClientSide)
@@ -131,6 +135,10 @@ public class VOBusServer
 				player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
 			}
 		}
+		
+		AbilityData abilityData = AbilityData.forEntity(player);
+		if(abilityData != null)
+			abilityData.markDirty();
 		
 		PlayerData playerData = PlayerData.forPlayer(player);
 		if(playerData != null)
@@ -148,8 +156,14 @@ public class VOBusServer
 			newLiving.setSpecies(oldLiving.getSpecies());
 			newLiving.setSelectedSpecies(oldLiving.hasSelectedSpecies());
 			newLiving.setTemplates(oldLiving.getTemplates());
-			newLiving.getAbilities().copy(oldLiving.getAbilities());
-			newLiving.getAbilities().markDirty();
+		}
+		
+		AbilityData oldAbilities = AbilityData.forEntity(event.getOriginal());
+		AbilityData newAbilities = AbilityData.forEntity(event.getEntity());
+		if(oldAbilities != null && newAbilities != null)
+		{
+			newAbilities.copy(oldAbilities);
+			newAbilities.markDirty();
 		}
 		
 		PlayerData oldPlayer = PlayerData.forPlayer(event.getOriginal());
@@ -168,19 +182,22 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onPlayerRespawnEvent(PlayerRespawnEvent event)
 	{
-		LivingData livingData = LivingData.forEntity(event.getEntity());
-		if(livingData != null)
-			livingData.getAbilities().markDirty();
+		Player player = event.getEntity();
+		LivingData livingData = LivingData.forEntity(player);
+		AbilityData abilityData = AbilityData.forEntity(player);
+		
+		if(abilityData != null)
+			abilityData.markDirty();
 		
 		if(ConfigVO.MOBS.newCharacterOnDeath.get())
 			livingData.setSelectedSpecies(false);
 		
-		if(AbilityRegistry.hasAbilityOfMapName(event.getEntity(), AbilityRegistry.getClassRegistryKey(AbilitySize.class).location()))
-			event.getEntity().refreshDimensions();
+		if(AbilityRegistry.hasAbilityOfMapName(player, AbilityRegistry.getClassRegistryKey(AbilitySize.class).location()))
+			player.refreshDimensions();
 		
-		if(PlayerData.isPlayerBodyDead(event.getEntity()))
+		if(PlayerData.isPlayerBodyDead(player))
 		{
-			PlayerData playerData = PlayerData.forPlayer(event.getEntity());
+			PlayerData playerData = PlayerData.forPlayer(player);
 			playerData.setBodyCondition(BodyCondition.ALIVE);
 			playerData.setSoulCondition(SoulCondition.ALIVE);
 		}

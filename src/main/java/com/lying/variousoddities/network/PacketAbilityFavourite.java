@@ -3,8 +3,7 @@ package com.lying.variousoddities.network;
 import java.util.function.Supplier;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.capabilities.Abilities;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -49,10 +48,9 @@ public class PacketAbilityFavourite
 			Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(sender != null)
 			{
-				LivingData data = LivingData.forEntity(sender);
-				if(data != null)
+				AbilityData abilities = AbilityData.forEntity(sender);
+				if(abilities != null)
 				{
-					Abilities abilities = data.getAbilities();
 					if(msg.favourite)
 						abilities.favourite(msg.mapName);
 					else

@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.Abilities;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.config.ConfigVO;
@@ -34,6 +34,7 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -183,7 +184,7 @@ public class GuiHandler
 		profiler.push("abilities");
 		
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
-		Abilities abilities = LivingData.forEntity(player).getAbilities();
+		AbilityData abilities = AbilityData.forEntity(player);
 		
 		float posXStart = 5F;
 		float posYStart = 5F;
@@ -193,18 +194,18 @@ public class GuiHandler
 		switch(corner)
 		{
 			case TOP_LEFT:
-				posXStart = (Abilities.FAVOURITE_SLOTS * 3F);
+				posXStart = (AbilityData.FAVOURITE_SLOTS * 3F);
 				break;
 			case BOTTOM_LEFT:
 				posXInc = -3F;
-				posYStart = (float)(window.getGuiScaledHeight() - (Abilities.FAVOURITE_SLOTS * posYInc) - 5F);
+				posYStart = (float)(window.getGuiScaledHeight() - (AbilityData.FAVOURITE_SLOTS * posYInc) - 5F);
 				break;
 			case BOTTOM_RIGHT:
-				posXStart = (float)(window.getGuiScaledWidth() - (Abilities.FAVOURITE_SLOTS * 3F));
-				posYStart = (float)(window.getGuiScaledHeight() - (Abilities.FAVOURITE_SLOTS * posYInc) - 5F);
+				posXStart = (float)(window.getGuiScaledWidth() - (AbilityData.FAVOURITE_SLOTS * 3F));
+				posYStart = (float)(window.getGuiScaledHeight() - (AbilityData.FAVOURITE_SLOTS * posYInc) - 5F);
 				break;
 			case TOP_RIGHT:
-				posXStart = (float)(window.getGuiScaledWidth() - (Abilities.FAVOURITE_SLOTS * 3F) - ICON_SIZE);
+				posXStart = (float)(window.getGuiScaledWidth() - (AbilityData.FAVOURITE_SLOTS * 3F) - ICON_SIZE);
 				posXInc = -3F;
 				break;
 		}
@@ -213,7 +214,7 @@ public class GuiHandler
 			float posX = posXStart;
 			float posY = posYStart;
 			int maxFav = 0;
-			for(int i=0; i<Abilities.FAVOURITE_SLOTS; i++)
+			for(int i=0; i<AbilityData.FAVOURITE_SLOTS; i++)
 			{
 				ResourceLocation mapName = abilities.getFavourite(i);
 				if(mapName != null)
@@ -239,7 +240,7 @@ public class GuiHandler
 				
 				posX = posXStart;
 				posY = posYStart;
-				for(int i=0; i<Math.min(Abilities.FAVOURITE_SLOTS, slots); i++)
+				for(int i=0; i<Math.min(AbilityData.FAVOURITE_SLOTS, slots); i++)
 				{
 					drawAbilitySlot(matrix, posX, posY);
 					posX -= posXInc;
@@ -256,8 +257,8 @@ public class GuiHandler
 		float inc = 3F;
 		switch(side)
 		{
-			case RIGHT:	return (float)(window.getGuiScaledWidth() - 5F - ICON_SIZE - (Abilities.FAVOURITE_SLOTS * inc));
-			default:	return 5F + Abilities.FAVOURITE_SLOTS * inc;
+			case RIGHT:	return (float)(window.getGuiScaledWidth() - 5F - ICON_SIZE - (AbilityData.FAVOURITE_SLOTS * inc));
+			default:	return 5F + AbilityData.FAVOURITE_SLOTS * inc;
 		}
 	}
 	
@@ -279,6 +280,7 @@ public class GuiHandler
 		double endX = posX + sizeX;
 		double endY = posY + sizeY;
 		
+		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
 		matrix.pushPose();
 			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
 			blit(matrix.last().pose(), (int)posX, (int)endX, (int)posY, (int)endY, 0, texXMin, texXMax, texYMin, texYMax, red, green, blue, alpha);

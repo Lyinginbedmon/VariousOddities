@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.Maps;
 import com.lying.variousoddities.VariousOddities;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.init.VOMobEffects;
@@ -80,11 +81,15 @@ public class LivingEntityMixin extends EntityMixin
 	{
 		LivingEntity living = (LivingEntity)(Object)this;
 		LivingData livingData = LivingData.forEntity(living);
-		if(livingData == null)
-			return;
+		if(livingData != null)
+		{
+			livingData.tick(living);
+			this.setAirSupply(livingData.getAir());
+		}
 		
-		livingData.tick(living);
-		this.setAirSupply(livingData.getAir());
+		AbilityData abilityData = AbilityData.forEntity(living);
+		if(abilityData != null)
+			abilityData.tick();
 	}
 	
 	@Inject(method = "isPotionApplicable", at = @At("HEAD"), cancellable = true)

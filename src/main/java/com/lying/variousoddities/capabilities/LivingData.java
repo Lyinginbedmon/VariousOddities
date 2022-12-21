@@ -43,9 +43,7 @@ import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeBus;
-import com.lying.variousoddities.utility.CompanionMarking.Mark;
 import com.lying.variousoddities.utility.DataHelper;
-import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -105,8 +103,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	private Species.SpeciesInstance species = null;
 	private Map<ResourceLocation, Template> templates = new HashMap<>();
 	
-	private Abilities abilities = new Abilities();
-	
 	private byte visualPotions = (byte)0;
 	private int potionSyncTimer = 0;
 	
@@ -116,9 +112,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	private boolean isUnconscious = false;
 	private int recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
 	private NonNullList<ItemStack> pockets = NonNullList.withSize(6, ItemStack.EMPTY);
-	
-	@SuppressWarnings("unused")
-	private Pair<Mark, Object> currentMark = null;
 	
 	/** Complex status effects */
 	private List<ConditionInstance> conditions = Lists.newArrayList();
@@ -154,7 +147,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	private void setEntity(LivingEntity entityIn)
 	{
 		this.entity = entityIn;
-		this.abilities.entity = entityIn;
 		this.isPlayer = entityIn.getType() == EntityType.PLAYER;
 	}
 	
@@ -195,8 +187,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 					customTypes.add(StringTag.valueOf(type.getSerializedName()));
 				compound.put("CustomTypes", customTypes);
 			}
-			
-			compound.put("Abilities", this.abilities.serializeNBT());
 			
 			if(!this.conditions.isEmpty())
 			{
@@ -268,8 +258,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 				this.customTypes.add(EnumCreatureType.fromName(types.getString(i)));
 		}
 		
-		this.abilities.deserializeNBT(nbt.getCompound("Abilities"));
-		
 		this.conditions.clear();
 		if(nbt.contains("Conditions", 9))
 		{
@@ -316,7 +304,18 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
 	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; markDirty(); }
 	
-	public Abilities getAbilities(){ return this.abilities; }
+	@Nullable
+	private AbilityData getAbilities()
+	{
+		return this.entity == null ? null : AbilityData.forEntity(this.entity);
+	}
+	
+	public void tryMarkAbilitiesToRecache()
+	{
+		AbilityData abilities = getAbilities();
+		if(abilities != null)
+			abilities.markForRecache();
+	}
 	
 	public byte getVisualPotions(){ return this.visualPotions; }
 	public boolean getVisualPotion(@Nullable MobEffect potion){ return potion == null ? false : getVisualPotion(VOMobEffects.getVisualPotionIndex(potion)); }
@@ -354,12 +353,15 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public SpeciesInstance getSpecies(){ return this.species; }
 	public void setSpecies(SpeciesInstance speciesIn)
 	{
+		AbilityData abilities = getAbilities();
 		this.species = null;
-		this.abilities.updateAbilityCache();
+		if(abilities != null)
+			abilities.updateAbilityCache();
 		
 		this.species = speciesIn;
-		this.abilities.updateAbilityCache();
-		this.abilities.markForRecache();
+		if(abilities != null)
+			abilities.updateAbilityCache();
+		
 		markDirty();
 	}
 	public void setSpecies(Species speciesIn){ setSpecies(speciesIn.createInstance()); }
@@ -392,7 +394,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 			return false;
 		
 		this.templates.put(templateIn.getRegistryName(), templateIn);
-		this.abilities.markForRecache();
+		tryMarkAbilitiesToRecache();
 		this.markDirty();
 		return true;
 	}
@@ -408,14 +410,14 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 			return;
 		
 		this.templates.remove(registryName);
-		this.abilities.markForRecache();
+		tryMarkAbilitiesToRecache();
 		this.markDirty();
 	}
 	
 	public void clearTemplates()
 	{
 		this.templates.clear();
-		this.abilities.markForRecache();
+		tryMarkAbilitiesToRecache();
 		this.markDirty();
 	}
 	
@@ -511,7 +513,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public void clearCustomTypes()
 	{
 		this.customTypes.clear();
-		this.abilities.markForRecache();
+		tryMarkAbilitiesToRecache();
 		markDirty();
 	}
 	public void addCustomType(EnumCreatureType type)
@@ -519,7 +521,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(!this.customTypes.contains(type))
 		{
 			this.customTypes.add(type);
-			this.abilities.markForRecache();
+			tryMarkAbilitiesToRecache();
 			markDirty();
 		}
 	}
@@ -528,7 +530,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(this.customTypes.contains(type))
 		{
 			this.customTypes.remove(type);
-			this.abilities.markForRecache();
+			tryMarkAbilitiesToRecache();
 			markDirty();
 		}
 	}
@@ -536,7 +538,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	{
 		this.customTypes.clear();
 		this.customTypes.addAll(typesIn);
-		this.abilities.markForRecache();
+		tryMarkAbilitiesToRecache();
 		markDirty();
 	}
 	
@@ -695,8 +697,9 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 					if(!mobDefaults.defaultCreatureTypes().isEmpty())
 						mobDefaults.defaultCreatureTypes().forEach((type) -> { addCustomType(type); } );
 					
-					if(!mobDefaults.defaultAbilities().isEmpty())
-						mobDefaults.defaultAbilities().forEach((ability) -> { this.abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundTag()))); });
+					AbilityData abilities = getAbilities();
+					if(!mobDefaults.defaultAbilities().isEmpty() && abilities != null)
+						mobDefaults.defaultAbilities().forEach((ability) -> abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundTag()))));
 				}
 				else
 				{
@@ -779,7 +782,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 			markDirty();
 		}
 		
-		abilities.tick();
 		handleConditions();
 		
 		if(this.dirty)

@@ -4,8 +4,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.capabilities.Abilities;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.client.Minecraft;
@@ -66,8 +65,8 @@ public class PacketSyncAbilities
 					
 					if(entity != null)
 					{
-						LivingData data = LivingData.forEntity(entity);
-						data.getAbilities().deserializeNBT(msg.abilitiesData);
+						AbilityData data = AbilityData.forEntity(entity);
+						data.deserializeNBT(msg.abilitiesData);
 					}
 				}
 			}
@@ -77,8 +76,8 @@ public class PacketSyncAbilities
 			ServerPlayer sender = context.getSender();
 			if(sender != null)
 			{
-				Abilities abilities = LivingData.forEntity(sender).getAbilities();
-				abilities.forceRecache();
+				AbilityData abilities = AbilityData.forEntity(sender);
+				abilities.updateAbilityCache();
 				CompoundTag data = abilities.serializeNBT();
 				PacketHandler.sendToNearby(sender.getLevel(), sender, new PacketSyncAbilities(sender.getUUID(), data));
 			}

@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.lying.variousoddities.capabilities.Abilities;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityFlight;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
@@ -43,6 +43,6 @@ public class ElytraMixinClient extends PlayerEntityMixin
 		LocalPlayer living = (LocalPlayer)(Object)this;
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(living);
 		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
-		return abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive() && Abilities.canBonusJump(living);
+		return abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive() && AbilityData.canBonusJump(living);
 	}
 }

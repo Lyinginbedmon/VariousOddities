@@ -3,7 +3,7 @@ package com.lying.variousoddities.species.abilities;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.condition.Conditions;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.AbilityGaze.AbilityGazeControl;
@@ -33,7 +33,7 @@ public class AbilityFearAura extends AbilityGazeControl
 	
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName()) && !getValidTargets(entity).isEmpty();
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.forEntity(entity).isAbilityOnCooldown(getMapName()) && !getValidTargets(entity).isEmpty();
 	}
 	
 	public void trigger(LivingEntity entity, Dist side)

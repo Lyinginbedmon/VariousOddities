@@ -1,6 +1,6 @@
 package com.lying.variousoddities.species.abilities;
 
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,7 +34,7 @@ public abstract class ActivatedAbility extends Ability
 	/** Called to check if a given ability has the suitable context in which to function. */
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !LivingData.forEntity(entity).getAbilities().isAbilityOnCooldown(getMapName()) && !isActive();
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.forEntity(entity).isAbilityOnCooldown(getMapName()) && !isActive();
 	}
 	
 	public boolean isActive(){ return this.activeTicks > 0; }
@@ -46,7 +46,7 @@ public abstract class ActivatedAbility extends Ability
 	
 	public void putOnCooldown(LivingEntity entity, int cooldown)
 	{
-		LivingData.forEntity(entity).getAbilities().putOnCooldown(getMapName(), cooldown);
+		AbilityData.forEntity(entity).putOnCooldown(getMapName(), cooldown);
 	}
 	
 	public void putOnCooldown(LivingEntity entity)
@@ -56,7 +56,6 @@ public abstract class ActivatedAbility extends Ability
 	
 	public void markForUpdate(LivingEntity entity)
 	{
-		LivingData.forEntity(entity).getAbilities().markForRecache();
-		LivingData.forEntity(entity).getAbilities().markDirty();
+		AbilityData.forEntity(entity).markForRecache();
 	}
 }

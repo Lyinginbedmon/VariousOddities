@@ -3,7 +3,7 @@ package com.lying.variousoddities.species.abilities;
 import java.util.Map;
 import java.util.UUID;
 
-import com.lying.variousoddities.capabilities.Abilities;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.reference.Reference;
 
 import net.minecraft.nbt.CompoundTag;
@@ -83,7 +83,7 @@ public class AbilityFlight extends AbilityMoveMode implements IBonusJumpAbility
 		if(abilityMap.containsKey(getRegistryName()))
 		{
 			AbilityFlight flight = (AbilityFlight)abilityMap.get(getRegistryName());
-			if(!flight.isActive() || !Abilities.canBonusJump(entity))
+			if(!flight.isActive() || !AbilityData.canBonusJump(entity))
 			{
 				if(mod != null)
 					gravity.removeModifier(GRAVITY_UUID);

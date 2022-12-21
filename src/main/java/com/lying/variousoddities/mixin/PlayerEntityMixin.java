@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.lying.variousoddities.capabilities.Abilities;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.reference.Reference;
@@ -72,7 +72,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	public void startElytraFlying(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Player player = (Player)(Object)this;
-		Abilities abilities = LivingData.forEntity(player).getAbilities();
+		AbilityData abilities = AbilityData.forEntity(player);
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
 		if(abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive())

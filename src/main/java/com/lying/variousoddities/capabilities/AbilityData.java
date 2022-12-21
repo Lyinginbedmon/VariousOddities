@@ -13,6 +13,8 @@ import com.google.common.collect.Lists;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAddEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityRemoveEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
+import com.lying.variousoddities.entity.AbstractBody;
+import com.lying.variousoddities.init.VOCapabilities;
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketAbilityRemove;
@@ -30,6 +32,7 @@ import com.lying.variousoddities.species.abilities.IBonusJumpAbility.JumpType;
 import com.lying.variousoddities.species.abilities.ICompoundAbility;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
@@ -39,10 +42,15 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class Abilities
+public class AbilityData implements ICapabilitySerializable<CompoundTag>
 {
 	private static final UUID UUID_ABILITIES = UUID.fromString("f7bc7eeb-69ea-43c7-8b3a-e85f1abbc817");
+	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities");
+	private final LazyOptional<AbilityData> handler;
 	
 	public static int FAVOURITE_SLOTS = 5;
 	
@@ -59,10 +67,34 @@ public class Abilities
 	
 	public LivingEntity entity = null;
 	
+	public AbilityData()
+	{
+		this.handler = LazyOptional.of(() -> this);
+	}
+	
+	public LazyOptional<AbilityData> handler(){ return this.handler; }
+	
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
+	{
+		return VOCapabilities.ABILITIES.orEmpty(cap, this.handler);
+	}
+	
+	@Nullable
+	public static AbilityData forEntity(LivingEntity entity)
+	{
+		if(entity == null || entity instanceof AbstractBody)
+			return null;
+		
+		AbilityData data = entity.getCapability(VOCapabilities.ABILITIES).orElse(null);
+		if(data != null)
+			data.entity = entity;
+		return data;
+	}
+	
 	/** Synchronise this object with surrounding entities */
 	public void markDirty()
 	{
-		if(this.entity != null && !this.entity.getLevel().isClientSide)
+		if(this.entity != null && !this.entity.getLevel().isClientSide())
 		{
 			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUUID(), serializeNBT());
 			PacketHandler.sendToNearby(entity.getLevel(), entity, packet);
@@ -73,6 +105,7 @@ public class Abilities
 	
 	public CompoundTag serializeNBT()
 	{
+		System.out.println(" = Saving abilities from NBT "+(this.entity != null ? this.entity.level.isClientSide() ? "CLIENT" : "SERVER" : "NULL"));
 		CompoundTag compound = new CompoundTag();
 		if(!customAbilities.isEmpty())
 		{
@@ -117,6 +150,7 @@ public class Abilities
 	
 	public void deserializeNBT(CompoundTag nbt)
 	{
+		System.out.println(" = Loading abilities from NBT "+(this.entity != null ? this.entity.level.isClientSide() ? "CLIENT" : "SERVER" : "NULL"));
 		this.customAbilities.clear();
 		this.cachedAbilities.clear();
 		this.cooldowns.clear();
@@ -152,7 +186,8 @@ public class Abilities
 				Ability ability = AbilityRegistry.getAbility(abilityData);
 				if(ability != null)
 				{
-					cacheAbility(ability);
+//					cacheAbility(ability);
+					this.cachedAbilities.put(ability.getMapName(), ability);
 					
 					ResourceLocation mapName = ability.getMapName();
 					if(abilityData.contains("Cooldown", 3))
@@ -163,6 +198,7 @@ public class Abilities
 				}
 			}
 			markForRecache();
+			
 			markDirty();
 		}
 		
@@ -202,7 +238,6 @@ public class Abilities
 			if(this.entity != null)
 				ability.onAbilityAdded(this.entity);
 			markForRecache();
-			markDirty();
 		}
 		catch(Exception e){ }
 	}
@@ -219,12 +254,11 @@ public class Abilities
 		}
 		this.customAbilities.remove(mapName);
 		markForRecache();
-		markDirty();
 	}
 	
 	public void removeCustomAbility(Ability ability){ removeCustomAbility(ability.getMapName()); uncacheAbility(ability.getMapName()); };
 	
-	public void clearCustomAbilities(){ this.customAbilities.clear(); markForRecache(); markDirty(); }
+	public void clearCustomAbilities(){ this.customAbilities.clear(); markForRecache(); }
 	
 	public Map<ResourceLocation, Ability> addCustomToMap(Map<ResourceLocation, Ability> abilityMap)
 	{
@@ -314,7 +348,7 @@ public class Abilities
 	public void tick()
 	{
 		boolean dirty = false;
-		if(this.entity != null && !this.entity.getLevel().isClientSide)
+		if(this.entity != null && !this.entity.getLevel().isClientSide())
 		{
 			// Refresh cached abilities
 			if(this.cacheDirty)
@@ -336,6 +370,7 @@ public class Abilities
 				if(this.entity.getType() == EntityType.PLAYER)
 					PacketHandler.sendTo((ServerPlayer)this.entity, new PacketAbilityCooldown());
 				dirty = true;
+				System.out.println("   = Tick dirty due to finished cooldown");
 			}
 			
 			/*
@@ -343,9 +378,10 @@ public class Abilities
 			 * Note: Non-permanent effects should NOT remove activated abilities, just prevent them from triggering whilst active.
 			 */
 			for(ResourceLocation favourite : this.favourites)
-				if(!AbilityRegistry.hasAbilityOfMapName(entity, favourite))
+				if(favourite != null && !AbilityRegistry.hasAbilityOfMapName(entity, favourite))
 				{
 					unfavourite(favourite);
+					System.out.println("   = Tick dirty due to missing favourited ability "+(favourite == null ? "NULL" : favourite.toString()));
 					dirty = true;
 				}
 			
@@ -436,9 +472,11 @@ public class Abilities
 				if(bodyData.hasTemplates())
 					for(Template template : bodyData.getTemplates())
 						template.applyAbilityOperations(abilityMap);
-				
-				abilityMap = bodyData.getAbilities().addCustomToMap(abilityMap);
 			}
+			
+			AbilityData bodyAbilities = AbilityData.forEntity(entityIn);
+			if(bodyAbilities != null)
+				abilityMap = bodyAbilities.addCustomToMap(abilityMap);
 			
 			// Remove any existing temporary abilities (these should never exist in the standard sources)
 			List<ResourceLocation> invalid = Lists.newArrayList();
@@ -482,8 +520,6 @@ public class Abilities
 		
 		return subAbilities;
 	}
-	
-	public void forceRecache(){ updateAbilityCache(); }
 	
 	public void updateAbilityCache()
 	{
@@ -541,6 +577,7 @@ public class Abilities
 		this.cachedAbilities.values().forEach((ability) -> { if(ability instanceof IBonusJumpAbility) bonusJumps.add(ability); });
 		
 		boolean noneValid = true;
+		boolean needsSync = false;
 		for(Ability ability : bonusJumps)
 		{
 			if(!ability.passive() && !ability.isActive())
@@ -556,7 +593,8 @@ public class Abilities
 					{
 						canBonusJump = true;
 						bonusJumpTimer = 0;
-						markDirty();
+						
+						needsSync = true;
 					}
 				
 				noneValid = false;
@@ -564,13 +602,31 @@ public class Abilities
 			}
 		}
 		
-		if(bonusJumps.isEmpty() || noneValid)
-		{
-			canBonusJump = false;
-			bonusJumpTimer = -(Reference.Values.TICKS_PER_SECOND / 2);
-			currentJumpType = null;
+		if(needsSync)
 			markDirty();
-			return;
+		else if(bonusJumps.isEmpty() || noneValid)
+		{
+			if(canBonusJump)
+			{
+				canBonusJump = false;
+				needsSync = true;
+			}
+			
+			int resetTimer = -(Reference.Values.TICKS_PER_SECOND / 2);
+			if(bonusJumpTimer > resetTimer)
+			{
+				bonusJumpTimer = resetTimer;
+				needsSync = true;
+			}
+			
+			if(currentJumpType != null)
+			{
+				currentJumpType = null;
+				needsSync = true;
+			}
+			
+			if(needsSync)
+				markDirty();
 		}
 	}
 	
@@ -627,7 +683,7 @@ public class Abilities
 		markDirty();
 	}
 	
-	public void copy(Abilities data)
+	public void copy(AbilityData data)
 	{
 		this.customAbilities.clear();
 		for(Ability ability : data.customAbilities.values())

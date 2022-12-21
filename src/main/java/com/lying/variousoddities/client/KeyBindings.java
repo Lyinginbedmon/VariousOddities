@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import org.lwjgl.glfw.GLFW;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.client.gui.ScreenAbilityMenu;
 import com.lying.variousoddities.network.PacketAbilityActivate;
 import com.lying.variousoddities.network.PacketHandler;
@@ -93,8 +93,8 @@ public class KeyBindings
 	
 	private static void handleAbilityKey(int index, Minecraft mc)
 	{
-		LivingData data = LivingData.forEntity(mc.player);
-		ResourceLocation mapName = data.getAbilities().getFavourite(index);
+		AbilityData data = AbilityData.forEntity(mc.player);
+		ResourceLocation mapName = data.getFavourite(index);
 		if(mapName != null)
 		{
 			ActivatedAbility ability = (ActivatedAbility)AbilityRegistry.getAbilityByMapName(mc.player, mapName);

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
@@ -98,9 +98,9 @@ public class CommandAbilities extends CommandBase
 		if(entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			LivingData data = LivingData.forEntity(living);
-			int tally = data.getAbilities().size();
-			data.getAbilities().clearCustomAbilities();
+			AbilityData data = AbilityData.forEntity(living);
+			int tally = data.size();
+			data.clearCustomAbilities();
 			source.sendSuccess(Component.translatable(translationSlug+"clear", tally, living.getDisplayName()), true);
 		}
 		else
@@ -158,10 +158,10 @@ public class CommandAbilities extends CommandBase
 			if(entity instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entity;
-				LivingData data = LivingData.forEntity(living);
+				AbilityData data = AbilityData.forEntity(living);
 				Ability ability = AbilityRegistry.getAbility(registryName, nbt);
 				if(ability != null)
-					data.getAbilities().addCustomAbility(ability);
+					data.addCustomAbility(ability);
 				source.sendSuccess(Component.translatable(translationSlug+"add", getAbilityWithEdit(ability, living), living.getDisplayName()), true);
 			}
 			else
@@ -189,7 +189,7 @@ public class CommandAbilities extends CommandBase
 			if(entity instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entity;
-				LivingData data = LivingData.forEntity(living);
+				AbilityData data = AbilityData.forEntity(living);
 				Ability ability = AbilityRegistry.getAbilityByMapName(living, mapName);
 				if(ability != null)
 				{
@@ -199,8 +199,8 @@ public class CommandAbilities extends CommandBase
 					Ability ability2 = AbilityRegistry.getAbility(originalNBT);
 					if(ability2 != null)
 					{
-						data.getAbilities().removeCustomAbility(ability);
-						data.getAbilities().addCustomAbility(ability2);
+						data.removeCustomAbility(ability);
+						data.addCustomAbility(ability2);
 						source.sendSuccess(Component.translatable(translationSlug+"add", getAbilityWithEdit(ability2, living), living.getDisplayName()), true);
 					}
 					else
@@ -229,8 +229,8 @@ public class CommandAbilities extends CommandBase
 			if(entity instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entity;
-				LivingData data = LivingData.forEntity(living);
-				data.getAbilities().removeCustomAbility(mapName);
+				AbilityData data = AbilityData.forEntity(living);
+				data.removeCustomAbility(mapName);
 				source.sendSuccess(Component.translatable(translationSlug+"remove", mapName, living.getDisplayName()), true);
 			}
 			else

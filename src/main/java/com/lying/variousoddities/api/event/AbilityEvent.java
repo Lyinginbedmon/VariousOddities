@@ -5,8 +5,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.Abilities;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.species.abilities.Ability;
 
 import net.minecraft.tags.TagKey;
@@ -18,19 +17,19 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 
 public class AbilityEvent extends LivingEvent
 {
-	private final Abilities abilities;
+	private final AbilityData abilities;
 	
-	public AbilityEvent(LivingEntity entity, Abilities abilitiesIn)
+	public AbilityEvent(LivingEntity entity, AbilityData abilitiesIn)
 	{
 		super(entity);
 		this.abilities = abilitiesIn;
 	}
 	
-	public Abilities getAbilities(){ return this.abilities; }
+	public AbilityData getAbilities(){ return this.abilities; }
 	
 	public static class AbilityUpdateEvent extends AbilityEvent
 	{
-		public AbilityUpdateEvent(LivingEntity entity, Abilities abilitiesIn)
+		public AbilityUpdateEvent(LivingEntity entity, AbilityData abilitiesIn)
 		{
 			super(entity, abilitiesIn);
 		}
@@ -40,7 +39,7 @@ public class AbilityEvent extends LivingEvent
 	{
 		private final Ability ability;
 		
-		public AbilityAddEvent(LivingEntity entity, Ability abilityIn, Abilities abilitiesIn)
+		public AbilityAddEvent(LivingEntity entity, Ability abilityIn, AbilityData abilitiesIn)
 		{
 			super(entity, abilitiesIn);
 			this.ability = abilityIn;
@@ -53,7 +52,7 @@ public class AbilityEvent extends LivingEvent
 	{
 		private final Ability ability;
 		
-		public AbilityRemoveEvent(LivingEntity entity, Ability abilityIn, Abilities abilitiesIn)
+		public AbilityRemoveEvent(LivingEntity entity, Ability abilityIn, AbilityData abilitiesIn)
 		{
 			super(entity, abilitiesIn);
 			this.ability = abilityIn;
@@ -86,10 +85,10 @@ public class AbilityEvent extends LivingEvent
 		
 		protected AbilityGetBreathableFluidEvent(LivingEntity entity)
 		{
-			this(entity, LivingData.forEntity(entity).getAbilities());
+			this(entity, AbilityData.forEntity(entity));
 		}
 		
-		protected AbilityGetBreathableFluidEvent(LivingEntity entity, Abilities abilitiesIn)
+		protected AbilityGetBreathableFluidEvent(LivingEntity entity, AbilityData abilitiesIn)
 		{
 			super(entity, abilitiesIn);
 		}
@@ -115,7 +114,7 @@ public class AbilityEvent extends LivingEvent
 				super(entity);
 			}
 			
-			public Add(LivingEntity entity, Abilities abilitiesIn)
+			public Add(LivingEntity entity, AbilityData abilitiesIn)
 			{
 				super(entity, abilitiesIn);
 			}
@@ -128,7 +127,7 @@ public class AbilityEvent extends LivingEvent
 				super(entity);
 			}
 			
-			public Remove(LivingEntity entity, Abilities abilitiesIn)
+			public Remove(LivingEntity entity, AbilityData abilitiesIn)
 			{
 				super(entity, abilitiesIn);
 			}

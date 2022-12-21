@@ -4,8 +4,7 @@ import java.util.function.Supplier;
 
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityRemoveEvent;
-import com.lying.variousoddities.capabilities.Abilities;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.proxy.CommonProxy;
 import com.lying.variousoddities.species.abilities.Ability;
 
@@ -43,10 +42,9 @@ public class PacketAbilityRemove
 			Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(sender != null)
 			{
-				LivingData data = LivingData.forEntity(sender);
-				if(data != null)
+				AbilityData abilities = AbilityData.forEntity(sender);
+				if(abilities != null)
 				{
-					Abilities abilities = data.getAbilities();
 					Ability ability = abilities.getCachedAbilities().get(msg.mapName);
 					if(ability != null)
 					{

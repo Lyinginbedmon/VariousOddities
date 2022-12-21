@@ -1,8 +1,7 @@
 package com.lying.variousoddities.species.abilities;
 
 import com.lying.variousoddities.api.event.SpeciesEvent;
-import com.lying.variousoddities.capabilities.Abilities;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Template;
@@ -122,7 +121,7 @@ public class AbilityStartingItem extends Ability
 		if(player.getLevel().isClientSide)
 			return;
 		
-		Abilities abilities = LivingData.forEntity(player).getAbilities();
+		AbilityData abilities = AbilityData.forEntity(player);
 		for(Ability ability : abilities.getEntityAbilities(player).values())
 			if(ability.getRegistryName().equals(getRegistryName()))
 				addItemsFromAbility((AbilityStartingItem)ability, player);
