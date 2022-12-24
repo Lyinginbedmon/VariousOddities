@@ -7,6 +7,7 @@ import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
+import com.lying.variousoddities.species.abilities.AbilityBreatheFluid;
 import com.lying.variousoddities.species.abilities.AbilityModifier;
 import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
@@ -59,7 +60,7 @@ public class ScreenCharacterSheet extends Screen
 			speciesHeader.append(((MutableComponent)data.getSpecies().getDisplayName().plainCopy()));
 		
 		actionSet = ActionSet.fromTypes(player, EnumCreatureType.getTypes(player).asSet());
-		fluids = data.getBreathableFluids(player);
+		fluids = AbilityBreatheFluid.getBreathableFluids(player);
 		
 		// Templates (if any)
 		List<Template> templates = Lists.newArrayList();

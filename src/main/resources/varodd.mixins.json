@@ -21,7 +21,8 @@
 		"EntityPredicateMixin",
 		"TargetGoalMixin",
 		"BeaconTileEntityMixin",
-		"PathNavigatorMixin"
+		"PathNavigatorMixin",
+		"AirControlMixin"
 	],
 	"client":
 	[

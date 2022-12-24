@@ -77,15 +77,12 @@ public class LivingEntityMixin extends EntityMixin
 	}
 	
 	@Inject(method = "baseTick()V", at = @At("TAIL"))
-	public void baseTick(final CallbackInfo ci)
+	public void updateCapabilities(final CallbackInfo ci)
 	{
 		LivingEntity living = (LivingEntity)(Object)this;
 		LivingData livingData = LivingData.forEntity(living);
 		if(livingData != null)
-		{
 			livingData.tick(living);
-			this.setAirSupply(livingData.getAir());
-		}
 		
 		AbilityData abilityData = AbilityData.forEntity(living);
 		if(abilityData != null)

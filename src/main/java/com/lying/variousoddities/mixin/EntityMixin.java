@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.lying.variousoddities.api.event.LivingBreathingEvent.LivingMaxAirEvent;
 import com.lying.variousoddities.capabilities.PlayerData;
 import com.lying.variousoddities.species.abilities.Ability;
-import com.lying.variousoddities.species.abilities.AbilityHoldBreath;
 import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.abilities.IPhasingAbility;
@@ -26,6 +26,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.MinecraftForge;
 
 @Mixin(Entity.class)
 public class EntityMixin
@@ -43,12 +44,6 @@ public class EntityMixin
 	
 	@Shadow
 	public SynchedEntityData getEntityData(){ return null; }
-	
-	@Shadow
-	public int getMaxAirSupply(){ return 0; }
-	
-	@Shadow
-	public void setAirSupply(int airIn){ }
 	
 	@Shadow
 	public boolean isSprinting(){ return false; }
@@ -117,14 +112,6 @@ public class EntityMixin
 			ci.setReturnValue(true);
 	}
 	
-	@Inject(method = "getMaxAir()I", at = @At("HEAD"), cancellable = true)
-	public void getMaxAirReptile(final CallbackInfoReturnable<Integer> ci)
-	{
-		Entity ent = (Entity)(Object)this;
-		if(ent instanceof LivingEntity && AbilityRegistry.hasAbilityOfMapName((LivingEntity)ent, AbilityRegistry.getClassRegistryKey(AbilityHoldBreath.class).location()))
-			ci.setReturnValue(600);
-	}
-	
 	@Inject(method = "setMotionMultiplier(Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/vector/Vector3d;)V", at = @At("HEAD"), cancellable = true)
 	public void cancelWebSlowdown(BlockState state, Vector3d multiplier, final CallbackInfo ci)
 	{
@@ -154,6 +141,19 @@ public class EntityMixin
 			float lenY = baseSize.height * scale;
 			
 			ci.setReturnValue(EntityDimensions.scalable(lenX, lenY));
+		}
+	}
+	
+	@Inject(method = "getMaxAirSupply()I", at = @At("RETURN"), cancellable = true)
+	public void getMaxAir(final CallbackInfoReturnable<Integer> ci)
+	{
+		Entity ent = (Entity)(Object)this;
+		if(ent instanceof LivingEntity)
+		{
+			LivingEntity living = (LivingEntity)ent;
+			LivingMaxAirEvent event = new LivingMaxAirEvent(living, ci.getReturnValue());
+			MinecraftForge.EVENT_BUS.post(event);
+			ci.setReturnValue(event.maxAir());
 		}
 	}
 }

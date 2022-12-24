@@ -3,7 +3,6 @@ package com.lying.variousoddities.network;
 import java.util.function.Supplier;
 
 import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.capabilities.LivingData;
 import com.lying.variousoddities.proxy.CommonProxy;
 
 import net.minecraft.network.FriendlyByteBuf;
@@ -35,19 +34,12 @@ public class PacketSyncAir
 	public static void handle(PacketSyncAir msg, Supplier<NetworkEvent.Context> cxt)
 	{
 		NetworkEvent.Context context = cxt.get();
-		if(context.getDirection().getReceptionSide().isServer())
-		{
-			context.setPacketHandled(true);
-			return;
-		}
-		
-		Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
-		if(sender != null)
-		{
-			LivingData data = LivingData.forEntity(sender);
-			if(data != null)
-				data.setAir(msg.air);
-		}
 		context.setPacketHandled(true);
+		if(!context.getDirection().getReceptionSide().isServer())
+		{
+			Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
+			if(sender != null)
+				sender.setAirSupply(msg.air);
+		}
 	}
 }

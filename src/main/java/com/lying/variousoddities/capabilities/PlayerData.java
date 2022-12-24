@@ -183,6 +183,7 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 		return player != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isBody(body);
 	}
 	
+	// FIXME Ensure accurate reporting of condition
 	private static boolean checkCondition(@Nullable LivingEntity playerIn, @Nullable BodyCondition bodyCondition, @Nullable SoulCondition soulCondition)
 	{
 		if(playerIn != null && playerIn.getType() == EntityType.PLAYER)

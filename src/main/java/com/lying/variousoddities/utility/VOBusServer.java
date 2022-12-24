@@ -2,6 +2,7 @@ package com.lying.variousoddities.utility;
 
 import java.util.List;
 
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
@@ -30,7 +31,6 @@ import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesOpenScreen;
-import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.network.PacketSyncPlayerData;
 import com.lying.variousoddities.network.PacketSyncSpecies;
@@ -103,13 +103,9 @@ public class VOBusServer
 	public static void onChangeDimensionEvent(EntityTravelToDimensionEvent event)
 	{
 		Entity entity = event.getEntity();
-		if(!entity.getLevel().isClientSide && entity.getType() == EntityType.PLAYER)
+		if(!entity.getLevel().isClientSide() && entity.getType() == EntityType.PLAYER)
 		{
 			Player player = (Player)entity;
-			LivingData data = LivingData.forEntity(player);
-			if(data != null)
-				PacketHandler.sendTo((ServerPlayer)player, new PacketSyncAir(data.getAir()));
-			
 			AbilityData abilities = AbilityData.forEntity(player);
 			if(abilities != null)
 				abilities.markDirty();
@@ -130,9 +126,9 @@ public class VOBusServer
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncLivingData(player.getUUID(), livingData));
 			if(!livingData.hasSelectedSpecies() && ConfigVO.MOBS.createCharacterOnLogin.get())
 			{
-				if(!player.getLevel().isClientSide)
-					PacketHandler.sendTo((ServerPlayer)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
 				player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Reference.Values.TICKS_PER_MINUTE * 15, 15, true, false));
+				if(!player.getLevel().isClientSide())
+					PacketHandler.sendTo((ServerPlayer)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), ConfigVO.MOBS.randomCharacters.get()));
 			}
 		}
 		
@@ -145,29 +141,18 @@ public class VOBusServer
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncPlayerData(player.getUUID(), playerData));
 	}
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onPlayerCloneEvent(PlayerEvent.Clone event)
 	{
-		LivingData oldLiving = LivingData.forEntity(event.getOriginal());
-		LivingData newLiving = LivingData.forEntity(event.getEntity());
-		if(oldLiving != null && newLiving != null)
-		{
-			newLiving.setCustomTypes(oldLiving.getCustomTypes());
-			newLiving.setSpecies(oldLiving.getSpecies());
-			newLiving.setSelectedSpecies(oldLiving.hasSelectedSpecies());
-			newLiving.setTemplates(oldLiving.getTemplates());
-		}
+		VariousOddities.log.info("Clone event fired");
+		Player original = event.getOriginal();
+		Player next = event.getEntity();
 		
-		AbilityData oldAbilities = AbilityData.forEntity(event.getOriginal());
-		AbilityData newAbilities = AbilityData.forEntity(event.getEntity());
-		if(oldAbilities != null && newAbilities != null)
-		{
-			newAbilities.copy(oldAbilities);
-			newAbilities.markDirty();
-		}
+		LivingData.syncOnDeath(original, next);
+		AbilityData.syncOnDeath(original, next);
 		
-		PlayerData oldPlayer = PlayerData.forPlayer(event.getOriginal());
-		PlayerData newPlayer = PlayerData.forPlayer(event.getEntity());
+		PlayerData oldPlayer = PlayerData.forPlayer(original);
+		PlayerData newPlayer = PlayerData.forPlayer(next);
 		if(oldPlayer != null && newPlayer != null)
 		{
 			if(!event.isWasDeath())
@@ -177,6 +162,8 @@ public class VOBusServer
 			}
 			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundTag()));
 		}
+		else
+			VariousOddities.log.error("Failed to find PlayerData during player cloning event ["+(oldPlayer != null)+" -> "+(newPlayer != null)+"]");
 	}
 	
 	@SubscribeEvent

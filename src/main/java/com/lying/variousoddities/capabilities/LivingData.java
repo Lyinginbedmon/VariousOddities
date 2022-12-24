@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.entity.IDefaultSpecies;
-import com.lying.variousoddities.api.event.AbilityEvent.AbilityGetBreathableFluidEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeApplyEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.TypeRemoveEvent;
 import com.lying.variousoddities.api.event.SpeciesEvent;
@@ -29,7 +28,6 @@ import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketBludgeoned;
 import com.lying.variousoddities.network.PacketHandler;
-import com.lying.variousoddities.network.PacketSyncAir;
 import com.lying.variousoddities.network.PacketSyncLivingData;
 import com.lying.variousoddities.network.PacketSyncVisualPotions;
 import com.lying.variousoddities.network.PacketVisualPotion;
@@ -43,12 +41,11 @@ import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeBus;
+import com.lying.variousoddities.species.types.Types;
 import com.lying.variousoddities.utility.DataHelper;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -56,11 +53,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.ServerStatsCounter;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -69,10 +63,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -439,23 +430,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		return types;
 	}
 	
-	/** True if this object should override the vanilla air value */
-	public boolean overrideAir(){ return true; }
-	
-	public int getAir(){ return this.air; }
-	public void setAir(int airIn){ this.air = airIn; }
-	
-	private int decreaseAirSupply(int air, LivingEntity entityIn)
-	{
-		int i = EnchantmentHelper.getRespiration(entityIn);
-		return i > 0 && entityIn.getRandom().nextInt(i + 1) > 0 ? air : air - 1;
-	}
-	
-	private int determineNextAir(int currentAir, LivingEntity entityIn)
-	{
-		return Math.min(currentAir + 4, entityIn.getMaxAirSupply());
-	}
-	
 	public float getBludgeoning(){ return this.bludgeoning; }
 	public void addBludgeoning(float bludgeonIn)
 	{
@@ -489,7 +463,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public static boolean unconscious(@Nonnull LivingEntity entity)
 	{
 		float health = entity.getHealth();
-		if(health <= 0F)
+		if(!entity.isAlive() || health <= 0F)
 			return false;
 		
 		LivingData data = LivingData.forEntity(entity);
@@ -654,6 +628,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		IDefaultSpecies mobDefaults = entity instanceof IDefaultSpecies ? (IDefaultSpecies)entity : null;
 		
 		Level world = entity.getLevel();
+		boolean isServer = !world.isClientSide();
 		if(!this.initialised && (!isPlayer || ((Player)entity).getGameProfile() != null))
 		{
 			// TODO Check default home dimension registry for creature before setting to current dim
@@ -728,25 +703,24 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		
 		ActionSet actions = ActionSet.fromTypes(this.entity, this.prevTypes);
 		
-		// Prevent phantoms due to sleeplessness
-		if(!actions.sleeps())
+		if(isServer)
 		{
-			if(isPlayer && !world.isClientSide)
+			ServerPlayer serverPlayer = (ServerPlayer)player;
+			
+			// Prevent phantoms due to sleeplessness
+			if(isPlayer && !actions.sleeps())
 			{
-				ServerPlayer serverPlayer = (ServerPlayer)player;
 				ServerStatsCounter statManager = serverPlayer.getStats();
                 statManager.setValue(serverPlayer, Stats.CUSTOM.get(Stats.TIME_SINCE_REST), 0);
 			}
+			
+			if(this.bludgeoning > 0F)
+				if(--this.recoveryTimer <= 0)
+				{
+					addBludgeoning(-(isPlayer && entity.isSleeping() ? 2F : 1F));
+					this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
+				}
 		}
-		
-		handleAir(actions.breathes(), entity);
-		
-		if(this.bludgeoning > 0F && !world.isClientSide)
-			if(--this.recoveryTimer <= 0)
-			{
-				addBludgeoning(-(this.isPlayer && entity.isSleeping() ? 2F : 1F));
-				this.recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
-			}
 		
 		if(isUnconscious() != isActuallyUnconscious())
 		{
@@ -766,13 +740,10 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 					// Spawn body
 					LivingEntity body = EntityBodyUnconscious.createBodyFrom(entity);
 					((AbstractBody)body).setPocketInventory(getPocketInventory());
-					if(entity.isAddedToWorld())
+					if(entity.isAddedToWorld() && isServer)
 					{
-						if(!world.isClientSide)
-						{
-							world.addFreshEntity(body);
-							entity.discard();
-						}
+						world.addFreshEntity(body);
+						entity.discard();
 					}
 				}
 				
@@ -834,13 +805,15 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		
 		this.prevTypes.removeAll(typesNow);
 		prevTypes.forEach((type) -> { MinecraftForge.EVENT_BUS.post(new TypeRemoveEvent(entity, type)); });
-
+		
 		if(!typesNew.isEmpty() || !prevTypes.isEmpty())
 			markDirty();
 		
 		this.prevTypes.clear();
 		this.prevTypes.addAll(typesNow);
 	}
+	
+	public List<EnumCreatureType> getTypes() { return this.prevTypes; }
 	
 	/** Manage base health according to active supertypes */
 	public void handleHealth(Player player)
@@ -883,83 +856,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		}
 	}
 	
-	/** Manage air for creatures that breathe */
-	@SuppressWarnings("deprecation")
-	public void handleAir(boolean breathes, LivingEntity entity)
-	{
-		boolean isPlayer = entity.getType() == EntityType.PLAYER;
-		boolean isInvulnerablePlayer = false;
-		if(isPlayer)
-		{
-			isPlayer = true;
-			isInvulnerablePlayer = ((Player)entity).getAbilities().invulnerable || !PlayerData.isPlayerNormalFunction(entity);
-		}
-		
-		if(getAir() > entity.getMaxAirSupply())
-			setAir(entity.getMaxAirSupply());
-		
-		if(!breathes)
-			setAir(entity.getMaxAirSupply());
-		else if(entity.isAlive() && !isInvulnerablePlayer)
-		{
-			List<TagKey<Fluid>> breathables = getBreathableFluids(entity);
-			if(breathables.isEmpty())
-				return;
-			
-			List<TagKey<Fluid>> fluidInEyes = Lists.newArrayList();
-			Registry.FLUID.getTagNames().forEach((fluid) -> { if(entity.isEyeInFluid(fluid)) fluidInEyes.add(fluid); });
-			
-			boolean hasSpecialBreathing = 
-					MobEffectUtil.hasWaterBreathing(entity) ||
-					entity.getLevel().getBlockState(new BlockPos(entity.getX(), entity.getEyeY(), entity.getZ())).is(Blocks.BUBBLE_COLUMN);
-			
-			boolean canBreathe = false;
-			for(TagKey<Fluid> fluid : fluidInEyes)
-				if(breathables.contains(fluid))
-				{
-					canBreathe = true;
-					break;
-				}
-			if(fluidInEyes.isEmpty() && breathables.contains(null))
-				canBreathe = true;
-			
-			if(canBreathe)
-			{
-				if(getAir() < entity.getMaxAirSupply())
-					setAir(determineNextAir(getAir(), entity));
-			}
-			else if(!hasSpecialBreathing)
-			{
-				setAir(Math.min(entity.getMaxAirSupply(), decreaseAirSupply(getAir(), entity)));
-				if(getAir() == -20)
-				{
-					setAir(0);
-					entity.hurt(DamageSource.DROWN, 2.0F);
-				}
-			}
-		}
-		
-		if(isPlayer && !entity.getLevel().isClientSide && entity.getLevel().getGameTime()%Reference.Values.TICKS_PER_MINUTE == 0)
-			PacketHandler.sendTo((ServerPlayer)entity, new PacketSyncAir(getAir()));
-	}
-	
-	public List<TagKey<Fluid>> getBreathableFluids(LivingEntity entity)
-	{
-		AbilityGetBreathableFluidEvent.Add event1 = new AbilityGetBreathableFluidEvent.Add(entity);
-		MinecraftForge.EVENT_BUS.post(event1);
-		
-		List<TagKey<Fluid>> breathables = event1.getFluids();
-		if(!breathables.isEmpty())
-		{
-			AbilityGetBreathableFluidEvent.Remove event2 = new AbilityGetBreathableFluidEvent.Remove(entity);
-			MinecraftForge.EVENT_BUS.post(event2);
-			
-			event2.getFluids().forEach((fluid) -> { breathables.remove(fluid); });
-		}
-		
-		return breathables;
-	}
-	
 	private static AttributeModifier makeModifier(double amount)
 	{
 		return new AttributeModifier(HEALTH_MODIFIER_UUID, "hit_die_modifier", amount, AttributeModifier.Operation.ADDITION);
@@ -968,5 +864,42 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public void markDirty()
 	{
 		this.dirty = true;
+	}
+	
+	public static void syncOnDeath(Player original, Player next)
+	{
+		original.getCapability(VOCapabilities.LIVING_DATA).ifPresent(then -> next.getCapability(VOCapabilities.LIVING_DATA).ifPresent(now -> now.clone(then)));
+	}
+	
+	public void clone(LivingData dataIn)
+	{
+		VariousOddities.log.info("Cloning LivingData");
+		
+		if(dataIn.hasCustomTypes())
+		{
+			VariousOddities.log.info("# Custom types: "+(new Types(dataIn.getCustomTypes())).toHeader().getString());
+			setCustomTypes(dataIn.getCustomTypes());
+		}
+		else
+			clearCustomTypes();
+		
+		this.selectedSpecies = dataIn.hasSelectedSpecies();
+		
+		if(dataIn.hasSpecies())
+		{
+			VariousOddities.log.info("# Species: "+dataIn.getSpecies().getDisplayName().getString());
+			setSpecies(dataIn.getSpecies());
+		}
+		else
+			this.species = null;
+		
+		if(dataIn.hasTemplates())
+		{
+			VariousOddities.log.info("# Templates:");
+			dataIn.getTemplates().forEach((template) -> VariousOddities.log.info("#   -"+template.getDisplayName().getString()));
+			setTemplates(dataIn.getTemplates());
+		}
+		else
+			clearTemplates();
 	}
 }

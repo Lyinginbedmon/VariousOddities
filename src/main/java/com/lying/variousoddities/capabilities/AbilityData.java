@@ -40,6 +40,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -82,7 +83,7 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	@Nullable
 	public static AbilityData forEntity(LivingEntity entity)
 	{
-		if(entity == null || entity instanceof AbstractBody)
+		if(entity == null || entity instanceof AbstractBody || !entity.isAddedToWorld())
 			return null;
 		
 		AbilityData data = entity.getCapability(VOCapabilities.ABILITIES).orElse(null);
@@ -105,7 +106,6 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	
 	public CompoundTag serializeNBT()
 	{
-		System.out.println(" = Saving abilities from NBT "+(this.entity != null ? this.entity.level.isClientSide() ? "CLIENT" : "SERVER" : "NULL"));
 		CompoundTag compound = new CompoundTag();
 		if(!customAbilities.isEmpty())
 		{
@@ -150,7 +150,6 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	
 	public void deserializeNBT(CompoundTag nbt)
 	{
-		System.out.println(" = Loading abilities from NBT "+(this.entity != null ? this.entity.level.isClientSide() ? "CLIENT" : "SERVER" : "NULL"));
 		this.customAbilities.clear();
 		this.cachedAbilities.clear();
 		this.cooldowns.clear();
@@ -186,7 +185,6 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 				Ability ability = AbilityRegistry.getAbility(abilityData);
 				if(ability != null)
 				{
-//					cacheAbility(ability);
 					this.cachedAbilities.put(ability.getMapName(), ability);
 					
 					ResourceLocation mapName = ability.getMapName();
@@ -683,7 +681,12 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 		markDirty();
 	}
 	
-	public void copy(AbilityData data)
+	public static void syncOnDeath(Player original, Player next)
+	{
+		original.getCapability(VOCapabilities.ABILITIES).ifPresent(then -> next.getCapability(VOCapabilities.ABILITIES).ifPresent(now -> now.clone(then)));
+	}
+	
+	public void clone(AbilityData data)
 	{
 		this.customAbilities.clear();
 		for(Ability ability : data.customAbilities.values())
@@ -695,5 +698,7 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 		
 		for(int i=0; i<this.favourites.length; i++)
 			this.favourites[i] = data.favourites[i];
+		
+		markDirty();
 	}
 }
