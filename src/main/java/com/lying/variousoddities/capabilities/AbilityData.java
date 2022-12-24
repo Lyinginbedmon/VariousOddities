@@ -15,6 +15,7 @@ import com.lying.variousoddities.api.event.AbilityEvent.AbilityRemoveEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.init.VOCapabilities;
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketAbilityRemove;
@@ -683,7 +684,12 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	
 	public static void syncOnDeath(Player original, Player next)
 	{
-		original.getCapability(VOCapabilities.ABILITIES).ifPresent(then -> next.getCapability(VOCapabilities.ABILITIES).ifPresent(now -> now.clone(then)));
+		if(AbilityData.forEntity(original) == null)
+			VariousOddities.log.error("! Failed to find AbilityData during clone of (old) "+original.getDisplayName().getString());
+		else if(AbilityData.forEntity(next) == null)
+			VariousOddities.log.error("! Failed to find AbilityData during clone of (new) "+next.getDisplayName().getString());
+		else
+			original.getCapability(VOCapabilities.ABILITIES).ifPresent(then -> next.getCapability(VOCapabilities.ABILITIES).ifPresent(now -> now.clone(then)));
 	}
 	
 	public void clone(AbilityData data)

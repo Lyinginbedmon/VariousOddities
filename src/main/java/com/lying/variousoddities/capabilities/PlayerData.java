@@ -256,6 +256,25 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 	
 	public void markDirty(){ this.isDirty = true; }
 	
+	public static void syncOnClone(Player original, Player next, boolean wasDeath)
+	{
+		PlayerData oldPlayer = PlayerData.forPlayer(original);
+		PlayerData newPlayer = PlayerData.forPlayer(next);
+		if(oldPlayer == null)
+			VariousOddities.log.error("! Failed to find PlayerData during clone of (old) "+original.getDisplayName().getString());
+		else if(newPlayer == null)
+			VariousOddities.log.error("! Failed to find PlayerData during clone of (new) "+next.getDisplayName().getString());
+		else
+		{
+			if(!wasDeath)
+			{
+				newPlayer.setBodyCondition(oldPlayer.getBodyCondition());
+				newPlayer.setBodyUUID(oldPlayer.getBodyUUID());
+			}
+			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundTag()));
+		}
+	}
+	
 	/**
 	 * Faction reputation holder class
 	 * @author Lying

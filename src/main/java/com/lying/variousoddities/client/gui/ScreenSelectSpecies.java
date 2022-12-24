@@ -116,6 +116,8 @@ public class ScreenSelectSpecies extends Screen
 					return (index1 > index2 ? 1 : index1 < index2 ? -1 : 0);
 				}
 			});
+		
+		speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
 	}
 	
 	private int indexBySpecies(@Nullable Species speciesIn)
@@ -349,7 +351,6 @@ public class ScreenSelectSpecies extends Screen
     	
         if(this.selectableSpecies.isEmpty())
         	initSpecies();
-		this.speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
 		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
 		if(!this.randomise)
 			addWidget(this.speciesList);

@@ -868,7 +868,12 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	
 	public static void syncOnDeath(Player original, Player next)
 	{
-		original.getCapability(VOCapabilities.LIVING_DATA).ifPresent(then -> next.getCapability(VOCapabilities.LIVING_DATA).ifPresent(now -> now.clone(then)));
+		if(LivingData.forEntity(original) == null)
+			VariousOddities.log.error("! Failed to find LivingData during clone of (old) "+original.getDisplayName().getString());
+		else if(LivingData.forEntity(next) == null)
+			VariousOddities.log.error("! Failed to find LivingData during clone of (new) "+next.getDisplayName().getString());
+		else
+			original.getCapability(VOCapabilities.LIVING_DATA).ifPresent(then -> next.getCapability(VOCapabilities.LIVING_DATA).ifPresent(now -> now.clone(then)));
 	}
 	
 	public void clone(LivingData dataIn)

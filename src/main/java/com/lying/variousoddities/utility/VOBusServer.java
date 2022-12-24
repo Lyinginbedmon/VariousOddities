@@ -41,7 +41,6 @@ import com.lying.variousoddities.species.abilities.AbilitySize;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -141,29 +140,19 @@ public class VOBusServer
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncPlayerData(player.getUUID(), playerData));
 	}
 	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@SubscribeEvent
 	public static void onPlayerCloneEvent(PlayerEvent.Clone event)
 	{
 		VariousOddities.log.info("Clone event fired");
-		Player original = event.getOriginal();
 		Player next = event.getEntity();
+		Player original = event.getOriginal();
+		original.reviveCaps();		
 		
 		LivingData.syncOnDeath(original, next);
 		AbilityData.syncOnDeath(original, next);
+		PlayerData.syncOnClone(original, next, event.isWasDeath());
 		
-		PlayerData oldPlayer = PlayerData.forPlayer(original);
-		PlayerData newPlayer = PlayerData.forPlayer(next);
-		if(oldPlayer != null && newPlayer != null)
-		{
-			if(!event.isWasDeath())
-			{
-				newPlayer.setBodyCondition(oldPlayer.getBodyCondition());
-				newPlayer.setBodyUUID(oldPlayer.getBodyUUID());
-			}
-			newPlayer.reputation.deserializeNBT(oldPlayer.reputation.serializeNBT(new CompoundTag()));
-		}
-		else
-			VariousOddities.log.error("Failed to find PlayerData during player cloning event ["+(oldPlayer != null)+" -> "+(newPlayer != null)+"]");
+		original.invalidateCaps();
 	}
 	
 	@SubscribeEvent
@@ -176,7 +165,7 @@ public class VOBusServer
 		if(abilityData != null)
 			abilityData.markDirty();
 		
-		if(ConfigVO.MOBS.newCharacterOnDeath.get())
+		if(ConfigVO.MOBS.newCharacterOnDeath.get() && !event.isEndConquered())
 			livingData.setSelectedSpecies(false);
 		
 		if(AbilityRegistry.hasAbilityOfMapName(player, AbilityRegistry.getClassRegistryKey(AbilitySize.class).location()))
