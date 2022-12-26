@@ -149,7 +149,7 @@ public class ScreenSelectSpecies extends Screen
 		if(this.typesButton == null)
 			return;
 		
-		LivingData data = LivingData.forEntity(player);
+		LivingData data = LivingData.getCapability(player);
 		typesButton.visible = typesButton.active = data.hasCustomTypes();
 		
 		Species currentSpecies = getCurrentSpecies();

@@ -159,7 +159,7 @@ public class AbilityRegistry
 	{
 		if(entity != null)
 		{
-			AbilityData data = AbilityData.forEntity(entity);
+			AbilityData data = AbilityData.getCapability(entity);
 			if(data != null)
 				return data.getCachedAbilities();
 		}

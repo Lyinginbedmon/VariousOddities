@@ -360,7 +360,7 @@ public abstract class AbstractBody extends Mob implements ContainerListener
 				entity.setItemSlot(slot, getItemBySlot(slot));
 			
 			if(entity instanceof LivingEntity)
-				LivingData.forEntity((LivingEntity)entity).setPocketInventory(getPocketInventory());
+				LivingData.getCapability((LivingEntity)entity).setPocketInventory(getPocketInventory());
 		}
 		
 		return (LivingEntity)entity;
@@ -504,7 +504,7 @@ public abstract class AbstractBody extends Mob implements ContainerListener
 			Player player = (Player)getSoul();
 			if(player != null)
 			{
-				SoulCondition condition = PlayerData.forPlayer(player).getSoulCondition();
+				SoulCondition condition = PlayerData.getCapability(player).getSoulCondition();
 				double dist = player.distanceTo(this);
 				if(dist > condition.getWanderRange() && condition.getWanderRange() >= 0)
 					player.moveTo(getX(), getY(), getZ());

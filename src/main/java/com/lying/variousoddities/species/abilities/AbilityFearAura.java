@@ -33,7 +33,7 @@ public class AbilityFearAura extends AbilityGazeControl
 	
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.forEntity(entity).isAbilityOnCooldown(getMapName()) && !getValidTargets(entity).isEmpty();
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.getCapability(entity).isAbilityOnCooldown(getMapName()) && !getValidTargets(entity).isEmpty();
 	}
 	
 	public void trigger(LivingEntity entity, Dist side)

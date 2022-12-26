@@ -69,6 +69,6 @@ public class PacketVisualPotion
 		}
 		
 		if(target != null)
-			LivingData.forEntity(target).setVisualPotion(msg.index, msg.value);
+			LivingData.getCapability(target).setVisualPotion(msg.index, msg.value);
 	}
 }

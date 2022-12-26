@@ -25,7 +25,7 @@ public class TargetGoalMixin
 	@Inject(method = "canAttack(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/world/entity/ai/targeting/TargetingConditions;)Z", at = @At("RETURN"), cancellable = true)
 	public void canAttack(LivingEntity living, TargetingConditions predicate, final CallbackInfoReturnable<Boolean> ci)
 	{
-		LivingData mobData = LivingData.forEntity(mob);
+		LivingData mobData = LivingData.getCapability(mob);
 		if(mobData != null && living != null && mobData.isTargetingHindered(living))
 			ci.setReturnValue(false);
 	}
@@ -33,7 +33,7 @@ public class TargetGoalMixin
 	@Inject(method = "canContinueToUse()Z", at = @At("RETURN"), cancellable = true)
 	public void canContinueToUse(final CallbackInfoReturnable<Boolean> ci)
 	{
-		LivingData mobData = LivingData.forEntity(mob);
+		LivingData mobData = LivingData.getCapability(mob);
 		if(mobData != null && targetMob != null && mobData.isTargetingHindered(targetMob))
 			ci.setReturnValue(false);
 	}

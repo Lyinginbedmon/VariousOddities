@@ -93,7 +93,7 @@ public class PacketSpeciesSelected
 			Player player = world.getPlayerByUUID(msg.playerID);
 			if(player != null)
 			{
-				LivingData data = LivingData.forEntity(player);
+				LivingData data = LivingData.getCapability(player);
 				if(data != null)
 				{
 					if(msg.selectedSpecies == null)

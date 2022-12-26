@@ -145,7 +145,7 @@ public class VOBusClient
 		if(event.getEntity() == mc.player)
 		{
 			LocalPlayer player = (LocalPlayer)event.getEntity();
-			AbilityData abilities = AbilityData.forEntity(player);
+			AbilityData abilities = AbilityData.getCapability(player);
 			Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 			if(player.input.jumping && abilities.canBonusJump)
 			{
@@ -191,13 +191,13 @@ public class VOBusClient
 	
 	private static void displayConditions(PoseStack stack, Player localPlayer)
 	{
-		LivingData playerData = LivingData.forEntity(localPlayer);
+		LivingData playerData = LivingData.getCapability(localPlayer);
 		List<LivingEntity> nearbyMobs = localPlayer.getLevel().getEntitiesOfClass(LivingEntity.class, localPlayer.getBoundingBox().inflate(16D));
 		for(LivingEntity mob : nearbyMobs)
 		{
 			List<ConditionInstance> conditions = playerData == null ? Lists.newArrayList() : playerData.getConditionsFromUUID(mob.getUUID());
 			
-			LivingData data = LivingData.forEntity(mob);
+			LivingData data = LivingData.getCapability(mob);
 			if(data != null)
 				conditions.addAll(data.getConditionsFromUUID(localPlayer.getUUID()));
 			
@@ -350,8 +350,8 @@ public class VOBusClient
 		Player localPlayer = mc.player;
 		Player rendering = event.getEntity();
 		
-		PlayerData playerData = PlayerData.forPlayer(localPlayer);
-		PlayerData renderData = PlayerData.forPlayer(rendering);
+		PlayerData playerData = PlayerData.getCapability(localPlayer);
+		PlayerData renderData = PlayerData.getCapability(rendering);
 		if(playerData == null || renderData == null)
 			return;
 		
@@ -386,7 +386,7 @@ public class VOBusClient
 			skipRenderEvent = false;
 		else if(renderTarget instanceof Player)
 		{
-			PlayerData data = PlayerData.forPlayer((Player)renderTarget);
+			PlayerData data = PlayerData.getCapability((Player)renderTarget);
 			if(!AbilityRegistry.getAbilitiesOfClass(renderTarget, AbilityPhasing.class).isEmpty() || (data != null && data.getBodyCondition() != BodyCondition.ALIVE))
 			{
 	            event.setCanceled(true);

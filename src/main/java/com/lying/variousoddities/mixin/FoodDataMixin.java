@@ -20,7 +20,7 @@ public class FoodDataMixin
 	@Inject(method = "tick(Lnet/minecraft/entity/player/PlayerEntity;)V", at = @At("INVOKE"))
 	public void tick(Player player, CallbackInfo ci)
 	{
-		LivingData data = LivingData.forEntity(player);
+		LivingData data = LivingData.getCapability(player);
 		if(data != null)
 			data.checkingFoodRegen = true;
 	}

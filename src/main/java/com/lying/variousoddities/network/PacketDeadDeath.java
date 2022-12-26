@@ -51,11 +51,11 @@ public class PacketDeadDeath
 		if(player == null || !PlayerData.isPlayerBodyDead(player))
 			return;
 		
-		PlayerData.forPlayer(player).setSoulCondition(SoulCondition.ROAMING);
+		PlayerData.getCapability(player).setSoulCondition(SoulCondition.ROAMING);
 		
 		if(!player.getLevel().isClientSide)
 		{
-			Entity body = PlayerData.forPlayer(player).getBody(player.getLevel());
+			Entity body = PlayerData.getCapability(player).getBody(player.getLevel());
 			if(body != null && body.getType() == VOEntities.BODY.get())
 				body.kill();
 			else if(body == null)

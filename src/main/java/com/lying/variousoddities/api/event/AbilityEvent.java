@@ -85,7 +85,7 @@ public class AbilityEvent extends LivingEvent
 		
 		protected AbilityGetBreathableFluidEvent(LivingEntity entity)
 		{
-			this(entity, AbilityData.forEntity(entity));
+			this(entity, AbilityData.getCapability(entity));
 		}
 		
 		protected AbilityGetBreathableFluidEvent(LivingEntity entity, AbilityData abilitiesIn)

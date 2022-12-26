@@ -36,7 +36,7 @@ public abstract class ToggledAbility extends ActivatedAbility
 	
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.forEntity(entity).isAbilityOnCooldown(getMapName());
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.getCapability(entity).isAbilityOnCooldown(getMapName());
 	}
 	
 	public void trigger(LivingEntity entity, Dist side)

@@ -58,7 +58,7 @@ public class MovementInputMixin
 			KeyboardInput input = (KeyboardInput)(Object)this;
 			handleTerror(player, input, ci);
 			
-			PlayerData data = PlayerData.forPlayer(player);
+			PlayerData data = PlayerData.getCapability(player);
 			if(data != null && PlayerData.isPlayerSoulBound(player))
 			{
 				Entity body = data.getBody(player.getLevel());
@@ -104,7 +104,7 @@ public class MovementInputMixin
 	
 	private static void handleTerror(Player player, KeyboardInput input, final CallbackInfo ci)
 	{
-		LivingData data = LivingData.forEntity(player);
+		LivingData data = LivingData.getCapability(player);
 		if(data == null)
 			return;
 		

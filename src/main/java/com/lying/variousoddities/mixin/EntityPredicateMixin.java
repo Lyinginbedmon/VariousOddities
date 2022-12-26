@@ -22,7 +22,7 @@ public class EntityPredicateMixin
 		if(victim == null)
 			return;
 		
-		LivingData data = LivingData.forEntity(attacker);
+		LivingData data = LivingData.getCapability(attacker);
 		if(data != null && data.isTargetingHindered(victim))
 		{
 			ci.setReturnValue(false);

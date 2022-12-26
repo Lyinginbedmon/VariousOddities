@@ -60,7 +60,7 @@ public class PacketSyncPlayerData
 				target = player.getLevel().getPlayerByUUID(msg.playerID);
 			
 			if(target != null)
-				PacketHandler.sendTo(player, new PacketSyncPlayerData(msg.playerID, PlayerData.forPlayer(target)));
+				PacketHandler.sendTo(player, new PacketSyncPlayerData(msg.playerID, PlayerData.getCapability(target)));
 		}
 		else
 		{
@@ -75,7 +75,7 @@ public class PacketSyncPlayerData
 			
 			if(target != null)
 			{
-				PlayerData data = PlayerData.forPlayer(target);
+				PlayerData data = PlayerData.getCapability(target);
 				if(data != null)
 					data.deserializeNBT(msg.dataNBT);
 			}

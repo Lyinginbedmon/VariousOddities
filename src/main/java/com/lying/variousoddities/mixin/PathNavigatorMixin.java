@@ -35,7 +35,7 @@ public class PathNavigatorMixin
 	@Inject(method = "tick()V", at = @At("HEAD"), cancellable = true)
 	public void tick(final CallbackInfo ci)
 	{
-		LivingData data = LivingData.forEntity(mob);
+		LivingData data = LivingData.getCapability(mob);
 		if(data == null || !isInProgress())
 			return;
 		

@@ -45,7 +45,7 @@ public class NearestAttackableTargetGoalMixin
 						return false;
 				
 				// Mobs do not attack creatures that have mind-controlled them somehow
-				LivingData mobData = LivingData.forEntity(goalOwnerIn);
+				LivingData mobData = LivingData.getCapability(goalOwnerIn);
 				if(mobData != null && mobData.isTargetingHindered(target))
 					return false;
 				
@@ -57,7 +57,7 @@ public class NearestAttackableTargetGoalMixin
 					if(ownerFaction != null)
 						if(target.getType() == EntityType.PLAYER)
 						{
-							PlayerData data = PlayerData.forPlayer((Player)target);
+							PlayerData data = PlayerData.getCapability((Player)target);
 							if(data != null)
 							{
 								int reputation = data.reputation.getReputation(ownerFaction.name);

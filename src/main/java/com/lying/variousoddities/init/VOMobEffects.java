@@ -91,7 +91,7 @@ public class VOMobEffects
 	
 	public static boolean isPotionVisible(LivingEntity entity, MobEffect potion)
 	{
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		return data != null && potion instanceof IVisualPotion && data.getVisualPotion(potion);
 	}
 	

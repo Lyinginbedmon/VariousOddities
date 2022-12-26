@@ -49,7 +49,7 @@ public class PacketUnconsciousAwaken
 	{
 		if(player == null || !PlayerData.isPlayerBodyAsleep(player))
 			return;
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data == null || data.getSoulCondition() != SoulCondition.ALIVE)
 			return;
 		

@@ -52,7 +52,7 @@ public class ScreenCharacterSheet extends Screen
 		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".character_sheet"));
 		
 		Player player = Minecraft.getInstance().player;
-		LivingData data = LivingData.forEntity(player);
+		LivingData data = LivingData.getCapability(player);
 		
 		// Species name and actions
 		this.speciesHeader = Component.literal("");

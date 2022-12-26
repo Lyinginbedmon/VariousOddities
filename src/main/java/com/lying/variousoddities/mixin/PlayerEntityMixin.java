@@ -38,7 +38,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	public void tick(final CallbackInfo ci)
 	{
 		Player player = (Player)(Object)this;
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data != null)
 			data.tick(player);
 	}
@@ -54,7 +54,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	public void shouldHeal(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Player player = (Player)(Object)this;
-		LivingData livingData = LivingData.forEntity(player);
+		LivingData livingData = LivingData.getCapability(player);
 		if(livingData != null && livingData.checkingFoodRegen)
 		{
 			ActionSet actions = ActionSet.fromTypes(player, EnumCreatureType.getCreatureTypes(player));
@@ -72,7 +72,7 @@ public class PlayerEntityMixin extends LivingEntityMixin
 	public void startElytraFlying(final CallbackInfoReturnable<Boolean> ci)
 	{
 		Player player = (Player)(Object)this;
-		AbilityData abilities = AbilityData.forEntity(player);
+		AbilityData abilities = AbilityData.getCapability(player);
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
 		ResourceLocation flightKey = AbilityRegistry.getClassRegistryKey(AbilityFlight.class).location();
 		if(abilityMap.containsKey(flightKey) && abilityMap.get(flightKey).isActive())

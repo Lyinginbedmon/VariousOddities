@@ -34,7 +34,7 @@ public abstract class ActivatedAbility extends Ability
 	/** Called to check if a given ability has the suitable context in which to function. */
 	public boolean canTrigger(LivingEntity entity)
 	{
-		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.forEntity(entity).isAbilityOnCooldown(getMapName()) && !isActive();
+		return AbilityRegistry.hasAbilityOfMapName(entity, getMapName()) && !AbilityData.getCapability(entity).isAbilityOnCooldown(getMapName()) && !isActive();
 	}
 	
 	public boolean isActive(){ return this.activeTicks > 0; }
@@ -46,7 +46,7 @@ public abstract class ActivatedAbility extends Ability
 	
 	public void putOnCooldown(LivingEntity entity, int cooldown)
 	{
-		AbilityData.forEntity(entity).putOnCooldown(getMapName(), cooldown);
+		AbilityData.getCapability(entity).putOnCooldown(getMapName(), cooldown);
 	}
 	
 	public void putOnCooldown(LivingEntity entity)
@@ -56,6 +56,6 @@ public abstract class ActivatedAbility extends Ability
 	
 	public void markForUpdate(LivingEntity entity)
 	{
-		AbilityData.forEntity(entity).markForRecache();
+		AbilityData.getCapability(entity).markForRecache();
 	}
 }

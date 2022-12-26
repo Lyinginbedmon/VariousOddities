@@ -156,7 +156,7 @@ public abstract class AbilityGaze extends ActivatedAbility
 		
 		public boolean affectTarget(LivingEntity entity, LivingEntity owner)
 		{
-			LivingData data = LivingData.forEntity(entity);
+			LivingData data = LivingData.getCapability(entity);
 			if(data.hasCondition(condition.get(), owner))
 				return false;
 			else

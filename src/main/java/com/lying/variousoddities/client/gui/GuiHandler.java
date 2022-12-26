@@ -152,7 +152,7 @@ public class GuiHandler
 			player = Minecraft.getInstance().player;
 			if(player != null)
 			{
-				LivingData data = LivingData.forEntity(player);
+				LivingData data = LivingData.getCapability(player);
 				if(data != null && !PlayerData.isPlayerBodyAsleep(player))
 				{
 					RenderSystem.setShaderTexture(0, HUD_ICONS);
@@ -184,7 +184,7 @@ public class GuiHandler
 		profiler.push("abilities");
 		
 		Map<ResourceLocation, Ability> abilityMap = AbilityRegistry.getCreatureAbilities(player);
-		AbilityData abilities = AbilityData.forEntity(player);
+		AbilityData abilities = AbilityData.getCapability(player);
 		
 		float posXStart = 5F;
 		float posYStart = 5F;

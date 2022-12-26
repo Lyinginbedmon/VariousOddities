@@ -48,7 +48,7 @@ public class AirControlMixin
 	public void airControlReturn(final CallbackInfo ci)
 	{
 		LivingEntity living = (LivingEntity)(Object)this;
-		LivingData data = LivingData.forEntity(living);
+		LivingData data = LivingData.getCapability(living);
 		if(data != null)
 		{
 			ActionSet actions = ActionSet.fromTypes(living, data.getTypes());

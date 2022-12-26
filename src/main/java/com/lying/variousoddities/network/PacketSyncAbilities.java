@@ -65,7 +65,7 @@ public class PacketSyncAbilities
 					
 					if(entity != null)
 					{
-						AbilityData data = AbilityData.forEntity(entity);
+						AbilityData data = AbilityData.getCapability(entity);
 						data.deserializeNBT(msg.abilitiesData);
 					}
 				}
@@ -76,7 +76,7 @@ public class PacketSyncAbilities
 			ServerPlayer sender = context.getSender();
 			if(sender != null)
 			{
-				AbilityData abilities = AbilityData.forEntity(sender);
+				AbilityData abilities = AbilityData.getCapability(sender);
 				abilities.updateAbilityCache();
 				CompoundTag data = abilities.serializeNBT();
 				PacketHandler.sendToNearby(sender.getLevel(), sender, new PacketSyncAbilities(sender.getUUID(), data));

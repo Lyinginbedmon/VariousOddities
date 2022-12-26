@@ -47,7 +47,7 @@ public class IngameGuiMixin
 		if(player == null)
 			return;
 		
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data == null || PlayerData.isPlayerNormalFunction(player))
 			return;
 		ci.cancel();
@@ -81,7 +81,7 @@ public class IngameGuiMixin
 						else
 						{
 							displayText = Component.translatable("gui."+Reference.ModInfo.MOD_ID+".unconscious_player.bludgeoning");
-							float bludgeoning = LivingData.forEntity(player).getBludgeoning();
+							float bludgeoning = LivingData.getCapability(player).getBludgeoning();
 							int healthToWaking = (int)(bludgeoning - player.getHealth()) + 1;
 							
 							int totalHearts = (int)Math.ceil(healthToWaking * 0.5D);

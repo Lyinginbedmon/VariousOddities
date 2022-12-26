@@ -189,7 +189,7 @@ public class CommandTypes extends CommandBase
     	{
     		if(entity instanceof LivingEntity)
     		{
-    			LivingData data = LivingData.forEntity((LivingEntity)entity);
+    			LivingData data = LivingData.getCapability((LivingEntity)entity);
     			data.addCustomType(type);
     			
 				if(report)
@@ -244,7 +244,7 @@ public class CommandTypes extends CommandBase
     		if(entity instanceof LivingEntity)
     		{
     			LivingEntity living = (LivingEntity)entity;
-    			LivingData data = LivingData.forEntity(living);
+    			LivingData data = LivingData.getCapability(living);
     			data.removeCustomType(type);
     			
     			source.sendSuccess(Component.translatable(translationSlug+"remove.success", type.getTranslated(false), living.getDisplayName()), true);
@@ -287,7 +287,7 @@ public class CommandTypes extends CommandBase
     	{
     		if(entity instanceof LivingEntity)
     		{
-    			LivingData data = LivingData.forEntity((LivingEntity)entity);
+    			LivingData data = LivingData.getCapability((LivingEntity)entity);
     			data.clearCustomTypes();
     			if(report)
     				source.sendSuccess(Component.translatable(translationSlug+"clear.success", entity.getDisplayName()), true);
@@ -456,7 +456,7 @@ public class CommandTypes extends CommandBase
 		{
 			if(entityIn instanceof LivingEntity)
 			{
-				LivingData data = LivingData.forEntity((LivingEntity)entityIn);
+				LivingData data = LivingData.getCapability((LivingEntity)entityIn);
 				if(data != null && data.getHomeDimension() != null)
 				{
 					source.sendSuccess(Component.translatable(translationSlug+"origin.success", entityIn.getDisplayName(), data.getHomeDimension()), true);
@@ -470,7 +470,7 @@ public class CommandTypes extends CommandBase
 		{
 			if(entityIn instanceof LivingEntity)
 			{
-				LivingData data = LivingData.forEntity((LivingEntity)entityIn);
+				LivingData data = LivingData.getCapability((LivingEntity)entityIn);
 				ResourceLocation dest = null;
 				try
 				{

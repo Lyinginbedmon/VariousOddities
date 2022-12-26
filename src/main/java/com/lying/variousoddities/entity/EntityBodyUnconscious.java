@@ -59,7 +59,7 @@ public class EntityBodyUnconscious extends AbstractBody
 		if(living.getType() == EntityType.PLAYER)
 		{
 			Player player = (Player)living;
-			PlayerData.forPlayer(player).setBodyUUID(body.getUUID());
+			PlayerData.getCapability(player).setBodyUUID(body.getUUID());
 		}
 		
 		return body;
@@ -159,7 +159,7 @@ public class EntityBodyUnconscious extends AbstractBody
 						getEntityData().set(LAST_KNOWN_EQUIPMENT, AbstractBody.writeInventoryToNBT(new CompoundTag(), new SimpleContainer(lastKnownArmour.toArray(new ItemStack[4])), new SimpleContainer(lastKnownEquip.toArray(new ItemStack[2])), null));
 					
 					// If the player is online and not unconscious, remove body
-					PlayerData data = PlayerData.forPlayer(soul);
+					PlayerData data = PlayerData.getCapability(soul);
 					if(data.getBodyCondition() != BodyCondition.UNCONSCIOUS)
 						this.kill();
 				}
@@ -169,7 +169,7 @@ public class EntityBodyUnconscious extends AbstractBody
 			else if(!this.level.isClientSide)
 			{
 				LivingEntity body = getBody();
-				LivingData bodyData = LivingData.forEntity(body);
+				LivingData bodyData = LivingData.getCapability(body);
 				if(!bodyData.isUnconscious())
 				{
 					respawnMob(body);
@@ -273,7 +273,7 @@ public class EntityBodyUnconscious extends AbstractBody
 			LivingEntity body = getBody();
 			body.setPos(getX(), getY(), getZ());
 			
-			LivingData data = LivingData.forEntity(body);
+			LivingData data = LivingData.getCapability(body);
 			data.setBludgeoning(0F);
 			
 			getLevel().addFreshEntity(body);

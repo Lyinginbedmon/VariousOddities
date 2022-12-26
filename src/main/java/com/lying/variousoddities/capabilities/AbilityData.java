@@ -48,11 +48,15 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
+/**
+ * Data containing all of a creature's abilities and associated cooldowns.
+ * @author Lying
+ *
+ */
 public class AbilityData implements ICapabilitySerializable<CompoundTag>
 {
-	private static final UUID UUID_ABILITIES = UUID.fromString("f7bc7eeb-69ea-43c7-8b3a-e85f1abbc817");
 	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities");
-	private final LazyOptional<AbilityData> handler;
+	private static final UUID UUID_ABILITIES = UUID.fromString("f7bc7eeb-69ea-43c7-8b3a-e85f1abbc817");
 	
 	public static int FAVOURITE_SLOTS = 5;
 	
@@ -61,7 +65,7 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	protected ResourceLocation[] favourites = new ResourceLocation[FAVOURITE_SLOTS];
 	
 	private Map<ResourceLocation, Ability> cachedAbilities = new HashMap<>();
-	private boolean cacheDirty = false;
+	private boolean cacheDirty = true;
 	
 	public boolean canBonusJump = false;
 	public int bonusJumpTimer = 0;
@@ -69,28 +73,25 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	
 	public LivingEntity entity = null;
 	
-	public AbilityData()
+	public AbilityData() { }
+	public AbilityData(LivingEntity entityIn)
 	{
-		this.handler = LazyOptional.of(() -> this);
+		this();
+		this.entity = entityIn;
 	}
-	
-	public LazyOptional<AbilityData> handler(){ return this.handler; }
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
 	{
-		return VOCapabilities.ABILITIES.orEmpty(cap, this.handler);
+		return VOCapabilities.ABILITY_DATA.orEmpty(cap, LazyOptional.of(() -> this));
 	}
 	
 	@Nullable
-	public static AbilityData forEntity(LivingEntity entity)
+	public static AbilityData getCapability(LivingEntity entity)
 	{
-		if(entity == null || entity instanceof AbstractBody || !entity.isAddedToWorld())
+		if(entity == null || entity instanceof AbstractBody)
 			return null;
 		
-		AbilityData data = entity.getCapability(VOCapabilities.ABILITIES).orElse(null);
-		if(data != null)
-			data.entity = entity;
-		return data;
+		return entity.getCapability(VOCapabilities.ABILITY_DATA).orElse(new AbilityData(entity));
 	}
 	
 	/** Synchronise this object with surrounding entities */
@@ -101,6 +102,13 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUUID(), serializeNBT());
 			PacketHandler.sendToNearby(entity.getLevel(), entity, packet);
 		}
+	}
+	
+	public static void tryMarkForRecache(LivingEntity entityIn)
+	{
+		AbilityData data = getCapability(entityIn);
+		if(data != null)
+			data.markForRecache();
 	}
 	
 	public void markForRecache(){ this.cacheDirty = true; }
@@ -462,7 +470,7 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 			EnumCreatureType.getTypes(entityIn).addAbilitiesToMap(abilityMap);
 			
 			// Collect abilities from creature's LivingData
-			LivingData bodyData = LivingData.forEntity(entityIn);
+			LivingData bodyData = LivingData.getCapability(entityIn);
 			if(bodyData != null)
 			{
 				if(bodyData.hasSpecies())
@@ -473,7 +481,7 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 						template.applyAbilityOperations(abilityMap);
 			}
 			
-			AbilityData bodyAbilities = AbilityData.forEntity(entityIn);
+			AbilityData bodyAbilities = AbilityData.getCapability(entityIn);
 			if(bodyAbilities != null)
 				abilityMap = bodyAbilities.addCustomToMap(abilityMap);
 			
@@ -684,16 +692,17 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	
 	public static void syncOnDeath(Player original, Player next)
 	{
-		if(AbilityData.forEntity(original) == null)
+		if(AbilityData.getCapability(original) == null)
 			VariousOddities.log.error("! Failed to find AbilityData during clone of (old) "+original.getDisplayName().getString());
-		else if(AbilityData.forEntity(next) == null)
+		else if(AbilityData.getCapability(next) == null)
 			VariousOddities.log.error("! Failed to find AbilityData during clone of (new) "+next.getDisplayName().getString());
 		else
-			original.getCapability(VOCapabilities.ABILITIES).ifPresent(then -> next.getCapability(VOCapabilities.ABILITIES).ifPresent(now -> now.clone(then)));
+			AbilityData.getCapability(next).clone(AbilityData.getCapability(original));
 	}
 	
 	public void clone(AbilityData data)
 	{
+		VariousOddities.log.info("Cloning AbilityData");
 		this.customAbilities.clear();
 		for(Ability ability : data.customAbilities.values())
 			this.customAbilities.put(ability.getMapName(), ability);

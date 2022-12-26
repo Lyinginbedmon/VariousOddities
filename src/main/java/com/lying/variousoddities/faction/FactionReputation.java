@@ -32,7 +32,7 @@ public class FactionReputation
 	public static int getPlayerReputation(Player player, String factionName)
 	{
 		factionName = validateName(factionName);
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data == null)
 			return 0;
 		
@@ -58,7 +58,7 @@ public class FactionReputation
 		
 		if(sourceMob != null)
 		{
-			LivingData data = LivingData.forEntity(sourceMob);
+			LivingData data = LivingData.getCapability(sourceMob);
 			if(data != null)
 				if(data.hasCondition(Conditions.DOMINATED.get(), player))
 					rep = 100;
@@ -84,7 +84,7 @@ public class FactionReputation
 		factionName = validateName(factionName);
 		repIn = Math.max(-100, Math.min(100, repIn));
 		
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data != null)
 			data.reputation.setReputation(factionName, repIn);
 		
@@ -104,7 +104,7 @@ public class FactionReputation
 		Faction faction = manager.getFaction(factionName);
 		
 		int rep = faction == null ? 0 : faction.startingRep;
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data != null)
 			data.reputation.setReputation(factionName, rep);
 		
@@ -130,7 +130,7 @@ public class FactionReputation
 		repIn = event.getChange();
 		
 		int rep = Math.max(-100, Math.min(100, currentReputation + repIn));
-		PlayerData data = PlayerData.forPlayer(player);
+		PlayerData data = PlayerData.getCapability(player);
 		if(data == null)
 			return 0;
 		data.reputation.setReputation(factionName, rep);
@@ -182,8 +182,8 @@ public class FactionReputation
 	{
 		if(sourceMob instanceof IFactionMob)
 			return ((IFactionMob)sourceMob).getFactionName();
-		else if(sourceMob.getType() == EntityType.PLAYER && PlayerData.forPlayer((Player)sourceMob) != null)
-			return PlayerData.forPlayer((Player)sourceMob).reputation.factionName();
+		else if(sourceMob.getType() == EntityType.PLAYER && PlayerData.getCapability((Player)sourceMob) != null)
+			return PlayerData.getCapability((Player)sourceMob).reputation.factionName();
 		return null;
 	}
 	

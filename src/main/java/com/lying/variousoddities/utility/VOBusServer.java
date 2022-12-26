@@ -81,19 +81,18 @@ public class VOBusServer
 	{
 		if(event.getObject() instanceof LivingEntity && !(event.getObject() instanceof AbstractBody))
 		{
-			LivingData dataLiving = new LivingData();
-			AbilityData dataAbilities = new AbilityData();
-			dataAbilities.markForRecache();
-			event.addCapability(LivingData.IDENTIFIER, dataLiving);
-			event.addCapability(AbilityData.IDENTIFIER, dataAbilities);
-			event.addListener(dataLiving.handler()::invalidate);
-			event.addListener(dataAbilities.handler()::invalidate);
+			VariousOddities.log.info("Adding capabilities");
+			VariousOddities.log.info("# Added LivingData capability to Dev");
+			VariousOddities.log.info("# Added AbilityData capability to Dev");
+			
+			LivingEntity living = (LivingEntity)event.getObject();
+			event.addCapability(LivingData.IDENTIFIER, new LivingData(living));
+			event.addCapability(AbilityData.IDENTIFIER, new AbilityData(living));
 			
 			if(event.getObject().getType() == EntityType.PLAYER)
 			{
-				PlayerData dataPlayer = new PlayerData();
-				event.addCapability(PlayerData.IDENTIFIER, dataPlayer);
-				event.addListener(dataPlayer.handler()::invalidate);
+				VariousOddities.log.info("# Added PlayerData capability to Dev");
+				event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
 			}
 		}
 	}
@@ -105,7 +104,7 @@ public class VOBusServer
 		if(!entity.getLevel().isClientSide() && entity.getType() == EntityType.PLAYER)
 		{
 			Player player = (Player)entity;
-			AbilityData abilities = AbilityData.forEntity(player);
+			AbilityData abilities = AbilityData.getCapability(player);
 			if(abilities != null)
 				abilities.markDirty();
 		}
@@ -119,7 +118,7 @@ public class VOBusServer
 	{
 		Player player = event.getEntity();
 		PacketHandler.sendTo((ServerPlayer)player, new PacketSyncSpecies(VORegistries.SPECIES));
-		LivingData livingData = LivingData.forEntity(player);
+		LivingData livingData = LivingData.getCapability(player);
 		if(livingData != null)
 		{
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncLivingData(player.getUUID(), livingData));
@@ -131,11 +130,11 @@ public class VOBusServer
 			}
 		}
 		
-		AbilityData abilityData = AbilityData.forEntity(player);
+		AbilityData abilityData = AbilityData.getCapability(player);
 		if(abilityData != null)
 			abilityData.markDirty();
 		
-		PlayerData playerData = PlayerData.forPlayer(player);
+		PlayerData playerData = PlayerData.getCapability(player);
 		if(playerData != null)
 			PacketHandler.sendToAll((ServerLevel)player.getLevel(), new PacketSyncPlayerData(player.getUUID(), playerData));
 	}
@@ -159,8 +158,8 @@ public class VOBusServer
 	public static void onPlayerRespawnEvent(PlayerRespawnEvent event)
 	{
 		Player player = event.getEntity();
-		LivingData livingData = LivingData.forEntity(player);
-		AbilityData abilityData = AbilityData.forEntity(player);
+		LivingData livingData = LivingData.getCapability(player);
+		AbilityData abilityData = AbilityData.getCapability(player);
 		
 		if(abilityData != null)
 			abilityData.markDirty();
@@ -173,7 +172,7 @@ public class VOBusServer
 		
 		if(PlayerData.isPlayerBodyDead(player))
 		{
-			PlayerData playerData = PlayerData.forPlayer(player);
+			PlayerData playerData = PlayerData.getCapability(player);
 			playerData.setBodyCondition(BodyCondition.ALIVE);
 			playerData.setSoulCondition(SoulCondition.ALIVE);
 		}
@@ -185,7 +184,7 @@ public class VOBusServer
 		Entity theEntity = event.getEntity();
 		if(theEntity instanceof LivingEntity && !theEntity.getLevel().isClientSide)
 		{
-			LivingData data = LivingData.forEntity((LivingEntity)theEntity);
+			LivingData data = LivingData.getCapability((LivingEntity)theEntity);
 			if(data != null && !theEntity.getLevel().isClientSide)
 				PacketHandler.sendToAll((ServerLevel)theEntity.getLevel(), new PacketSyncLivingData(theEntity.getUUID(), data));
 		}
@@ -302,7 +301,7 @@ public class VOBusServer
 			
 			if(victim.getType() == EntityType.PLAYER)
 			{
-				PlayerData playerData = PlayerData.forPlayer((Player)victim);
+				PlayerData playerData = PlayerData.getCapability((Player)victim);
 				
 				// If player is already dead, let them die as normal
 				if(PlayerData.isPlayerBodyDead((Player)victim))
@@ -317,13 +316,13 @@ public class VOBusServer
 			}
 			else if(corpse != null && !world.isClientSide)
 			{
-				corpse.setPocketInventory(LivingData.forEntity(victim).getPocketInventory());
+				corpse.setPocketInventory(LivingData.getCapability(victim).getPocketInventory());
 				world.addFreshEntity(corpse);
 			}
 		}
 		else if(!world.isClientSide)
 		{
-			LivingData livingData = LivingData.forEntity(victim);
+			LivingData livingData = LivingData.getCapability(victim);
 			for(ItemStack stack : livingData.getPocketInventory())
 				if(!stack.isEmpty())
 					victim.spawnAtLocation(stack, victim.getRandom().nextFloat());
@@ -340,7 +339,7 @@ public class VOBusServer
 		if(event.bodyChange())
 		{
 			Player player = event.getEntity();
-			PlayerData data = PlayerData.forPlayer(player);
+			PlayerData data = PlayerData.getCapability(player);
 			Level world = player.getLevel();
 			
 			if(!(event.getNewBody() == BodyCondition.ALIVE && event.getNewSoul() == SoulCondition.ALIVE))
@@ -385,7 +384,7 @@ public class VOBusServer
 	public static void applyNativeExtraplanar(GetEntityTypesEvent event)
 	{
 		LivingEntity entity = event.getEntity();
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		if(data == null)
 			return;
 		
@@ -440,7 +439,7 @@ public class VOBusServer
 		{
 			DamageSource source = event.getSource();
 			
-			LivingData data = LivingData.forEntity(event.getEntity());
+			LivingData data = LivingData.getCapability(event.getEntity());
 			if(data == null)
 				return;
 			
@@ -463,7 +462,7 @@ public class VOBusServer
 		if(!event.isCanceled() && event.getSource() == VODamageSource.BLUDGEON)
 		{
 			LivingEntity hurtEntity = event.getEntity();
-			LivingData data = LivingData.forEntity(hurtEntity);
+			LivingData data = LivingData.getCapability(hurtEntity);
 			
 			if(data != null)
 				data.addBludgeoning(event.getAmount());

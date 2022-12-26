@@ -129,8 +129,8 @@ public class FactionManager extends SavedData
 	{
 		if(entity instanceof IFactionMob)
 			return getFaction(((IFactionMob)entity).getFactionName());
-		else if(entity.getType() == EntityType.PLAYER && PlayerData.forPlayer((Player)entity) != null)
-			return getFaction(PlayerData.forPlayer((Player)entity).reputation.factionName());
+		else if(entity.getType() == EntityType.PLAYER && PlayerData.getCapability((Player)entity) != null)
+			return getFaction(PlayerData.getCapability((Player)entity).reputation.factionName());
 		return null;
 	}
 	

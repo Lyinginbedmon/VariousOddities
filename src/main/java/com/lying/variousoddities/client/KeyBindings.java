@@ -93,7 +93,7 @@ public class KeyBindings
 	
 	private static void handleAbilityKey(int index, Minecraft mc)
 	{
-		AbilityData data = AbilityData.forEntity(mc.player);
+		AbilityData data = AbilityData.getCapability(mc.player);
 		ResourceLocation mapName = data.getFavourite(index);
 		if(mapName != null)
 		{

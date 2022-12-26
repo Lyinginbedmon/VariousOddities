@@ -48,7 +48,7 @@ public class PacketAbilityFavourite
 			Player sender = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			if(sender != null)
 			{
-				AbilityData abilities = AbilityData.forEntity(sender);
+				AbilityData abilities = AbilityData.getCapability(sender);
 				if(abilities != null)
 				{
 					if(msg.favourite)

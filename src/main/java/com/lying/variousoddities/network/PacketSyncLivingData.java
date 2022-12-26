@@ -71,7 +71,7 @@ public class PacketSyncLivingData
 			}
 			
 			if(target != null)
-				PacketHandler.sendTo(player, new PacketSyncLivingData(msg.entityID, LivingData.forEntity(target)));
+				PacketHandler.sendTo(player, new PacketSyncLivingData(msg.entityID, LivingData.getCapability(target)));
 		}
 		else
 		{
@@ -95,7 +95,7 @@ public class PacketSyncLivingData
 			
 			if(target != null)
 			{
-				LivingData data = LivingData.forEntity(target);
+				LivingData data = LivingData.getCapability(target);
 				if(data != null)
 					data.deserializeNBT(msg.dataNBT);
 			}

@@ -144,7 +144,7 @@ public class AbilitySize extends AbilityModifier
 		{
 			LivingEntity living = (LivingEntity)event.getEntity();
 			
-			LivingData data = LivingData.forEntity(living);
+			LivingData data = LivingData.getCapability(living);
 			if(data == null || !AbilityRegistry.hasAbilityOfMapName(living, getRegistryName()))
 				return;
 			

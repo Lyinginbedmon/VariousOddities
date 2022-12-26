@@ -76,11 +76,8 @@ import net.minecraftforge.common.util.LazyOptional;
  */
 public class LivingData implements ICapabilitySerializable<CompoundTag>
 {
-	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
-	
 	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "living_data");
-	
-	private final LazyOptional<LivingData> handler;
+	private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("1f1a65b2-2041-44d9-af77-e13166a2a5b3");
 	
 	private LivingEntity entity = null;
 	private boolean isPlayer = false;
@@ -97,8 +94,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	private byte visualPotions = (byte)0;
 	private int potionSyncTimer = 0;
 	
-	private int air = Reference.Values.TICKS_PER_DAY;
-	
 	private float bludgeoning = 0F;
 	private boolean isUnconscious = false;
 	private int recoveryTimer = ConfigVO.GENERAL.bludgeoningRecoveryRate();
@@ -111,91 +106,87 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	
 	private boolean dirty = false;
 	
-	public LivingData()
+	public LivingData() {}
+	public LivingData(LivingEntity entityIn)
 	{
-		this.handler = LazyOptional.of(() -> this);
-	}
-	
-	public LazyOptional<LivingData> handler(){ return this.handler; }
-	
-	@Nullable
-	public static LivingData forEntity(LivingEntity entity)
-	{
-		if(entity == null || entity instanceof AbstractBody)
-			return null;
-		
-		LivingData data = entity.getCapability(VOCapabilities.LIVING_DATA).orElse(null);
-		if(data != null)
-			data.setEntity(entity);
-		return data;
+		this();
+		setEntity(entityIn);
 	}
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
 	{
-		return VOCapabilities.LIVING_DATA.orEmpty(cap, this.handler);
+		return VOCapabilities.LIVING_DATA.orEmpty(cap, LazyOptional.of(() -> this));
+	}
+	
+	@Nullable
+	public static LivingData getCapability(LivingEntity entity)
+	{
+		if(entity == null || entity instanceof AbstractBody)
+			return null;
+		
+		return entity.getCapability(VOCapabilities.LIVING_DATA).orElse(new LivingData(entity));
 	}
 	
 	private void setEntity(LivingEntity entityIn)
 	{
 		this.entity = entityIn;
-		this.isPlayer = entityIn.getType() == EntityType.PLAYER;
+		this.isPlayer = entityIn != null && entityIn.getType() == EntityType.PLAYER;
 	}
 	
 	public CompoundTag serializeNBT()
 	{
 		CompoundTag compound = new CompoundTag();
-			compound.putBoolean("Initialised", this.initialised);
+		compound.putBoolean("Initialised", this.initialised);
+		
+		if(this.originDimension != null)
+			compound.putString("HomeDim", this.originDimension.toString());
+		
+		compound.putFloat("Bludgeoning", getBludgeoning());
+		compound.putInt("Recovery", this.recoveryTimer);
+		compound.putBoolean("Unconscious", isActuallyUnconscious());
+		
+		if(this.species != null)
+			compound.put("Species", this.species.writeToNBT(new CompoundTag()));
+		compound.putBoolean("SelectedSpecies", this.selectedSpecies);
+		
+		if(!this.templates.isEmpty())
+		{
+			ListTag templateList = new ListTag();
+			for(ResourceLocation template : templates.keySet())
+				templateList.add(StringTag.valueOf(template.toString()));
+			compound.put("Templates", templateList);
+		}
+		
+		ListTag types = new ListTag();
+		for(EnumCreatureType type : prevTypes)
+			types.add(StringTag.valueOf(type.getSerializedName()));
+		compound.put("Types", types);
+		
+		if(!this.customTypes.isEmpty())
+		{
+			ListTag customTypes = new ListTag();
+			for(EnumCreatureType type : this.customTypes)
+				customTypes.add(StringTag.valueOf(type.getSerializedName()));
+			compound.put("CustomTypes", customTypes);
+		}
+		
+		if(!this.conditions.isEmpty())
+		{
+			ListTag conditionList = new ListTag();
+			this.conditions.forEach((instance) -> { conditionList.add(instance.write(new CompoundTag())); });
+			compound.put("Conditions", conditionList);
+		}
+		
+		compound.putByte("Potions", this.visualPotions);
+		
+		if(!isPlayer)
+		{
+			ListTag pocketItems = new ListTag();
+			for(ItemStack stack : pockets)
+				pocketItems.add(stack.save(new CompoundTag()));
 			
-			if(this.originDimension != null)
-				compound.putString("HomeDim", this.originDimension.toString());
-			
-			compound.putInt("Air", this.air);
-			compound.putFloat("Bludgeoning", getBludgeoning());
-			compound.putInt("Recovery", this.recoveryTimer);
-			compound.putBoolean("Unconscious", isActuallyUnconscious());
-			
-			if(this.species != null)
-				compound.put("Species", this.species.writeToNBT(new CompoundTag()));
-			compound.putBoolean("SelectedSpecies", this.selectedSpecies);
-			
-			if(!this.templates.isEmpty())
-			{
-				ListTag templateList = new ListTag();
-				for(ResourceLocation template : templates.keySet())
-					templateList.add(StringTag.valueOf(template.toString()));
-				compound.put("Templates", templateList);
-			}
-			
-			ListTag types = new ListTag();
-			for(EnumCreatureType type : prevTypes)
-				types.add(StringTag.valueOf(type.getSerializedName()));
-			compound.put("Types", types);
-			
-			if(!this.customTypes.isEmpty())
-			{
-				ListTag customTypes = new ListTag();
-				for(EnumCreatureType type : this.customTypes)
-					customTypes.add(StringTag.valueOf(type.getSerializedName()));
-				compound.put("CustomTypes", customTypes);
-			}
-			
-			if(!this.conditions.isEmpty())
-			{
-				ListTag conditionList = new ListTag();
-				this.conditions.forEach((instance) -> { conditionList.add(instance.write(new CompoundTag())); });
-				compound.put("Conditions", conditionList);
-			}
-			
-			compound.putByte("Potions", this.visualPotions);
-			
-			if(!isPlayer)
-			{
-				ListTag pocketItems = new ListTag();
-				for(ItemStack stack : pockets)
-					pocketItems.add(stack.save(new CompoundTag()));
-				
-				compound.put("Pockets", pocketItems);
-			}
+			compound.put("Pockets", pocketItems);
+		}
 		return compound;
 	}
 	
@@ -211,7 +202,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(nbt.contains("HomeDim", 8))
 			this.originDimension = new ResourceLocation(nbt.getString("HomeDim"));
 		
-		this.air = nbt.getInt("Air");
 		this.bludgeoning = nbt.getFloat("Bludgeoning");
 		this.recoveryTimer = nbt.getInt("Recovery");
 		this.isUnconscious = nbt.getBoolean("Unconscious");
@@ -295,19 +285,6 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public ResourceLocation getHomeDimension(){ return this.originDimension; }
 	public void setHomeDimension(ResourceLocation dimension){ this.originDimension = dimension; markDirty(); }
 	
-	@Nullable
-	private AbilityData getAbilities()
-	{
-		return this.entity == null ? null : AbilityData.forEntity(this.entity);
-	}
-	
-	public void tryMarkAbilitiesToRecache()
-	{
-		AbilityData abilities = getAbilities();
-		if(abilities != null)
-			abilities.markForRecache();
-	}
-	
 	public byte getVisualPotions(){ return this.visualPotions; }
 	public boolean getVisualPotion(@Nullable MobEffect potion){ return potion == null ? false : getVisualPotion(VOMobEffects.getVisualPotionIndex(potion)); }
 	public boolean getVisualPotion(int index)
@@ -344,7 +321,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public SpeciesInstance getSpecies(){ return this.species; }
 	public void setSpecies(SpeciesInstance speciesIn)
 	{
-		AbilityData abilities = getAbilities();
+		AbilityData abilities = AbilityData.getCapability(this.entity);
 		this.species = null;
 		if(abilities != null)
 			abilities.updateAbilityCache();
@@ -385,7 +362,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 			return false;
 		
 		this.templates.put(templateIn.getRegistryName(), templateIn);
-		tryMarkAbilitiesToRecache();
+		AbilityData.tryMarkForRecache(this.entity);
 		this.markDirty();
 		return true;
 	}
@@ -401,14 +378,14 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 			return;
 		
 		this.templates.remove(registryName);
-		tryMarkAbilitiesToRecache();
+		AbilityData.tryMarkForRecache(this.entity);
 		this.markDirty();
 	}
 	
 	public void clearTemplates()
 	{
 		this.templates.clear();
-		tryMarkAbilitiesToRecache();
+		AbilityData.tryMarkForRecache(this.entity);
 		this.markDirty();
 	}
 	
@@ -466,7 +443,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 		if(!entity.isAlive() || health <= 0F)
 			return false;
 		
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		float bludgeoning = data.getBludgeoning();
 		if(bludgeoning <= 0F)
 			return false;
@@ -487,32 +464,35 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	public void clearCustomTypes()
 	{
 		this.customTypes.clear();
-		tryMarkAbilitiesToRecache();
+		AbilityData.tryMarkForRecache(this.entity);
 		markDirty();
 	}
+	
 	public void addCustomType(EnumCreatureType type)
 	{
 		if(!this.customTypes.contains(type))
 		{
 			this.customTypes.add(type);
-			tryMarkAbilitiesToRecache();
+			AbilityData.tryMarkForRecache(this.entity);
 			markDirty();
 		}
 	}
+	
 	public void removeCustomType(EnumCreatureType type)
 	{
 		if(this.customTypes.contains(type))
 		{
 			this.customTypes.remove(type);
-			tryMarkAbilitiesToRecache();
+			AbilityData.tryMarkForRecache(this.entity);
 			markDirty();
 		}
 	}
+	
 	public void setCustomTypes(Collection<EnumCreatureType> typesIn)
 	{
 		this.customTypes.clear();
 		this.customTypes.addAll(typesIn);
-		tryMarkAbilitiesToRecache();
+		AbilityData.tryMarkForRecache(this.entity);
 		markDirty();
 	}
 	
@@ -625,6 +605,9 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	
 	public void tick(LivingEntity entity)
 	{
+		setEntity(entity);
+		if(this.entity == null)
+			return;
 		IDefaultSpecies mobDefaults = entity instanceof IDefaultSpecies ? (IDefaultSpecies)entity : null;
 		
 		Level world = entity.getLevel();
@@ -672,7 +655,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 					if(!mobDefaults.defaultCreatureTypes().isEmpty())
 						mobDefaults.defaultCreatureTypes().forEach((type) -> { addCustomType(type); } );
 					
-					AbilityData abilities = getAbilities();
+					AbilityData abilities = AbilityData.getCapability(this.entity);
 					if(!mobDefaults.defaultAbilities().isEmpty() && abilities != null)
 						mobDefaults.defaultAbilities().forEach((ability) -> abilities.addCustomAbility(AbilityRegistry.getAbility(ability.writeAtomically(new CompoundTag()))));
 				}
@@ -727,7 +710,7 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 			if(isPlayer)
 			{
 				if(isUnconscious())
-					PlayerData.forPlayer((Player)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
+					PlayerData.getCapability((Player)entity).setBodyCondition(BodyCondition.UNCONSCIOUS);
 				
 				this.isUnconscious = isUnconscious();
 			}
@@ -868,12 +851,12 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	
 	public static void syncOnDeath(Player original, Player next)
 	{
-		if(LivingData.forEntity(original) == null)
+		if(LivingData.getCapability(original) == null)
 			VariousOddities.log.error("! Failed to find LivingData during clone of (old) "+original.getDisplayName().getString());
-		else if(LivingData.forEntity(next) == null)
+		else if(LivingData.getCapability(next) == null)
 			VariousOddities.log.error("! Failed to find LivingData during clone of (new) "+next.getDisplayName().getString());
 		else
-			original.getCapability(VOCapabilities.LIVING_DATA).ifPresent(then -> next.getCapability(VOCapabilities.LIVING_DATA).ifPresent(now -> now.clone(then)));
+			LivingData.getCapability(next).clone(LivingData.getCapability(original));
 	}
 	
 	public void clone(LivingData dataIn)

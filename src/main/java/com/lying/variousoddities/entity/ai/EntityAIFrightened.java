@@ -43,7 +43,7 @@ public class EntityAIFrightened extends Goal
 	 */
 	public boolean canUse()
 	{
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		if(data == null)
 			return false;
 		

@@ -80,7 +80,7 @@ public class EntityBodyCorpse extends AbstractBody
 					return;
 				
 				if(PlayerData.isPlayerSoulBound(soul) && this.isAlive())
-					moveWithinRangeOf(this, soul, PlayerData.forPlayer((Player)soul).getSoulCondition().getWanderRange());
+					moveWithinRangeOf(this, soul, PlayerData.getCapability((Player)soul).getSoulCondition().getWanderRange());
 				
 				if(!PlayerData.isPlayerBodyDead((Player)soul) && !getLevel().isClientSide)
 					this.kill();

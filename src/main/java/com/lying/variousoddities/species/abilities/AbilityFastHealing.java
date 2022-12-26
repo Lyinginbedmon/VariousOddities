@@ -58,7 +58,7 @@ public class AbilityFastHealing extends Ability
 		AbilityFastHealing ability = (AbilityFastHealing)AbilityRegistry.getAbilityByMapName(entity, getMapName());
 		if(ability != null)
 		{
-			LivingData data = LivingData.forEntity(entity);
+			LivingData data = LivingData.getCapability(entity);
 			if((entity.getHealth() < entity.getMaxHealth() || data.getBludgeoning() > 0F) && entity.isAlive())
 			{
 				if(++ability.ticksSinceHeal >= Reference.Values.TICKS_PER_SECOND * 6)

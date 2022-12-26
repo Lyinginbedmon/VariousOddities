@@ -121,7 +121,7 @@ public class AbilityStartingItem extends Ability
 		if(player.getLevel().isClientSide)
 			return;
 		
-		AbilityData abilities = AbilityData.forEntity(player);
+		AbilityData abilities = AbilityData.getCapability(player);
 		for(Ability ability : abilities.getEntityAbilities(player).values())
 			if(ability.getRegistryName().equals(getRegistryName()))
 				addItemsFromAbility((AbilityStartingItem)ability, player);

@@ -68,7 +68,7 @@ public class PacketSyncTypesCustom
 				
 				if(entity != null)
 				{
-					LivingData data = LivingData.forEntity(entity);
+					LivingData data = LivingData.getCapability(entity);
 					data.setCustomTypes(msg.types);
 				}
 			}

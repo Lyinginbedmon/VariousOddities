@@ -53,7 +53,7 @@ public class AbilityTeleportToHome extends ActivatedAbility
 			if(mob.getSleepingPos().equals(BlockPos.ZERO))
 				return false;
 			
-			LivingData data = LivingData.forEntity(mob);
+			LivingData data = LivingData.getCapability(mob);
 			if(!data.getHomeDimension().equals(mob.getLevel().dimension().location()))
 				return false;
 		}

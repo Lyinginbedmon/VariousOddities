@@ -68,7 +68,7 @@ public class ScreenAbilityMenu extends Screen implements IScrollableGUI
 	{
 		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".ability_menu"));
 		thePlayer = Minecraft.getInstance().player;
-		theData = AbilityData.forEntity(thePlayer);
+		theData = AbilityData.getCapability(thePlayer);
 		
 		PacketHandler.sendToServer(new PacketSyncAbilities(thePlayer.getUUID()));
 		

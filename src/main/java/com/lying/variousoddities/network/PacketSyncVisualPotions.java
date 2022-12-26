@@ -49,7 +49,7 @@ public class PacketSyncVisualPotions
 			
 			if(target != null)
 			{
-				LivingData data = LivingData.forEntity(target);
+				LivingData data = LivingData.getCapability(target);
 				if(data != null)
 				{
 					msg.value = data.getVisualPotions();
@@ -62,7 +62,7 @@ public class PacketSyncVisualPotions
 			Player player = ((CommonProxy)VariousOddities.proxy).getPlayerEntity(context);
 			LivingEntity target = getEntityFromUUID(player, msg.entityID);
 			if(target != null)
-				LivingData.forEntity(target).setVisualPotions(msg.value);
+				LivingData.getCapability(target).setVisualPotions(msg.value);
 		}
 		
 		context.setPacketHandled(true);

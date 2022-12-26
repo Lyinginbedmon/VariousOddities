@@ -58,7 +58,7 @@ public class LivingEntityMixin extends EntityMixin
 		LivingEntity living = (LivingEntity)(Object)this;
 		if(!living.getLevel().isClientSide)
 		{
-			LivingData livingData = LivingData.forEntity(living);
+			LivingData livingData = LivingData.getCapability(living);
 			if(livingData == null)
 				return;
 			
@@ -80,11 +80,11 @@ public class LivingEntityMixin extends EntityMixin
 	public void updateCapabilities(final CallbackInfo ci)
 	{
 		LivingEntity living = (LivingEntity)(Object)this;
-		LivingData livingData = LivingData.forEntity(living);
+		LivingData livingData = LivingData.getCapability(living);
 		if(livingData != null)
 			livingData.tick(living);
 		
-		AbilityData abilityData = AbilityData.forEntity(living);
+		AbilityData abilityData = AbilityData.getCapability(living);
 		if(abilityData != null)
 			abilityData.tick();
 	}
@@ -277,7 +277,7 @@ public class LivingEntityMixin extends EntityMixin
 	{
 		if(healAmount > 0)
 		{
-			LivingData data = LivingData.forEntity((LivingEntity)(Object)this);
+			LivingData data = LivingData.getCapability((LivingEntity)(Object)this);
 			if(data != null && data.getBludgeoning() > 0)
 				data.addBludgeoning(Math.min(0F, -healAmount));
 		}
@@ -297,7 +297,7 @@ public class LivingEntityMixin extends EntityMixin
 	public void canAttack(LivingEntity living, TargetingConditions predicate, final CallbackInfoReturnable<Boolean> ci)
 	{
 		LivingEntity entity = (LivingEntity)(Object)this;
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		if(data.isTargetingHindered(living))
 			ci.setReturnValue(false);
 	}

@@ -53,7 +53,7 @@ public class EntityAITargetHostileFaction extends TargetGoal
 					if(ownerFaction != null)
 						if(input.getType() == EntityType.PLAYER)
 						{
-							PlayerData data = PlayerData.forPlayer((Player)input);
+							PlayerData data = PlayerData.getCapability((Player)input);
 							if(data != null)
 							{
 								int reputation = data.reputation.getReputation(ownerFaction.name);

@@ -18,7 +18,7 @@ public class MobEffectMixin
 	@Inject(method = "performEffect", at = @At("HEAD"), cancellable = true)
 	public void performEffect(LivingEntity living, int amplifier, final CallbackInfo ci)
 	{
-		LivingData data = LivingData.forEntity(living);
+		LivingData data = LivingData.getCapability(living);
 		MobEffect effect = (MobEffect)(Object)this;
 		if(effect == MobEffects.POISON)
 		{

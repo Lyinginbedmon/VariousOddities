@@ -131,7 +131,7 @@ public class CommandSpecies extends CommandBase
 		if(entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			LivingData data = LivingData.forEntity(living);
+			LivingData data = LivingData.getCapability(living);
 			if(data.getSpecies() != null)
 			{
 				source.sendSuccess(Component.translatable(translationSlug+"get", living.getDisplayName(), data.getSpecies().getRegistryName()), true);
@@ -149,7 +149,7 @@ public class CommandSpecies extends CommandBase
 		if(entity instanceof LivingEntity)
 		{
 			LivingEntity living = (LivingEntity)entity;
-			LivingData data = LivingData.forEntity(living);
+			LivingData data = LivingData.getCapability(living);
 			
 			Species species = SpeciesRegistry.getSpecies(name);
 			if(species != null)
@@ -243,7 +243,7 @@ public class CommandSpecies extends CommandBase
 			if(entity instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entity;
-				LivingData livingData = LivingData.forEntity(living);
+				LivingData livingData = LivingData.getCapability(living);
 				if(livingData.getTemplates().isEmpty())
 					throw TEMPLATE_MISSING_EXCEPTION.create(entity.getDisplayName());
 				else
@@ -303,7 +303,7 @@ public class CommandSpecies extends CommandBase
 				else
 				{
 					LivingEntity living = (LivingEntity)entityIn;
-					LivingData data = LivingData.forEntity(living);
+					LivingData data = LivingData.getCapability(living);
 					if(!data.addTemplateInitial(template))
 						throw INVALID_ENTITY_EXCEPTION.create();
 					
@@ -320,7 +320,7 @@ public class CommandSpecies extends CommandBase
 			if(entityIn instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entityIn;
-				LivingData data = LivingData.forEntity(living);
+				LivingData data = LivingData.getCapability(living);
 				if(!data.hasTemplate(templateName))
 					throw TEMPLATE_INVALID_EXCEPTION.create(templateName);
 				else
@@ -339,7 +339,7 @@ public class CommandSpecies extends CommandBase
 			if(entityIn instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entityIn;
-				LivingData data = LivingData.forEntity(living);
+				LivingData data = LivingData.getCapability(living);
 				if(!data.hasTemplates())
 					throw TEMPLATE_MISSING_EXCEPTION.create(entityIn.getDisplayName());
 				else
@@ -358,7 +358,7 @@ public class CommandSpecies extends CommandBase
 			if(entityIn instanceof LivingEntity)
 			{
 				LivingEntity living = (LivingEntity)entityIn;
-				LivingData data = LivingData.forEntity(living);
+				LivingData data = LivingData.getCapability(living);
 				if(!data.hasTemplate(templateName))
 					throw TEMPLATE_MISSING_EXCEPTION.create(entityIn.getDisplayName());
 				else

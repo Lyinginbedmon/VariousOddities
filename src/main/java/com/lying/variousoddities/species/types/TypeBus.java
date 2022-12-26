@@ -55,7 +55,7 @@ public class TypeBus
 				if(manager != null)
 					manager.notifyPlayer(player);
 				
-				PacketHandler.sendToNearby(world, player, new PacketSyncTypesCustom(player, LivingData.forEntity(player).getCustomTypes()));
+				PacketHandler.sendToNearby(world, player, new PacketSyncTypesCustom(player, LivingData.getCapability(player).getCustomTypes()));
 			}
 		}
 	}

@@ -40,8 +40,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "player_data");
 	public static final int DEAD_TIME = Reference.Values.TICKS_PER_SECOND * 15;
 	
-	private final LazyOptional<PlayerData> handler;
-	
 	private Player player = null;
 	
 	public Reputation reputation = new Reputation();
@@ -54,27 +52,21 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 	
 	private boolean isDirty = true;
 	
-	public PlayerData()
+	public PlayerData() { }
+	public PlayerData(Player playerIn)
 	{
-		this.handler = LazyOptional.of(() -> this);
-	}
-	
-	public LazyOptional<PlayerData> handler(){ return this.handler; }
-	
-	public static PlayerData forPlayer(Player player)
-	{
-		if(player == null)
-			return null;
-		
-		PlayerData data = player.getCapability(VOCapabilities.PLAYER_DATA).orElse(null);
-		if(data != null)
-			data.player = player;
-		return data;
+		this();
+		this.player = playerIn;
 	}
 	
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
 	{
-		return VOCapabilities.PLAYER_DATA.orEmpty(cap, this.handler);
+		return VOCapabilities.PLAYER_DATA.orEmpty(cap, LazyOptional.of(() -> this));
+	}
+	
+	public static PlayerData getCapability(Player player)
+	{
+		return player == null ? null : player.getCapability(VOCapabilities.PLAYER_DATA).orElse(new PlayerData(player));
 	}
 	
 	public CompoundTag serializeNBT()
@@ -180,16 +172,15 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 	
 	public static boolean isPlayerBody(@Nullable Player player, Entity body)
 	{
-		return player != null && PlayerData.forPlayer(player) != null && PlayerData.forPlayer(player).isBody(body);
+		return player != null && PlayerData.getCapability(player) != null && PlayerData.getCapability(player).isBody(body);
 	}
 	
-	// FIXME Ensure accurate reporting of condition
 	private static boolean checkCondition(@Nullable LivingEntity playerIn, @Nullable BodyCondition bodyCondition, @Nullable SoulCondition soulCondition)
 	{
 		if(playerIn != null && playerIn.getType() == EntityType.PLAYER)
 		{
 			Player player = (Player)playerIn;
-			PlayerData data = PlayerData.forPlayer(player);
+			PlayerData data = PlayerData.getCapability(player);
 			return data != null && (bodyCondition == null || data.getBodyCondition() == bodyCondition) && (soulCondition == null || data.getSoulCondition() == soulCondition);
 		}
 		return false;
@@ -258,14 +249,15 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 	
 	public static void syncOnClone(Player original, Player next, boolean wasDeath)
 	{
-		PlayerData oldPlayer = PlayerData.forPlayer(original);
-		PlayerData newPlayer = PlayerData.forPlayer(next);
+		PlayerData oldPlayer = PlayerData.getCapability(original);
+		PlayerData newPlayer = PlayerData.getCapability(next);
 		if(oldPlayer == null)
 			VariousOddities.log.error("! Failed to find PlayerData during clone of (old) "+original.getDisplayName().getString());
 		else if(newPlayer == null)
 			VariousOddities.log.error("! Failed to find PlayerData during clone of (new) "+next.getDisplayName().getString());
 		else
 		{
+			VariousOddities.log.info("Cloning PlayerData");
 			if(!wasDeath)
 			{
 				newPlayer.setBodyCondition(oldPlayer.getBodyCondition());

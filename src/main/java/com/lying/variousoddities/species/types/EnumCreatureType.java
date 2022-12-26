@@ -262,7 +262,7 @@ public enum EnumCreatureType implements StringRepresentable
 		if(entity == null || !TypeBus.shouldFire())
 			return types;
 		
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		if(data != null)
 		{
 			// If creature has custom types, use those
@@ -324,7 +324,7 @@ public enum EnumCreatureType implements StringRepresentable
 		if(entity == null || !TypeBus.shouldFire())
 			return new Types(types);
 		
-		LivingData data = LivingData.forEntity(entity);
+		LivingData data = LivingData.getCapability(entity);
 		if(data != null)
 		{
 			// If creature has custom types, use those
