@@ -2,7 +2,6 @@ package com.lying.variousoddities.utility;
 
 import java.util.List;
 
-import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAffectEntityEvent;
 import com.lying.variousoddities.api.event.CreatureTypeEvent.GetEntityTypesEvent;
 import com.lying.variousoddities.api.event.FireworkExplosionEvent;
@@ -81,19 +80,12 @@ public class VOBusServer
 	{
 		if(event.getObject() instanceof LivingEntity && !(event.getObject() instanceof AbstractBody))
 		{
-			VariousOddities.log.info("Adding capabilities");
-			VariousOddities.log.info("# Added LivingData capability to Dev");
-			VariousOddities.log.info("# Added AbilityData capability to Dev");
-			
 			LivingEntity living = (LivingEntity)event.getObject();
 			event.addCapability(LivingData.IDENTIFIER, new LivingData(living));
 			event.addCapability(AbilityData.IDENTIFIER, new AbilityData(living));
 			
 			if(event.getObject().getType() == EntityType.PLAYER)
-			{
-				VariousOddities.log.info("# Added PlayerData capability to Dev");
 				event.addCapability(PlayerData.IDENTIFIER, new PlayerData());
-			}
 		}
 	}
 	
@@ -142,7 +134,6 @@ public class VOBusServer
 	@SubscribeEvent
 	public static void onPlayerCloneEvent(PlayerEvent.Clone event)
 	{
-		VariousOddities.log.info("Clone event fired");
 		Player next = event.getEntity();
 		Player original = event.getOriginal();
 		original.reviveCaps();		

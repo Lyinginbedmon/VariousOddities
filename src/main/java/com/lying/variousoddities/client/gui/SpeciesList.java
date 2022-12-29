@@ -7,6 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.locale.Language;
@@ -22,18 +23,24 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 	{
 		super(mcIn, 100, listHeightIn, 32, screenHeightIn - 51, 18);
 		this.parentScreen = screenIn;
-		for(Species entry : entriesIn)
-			this.addEntry(new SpeciesListEntry(mcIn, entry, this));
+		setEntries(entriesIn);
 	}
 	
 	public int getRowWidth(){ return this.width; }
 	
 	protected int getScrollbarPosition(){ return this.x1 - 6; }
 	
+	public void setEntries(List<Species> entriesIn)
+	{
+		this.clearEntries();
+		for(Species entry : entriesIn)
+			this.addEntry(new SpeciesListEntry(this.minecraft, entry, this));
+	}
+	
 	public class SpeciesListEntry extends ObjectSelectionList.Entry<SpeciesList.SpeciesListEntry>
 	{
 		private final Minecraft mc;
-		private final FormattedCharSequence field_243407_e;
+		private final FormattedCharSequence displayText;
 		private final Species species;
 		private final SpeciesList parentList;
 		
@@ -42,19 +49,18 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 			this.species = speciesIn;
 			this.parentList = parentListIn;
 			this.mc = mcIn;
-			this.field_243407_e = func_244424_a(mcIn, speciesIn.getDisplayName());
+			this.displayText = truncateIfNecessary(speciesIn.getDisplayName());
 		}
 		
-		private FormattedCharSequence func_244424_a(Minecraft p_244424_0_, Component p_244424_1_)
+		private FormattedCharSequence truncateIfNecessary(Component componentIn)
 		{
-			int i = p_244424_0_.font.width(p_244424_1_);
-			if (i > 157)
+			if(mc.font.width(componentIn) > 157)
 			{
-				FormattedText itextproperties = FormattedText.composite(p_244424_0_.font.substrByWidth(p_244424_1_, 157 - p_244424_0_.font.width("...")), FormattedText.of("..."));
+				FormattedText itextproperties = FormattedText.composite(minecraft.font.substrByWidth(componentIn, 157 - minecraft.font.width("...")), FormattedText.of("..."));
 				return Language.getInstance().getVisualOrder(itextproperties);
 			}
 			else
-				return p_244424_1_.getVisualOrderText();
+				return componentIn.getVisualOrderText();
 		}
 		
 		public void render(PoseStack matrixStack, int slotIndex, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTicks)
@@ -79,7 +85,7 @@ public class SpeciesList extends ObjectSelectionList<SpeciesList.SpeciesListEntr
 			// Bottom Right
 			blit(matrixStack, rowLeft - 2 + texWidth, rowTop + texHeight, 200 - texWidth, texY + 20 - texHeight, texWidth, texHeight);
 			
-			this.mc.font.draw(matrixStack, this.field_243407_e, (float)(rowLeft + 2), (float)(rowTop + (rowHeight + 3 - mc.font.lineHeight) / 2), 16777215);
+			GuiComponent.drawString(matrixStack, mc.font, this.displayText, (rowLeft + 2), (rowTop + (rowHeight + 3 - mc.font.lineHeight) / 2), 16777215);
 		}
 		
 	 	public boolean mouseClicked(double mouseX, double mouseY, int button)

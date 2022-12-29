@@ -20,5 +20,6 @@ public class VOCapabilities
 		event.register(LivingData.class);
 		event.register(AbilityData.class);
 		event.register(PlayerData.class);
+		
 	}
 }

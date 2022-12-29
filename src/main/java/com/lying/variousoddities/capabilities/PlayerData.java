@@ -257,7 +257,6 @@ public class PlayerData implements ICapabilitySerializable<CompoundTag>
 			VariousOddities.log.error("! Failed to find PlayerData during clone of (new) "+next.getDisplayName().getString());
 		else
 		{
-			VariousOddities.log.info("Cloning PlayerData");
 			if(!wasDeath)
 			{
 				newPlayer.setBodyCondition(oldPlayer.getBodyCondition());

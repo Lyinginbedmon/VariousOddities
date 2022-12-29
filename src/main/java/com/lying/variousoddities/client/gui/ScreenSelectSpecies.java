@@ -66,7 +66,7 @@ public class ScreenSelectSpecies extends Screen
 	
 	private final Player player;
 	
-	private SpeciesList speciesList;
+	private final Species initialSpecies;
 	private List<Species> selectableSpecies = Lists.newArrayList();
 	private int index = 0;
 	
@@ -77,25 +77,40 @@ public class ScreenSelectSpecies extends Screen
 	private int targetPower;
 	private boolean randomise;
 	
-	private AbilityList abilityList;
+	private static final int listWidth = 165;
+	private SpeciesList speciesList = new SpeciesList(Minecraft.getInstance(), this, 200, this.height, this.selectableSpecies);
+	private AbilityList abilityList = new AbilityList(Minecraft.getInstance(), (this.width - listWidth) / 2, listWidth, this.height, 20);
 	
-	public ScreenSelectSpecies(Player playerIn, int power, boolean random)
+	public ScreenSelectSpecies(Player playerIn, int power, boolean random, @Nullable Species initialIn)
 	{
 		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select"));
 		this.player = playerIn;
 		this.targetPower = power;
 		this.randomise = random;
-		setCurrentSpecies(Species.HUMAN);
+		this.initialSpecies = initialIn;
 	}
 	
-	public ScreenSelectSpecies(Player playerIn, int power, boolean random, @Nullable Species initialIn)
+	public ScreenSelectSpecies(Player playerIn, int power, boolean random)
 	{
-		this(playerIn, power, random);
-		setCurrentSpecies(initialIn);
+		this(playerIn, power, random, Species.HUMAN);
 	}
+	
+	public boolean shouldCloseOnEsc(){ return false; }
+	
+	public boolean isPauseScreen(){ return true; }
+	
+    protected void init()
+    {
+        initSpecies();
+    	setCurrentSpecies(initialSpecies);
+		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
+		
+		addWidgets();
+    }
 	
 	private void initSpecies()
 	{
+		selectableSpecies.clear();
 		if(player.isCreative())
 			selectableSpecies.addAll(VORegistries.SPECIES.values());
 		else
@@ -117,7 +132,7 @@ public class ScreenSelectSpecies extends Screen
 				}
 			});
 		
-		speciesList = new SpeciesList(minecraft, this, 200, this.height, this.selectableSpecies);
+		speciesList.setEntries(selectableSpecies);
 	}
 	
 	private int indexBySpecies(@Nullable Species speciesIn)
@@ -135,13 +150,61 @@ public class ScreenSelectSpecies extends Screen
 			initSpecies();
 		this.index = indexBySpecies(speciesIn);
 		
-		if(this.abilityList != null)
-			this.abilityList.clear();
+		this.abilityList.clear();
 	}
-	
-	public boolean shouldCloseOnEsc(){ return false; }
-	
-	public boolean isPauseScreen(){ return true; }
+    
+    public void addWidgets()
+    {
+    	clearWidgets();
+        int midX = width / 2;
+		if(!this.randomise)
+			addWidget(this.speciesList);
+		
+		addWidget(this.abilityList);
+    	
+    	this.addRenderableWidget(selectButton = new Button(midX - 50, 35, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
+    		{
+    			getMinecraft().setScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+    		},
+				(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
+    	
+    	this.addRenderableWidget(typesButton = new Button(midX - 60, height - 25, 120, 20, Component.translatable("gui.varodd.species_select.lose_types"), (button) ->
+    		{
+    			keepTypes = !keepTypes;
+    			typesButton.setMessage(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select."+(keepTypes ? "keep_types" : "lose_types")));
+    		}, (button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.keep_types.info"), x, y); }));
+    	
+    	this.addRenderableWidget(new Button(midX + 100, 35, 20, 20, Component.literal("X"), (button) -> 
+    	{
+			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUUID()));
+			getMinecraft().setScreen(null);
+    	}, (button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui.varodd.species_select.exit"), x, y); }));
+    	
+    	this.addRenderableWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
+    		{
+    			getMinecraft().setScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+    		},
+    			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
+    }
+    
+    private void populateAbilityList(List<Ability> abilitiesIn)
+    {
+		if(!abilitiesIn.isEmpty())
+		{
+			abilitiesIn.sort(ABILITY_SORT);
+			for(Ability ability : abilitiesIn)
+			{
+				if(!ability.displayInSpecies())
+					continue;
+				this.abilityList.addAbility(ability);
+			}
+		}
+    }
+    
+    public Species getCurrentSpecies()
+    {
+		return selectableSpecies.get(index);
+    }
 	
 	public void tick()
 	{
@@ -167,13 +230,14 @@ public class ScreenSelectSpecies extends Screen
 				}
 				while(selected.getPower() > this.targetPower);
 			
-			Minecraft.getInstance().setScreen(new ScreenSelectTemplates(player, selected, EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+			getMinecraft().setScreen(new ScreenSelectTemplates(player, selected, EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
 		}
 	}
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		renderDirtBackground(0);
+		
 		if(!this.randomise)
 			this.speciesList.render(matrixStack, mouseX, mouseY, partialTicks);
 		
@@ -342,65 +406,6 @@ public class ScreenSelectSpecies extends Screen
 			blit(matrixStack.last().pose(), startX, (int)endX, yPos, yPos + 9, 0, 0, ICON_TEX, ICON_TEX, ICON_TEX * 2, red, green, blue, 1F);
 		matrixStack.popPose();
 	}
-	
-    public void init()
-    {
-    	clearWidgets();
-        
-        int midX = width / 2;
-    	
-        if(this.selectableSpecies.isEmpty())
-        	initSpecies();
-		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
-		if(!this.randomise)
-			addWidget(this.speciesList);
-		
-		int listWidth = 165;
-		this.abilityList = new AbilityList(minecraft, (this.width - listWidth) / 2, listWidth, this.height, 20);
-		addWidget(this.abilityList);
-    	
-    	this.addRenderableWidget(selectButton = new Button(midX - 50, 35, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
-    		{
-    			Minecraft.getInstance().setScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
-    		},
-				(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
-    	
-    	this.addRenderableWidget(typesButton = new Button(midX - 60, height - 25, 120, 20, Component.translatable("gui.varodd.species_select.lose_types"), (button) ->
-    		{
-    			keepTypes = !keepTypes;
-    			typesButton.setMessage(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select."+(keepTypes ? "keep_types" : "lose_types")));
-    		}, (button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.keep_types.info"), x, y); }));
-    	
-    	this.addRenderableWidget(new Button(midX + 100, 35, 20, 20, Component.literal("X"), (button) -> 
-    	{
-			PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUUID()));
-			Minecraft.getInstance().setScreen(null);
-    	}, (button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui.varodd.species_select.exit"), x, y); }));
-    	this.addRenderableWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
-    		{
-    			Minecraft.getInstance().setScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
-    		},
-    			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
-    }
-    
-    private void populateAbilityList(List<Ability> abilitiesIn)
-    {
-		if(!abilitiesIn.isEmpty())
-		{
-			abilitiesIn.sort(ABILITY_SORT);
-			for(Ability ability : abilitiesIn)
-			{
-				if(!ability.displayInSpecies())
-					continue;
-				this.abilityList.addAbility(ability);
-			}
-		}
-    }
-    
-    public Species getCurrentSpecies()
-    {
-		return selectableSpecies.get(index);
-    }
     
     public static void drawHealthAndArmour(PoseStack matrix, Font font, int xPos, int yPos, int health, int armour)
     {

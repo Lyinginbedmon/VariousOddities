@@ -41,7 +41,6 @@ import com.lying.variousoddities.species.types.CreatureTypeDefaults;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.lying.variousoddities.species.types.EnumCreatureType.ActionSet;
 import com.lying.variousoddities.species.types.TypeBus;
-import com.lying.variousoddities.species.types.Types;
 import com.lying.variousoddities.utility.DataHelper;
 
 import net.minecraft.core.Direction;
@@ -851,42 +850,30 @@ public class LivingData implements ICapabilitySerializable<CompoundTag>
 	
 	public static void syncOnDeath(Player original, Player next)
 	{
-		if(LivingData.getCapability(original) == null)
+		if(getCapability(original) == null)
 			VariousOddities.log.error("! Failed to find LivingData during clone of (old) "+original.getDisplayName().getString());
-		else if(LivingData.getCapability(next) == null)
+		else if(getCapability(next) == null)
 			VariousOddities.log.error("! Failed to find LivingData during clone of (new) "+next.getDisplayName().getString());
 		else
-			LivingData.getCapability(next).clone(LivingData.getCapability(original));
+			getCapability(next).clone(getCapability(original));
 	}
 	
 	public void clone(LivingData dataIn)
 	{
-		VariousOddities.log.info("Cloning LivingData");
-		
 		if(dataIn.hasCustomTypes())
-		{
-			VariousOddities.log.info("# Custom types: "+(new Types(dataIn.getCustomTypes())).toHeader().getString());
 			setCustomTypes(dataIn.getCustomTypes());
-		}
 		else
 			clearCustomTypes();
 		
 		this.selectedSpecies = dataIn.hasSelectedSpecies();
 		
 		if(dataIn.hasSpecies())
-		{
-			VariousOddities.log.info("# Species: "+dataIn.getSpecies().getDisplayName().getString());
 			setSpecies(dataIn.getSpecies());
-		}
 		else
 			this.species = null;
 		
 		if(dataIn.hasTemplates())
-		{
-			VariousOddities.log.info("# Templates:");
-			dataIn.getTemplates().forEach((template) -> VariousOddities.log.info("#   -"+template.getDisplayName().getString()));
 			setTemplates(dataIn.getTemplates());
-		}
 		else
 			clearTemplates();
 	}

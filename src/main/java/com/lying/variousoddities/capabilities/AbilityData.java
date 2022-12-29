@@ -7,16 +7,18 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.VariousOddities;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityAddEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityRemoveEvent;
 import com.lying.variousoddities.api.event.AbilityEvent.AbilityUpdateEvent;
+import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.entity.AbstractBody;
 import com.lying.variousoddities.init.VOCapabilities;
-import com.lying.variousoddities.VariousOddities;
-import com.lying.variousoddities.api.event.GatherAbilitiesEvent;
 import com.lying.variousoddities.network.PacketAbilityCooldown;
 import com.lying.variousoddities.network.PacketAbilityRemove;
 import com.lying.variousoddities.network.PacketHandler;
@@ -51,11 +53,10 @@ import net.minecraftforge.common.util.LazyOptional;
 /**
  * Data containing all of a creature's abilities and associated cooldowns.
  * @author Lying
- *
  */
 public class AbilityData implements ICapabilitySerializable<CompoundTag>
 {
-	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "abilities");
+	public static final ResourceLocation IDENTIFIER = new ResourceLocation(Reference.ModInfo.MOD_ID, "test");
 	private static final UUID UUID_ABILITIES = UUID.fromString("f7bc7eeb-69ea-43c7-8b3a-e85f1abbc817");
 	
 	public static int FAVOURITE_SLOTS = 5;
@@ -73,14 +74,12 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	
 	public LivingEntity entity = null;
 	
-	public AbilityData() { }
-	public AbilityData(LivingEntity entityIn)
+	public AbilityData(LivingEntity living)
 	{
-		this();
-		this.entity = entityIn;
+		this.entity = living;
 	}
 	
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
+	public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side)
 	{
 		return VOCapabilities.ABILITY_DATA.orEmpty(cap, LazyOptional.of(() -> this));
 	}
@@ -88,30 +87,8 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	@Nullable
 	public static AbilityData getCapability(LivingEntity entity)
 	{
-		if(entity == null || entity instanceof AbstractBody)
-			return null;
-		
-		return entity.getCapability(VOCapabilities.ABILITY_DATA).orElse(new AbilityData(entity));
+		return entity != null && !(entity instanceof AbstractBody) ? entity.getCapability(VOCapabilities.ABILITY_DATA).orElse(new AbilityData(entity)) : null;
 	}
-	
-	/** Synchronise this object with surrounding entities */
-	public void markDirty()
-	{
-		if(this.entity != null && !this.entity.getLevel().isClientSide())
-		{
-			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUUID(), serializeNBT());
-			PacketHandler.sendToNearby(entity.getLevel(), entity, packet);
-		}
-	}
-	
-	public static void tryMarkForRecache(LivingEntity entityIn)
-	{
-		AbilityData data = getCapability(entityIn);
-		if(data != null)
-			data.markForRecache();
-	}
-	
-	public void markForRecache(){ this.cacheDirty = true; }
 	
 	public CompoundTag serializeNBT()
 	{
@@ -212,6 +189,48 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 		this.canBonusJump = nbt.getBoolean("CanJump");
 		this.bonusJumpTimer = nbt.getInt("JumpTimer");
 	}
+	
+	public static void syncOnDeath(Player original, Player next)
+	{
+		if(getCapability(original) == null)
+			VariousOddities.log.error("! Failed to find AbilityData during clone of (old) "+original.getDisplayName().getString());
+		else if(getCapability(next) == null)
+			VariousOddities.log.error("! Failed to find AbilityData during clone of (new) "+next.getDisplayName().getString());
+		else
+			getCapability(next).clone(getCapability(original));
+	}
+	
+	public void clone(AbilityData data)
+	{
+		this.customAbilities.clear();
+		this.customAbilities.putAll(data.customAbilities);
+		
+		this.cooldowns.clear();
+		this.cooldowns.putAll(data.cooldowns);
+		
+		this.favourites = data.favourites;
+		
+		markForRecache();
+	}
+	
+	/** Synchronise this object with surrounding entities */
+	public void markDirty()
+	{
+		if(this.entity != null && !this.entity.getLevel().isClientSide())
+		{
+			PacketSyncAbilities packet = new PacketSyncAbilities(this.entity.getUUID(), serializeNBT());
+			PacketHandler.sendToNearby(entity.getLevel(), entity, packet);
+		}
+	}
+	
+	public static void tryMarkForRecache(LivingEntity entityIn)
+	{
+		AbilityData data = getCapability(entityIn);
+		if(data != null)
+			data.markForRecache();
+	}
+	
+	public void markForRecache(){ this.cacheDirty = true; }
 	
 	public int size(){ return this.customAbilities.size(); }
 	
@@ -377,7 +396,6 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 				if(this.entity.getType() == EntityType.PLAYER)
 					PacketHandler.sendTo((ServerPlayer)this.entity, new PacketAbilityCooldown());
 				dirty = true;
-				System.out.println("   = Tick dirty due to finished cooldown");
 			}
 			
 			/*
@@ -388,7 +406,6 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 				if(favourite != null && !AbilityRegistry.hasAbilityOfMapName(entity, favourite))
 				{
 					unfavourite(favourite);
-					System.out.println("   = Tick dirty due to missing favourited ability "+(favourite == null ? "NULL" : favourite.toString()));
 					dirty = true;
 				}
 			
@@ -481,7 +498,7 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 						template.applyAbilityOperations(abilityMap);
 			}
 			
-			AbilityData bodyAbilities = AbilityData.getCapability(entityIn);
+			AbilityData bodyAbilities = getCapability(entityIn);
 			if(bodyAbilities != null)
 				abilityMap = bodyAbilities.addCustomToMap(abilityMap);
 			
@@ -687,33 +704,6 @@ public class AbilityData implements ICapabilitySerializable<CompoundTag>
 	{
 		this.canBonusJump = false;
 		this.bonusJumpTimer = 0;
-		markDirty();
-	}
-	
-	public static void syncOnDeath(Player original, Player next)
-	{
-		if(AbilityData.getCapability(original) == null)
-			VariousOddities.log.error("! Failed to find AbilityData during clone of (old) "+original.getDisplayName().getString());
-		else if(AbilityData.getCapability(next) == null)
-			VariousOddities.log.error("! Failed to find AbilityData during clone of (new) "+next.getDisplayName().getString());
-		else
-			AbilityData.getCapability(next).clone(AbilityData.getCapability(original));
-	}
-	
-	public void clone(AbilityData data)
-	{
-		VariousOddities.log.info("Cloning AbilityData");
-		this.customAbilities.clear();
-		for(Ability ability : data.customAbilities.values())
-			this.customAbilities.put(ability.getMapName(), ability);
-		
-		this.cooldowns.clear();
-		for(ResourceLocation mapName : data.cooldowns.keySet())
-			this.cooldowns.put(mapName, data.cooldowns.get(mapName));
-		
-		for(int i=0; i<this.favourites.length; i++)
-			this.favourites[i] = data.favourites[i];
-		
 		markDirty();
 	}
 }

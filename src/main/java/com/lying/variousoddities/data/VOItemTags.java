@@ -30,7 +30,7 @@ public class VOItemTags extends ItemTagsProvider
 		return "Various Oddities item tags";
 	}
 	
-	protected void registerTags()
+	protected void addTags()
 	{
 		tag(WORG_FOOD).add(
 				Items.ROTTEN_FLESH,

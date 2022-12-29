@@ -22,7 +22,7 @@ public class AbilityHoldBreath extends Ability
 	public void onMaxAir(LivingMaxAirEvent event)
 	{
 		LivingEntity living = event.getEntity();
-		if(AbilityRegistry.hasAbilityOfMapName(living, getRegistryName()))
+		if(living.isAddedToWorld() && AbilityRegistry.hasAbilityOfMapName(living, getRegistryName()))
 			event.setMaxAir(event.maxAir() * 2);
 	}
 	
