@@ -51,9 +51,9 @@ public class VOEntities
     public static final List<EntityType<?>> ENTITIES_AI = Lists.newArrayList();
     public static final Map<EntityType<?>, Item> SPAWN_EGGS = new HashMap<>();
 	
-    public static final RegistryObject<EntityType<EntitySpell>> SPELL			= register("spell", EntityType.Builder.<EntitySpell>of(EntitySpell::new, MobCategory.MISC).sized(0.5F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
-    public static final RegistryObject<EntityType<EntityBodyCorpse>> CORPSE		= register("corpse", EntityType.Builder.<EntityBodyCorpse>of(EntityBodyCorpse::new, MobCategory.MISC).sized(0.75F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
-    public static final RegistryObject<EntityType<EntityBodyUnconscious>> BODY	= register("body", EntityType.Builder.<EntityBodyUnconscious>of(EntityBodyUnconscious::new, MobCategory.MISC).sized(0.75F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
+    public static final RegistryObject<EntityType<EntitySpell>> SPELL						= register("spell", EntityType.Builder.<EntitySpell>of(EntitySpell::new, MobCategory.MISC).sized(0.5F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
+    public static final RegistryObject<EntityType<EntityBodyCorpse>> CORPSE					= register("corpse", EntityType.Builder.<EntityBodyCorpse>of(EntityBodyCorpse::new, MobCategory.MISC).sized(0.75F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
+    public static final RegistryObject<EntityType<EntityBodyUnconscious>> BODY				= register("body", EntityType.Builder.<EntityBodyUnconscious>of(EntityBodyUnconscious::new, MobCategory.MISC).sized(0.75F, 0.5F));//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING
     
     // First release
 	public static final RegistryObject<EntityType<EntityKobold>> KOBOLD						= register("kobold",			EntityType.Builder.<EntityKobold>of(EntityKobold::new, MobCategory.CREATURE).sized(0.6F, 1.6F).clientTrackingRange(10), 16167425, 15826224);
@@ -64,11 +64,11 @@ public class VOEntities
 	public static final RegistryObject<EntityType<EntityScorpionGiant>> SCORPION_GIANT		= register("giant_scorpion",	EntityType.Builder.<EntityScorpionGiant>of(EntityScorpionGiant::new, MobCategory.MONSTER).sized(1.8F, 1.85F).clientTrackingRange(10), 14704695, 6366997);
 	
 	// Second release
-	public static final RegistryObject<EntityType<EntityCrab>> CRAB						= register("crab",				EntityType.Builder.<EntityCrab>of(EntityCrab::new, MobCategory.WATER_CREATURE).sized(0.6F, 0.5F).clientTrackingRange(10), 10489616, 16775294);//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR
-	public static final RegistryObject<EntityType<EntityCrabGiant>> CRAB_GIANT			= register("giant_crab",		EntityType.Builder.<EntityCrabGiant>of(EntityCrabGiant::new, MobCategory.MONSTER).sized(1.9F, 1.5F).clientTrackingRange(10), 10489616, 16775294);//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR
-	public static final RegistryObject<EntityType<EntityWorg>> WORG						= register("worg",				EntityType.Builder.<EntityWorg>of(EntityWorg::new, MobCategory.CREATURE).sized(0.7F, 1.0F).clientTrackingRange(10), 14670297, 3749941);
-	public static final RegistryObject<EntityType<EntityWarg>> WARG						= register("warg",				EntityType.Builder.<EntityWarg>of(EntityWarg::new, MobCategory.CREATURE).sized(0.85F, 1.35F).clientTrackingRange(10), 6898719, 1248261);
-	public static final RegistryObject<EntityType<EntityGhastling>> GHASTLING			= register("ghastling",			EntityType.Builder.<EntityGhastling>of(EntityGhastling::new, MobCategory.CREATURE).sized(0.95F, 0.95F).clientTrackingRange(10).fireImmune(), 16382457, 12369084);
+	public static final RegistryObject<EntityType<EntityCrab>> CRAB							= register("crab",				EntityType.Builder.<EntityCrab>of(EntityCrab::new, MobCategory.WATER_CREATURE).sized(0.6F, 0.5F).clientTrackingRange(10), 10489616, 16775294);//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR
+	public static final RegistryObject<EntityType<EntityCrabGiant>> CRAB_GIANT				= register("giant_crab",		EntityType.Builder.<EntityCrabGiant>of(EntityCrabGiant::new, MobCategory.MONSTER).sized(1.9F, 1.5F).clientTrackingRange(10), 10489616, 16775294);//SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR
+	public static final RegistryObject<EntityType<EntityWorg>> WORG							= register("worg",				EntityType.Builder.<EntityWorg>of(EntityWorg::new, MobCategory.CREATURE).sized(0.7F, 1.0F).clientTrackingRange(10), 14670297, 3749941);
+	public static final RegistryObject<EntityType<EntityWarg>> WARG							= register("warg",				EntityType.Builder.<EntityWarg>of(EntityWarg::new, MobCategory.CREATURE).sized(0.85F, 1.35F).clientTrackingRange(10), 6898719, 1248261);
+	public static final RegistryObject<EntityType<EntityGhastling>> GHASTLING				= register("ghastling",			EntityType.Builder.<EntityGhastling>of(EntityGhastling::new, MobCategory.CREATURE).sized(0.95F, 0.95F).clientTrackingRange(10).fireImmune(), 16382457, 12369084);
 	
 	// WIP mobs to be fleshed out at a later date
 	public static final RegistryObject<EntityType<EntityPatronKirin>> PATRON_KIRIN			= register("patron_kirin",		EntityType.Builder.<EntityPatronKirin>of(EntityPatronKirin::new, MobCategory.CREATURE).sized(0.6F, 1.999F).clientTrackingRange(10), -1, 1);
@@ -76,7 +76,7 @@ public class VOEntities
 	public static final RegistryObject<EntityType<EntityChangeling>> CHANGELING				= register("changeling",		EntityType.Builder.<EntityChangeling>of(EntityChangeling::new, MobCategory.CREATURE).sized(0.6F, 1.8F).clientTrackingRange(10), -1, 1);
 	public static final RegistryObject<EntityType<EntityMindFlayer>> MIND_FLAYER			= register("mind_flayer",		EntityType.Builder.<EntityMindFlayer>of(EntityMindFlayer::new, MobCategory.MONSTER).sized(0.6F, 1.8F).clientTrackingRange(10), -1, -1);
 	
-	public static final RegistryObject<EntityType<EntityMarimo>> MARIMO	= register("marimo", EntityType.Builder.<EntityMarimo>of(EntityMarimo::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(8));//SpawnPlacements.Type.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES
+	public static final RegistryObject<EntityType<EntityMarimo>> MARIMO						= register("marimo", EntityType.Builder.<EntityMarimo>of(EntityMarimo::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(8));//SpawnPlacements.Type.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES
 	
 	// Utility entities
 	public static final RegistryObject<EntityType<EntityFireballGhastling>> GHASTLING_FIREBALL	= register("ghastling_fireball", EntityType.Builder.<EntityFireballGhastling>of(EntityFireballGhastling::new, MobCategory.MISC).sized(0.3125F, 0.3125F).noSummon().fireImmune().clientTrackingRange(4));

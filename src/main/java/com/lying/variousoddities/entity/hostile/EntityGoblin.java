@@ -193,17 +193,17 @@ public class EntityGoblin extends EntityOddityAgeable implements IFactionMob, IS
 	
     protected SoundEvent getAmbientSound()
     {
-        return VOSoundEvents.ENTITY_GOBLIN_AMBIENT;
+        return VOSoundEvents.ENTITY_GOBLIN_AMBIENT.get();
     }
     
     protected SoundEvent getHurtSound(DamageSource damageSourceIn)
     {
-        return VOSoundEvents.ENTITY_GOBLIN_HURT;
+        return VOSoundEvents.ENTITY_GOBLIN_HURT.get();
     }
     
     protected SoundEvent getDeathSound()
     {
-        return VOSoundEvents.ENTITY_GOBLIN_DEATH;
+        return VOSoundEvents.ENTITY_GOBLIN_DEATH.get();
     }
 	
     protected float getSoundVolume(){ return this.isBaby() ? super.getSoundVolume() * 0.3F : super.getSoundVolume(); }

@@ -20,6 +20,7 @@ import com.lying.variousoddities.init.VOEntities;
 import com.lying.variousoddities.init.VOItems;
 import com.lying.variousoddities.init.VOMobEffects;
 import com.lying.variousoddities.init.VORegistries;
+import com.lying.variousoddities.init.VOSoundEvents;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.proxy.ClientProxy;
 import com.lying.variousoddities.proxy.IProxy;
@@ -72,6 +73,7 @@ public class VariousOddities
         VOItems.ITEMS.register(modEventBus);
         VOItems.CONTAINERS.register(modEventBus);
         VOMobEffects.EFFECTS.register(modEventBus);
+        VOSoundEvents.SOUNDS.register(modEventBus);
 		VORegistries.registerCustom(modEventBus);
         
         modEventBus.addListener(this::doCommonSetup);

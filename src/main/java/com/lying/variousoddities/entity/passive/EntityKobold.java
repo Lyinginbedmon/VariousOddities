@@ -200,19 +200,19 @@ public class EntityKobold extends EntityOddityAgeable implements IFactionMob, IS
     protected SoundEvent getAmbientSound()
     {
     	openJaw();
-        return VOSoundEvents.ENTITY_KOBOLD_AMBIENT;
+        return VOSoundEvents.ENTITY_KOBOLD_AMBIENT.get();
     }
 
     protected SoundEvent getHurtSound(DamageSource damageSourceIn)
     {
     	openJaw();
-        return VOSoundEvents.ENTITY_KOBOLD_HURT;
+        return VOSoundEvents.ENTITY_KOBOLD_HURT.get();
     }
     
     protected SoundEvent getDeathSound()
     {
     	openJaw();
-        return VOSoundEvents.ENTITY_KOBOLD_DEATH;
+        return VOSoundEvents.ENTITY_KOBOLD_DEATH.get();
     }
 	
 	public boolean getShortSnout(){ return DataHelper.Booleans.getBooleanByte(getEntityData(), SNOUT); }

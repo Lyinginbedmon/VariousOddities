@@ -47,6 +47,8 @@ public class ModelWorg extends ColorableAgeableListModel<EntityWorg> implements 
 	{
         this.head = partsIn.getChild("head");
         this.muzzle = this.head.getChild("muzzle");
+        this.earRight = this.head.getChild("right_ear");
+        this.earLeft = this.head.getChild("left_ear");
         this.jaw = this.muzzle.getChild("jaw");
 		this.tongue = this.jaw.getChild("tongue");
         
