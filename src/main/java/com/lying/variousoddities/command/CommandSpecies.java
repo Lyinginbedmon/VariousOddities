@@ -38,8 +38,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 
 public class CommandSpecies extends CommandBase
 {
@@ -167,11 +167,9 @@ public class CommandSpecies extends CommandBase
 	
 	private static int selectSpecies(Entity entity, CommandSourceStack source) throws CommandSyntaxException
 	{
-		if(entity instanceof Player)
+		if(entity.getType() == EntityType.PLAYER)
 		{
-			Player player = (Player)entity;
-			if(!player.level.isClientSide)
-				PacketHandler.sendTo((ServerPlayer)player, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), false));
+			PacketHandler.sendTo((ServerPlayer)entity, new PacketSpeciesOpenScreen(ConfigVO.MOBS.powerLevel.get(), false));
 			return 15;
 		}
 		else

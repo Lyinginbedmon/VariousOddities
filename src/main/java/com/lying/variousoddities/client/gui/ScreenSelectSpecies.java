@@ -95,18 +95,18 @@ public class ScreenSelectSpecies extends Screen
 		this(playerIn, power, random, Species.HUMAN);
 	}
 	
-	public boolean shouldCloseOnEsc(){ return false; }
+	public boolean shouldCloseOnEsc() { return true; }
 	
-	public boolean isPauseScreen(){ return true; }
+	public boolean isPauseScreen() { return true; }
 	
-    protected void init()
-    {
+	protected void init()
+	{
         initSpecies();
     	setCurrentSpecies(initialSpecies);
 		this.speciesList.setLeftPos((this.width - 170) / 2 - 11 - this.speciesList.getRowWidth());
 		
 		addWidgets();
-    }
+	}
 	
 	private void initSpecies()
 	{
@@ -134,6 +134,11 @@ public class ScreenSelectSpecies extends Screen
 		
 		speciesList.setEntries(selectableSpecies);
 	}
+    
+    public Species getCurrentSpecies()
+    {
+		return selectableSpecies.get(index);
+    }
 	
 	private int indexBySpecies(@Nullable Species speciesIn)
 	{
@@ -151,6 +156,9 @@ public class ScreenSelectSpecies extends Screen
 		this.index = indexBySpecies(speciesIn);
 		
 		this.abilityList.clear();
+		
+		if(speciesIn != null && !speciesIn.getAbilities().isEmpty())
+			populateAbilityList(speciesIn.getFullAbilities());
 	}
     
     public void addWidgets()
@@ -186,25 +194,6 @@ public class ScreenSelectSpecies extends Screen
     		},
     			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
     }
-    
-    private void populateAbilityList(List<Ability> abilitiesIn)
-    {
-		if(!abilitiesIn.isEmpty())
-		{
-			abilitiesIn.sort(ABILITY_SORT);
-			for(Ability ability : abilitiesIn)
-			{
-				if(!ability.displayInSpecies())
-					continue;
-				this.abilityList.addAbility(ability);
-			}
-		}
-    }
-    
-    public Species getCurrentSpecies()
-    {
-		return selectableSpecies.get(index);
-    }
 	
 	public void tick()
 	{
@@ -214,10 +203,6 @@ public class ScreenSelectSpecies extends Screen
 		
 		LivingData data = LivingData.getCapability(player);
 		typesButton.visible = typesButton.active = data.hasCustomTypes();
-		
-		Species currentSpecies = getCurrentSpecies();
-		if(currentSpecies != null && !currentSpecies.getAbilities().isEmpty() && this.abilityList.isEmpty())
-			populateAbilityList(currentSpecies.getFullAbilities());
 		
 		if(this.randomise && !this.selectableSpecies.isEmpty())
 		{
@@ -233,20 +218,38 @@ public class ScreenSelectSpecies extends Screen
 			getMinecraft().setScreen(new ScreenSelectTemplates(player, selected, EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
 		}
 	}
+    
+    private void populateAbilityList(List<Ability> abilitiesIn)
+    {
+		if(!abilitiesIn.isEmpty())
+		{
+			abilitiesIn.sort(ABILITY_SORT);
+			for(Ability ability : abilitiesIn)
+			{
+				if(!ability.displayInSpecies())
+					continue;
+				this.abilityList.addAbility(ability);
+			}
+		}
+    }
 	
 	public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
 	{
 		renderDirtBackground(0);
-		
 		if(!this.randomise)
 			this.speciesList.render(matrixStack, mouseX, mouseY, partialTicks);
-		
     	this.abilityList.render(matrixStack, mouseX, mouseY, partialTicks);
 		renderBackgroundLayer(matrixStack, partialTicks);
     	hideListEdge();
-		
 		drawListBorder(matrixStack, this.speciesList, this.height, 0, 180, 6, TEXTURE);
 		
+		renderForegroundLayer(matrixStack);
+		
+		super.render(matrixStack, mouseX, mouseY, partialTicks);
+	}
+	
+	public void renderForegroundLayer(PoseStack matrixStack)
+	{
 		int yPos = 20;
 		drawCenteredString(matrixStack, this.font, this.title, this.width / 2, 12, 16777215);
 		yPos += 15;
@@ -293,8 +296,120 @@ public class ScreenSelectSpecies extends Screen
 		// Display abilities
 		yPos += this.font.lineHeight + 3;
 		this.abilityList.setTop(yPos);
+	}
+	
+	public void renderBackgroundLayer(PoseStack matrixStack, float partialTicks)
+	{
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.setShaderTexture(0, TEXTURE);
 		
-		super.render(matrixStack, mouseX, mouseY, partialTicks);
+		int x = (this.width - 175) / 2;
+		// Top
+		this.blit(matrixStack, x, 45, 0, 0, 175, 46);
+		// Middle
+		Screen.blit(matrixStack, x, 45 + 46, 175, this.height - 20 - 45 - 46, 0, 47, 175, 125, 256, 256);
+		// Bottom
+		this.blit(matrixStack, x, this.height - 20, 0, 172, 175, 8);
+	}
+    
+    public static void drawHealthAndArmour(PoseStack matrix, Font font, int xPos, int yPos, int health, int armour)
+    {
+		yPos -= 2;
+    	int healthX = xPos;
+    	int armourX = xPos;
+    	
+    	if(armour > 0 && health > 0)
+    	{
+    		healthX -= 20;
+    		armourX += 20;
+    	}
+    	
+		if(health > 0)
+		{
+	    	String healthStr = String.valueOf(health);
+			drawCenteredString(matrix, font, healthStr, healthX, yPos, -1);
+			
+			int heartX = healthX - (font.width(healthStr) / 2) - 2 - font.lineHeight;
+			drawHUDIcon(matrix, heartX, yPos, 16, 0);
+			drawHUDIcon(matrix, heartX, yPos, 52, 0);
+		}
+    	
+		if(armour > 0)
+		{
+	    	String armourStr = String.valueOf(armour);
+			drawCenteredString(matrix, font, armourStr, armourX, yPos, -1);
+			
+			int chestX = armourX + (font.width(armourStr) / 2) + 2;
+			drawHUDIcon(matrix, chestX, yPos, 34, 9);
+		}
+    }
+    
+    public static void drawHUDIcon(PoseStack matrix, int xPos, int yPos, int texX, int texY)
+    {
+    	yPos -= 1;
+		matrix.pushPose();
+			RenderSystem.setShaderTexture(0, GUI_ICONS_LOCATION);
+			
+			float scale = 1F / 256F;
+			float xMin = texX * scale;
+			float xMax = (texX + 9) * scale;
+			float yMin = texY * scale;
+			float yMax = (texY + 9) * scale;
+			blit(matrix.last().pose(), xPos, xPos + Minecraft.getInstance().font.lineHeight, yPos, yPos + Minecraft.getInstance().font.lineHeight, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
+		matrix.popPose();
+    }
+	
+	public void drawStars(PoseStack matrixStack, int yPos, int power)
+	{
+		int stars = Math.max(Math.abs(power), 1);
+		
+		int midX = this.width / 2;
+		int startX = midX - (9 * stars) / 2;
+		
+		drawStars(matrixStack, power, startX, yPos);
+	}
+	
+	public static void drawStars(PoseStack matrixStack, int power, int xPos, int yPos)
+	{
+		float red = power > 0 ? 0F : power < 0 ? 1F : 0.5F;
+		float green = power > 0 ? 1F : power < 0 ? 0F : 0.5F;
+		float blue = power > 0 ? 0F : power < 0 ? 0F : 0.5F;
+		drawStars(matrixStack, power, xPos, yPos, red, green, blue);
+	}
+	
+	public static void drawStars(PoseStack matrixStack, int power, int xPos, int yPos, float red, float green, float blue)
+	{
+		int stars = Math.max(Math.abs(power), 1);
+		int startX = xPos;
+		for(int i=0; i<stars; i++)
+		{
+			drawStar(matrixStack, startX, yPos, red, green, blue);
+			startX += 9;
+		}
+	}
+	
+	public static void drawStar(PoseStack matrixStack, int xPos, int yPos, float red, float green, float blue)
+	{
+		int startX = xPos;
+		int endX = startX + 9;
+		matrixStack.pushPose();
+			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
+			blit(matrixStack.last().pose(), startX, (int)endX, yPos, yPos + 9, 0, 0, ICON_TEX, ICON_TEX, ICON_TEX * 2, red, green, blue, 1F);
+		matrixStack.popPose();
+	}
+	
+	private static void blit(Matrix4f matrix, int startX, int endX, int startY, int endY, int blitOffset, float texXMin, float texXMax, float texYMin, float texYMax, float red, float green, float blue, float alpha)
+	{
+		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+			bufferbuilder.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMax).endVertex();
+			bufferbuilder.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMax).endVertex();
+			bufferbuilder.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMin).endVertex();
+			bufferbuilder.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMin).endVertex();
+		BufferUploader.drawWithShader(bufferbuilder.end());
+		RenderSystem.enableDepthTest();
 	}
     
 	public static void drawListBorder(PoseStack matrixStack, ObjectSelectionList<?> listIn, int heightIn, int texX, int texY, int growth, ResourceLocation texture)
@@ -353,118 +468,4 @@ public class ScreenSelectSpecies extends Screen
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
     }
-	
-	public void renderBackgroundLayer(PoseStack matrixStack, float partialTicks)
-	{
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-		RenderSystem.setShaderTexture(0, TEXTURE);
-		
-		int x = (this.width - 175) / 2;
-		// Top
-		this.blit(matrixStack, x, 45, 0, 0, 175, 46);
-		// Middle
-		Screen.blit(matrixStack, x, 45 + 46, 175, this.height - 20 - 45 - 46, 0, 47, 175, 125, 256, 256);
-		// Bottom
-		this.blit(matrixStack, x, this.height - 20, 0, 172, 175, 8);
-	}
-	
-	public void drawStars(PoseStack matrixStack, int yPos, int power)
-	{
-		int stars = Math.max(Math.abs(power), 1);
-		
-		int midX = this.width / 2;
-		int startX = midX - (9 * stars) / 2;
-		
-		drawStars(matrixStack, power, startX, yPos);
-	}
-	
-	public static void drawStars(PoseStack matrixStack, int power, int xPos, int yPos)
-	{
-		float red = power > 0 ? 0F : power < 0 ? 1F : 0.5F;
-		float green = power > 0 ? 1F : power < 0 ? 0F : 0.5F;
-		float blue = power > 0 ? 0F : power < 0 ? 0F : 0.5F;
-		drawStars(matrixStack, power, xPos, yPos, red, green, blue);
-	}
-	
-	public static void drawStars(PoseStack matrixStack, int power, int xPos, int yPos, float red, float green, float blue)
-	{
-		int stars = Math.max(Math.abs(power), 1);
-		int startX = xPos;
-		for(int i=0; i<stars; i++)
-		{
-			drawStar(matrixStack, startX, yPos, red, green, blue);
-			startX += 9;
-		}
-	}
-	
-	public static void drawStar(PoseStack matrixStack, int xPos, int yPos, float red, float green, float blue)
-	{
-		int startX = xPos;
-		int endX = startX + 9;
-		matrixStack.pushPose();
-			RenderSystem.setShaderTexture(0, ABILITY_ICONS);
-			blit(matrixStack.last().pose(), startX, (int)endX, yPos, yPos + 9, 0, 0, ICON_TEX, ICON_TEX, ICON_TEX * 2, red, green, blue, 1F);
-		matrixStack.popPose();
-	}
-    
-    public static void drawHealthAndArmour(PoseStack matrix, Font font, int xPos, int yPos, int health, int armour)
-    {
-		yPos -= 2;
-    	int healthX = xPos;
-    	int armourX = xPos;
-    	
-    	if(armour > 0 && health > 0)
-    	{
-    		healthX -= 20;
-    		armourX += 20;
-    	}
-    	
-		if(health > 0)
-		{
-	    	String healthStr = String.valueOf(health);
-			drawCenteredString(matrix, font, healthStr, healthX, yPos, -1);
-			
-			int heartX = healthX - (font.width(healthStr) / 2) - 2 - font.lineHeight;
-			drawHUDIcon(matrix, heartX, yPos, 16, 0);
-			drawHUDIcon(matrix, heartX, yPos, 52, 0);
-		}
-    	
-		if(armour > 0)
-		{
-	    	String armourStr = String.valueOf(armour);
-			drawCenteredString(matrix, font, armourStr, armourX, yPos, -1);
-			
-			int chestX = armourX + (font.width(armourStr) / 2) + 2;
-			drawHUDIcon(matrix, chestX, yPos, 34, 9);
-		}
-    }
-    
-    public static void drawHUDIcon(PoseStack matrix, int xPos, int yPos, int texX, int texY)
-    {
-    	yPos -= 1;
-		matrix.pushPose();
-			RenderSystem.setShaderTexture(0, GUI_ICONS_LOCATION);
-			
-			float scale = 1F / 256F;
-			float xMin = texX * scale;
-			float xMax = (texX + 9) * scale;
-			float yMin = texY * scale;
-			float yMax = (texY + 9) * scale;
-			blit(matrix.last().pose(), xPos, xPos + Minecraft.getInstance().font.lineHeight, yPos, yPos + Minecraft.getInstance().font.lineHeight, 0, xMin, xMax, yMin, yMax, 1F, 1F, 1F, 1F);
-		matrix.popPose();
-    }
-	
-	private static void blit(Matrix4f matrix, int startX, int endX, int startY, int endY, int blitOffset, float texXMin, float texXMax, float texYMin, float texYMax, float red, float green, float blue, float alpha)
-	{
-		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-		RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-			bufferbuilder.vertex(matrix, (float)startX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMax).endVertex();
-			bufferbuilder.vertex(matrix, (float)endX, (float)endY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMax).endVertex();
-			bufferbuilder.vertex(matrix, (float)endX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMax, texYMin).endVertex();
-			bufferbuilder.vertex(matrix, (float)startX, (float)startY, (float)blitOffset).color(red, green, blue, alpha).uv(texXMin, texYMin).endVertex();
-		BufferUploader.drawWithShader(bufferbuilder.end());
-		RenderSystem.enableDepthTest();
-	}
 }

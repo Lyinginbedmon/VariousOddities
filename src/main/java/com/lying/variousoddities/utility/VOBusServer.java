@@ -109,7 +109,7 @@ public class VOBusServer
 	public static void onPlayerLogInEvent(PlayerLoggedInEvent event)
 	{
 		Player player = event.getEntity();
-		PacketHandler.sendTo((ServerPlayer)player, new PacketSyncSpecies(VORegistries.SPECIES));
+//		PacketHandler.sendTo((ServerPlayer)player, new PacketSyncSpecies(VORegistries.SPECIES));
 		LivingData livingData = LivingData.getCapability(player);
 		if(livingData != null)
 		{
