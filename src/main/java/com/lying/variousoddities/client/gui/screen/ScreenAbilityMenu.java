@@ -1,4 +1,4 @@
-package com.lying.variousoddities.client.gui;
+package com.lying.variousoddities.client.gui.screen;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.AbilityData;
 import com.lying.variousoddities.client.KeyBindings;
+import com.lying.variousoddities.client.gui.IScrollableGUI;
 import com.lying.variousoddities.config.ConfigVO;
 import com.lying.variousoddities.network.PacketAbilityActivate;
 import com.lying.variousoddities.network.PacketAbilityFavourite;

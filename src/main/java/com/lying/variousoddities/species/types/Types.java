@@ -38,7 +38,13 @@ public class Types
 		}
 	}
 	
-	public boolean hasCustomAttributes(){ return !getAttributes().isEmpty(); }
+	public static Types empty() { return new Types(EnumSet.noneOf(EnumCreatureType.class)); }
+	
+	public boolean isEmpty() { return types.isEmpty(); }
+	
+	public void clear() { this.types.clear(); }
+	
+	public boolean hasCustomAttributes() { return !getAttributes().isEmpty(); }
 	
 	public List<MobType> getAttributes()
 	{

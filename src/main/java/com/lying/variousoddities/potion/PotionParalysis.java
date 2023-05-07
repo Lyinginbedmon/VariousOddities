@@ -1,6 +1,6 @@
 package com.lying.variousoddities.potion;
 
-import com.lying.variousoddities.client.gui.ScreenParalysed;
+import com.lying.variousoddities.client.gui.screen.ScreenParalysed;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

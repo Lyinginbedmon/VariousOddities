@@ -1,9 +1,11 @@
-package com.lying.variousoddities.client.gui;
+package com.lying.variousoddities.client.gui.screen;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.client.gui.AbilityList;
+import com.lying.variousoddities.client.gui.GuiHandler;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;

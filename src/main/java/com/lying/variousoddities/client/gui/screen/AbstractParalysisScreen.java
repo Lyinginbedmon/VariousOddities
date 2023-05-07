@@ -1,4 +1,4 @@
-package com.lying.variousoddities.client.gui;
+package com.lying.variousoddities.client.gui.screen;
 
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketParalysisResignation;

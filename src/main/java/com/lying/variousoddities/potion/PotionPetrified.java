@@ -1,6 +1,6 @@
 package com.lying.variousoddities.potion;
 
-import com.lying.variousoddities.client.gui.ScreenPetrified;
+import com.lying.variousoddities.client.gui.screen.ScreenPetrified;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

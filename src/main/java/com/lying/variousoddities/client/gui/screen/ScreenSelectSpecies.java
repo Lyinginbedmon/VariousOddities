@@ -1,15 +1,16 @@
-package com.lying.variousoddities.client.gui;
+package com.lying.variousoddities.client.gui.screen;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.lying.variousoddities.capabilities.LivingData;
+import com.lying.variousoddities.client.gui.AbilityList;
+import com.lying.variousoddities.client.gui.SpeciesList;
+import com.lying.variousoddities.client.gui.menu.MenuSelectSpecies;
 import com.lying.variousoddities.init.VORegistries;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.network.PacketSpeciesSelected;
@@ -18,9 +19,7 @@ import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.Ability.Type;
 import com.lying.variousoddities.species.abilities.AbilityModifier;
-import com.lying.variousoddities.species.abilities.AbilityModifierCon;
 import com.lying.variousoddities.species.abilities.AbilityNaturalArmour;
-import com.lying.variousoddities.species.abilities.AbilityRegistry;
 import com.lying.variousoddities.species.types.EnumCreatureType;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -42,7 +41,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 
-public class ScreenSelectSpecies extends Screen
+public class ScreenSelectSpecies extends AbstractCharacterCreationScreen<MenuSelectSpecies>
 {
 	public static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/species_select.png");
 	public static final ResourceLocation ABILITY_ICONS = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/abilities.png");
@@ -61,11 +60,6 @@ public class ScreenSelectSpecies extends Screen
 	private static final float TEX_SIZE = 128F;
 	private static final float ICON_TEX = 16F / TEX_SIZE;
 	
-	public ResourceLocation healthKey = AbilityRegistry.getClassRegistryKey(AbilityModifierCon.class).location();
-	public ResourceLocation armourKey = AbilityRegistry.getClassRegistryKey(AbilityNaturalArmour.class).location();
-	
-	private final Player player;
-	
 	private final Species initialSpecies;
 	private List<Species> selectableSpecies = Lists.newArrayList();
 	private int index = 0;
@@ -74,25 +68,19 @@ public class ScreenSelectSpecies extends Screen
 	private Button selectButton;
 	private boolean keepTypes = false;
 	
-	private int targetPower;
-	private boolean randomise;
-	
 	private static final int listWidth = 165;
 	private SpeciesList speciesList = new SpeciesList(Minecraft.getInstance(), this, 200, this.height, this.selectableSpecies);
 	private AbilityList abilityList = new AbilityList(Minecraft.getInstance(), (this.width - listWidth) / 2, listWidth, this.height, 20);
 	
-	public ScreenSelectSpecies(Player playerIn, int power, boolean random, @Nullable Species initialIn)
+	public ScreenSelectSpecies(MenuSelectSpecies menuIn, Player playerIn, int power, boolean random, @Nullable Species initialIn)
 	{
-		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select"));
-		this.player = playerIn;
-		this.targetPower = power;
-		this.randomise = random;
+		super(menuIn, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select"), playerIn, power, random, new CharacterSheet(EnumCreatureType.getCustomTypes(playerIn).asSet()));
 		this.initialSpecies = initialIn;
 	}
 	
-	public ScreenSelectSpecies(Player playerIn, int power, boolean random)
+	public ScreenSelectSpecies(MenuSelectSpecies menuIn, Player playerIn, int power, boolean random)
 	{
-		this(playerIn, power, random, Species.HUMAN);
+		this(menuIn, playerIn, power, random, Species.HUMAN);
 	}
 	
 	public boolean shouldCloseOnEsc() { return true; }
@@ -172,7 +160,10 @@ public class ScreenSelectSpecies extends Screen
     	
     	this.addRenderableWidget(selectButton = new Button(midX - 50, 35, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), (button) -> 
     		{
-    			getMinecraft().setScreen(new ScreenSelectTemplates(player, getCurrentSpecies(), keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+    			if(!keepTypes)
+    				this.sheet.clearCustomTypes();
+    			this.sheet.setSpecies(getCurrentSpecies());
+    			getMinecraft().setScreen(new ScreenSelectTemplates(player, this.targetPower, this.randomise, this.sheet));
     		},
 				(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select.select"), x, y); }));
     	
@@ -190,7 +181,10 @@ public class ScreenSelectSpecies extends Screen
     	
     	this.addRenderableWidget(new Button(this.width - 23, 3, 20, 20, Component.literal(">"), (button) -> 
     		{
-    			getMinecraft().setScreen(new ScreenSelectTemplates(player, Species.HUMAN, keepTypes ? EnumCreatureType.getCustomTypes(player).asSet() : EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+    			if(!keepTypes)
+    				this.sheet.clearCustomTypes();
+    			this.sheet.setSpecies(Species.HUMAN);
+    			getMinecraft().setScreen(new ScreenSelectTemplates(player, this.targetPower, this.randomise, this.sheet));
     		},
     			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"), x, y); }));
     }
@@ -201,8 +195,7 @@ public class ScreenSelectSpecies extends Screen
 		if(this.typesButton == null)
 			return;
 		
-		LivingData data = LivingData.getCapability(player);
-		typesButton.visible = typesButton.active = data.hasCustomTypes();
+		typesButton.visible = typesButton.active = hasCustomTypes();
 		
 		if(this.randomise && !this.selectableSpecies.isEmpty())
 		{
@@ -214,8 +207,8 @@ public class ScreenSelectSpecies extends Screen
 					selected = this.selectableSpecies.get(rand.nextInt(this.selectableSpecies.size()));
 				}
 				while(selected.getPower() > this.targetPower);
-			
-			getMinecraft().setScreen(new ScreenSelectTemplates(player, selected, EnumSet.noneOf(EnumCreatureType.class), this.targetPower, this.randomise));
+			this.sheet.setSpecies(selected);
+			getMinecraft().setScreen(new ScreenSelectTemplates(player, this.targetPower, this.randomise, this.sheet));
 		}
 	}
     

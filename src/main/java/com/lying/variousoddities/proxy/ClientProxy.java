@@ -8,7 +8,7 @@ import com.lying.variousoddities.client.RendererHandler;
 import com.lying.variousoddities.client.SettlementManagerClient;
 import com.lying.variousoddities.client.SpellManagerClient;
 import com.lying.variousoddities.client.gui.GuiHandler;
-import com.lying.variousoddities.client.gui.ScreenSelectSpecies;
+import com.lying.variousoddities.client.gui.screen.ScreenSelectSpecies;
 import com.lying.variousoddities.client.renderer.ColorHandler;
 import com.lying.variousoddities.world.savedata.ScentsManager;
 import com.lying.variousoddities.world.savedata.SettlementManager;

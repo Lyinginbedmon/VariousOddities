@@ -1,4 +1,4 @@
-package com.lying.variousoddities.client.gui;
+package com.lying.variousoddities.client.gui.screen;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,11 +13,10 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.client.gui.TemplateList;
+import com.lying.variousoddities.client.gui.menu.MenuSelectTemplates;
 import com.lying.variousoddities.init.VORegistries;
-import com.lying.variousoddities.network.PacketHandler;
-import com.lying.variousoddities.network.PacketSpeciesSelected;
 import com.lying.variousoddities.reference.Reference;
-import com.lying.variousoddities.species.Species;
 import com.lying.variousoddities.species.Template;
 import com.lying.variousoddities.species.abilities.Ability;
 import com.lying.variousoddities.species.abilities.AbilityModifier;
@@ -44,7 +43,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
-public class ScreenSelectTemplates extends Screen
+public class ScreenSelectTemplates extends AbstractCharacterCreationScreen<MenuSelectTemplates>
 {
 	public static final ResourceLocation TEXTURES = new ResourceLocation(Reference.ModInfo.MOD_ID, "textures/gui/templates_select.png");
 	private static final Comparator<Template> TEMPLATE_SORT = new Comparator<Template>()
@@ -65,47 +64,31 @@ public class ScreenSelectTemplates extends Screen
 	public ResourceLocation healthKey = AbilityRegistry.getClassRegistryKey(AbilityModifierCon.class).location();
 	public ResourceLocation armourKey = AbilityRegistry.getClassRegistryKey(AbilityNaturalArmour.class).location();
 	
-	private final Player player;
-	private final Types customTypes;
-	private final Species baseSpecies;
-	
 	private TemplateList listAvailable;
 	private TemplateList listApplied;
 	public TemplateList.TemplateListEntry highlightEntry = null;
-	
-	private int targetPower;
-	private boolean randomise;
 	
 	private static final int LIST_SEP = 7;
 	private static final int LIST_BORDER = 6;
 	
 	private Button clearButton;
 	
-	public ScreenSelectTemplates(@Nonnull Player playerIn, @Nonnull Species speciesIn, EnumSet<EnumCreatureType> customTypesIn, int powerIn, boolean random)
+	public ScreenSelectTemplates(MenuSelectTemplates menuIn, @Nonnull Player playerIn, int powerIn, boolean random, CharacterSheet sheetIn)
 	{
-		super(Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"));
-		this.player = playerIn;
-		this.targetPower = powerIn;
-		this.randomise = random;
-		this.customTypes = customTypesIn.isEmpty() ? null : new Types(customTypesIn);
-		this.baseSpecies = speciesIn;
+		super(menuIn, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select"), playerIn, powerIn, random, sheetIn);
 	}
-	
-	public boolean shouldCloseOnEsc(){ return false; }
-	
-	public boolean isPauseScreen(){ return true; }
 	
 	private Map<ResourceLocation, Ability> getBaseAbilities()
 	{
 		Map<ResourceLocation, Ability> abilityMap = new HashMap<>();
 		
-		if(customTypes != null)
-			customTypes.addAbilitiesToMap(abilityMap);
-		else if(baseSpecies != null)
-			baseSpecies.getTypes().addAbilitiesToMap(abilityMap);
+		if(hasCustomTypes())
+			this.sheet.customTypes().addAbilitiesToMap(abilityMap);
+		else if(sheet.getSpecies() != null)
+			sheet.getSpecies().getTypes().addAbilitiesToMap(abilityMap);
 		
-		if(baseSpecies != null)
-			baseSpecies.getAbilities().forEach((ability) -> { abilityMap.put(ability.getMapName(), AbilityRegistry.getAbility(ability.writeAtomically(new CompoundTag()))); });
+		if(sheet.getSpecies() != null)
+			sheet.getSpecies().getAbilities().forEach((ability) -> { abilityMap.put(ability.getMapName(), AbilityRegistry.getAbility(ability.writeAtomically(new CompoundTag()))); });
 		
 		return abilityMap;
 	}
@@ -113,16 +96,16 @@ public class ScreenSelectTemplates extends Screen
 	private EnumSet<EnumCreatureType> getBaseTypes()
 	{
 		EnumSet<EnumCreatureType> types = EnumSet.noneOf(EnumCreatureType.class);
-		if(customTypes == null)
-			types.addAll(baseSpecies.getTypes().asSet());
+		if(this.sheet.customTypes() == null)
+			types.addAll(sheet.getSpecies().getTypes().asSet());
 		else
-			types.addAll(this.customTypes.asSet());
+			types.addAll(this.sheet.customTypes().asSet());
 		return types;
 	}
 	
 	public int totalPower()
 	{
-		int tally = this.baseSpecies == null ? 0 : this.baseSpecies.getPower();
+		int tally = this.sheet.getSpecies() == null ? 0 : this.sheet.getSpecies().getPower();
 		if(this.listApplied != null)
 			for(Template template : this.listApplied.getTemplates())
 				tally += template.getPower();
@@ -188,6 +171,7 @@ public class ScreenSelectTemplates extends Screen
 	/** Adds the given template to the applied list and updates the available list */
 	public void applyTemplate(Template template)
 	{
+		this.sheet.addTemplate(template);
 		this.listApplied.addEntry(template);
 		this.listAvailable.setEntries(getViableTemplates());
 	}
@@ -223,15 +207,16 @@ public class ScreenSelectTemplates extends Screen
 				noHits = true;
 		}
 		
+		this.sheet.removeTemplate(template);
 		this.listApplied.setEntries(applied);
 		this.listAvailable.setEntries(getViableTemplates());
 	}
 	
 	public void clear()
 	{
+		this.sheet.clearTemplates();
 		this.listApplied.clear();
 		this.listAvailable.setEntries(getViableTemplates());
-		
 	}
 	
 	/** Replaces the current template selection with a randomised set */
@@ -263,7 +248,7 @@ public class ScreenSelectTemplates extends Screen
 		if(this.listAvailable.getTemplates().isEmpty() && this.listApplied.getTemplates().isEmpty())
 		{
 			/* If there are no applicable templates at initialisation, conclude character creation outright */
-			finalise();
+			this.sheet.finalise(this.player);
 			return;
 		}
 		
@@ -271,7 +256,7 @@ public class ScreenSelectTemplates extends Screen
     	this.addRenderableWidget(new Button(midX - 50, this.height - 22, 100, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.finalise"), (button) -> { this.finalise(); }));
     	this.addRenderableWidget(new Button(midX - 62, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.randomise"), (button) -> { this.randomise(); }));
     	this.addRenderableWidget(clearButton = new Button(midX + 2, this.height - 44, 60, 20, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".templates_select.clear"), (button) -> { this.clear(); }));
-    	this.addRenderableWidget(new Button(3, 3, 20, 20, Component.literal("<"), (button) -> { Minecraft.getInstance().setScreen(new ScreenSelectSpecies(player, this.targetPower, this.randomise, this.baseSpecies)); },
+    	this.addRenderableWidget(new Button(3, 3, 20, 20, Component.literal("<"), (button) -> { Minecraft.getInstance().setScreen(new ScreenSelectSpecies(player, this.targetPower, this.randomise, this.sheet.getSpecies())); },
     			(button,matrix,x,y) -> { renderTooltip(matrix, Component.translatable("gui."+Reference.ModInfo.MOD_ID+".species_select"), x, y); }));
     }
     
@@ -284,15 +269,6 @@ public class ScreenSelectTemplates extends Screen
     		randomise();
     		finalise();
     	}
-    }
-    
-    private void finalise()
-    {
-    	List<ResourceLocation> templateNames = Lists.newArrayList();
-    	this.listApplied.getTemplates().forEach((template) -> { templateNames.add(template.getRegistryName()); });
-    	
-		PacketHandler.sendToServer(new PacketSpeciesSelected(player.getUUID(), this.baseSpecies.getRegistryName(), this.customTypes != null, templateNames.toArray(new ResourceLocation[0])));
-		Minecraft.getInstance().setScreen(null);
     }
     
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks)
@@ -337,9 +313,9 @@ public class ScreenSelectTemplates extends Screen
 		xPos -= 8;
 		yPos += 10;
     	
-		drawString(matrixStack, this.font, this.baseSpecies.getDisplayName().getString(), xPos - this.font.width(this.baseSpecies.getDisplayName().getString()) - 2, yPos, 16777215);
+		drawString(matrixStack, this.font, this.sheet.getSpecies().getDisplayName().getString(), xPos - this.font.width(this.sheet.getSpecies().getDisplayName().getString()) - 2, yPos, 16777215);
 		yPos += this.font.lineHeight + 8;
-		int basePower = this.baseSpecies.getPower();
+		int basePower = this.sheet.getSpecies().getPower();
 		int totalStars = Math.max(1, Math.abs(basePower));
 		while(totalStars > 0)
 		{
@@ -391,9 +367,9 @@ public class ScreenSelectTemplates extends Screen
 		xPos += 8;
 		yPos += 10;
 		
-		drawString(matrixStack, this.font, this.baseSpecies.getDisplayName().getString(), xPos + 2, yPos, 16777215);
+		drawString(matrixStack, this.font, this.sheet.getSpecies().getDisplayName().getString(), xPos + 2, yPos, 16777215);
 		yPos += this.font.lineHeight + 8;
-		int templatePower = this.baseSpecies.getPower();
+		int templatePower = this.sheet.getSpecies().getPower();
 		for(Template template : this.listApplied.getTemplates())
 			templatePower += template.getPower();
 		

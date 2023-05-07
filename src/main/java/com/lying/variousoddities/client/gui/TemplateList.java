@@ -3,6 +3,8 @@ package com.lying.variousoddities.client.gui;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.lying.variousoddities.client.gui.screen.ScreenSelectSpecies;
+import com.lying.variousoddities.client.gui.screen.ScreenSelectTemplates;
 import com.lying.variousoddities.reference.Reference;
 import com.lying.variousoddities.species.Template;
 import com.mojang.blaze3d.systems.RenderSystem;

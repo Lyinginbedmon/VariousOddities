@@ -7,7 +7,7 @@ import org.lwjgl.glfw.GLFW;
 
 import com.google.common.collect.Lists;
 import com.lying.variousoddities.capabilities.AbilityData;
-import com.lying.variousoddities.client.gui.ScreenAbilityMenu;
+import com.lying.variousoddities.client.gui.screen.ScreenAbilityMenu;
 import com.lying.variousoddities.network.PacketAbilityActivate;
 import com.lying.variousoddities.network.PacketHandler;
 import com.lying.variousoddities.reference.Reference;
